@@ -1,0 +1,743 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>07 — Live Product Pivot &amp; Stakeholder Notes</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="38f9192a-fd11-81b8-af92-d51f148bdd29" class="page sans"><header><div class="page-header-icon undefined"><span class="icon">🧭</span></div><h1 class="page-title" dir="auto">07 — Live Product Pivot &amp; Stakeholder Notes</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><h2 id="4870aac0-fae5-4658-a83b-164cfc5166ed" class="">Purpose</h2></div><div style="display:contents" dir="auto"><p id="5a987670-cf0f-4602-8f46-1d9fd9b0ac80" class="">This page captures the major pivot from a senior-project-style dorm allocation concept into a real live product direction for KKU affiliated dorms.</p></div><div style="display:contents" dir="auto"><h2 id="6c00f797-ff46-4bf5-be78-61ff39957187" class="">New product direction</h2></div><div style="display:contents" dir="auto"><p id="092107a2-12b4-45b0-933b-e9cbb1332807" class="">The system should be designed as:</p></div><div style="display:contents" dir="auto"><p id="9b772be7-0f0e-4c3a-90ce-4a7e2fa6a891" class=""><strong>KKU Affiliated Dorm Application &amp; Reservation System</strong></p></div><div style="display:contents" dir="auto"><p id="1e9af04f-2279-4152-9c9b-bc4d40e6c21d" class="">Thai:</p></div><div style="display:contents" dir="auto"><p id="987d2539-6b47-461f-8f65-6b60ff9c6e49" class=""><strong>ระบบรับสมัครและจองหอพักในกำกับ มข. พร้อมตรวจสอบการชำระเงิน</strong></p></div><div style="display:contents" dir="auto"><h2 id="51dde6a7-a07b-478a-8318-1c44429101c4" class="">Dorm scope</h2></div><div style="display:contents" dir="auto"><p id="b7ec0d74-c678-4ccd-9646-a93c7bef5871" class="">The affiliated dorms discussed are:</p></div><div style="display:contents" dir="auto"><ul id="d0c743f8-53a8-40e5-ac63-f25097029e96" class="bulleted-list"><li style="list-style-type:disc"><strong>หอพักนพรัตน์ / หอพัก 9 หลัง</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="f564429d-ad44-468f-aa01-71753a07bde5" class="bulleted-list"><li style="list-style-type:disc"><strong>หอพักสวัสดิการนักศึกษา / วรเรสซิเดนซ์</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="dfc84ba8-33ec-450b-874c-4748080c733b" class="bulleted-list"><li style="list-style-type:disc"><strong>หอพักวรอินเตอร์</strong></li></ul></div><div style="display:contents" dir="auto"><p id="e624a54d-37dc-4589-a856-3021165fc30a" class="">Note: In conversation, หอ 8 หลัง appears to be discussed together with วรเรสซิเดนซ์ / หอพักสวัสดิการนักศึกษา context. Confirm exact naming with stakeholders before final documentation.</p></div><div style="display:contents" dir="auto"><h2 id="c6e58075-0a09-4b1d-ba83-1b56ff2ac804" class="">Stakeholders</h2></div><div style="display:contents" dir="auto"><h3 id="d4570920-9c30-4cf4-b89f-2544337e0aa3" class="">ผอ. อ้อม</h3></div><div style="display:contents" dir="auto"><p id="e2ef4995-9046-48e3-87be-a660fba6a42f" class="">Role:</p></div><div style="display:contents" dir="auto"><ul id="5d98de71-b3ae-4959-860d-8aca5a4bb91a" class="bulleted-list"><li style="list-style-type:disc">รักษาการแทนผู้อำนวยการกองบริการหอพักนักศึกษา</li></ul></div><div style="display:contents" dir="auto"><p id="a518de89-3b51-49f4-b93f-7ab8f7e3c5ff" class="">Likely importance:</p></div><div style="display:contents" dir="auto"><ul id="588a3d1c-fae4-4ede-affb-49730097b8e2" class="bulleted-list"><li style="list-style-type:disc">Confirms policy direction</li></ul></div><div style="display:contents" dir="auto"><ul id="9bbfd638-e6a8-4e2b-90a7-32182f9be139" class="bulleted-list"><li style="list-style-type:disc">Connects team with dorm managers</li></ul></div><div style="display:contents" dir="auto"><ul id="9c618e80-31ac-4bfa-8691-6cecb74bd6cc" class="bulleted-list"><li style="list-style-type:disc">Clarifies official process and constraints</li></ul></div><div style="display:contents" dir="auto"><ul id="c1486a5a-cb62-468c-965c-c7705e2a55c2" class="bulleted-list"><li style="list-style-type:disc">Helps decide whether this can become live product</li></ul></div><div style="display:contents" dir="auto"><h3 id="435002a2-cef6-4e9e-9e68-23ef45ac8620" class="">อาจารย์กานดา</h3></div><div style="display:contents" dir="auto"><p id="c3879254-a525-4eae-bf9f-fc376d743114" class="">Role:</p></div><div style="display:contents" dir="auto"><ul id="c8378df2-3f6d-4815-a3e4-e019954695e1" class="bulleted-list"><li style="list-style-type:disc">อาจารย์ที่ปรึกษาหลัก</li></ul></div><div style="display:contents" dir="auto"><p id="3accb1ef-3bc4-48e8-857b-4326426f95ae" class="">Likely importance:</p></div><div style="display:contents" dir="auto"><ul id="9c273681-5ad1-4a5c-8ae3-80b5ac427053" class="bulleted-list"><li style="list-style-type:disc">Guides project scope</li></ul></div><div style="display:contents" dir="auto"><ul id="d67f9536-47bd-45d8-bd29-5fa5015c2cbb" class="bulleted-list"><li style="list-style-type:disc">Helps evaluate academic/project fit</li></ul></div><div style="display:contents" dir="auto"><ul id="6fa6355d-bd0f-4619-8a01-03e37e80596f" class="bulleted-list"><li style="list-style-type:disc">Helps communicate with university stakeholders</li></ul></div><div style="display:contents" dir="auto"><h3 id="f9d996d8-8878-4a11-b765-af12c4620ce4" class="">ผู้จัดการหอพักในกำกับ</h3></div><div style="display:contents" dir="auto"><p id="b966478c-6222-4022-b3c2-3deee8737c1f" class="">Likely importance:</p></div><div style="display:contents" dir="auto"><ul id="887335c2-0a79-448c-8432-c089b542a8e8" class="bulleted-list"><li style="list-style-type:disc">Real operational users</li></ul></div><div style="display:contents" dir="auto"><ul id="822ca66d-02f1-46ee-854c-b7f8c197e8fb" class="bulleted-list"><li style="list-style-type:disc">Define payment rules</li></ul></div><div style="display:contents" dir="auto"><ul id="80b373cc-7874-40cd-823b-f87ef5fac233" class="bulleted-list"><li style="list-style-type:disc">Define application workflow</li></ul></div><div style="display:contents" dir="auto"><ul id="04c1e014-4ab1-4d50-b1da-bcfb5b4986f9" class="bulleted-list"><li style="list-style-type:disc">Verify feasibility</li></ul></div><div style="display:contents" dir="auto"><ul id="3215910c-7724-4c97-8cc6-bbedba6b7e09" class="bulleted-list"><li style="list-style-type:disc">Decide what dashboard and reports they need</li></ul></div><div style="display:contents" dir="auto"><h2 id="73ab1a43-5e0f-4ae5-80e4-5704a6254443" class="">What changed from the original idea</h2></div><div style="display:contents" dir="auto"><h3 id="28ca5caa-5483-4da0-bac8-9a56f7d00f49" class="">Original idea</h3></div><div style="display:contents" dir="auto"><p id="ef4ae14e-03eb-42fe-9908-1eb8cd618f08" class="">The original project focused on:</p></div><div style="display:contents" dir="auto"><ul id="b4cf193e-b18c-4956-a6cf-2d8729b1c94d" class="bulleted-list"><li style="list-style-type:disc">Fair allocation</li></ul></div><div style="display:contents" dir="auto"><ul id="9b05e150-7403-4ae6-9579-be752696571f" class="bulleted-list"><li style="list-style-type:disc">Transparent waitlist</li></ul></div><div style="display:contents" dir="auto"><ul id="623757b5-34da-4b8c-ab78-a49d15c3171a" class="bulleted-list"><li style="list-style-type:disc">Priority scoring</li></ul></div><div style="display:contents" dir="auto"><ul id="b2576d3f-0a9f-4457-9da0-22b664945adb" class="bulleted-list"><li style="list-style-type:disc">Allocation engine</li></ul></div><div style="display:contents" dir="auto"><ul id="63a669bc-426e-4fd6-99b7-291b342e3c02" class="bulleted-list"><li style="list-style-type:disc">Admin dashboard for allocation</li></ul></div><div style="display:contents" dir="auto"><p id="ffbd795c-fee5-4624-a487-19128557b07e" class="">This is still useful, but it is not the main live need discovered.</p></div><div style="display:contents" dir="auto"><h3 id="c6a7ad9b-18ab-4766-8b87-cc61abaa230a" class="">New live need</h3></div><div style="display:contents" dir="auto"><p id="e269d147-4952-4637-afc3-188f3e150f81" class="">The new product should focus on:</p></div><div style="display:contents" dir="auto"><ul id="6b782eee-b25c-4a67-aec2-e26483bc14ef" class="bulleted-list"><li style="list-style-type:disc">Online application instead of paper form</li></ul></div><div style="display:contents" dir="auto"><ul id="2c64e283-b0a6-4e9b-8f8d-1a90fd317713" class="bulleted-list"><li style="list-style-type:disc">Payment required during application/reservation</li></ul></div><div style="display:contents" dir="auto"><ul id="faa37caf-9625-4bfd-990b-a7595bc7cd3c" class="bulleted-list"><li style="list-style-type:disc">Uploading payment slip</li></ul></div><div style="display:contents" dir="auto"><ul id="5e3d742a-c285-464b-a3a1-62f5dbc91a80" class="bulleted-list"><li style="list-style-type:disc">Staff verification of slip</li></ul></div><div style="display:contents" dir="auto"><ul id="136c914f-9391-4cff-bd56-7e1b88b3b916" class="bulleted-list"><li style="list-style-type:disc">Reservation confirmation</li></ul></div><div style="display:contents" dir="auto"><ul id="87243629-4886-43ae-b18e-b41dc15174fb" class="bulleted-list"><li style="list-style-type:disc">Room/room-type availability tracking</li></ul></div><div style="display:contents" dir="auto"><ul id="97682d8a-f8cf-4ae6-a5ca-94fb63a60f3f" class="bulleted-list"><li style="list-style-type:disc">Early recruitment campaign management</li></ul></div><div style="display:contents" dir="auto"><ul id="72a62629-cdb2-4e52-ad9e-75b57e962465" class="bulleted-list"><li style="list-style-type:disc">Export/report for official process</li></ul></div><div style="display:contents" dir="auto"><h2 id="d5371d43-cde1-403a-aa7a-227cea26d962" class="">Stakeholder Q&amp;A summary</h2></div><div style="display:contents" dir="auto"><h3 id="2834dfcf-1088-4148-bcce-2671def45fba" class="">Question 1 — payment at application/reservation time</h3></div><div style="display:contents" dir="auto"><p id="68a79a35-dc5e-4ae9-aed6-8dfa27d3992c" class="">Summary:</p></div><div style="display:contents" dir="auto"><p id="dbc3996f-20a7-4971-9c1f-2250803c2e78" class="">A stakeholder asked whether applicants need to pay when applying/reserving, causing paper form submission at the dorm.</p></div><div style="display:contents" dir="auto"><p id="2226644e-2010-498a-826d-654cd2f409fa" class="">Answer summary:</p></div><div style="display:contents" dir="auto"><p id="3d72cb89-9113-46b4-b076-ca40011f35f9" class="">The dorms can have varied conditions, such as:</p></div><div style="display:contents" dir="auto"><ul id="afb5979b-28d4-40c0-9afa-a33851b03e18" class="bulleted-list"><li style="list-style-type:disc">Requiring damage deposit immediately</li></ul></div><div style="display:contents" dir="auto"><ul id="5aca0ea0-7649-4e14-8832-4b58c03dec22" class="bulleted-list"><li style="list-style-type:disc">Requiring first-year students to pay full amount for 2 terms immediately when booking</li></ul></div><div style="display:contents" dir="auto"><p id="8b9db383-e7b9-459a-b76a-65aa1107b3b4" class="">Product implication:</p></div><div style="display:contents" dir="auto"><ul id="8b0ae281-4bdd-48fa-bc14-c3eed5b08968" class="bulleted-list"><li style="list-style-type:disc">Payment conditions must be configurable.</li></ul></div><div style="display:contents" dir="auto"><ul id="35499136-22f1-4859-b98c-458b49907c0b" class="bulleted-list"><li style="list-style-type:disc">The system cannot assume one universal payment rule.</li></ul></div><div style="display:contents" dir="auto"><ul id="ee2f883d-a36c-4644-899b-77c15a601075" class="bulleted-list"><li style="list-style-type:disc">The application page must clearly show payment requirement before submission.</li></ul></div><div style="display:contents" dir="auto"><ul id="624151a2-8aa1-40ef-a47c-bf220819ac57" class="bulleted-list"><li style="list-style-type:disc">Slip upload and verification are central core product release features.</li></ul></div><div style="display:contents" dir="auto"><h3 id="70426c73-12d5-454b-bc57-dba0ea707a00" class="">Question 2 — online application and UniPay payment or manual evidence upload</h3></div><div style="display:contents" dir="auto"><p id="7f53c0c6-ed97-42b1-97ff-3f9d813d82f6" class="">Summary:</p></div><div style="display:contents" dir="auto"><p id="5cc1b6d4-0c4b-41de-912e-04a8ce07f408" class="">The idea of online application and payment UniPay payment or manual evidence upload was raised.</p></div><div style="display:contents" dir="auto"><p id="7132012b-a071-4b0d-a316-5f9314362818" class="">Answer summary:</p></div><div style="display:contents" dir="auto"><p id="86be250f-bcce-4040-96f1-6e895c02c879" class="">Initial discussion with managers of หอ 8 หลัง and หออินเตอร์ shows interest in an online booking/application website, and they are willing to discuss details with students.</p></div><div style="display:contents" dir="auto"><p id="e2332ad6-909d-432d-9a89-a174f992f417" class="">Product implication:</p></div><div style="display:contents" dir="auto"><ul id="68ca0ba1-3caf-48c8-bc55-19c5480cfdcf" class="bulleted-list"><li style="list-style-type:disc">Stakeholders are open to the idea.</li></ul></div><div style="display:contents" dir="auto"><ul id="3c3e3b8d-1db8-45dc-b179-6746a2b01a65" class="bulleted-list"><li style="list-style-type:disc">The next meeting should be used to define details, not just pitch a vague concept.</li></ul></div><div style="display:contents" dir="auto"><ul id="7129b2e7-8266-4b59-b276-49cabcda03a0" class="bulleted-list"><li style="list-style-type:disc">Prepare prototype flows around online application + UniPay payment or manual evidence upload + admin verification.</li></ul></div><div style="display:contents" dir="auto"><h3 id="ca54a63a-0cd7-4158-8965-d48dbadc5f4b" class="">Question 3 — existing booking and invoice systems</h3></div><div style="display:contents" dir="auto"><p id="2485d510-2b89-48ab-ae67-cf48f8b754bb" class="">Summary:</p></div><div style="display:contents" dir="auto"><p id="948149ab-d38f-435e-a10c-8b623ac85345" class="">Research found central dorm online booking and invoice printing. The question was whether central booking covers หอส่วนกลาง 1–27 and หอ 9 หลัง, but not หอ 8 หลัง and หออินเตอร์, and whether all invoice printing happens through the same system.</p></div><div style="display:contents" dir="auto"><p id="d9fcd3e6-5a1a-4e19-9669-bb8de06b2c1f" class="">Answer summary:</p></div><div style="display:contents" dir="auto"><ul id="2e4bd243-9ee7-413f-a294-2628814363b6" class="bulleted-list"><li style="list-style-type:disc">หอ 8 หลัง + อินเตอร์ do not want to book through the same central flow because they want to recruit before normal central dorm rounds.</li></ul></div><div style="display:contents" dir="auto"><ul id="652f75c5-2170-4799-85b6-91df133b1e59" class="bulleted-list"><li style="list-style-type:disc">They want to fill rooms quickly.</li></ul></div><div style="display:contents" dir="auto"><ul id="8127f235-66c1-444d-b46d-e9b3d36d402e" class="bulleted-list"><li style="list-style-type:disc">หอ 9 หลัง has only a small portion joining central booking; most want earlier recruitment for the same reason.</li></ul></div><div style="display:contents" dir="auto"><ul id="dacbfb73-3aa5-46fc-855f-291d9d263f7c" class="bulleted-list"><li style="list-style-type:disc">Invoice printing goes through the same system for all.</li></ul></div><div style="display:contents" dir="auto"><p id="29d76356-56a7-44bc-a1a2-fd56abc637be" class="">Product implication:</p></div><div style="display:contents" dir="auto"><ul id="bd101071-7cdc-4e72-83f3-6720d5a85935" class="bulleted-list"><li style="list-style-type:disc">The new system should not replace central booking completely.</li></ul></div><div style="display:contents" dir="auto"><ul id="679232d8-8ed2-4f06-bc19-0efd0dc55a0a" class="bulleted-list"><li style="list-style-type:disc">The new system supports affiliated dorm early recruitment and reservation.</li></ul></div><div style="display:contents" dir="auto"><ul id="c5dd8d00-94da-4c85-b3dc-3dc67c6138c3" class="bulleted-list"><li style="list-style-type:disc">Invoice/payment document process may remain external at first.</li></ul></div><div style="display:contents" dir="auto"><ul id="67c9edee-2397-4fd3-a55d-9a0c4d41ee5e" class="bulleted-list"><li style="list-style-type:disc">core product release should support export to existing invoice system.</li></ul></div><div style="display:contents" dir="auto"><h3 id="0edba595-9755-4cf4-b980-b07621fd2a39" class="">Question 4 — booking order for หอ 8 หลัง + อินเตอร์</h3></div><div style="display:contents" dir="auto"><p id="7c9f9e3d-77cd-421c-aaea-e14196a9274c" class="">Summary:</p></div><div style="display:contents" dir="auto"><p id="432b232e-aa33-474a-b80f-1e4a895b42c9" class="">The question compared affiliated dorm booking with central dorm booking, where central dorm allows first-year booking and reserves some room proportion for seniors.</p></div><div style="display:contents" dir="auto"><p id="a47bab0c-8044-402f-91eb-9daaaabfb25e" class="">Answer summary:</p></div><div style="display:contents" dir="auto"><ul id="33b527f3-2c88-4b32-8d47-55f0838019d2" class="bulleted-list"><li style="list-style-type:disc">Affiliated dorms do not follow that model.</li></ul></div><div style="display:contents" dir="auto"><ul id="ada24fe9-db56-4997-b938-a90ad840c93c" class="bulleted-list"><li style="list-style-type:disc">Current residents who want to stay continue/reserve first.</li></ul></div><div style="display:contents" dir="auto"><ul id="14d3dd42-fb3b-4b08-a268-9c23f97a17ff" class="bulleted-list"><li style="list-style-type:disc">Remaining vacant rooms are opened to general applicants, including seniors from other dorms and new students.</li></ul></div><div style="display:contents" dir="auto"><ul id="57fcd253-44a7-4e8d-a074-9fd934dd22b4" class="bulleted-list"><li style="list-style-type:disc">Usually rooms fill very fast, sometimes by quota-round freshmen.</li></ul></div><div style="display:contents" dir="auto"><ul id="7e737f50-6b5c-4a1f-aece-32cdee4ca7de" class="bulleted-list"><li style="list-style-type:disc">No rooms are reserved in advance for freshmen.</li></ul></div><div style="display:contents" dir="auto"><ul id="d2216823-2cf2-4ba3-938d-7e869f752d36" class="bulleted-list"><li style="list-style-type:disc">Central dorms reserve proportions from the beginning, such as seniors 40% and freshmen 60%, and freshman rounds are split into Portfolio / Quota / Admission.</li></ul></div><div style="display:contents" dir="auto"><p id="98019979-1b66-40cb-8368-56e75cd4cf73" class="">Product implication:</p></div><div style="display:contents" dir="auto"><ul id="c720a566-4c08-48e9-8985-d08210e85539" class="bulleted-list"><li style="list-style-type:disc">The system should support renewal-first workflow.</li></ul></div><div style="display:contents" dir="auto"><ul id="24ff08cf-0f3f-49ed-a835-f7cd3f8ff603" class="bulleted-list"><li style="list-style-type:disc">The system should not enforce central dorm quota logic.</li></ul></div><div style="display:contents" dir="auto"><ul id="4a44300b-1a9c-4b0f-bdef-1f98ca0f0926" class="bulleted-list"><li style="list-style-type:disc">The system should allow managers to open early campaigns.</li></ul></div><div style="display:contents" dir="auto"><ul id="115c9ca9-b34a-4be1-9f8a-c20bfe2c7bdb" class="bulleted-list"><li style="list-style-type:disc">Room availability must update after renewals.</li></ul></div><div style="display:contents" dir="auto"><ul id="4b4387d0-faea-48bd-a832-69d5f26076c2" class="bulleted-list"><li style="list-style-type:disc">Public application should use remaining availability.</li></ul></div><div style="display:contents" dir="auto"><h2 id="718b3350-40b6-478b-b88f-4659ab52425a" class="">Updated product thesis</h2></div><div style="display:contents" dir="auto"><blockquote id="fc9a8bba-0681-410f-a982-1edc793257f5" class="">Affiliated dorms need a flexible online workflow to recruit residents early, collect applications, require payment according to dorm-specific rules, verify payment slips, and confirm reservations while keeping room availability and reports organized.</blockquote></div><div style="display:contents" dir="auto"><h2 id="cf8d5af6-ecd1-4c6d-87ec-39659f372a06" class="">Updated core product release in one sentence</h2></div><div style="display:contents" dir="auto"><blockquote id="0f01f0ef-4d32-406a-9494-b2df997db65b" class="">A web system where dorm managers open campaigns, applicants apply online and upload payment slips, staff verify payment evidence, and the system confirms reservations while tracking remaining room availability.</blockquote></div><div style="display:contents" dir="auto"><h2 id="4a90b76b-cb5b-402e-90dd-550c6be82394" class="">What should not be overbuilt first</h2></div><div style="display:contents" dir="auto"><p id="abb8aa3d-a354-429c-b546-40aa4b8ac5a6" class="">Do not make these the center of the live core product release:</p></div><div style="display:contents" dir="auto"><ul id="ab070e72-b418-446b-9bf2-ec622445cf81" class="bulleted-list"><li style="list-style-type:disc">Complex priority scoring</li></ul></div><div style="display:contents" dir="auto"><ul id="58a2c098-d258-4d71-8659-debef5f72a16" class="bulleted-list"><li style="list-style-type:disc">Full lottery allocation</li></ul></div><div style="display:contents" dir="auto"><ul id="e4fb274c-dcaa-4dde-be23-1dc753e69a6a" class="bulleted-list"><li style="list-style-type:disc">Automatic payment gateway</li></ul></div><div style="display:contents" dir="auto"><ul id="e75feb8b-40fc-4624-a3fb-9d47ad47a165" class="bulleted-list"><li style="list-style-type:disc">Exact room selection</li></ul></div><div style="display:contents" dir="auto"><ul id="124f5969-5035-460b-a06e-7f2f75945cb6" class="bulleted-list"><li style="list-style-type:disc">Deep integration with central systems</li></ul></div><div style="display:contents" dir="auto"><ul id="79e0195b-215e-44a3-9db7-8f6f9e2f3e6c" class="bulleted-list"><li style="list-style-type:disc">Maintenance module</li></ul></div><div style="display:contents" dir="auto"><ul id="8872d399-93ab-4393-abcf-dc19d5d86e01" class="bulleted-list"><li style="list-style-type:disc">Chatbot</li></ul></div><div style="display:contents" dir="auto"><ul id="c2e219fe-d2ba-4787-8f74-f20db50f25ad" class="bulleted-list"><li style="list-style-type:disc">Mobile app</li></ul></div><div style="display:contents" dir="auto"><p id="4df4f7df-82dd-4ae4-badd-20eaecfb18ee" class="">These can be future versions.</p></div><div style="display:contents" dir="auto"><h2 id="33eadbe0-d1a0-4228-b0d4-ef05680a1fcc" class="">What should be built first</h2></div><div style="display:contents" dir="auto"><p id="8ee30d1b-d95e-47f2-bea4-f9284952c4f6" class="">Build these first:</p></div><div style="display:contents" dir="auto"><ol type="1" id="bdf3024a-7d9c-468e-b8e6-706258ec5934" class="numbered-list" start="1"><li>Campaign setup</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="4d3c59fe-97f4-4a29-8657-3ea34361eca3" class="numbered-list" start="2"><li>Dorm/room type availability</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="5d85f8e5-7a55-4664-aace-3d3f8a151c9f" class="numbered-list" start="3"><li>Online application form</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="874bc643-77b9-4682-8ef2-2e87bdd167b9" class="numbered-list" start="4"><li>Payment condition display</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3c6aa715-6913-4a51-9777-9d134f1b8ee1" class="numbered-list" start="5"><li>Slip upload</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="e662a8a2-4016-459d-b5a9-b0d4e0678d72" class="numbered-list" start="6"><li>Slip verification dashboard</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="bad3a14d-4f8f-4444-9bf5-6f96bfdc4442" class="numbered-list" start="7"><li>Reservation approval/rejection</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="d0a40d99-7389-46f1-b5fd-914155d41d38" class="numbered-list" start="8"><li>Reservation status tracker</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="c70f0e0d-2259-4c97-91d6-a32ec8a99a55" class="numbered-list" start="9"><li>Export/report</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="de2ee141-0513-4805-a1b3-485ef74cfb12" class="numbered-list numbered-list-digits-2" start="10"><li>Audit log</li></ol></div><div style="display:contents" dir="auto"><h2 id="5dc1f3d4-7e12-4093-afc7-5e4e88289b33" class="">Biggest uncertainty</h2></div><div style="display:contents" dir="auto"><p id="8fc87632-6441-4469-96bf-4a9aa96dd889" class="">The biggest uncertainty is the <strong>official reservation confirmation rule</strong>.</p></div><div style="display:contents" dir="auto"><p id="afac4e09-941b-4ae0-942b-d01e770b6bc5" class="">Need to clarify:</p></div><div style="display:contents" dir="auto"><ul id="94c18153-7e46-43f7-888a-7556f5e14b78" class="bulleted-list"><li style="list-style-type:disc">Is reservation confirmed after application submission?</li></ul></div><div style="display:contents" dir="auto"><ul id="a7fc7719-7217-4be2-91ec-a53d77e6f80c" class="bulleted-list"><li style="list-style-type:disc">After payment?</li></ul></div><div style="display:contents" dir="auto"><ul id="5ae817e3-a74c-468d-aa7f-2435475aca2b" class="bulleted-list"><li style="list-style-type:disc">After UniPay payment or manual evidence upload?</li></ul></div><div style="display:contents" dir="auto"><ul id="cdf706f1-034e-4122-a00e-38117dfa3d20" class="bulleted-list"><li style="list-style-type:disc">After staff verification?</li></ul></div><div style="display:contents" dir="auto"><ul id="f3e881d2-6150-4afd-b5bc-d4645e2aea1a" class="bulleted-list"><li style="list-style-type:disc">After invoice system record?</li></ul></div><div style="display:contents" dir="auto"><p id="d64bf656-b216-49b3-aa2a-7496e3b857fd" class="">Recommended product assumption:</p></div><div style="display:contents" dir="auto"><blockquote id="0b9770d3-26dd-4e1a-b56a-54bb42eedaa1" class="">Reservation is confirmed only after staff verifies required payment evidence.</blockquote></div><div style="display:contents" dir="auto"><h2 id="1358f794-4548-41c0-9af0-e420329c2a2f" class="">Product positioning for stakeholders</h2></div><div style="display:contents" dir="auto"><p id="bffd2bac-51e1-4801-a5be-e95a04c9cbd3" class="">Use this wording:</p></div><div style="display:contents" dir="auto"><blockquote id="58f5cfa4-7dea-4ab1-a4c5-5e22bad7f848" class="">We are not trying to force affiliated dorms into the central dorm booking process. We are designing a flexible system for affiliated dorms to manage their own early recruitment rounds, payment conditions, slip verification, and reservation tracking in a more organized online workflow.</blockquote></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

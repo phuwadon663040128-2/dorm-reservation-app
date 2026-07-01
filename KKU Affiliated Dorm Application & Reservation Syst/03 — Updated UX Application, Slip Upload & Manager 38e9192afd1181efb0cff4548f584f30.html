@@ -1,0 +1,763 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>03 — Updated UX: Application, Slip Upload &amp; Manager Dashboard</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="38e9192a-fd11-81ef-b0cf-f4548f584f30" class="page sans"><header><div class="page-header-icon undefined"><span class="icon">🎨</span></div><h1 class="page-title" dir="auto">03 — Updated UX: Application, Slip Upload &amp; Manager Dashboard</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><h2 id="6f767032-94eb-4d60-9907-6ca3aa2a67d0" class="">UniPay UX update</h2></div><div style="display:contents" dir="auto"><p id="e2791678-e78b-44b3-aa76-d80710f5bd81" class="">Show the UniPay step and status in the applicant flow when available. Manual evidence upload is fallback only. See page 12.</p></div><div style="display:contents" dir="auto"><hr id="74102148-54b3-4bb7-aca7-6c2e6641cbed"/></div><div style="display:contents" dir="auto"><h2 id="8a37e644-2f4e-4818-8200-b190b70eaa13" class="">Purpose</h2></div><div style="display:contents" dir="auto"><p id="44553d91-fcb6-40bb-8c99-166f3a373f17" class="">This page defines the current UX direction for the <strong>KKU Affiliated Dorm Application &amp; Reservation System</strong>.</p></div><div style="display:contents" dir="auto"><p id="06651194-3394-418e-9dd1-56e35ef11323" class="">It replaces the older allocation-status UX. The current UX focus is application campaigns, payment condition clarity, slip upload, staff verification, reservation status, and dorm manager operations.</p></div><div style="display:contents" dir="auto"><h2 id="1e85fe8a-c600-402b-a0df-1096f566683f" class="">Main UX promise</h2></div><div style="display:contents" dir="auto"><p id="999fa2e0-abac-4730-a788-ccadf07bab1c" class="">Applicants should be able to answer these quickly:</p></div><div style="display:contents" dir="auto"><ul id="b9e014d1-4e4e-4a75-a7b2-d1d90e755765" class="bulleted-list"><li style="list-style-type:disc">Which affiliated dorms are open now?</li></ul></div><div style="display:contents" dir="auto"><ul id="1ac922bf-3bc1-46d2-a3a5-b6551bcedf20" class="bulleted-list"><li style="list-style-type:disc">What room types are available?</li></ul></div><div style="display:contents" dir="auto"><ul id="52e434ee-676f-4abb-929d-7be1d47ecfb5" class="bulleted-list"><li style="list-style-type:disc">What do I need to pay before my reservation is confirmed?</li></ul></div><div style="display:contents" dir="auto"><ul id="617d3b6a-c118-483b-93d6-af201cab3eff" class="bulleted-list"><li style="list-style-type:disc">Did I submit my application correctly?</li></ul></div><div style="display:contents" dir="auto"><ul id="11b57230-e473-4166-a1c6-e02b16b168c8" class="bulleted-list"><li style="list-style-type:disc">Did I upload my payment slip correctly?</li></ul></div><div style="display:contents" dir="auto"><ul id="623261e4-1dc6-45ae-acc4-a6075d11a9c9" class="bulleted-list"><li style="list-style-type:disc">Is my slip verified?</li></ul></div><div style="display:contents" dir="auto"><ul id="c3c99fcd-adc2-4f52-870a-74aeee6e61bf" class="bulleted-list"><li style="list-style-type:disc">Is my reservation confirmed?</li></ul></div><div style="display:contents" dir="auto"><ul id="97ffc219-18a1-4f66-85f8-71826b854750" class="bulleted-list"><li style="list-style-type:disc">What do I do next?</li></ul></div><div style="display:contents" dir="auto"><p id="f1d1c390-1602-4af9-86a2-3070aeed4450" class="">Dorm managers should be able to answer:</p></div><div style="display:contents" dir="auto"><ul id="a9776bd9-cf9d-4f1c-9821-5910734da454" class="bulleted-list"><li style="list-style-type:disc">How many applicants submitted today?</li></ul></div><div style="display:contents" dir="auto"><ul id="dd05dc80-5094-4bd0-8ea4-0f7575a000fe" class="bulleted-list"><li style="list-style-type:disc">How many uploaded slips?</li></ul></div><div style="display:contents" dir="auto"><ul id="e6c0a507-006e-4b19-beae-dd1e4322687e" class="bulleted-list"><li style="list-style-type:disc">How many slips are waiting for verification?</li></ul></div><div style="display:contents" dir="auto"><ul id="0ee77a59-46a2-450f-811a-079570a3a066" class="bulleted-list"><li style="list-style-type:disc">How many reservations are confirmed?</li></ul></div><div style="display:contents" dir="auto"><ul id="3fda8d29-ee8b-4a6a-9da0-af98098125c6" class="bulleted-list"><li style="list-style-type:disc">How many rooms/room types remain?</li></ul></div><div style="display:contents" dir="auto"><ul id="75d4dea5-c789-43a8-bdd9-185a6c432843" class="bulleted-list"><li style="list-style-type:disc">Which applicants need follow-up?</li></ul></div><div style="display:contents" dir="auto"><ul id="bda2115b-df5a-41ad-b815-3ff1914e5d8f" class="bulleted-list"><li style="list-style-type:disc">Which data should be exported to the official invoice/payment workflow?</li></ul></div><div style="display:contents" dir="auto"><h2 id="d8162789-4178-4a71-96ed-aeb09408a821" class="">Applicant navigation</h2></div><div style="display:contents" dir="auto"><p id="9edc1af7-39c1-4d5c-a9c5-763e4deb6650" class="">Recommended applicant navigation:</p></div><div style="display:contents" dir="auto"><ol type="1" id="1180d66b-1df3-48f9-8fe5-39e2063971ed" class="numbered-list" start="1"><li>Open Campaigns</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="b4919d51-b3c6-4f18-bc40-888af3f10295" class="numbered-list" start="2"><li>Dorms / Room Types</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="21440e71-6422-4ce2-bc8d-b7f121468855" class="numbered-list" start="3"><li>My Application</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="64b66de3-34e1-48c4-b1ff-4673d93c7c94" class="numbered-list" start="4"><li>Payment Slip</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="75a58af9-31a3-4011-a89e-7ad319e6f4bf" class="numbered-list" start="5"><li>Reservation Status</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="da330275-f3ea-4389-ae6b-7ed70bed5c8f" class="numbered-list" start="6"><li>Announcements / Contact</li></ol></div><div style="display:contents" dir="auto"><h2 id="1202b4f5-845d-44b9-a728-f9ded86fa515" class="">Admin navigation</h2></div><div style="display:contents" dir="auto"><p id="a902e504-19db-41da-8349-82e95f5a7d74" class="">Recommended dorm manager/admin navigation:</p></div><div style="display:contents" dir="auto"><ol type="1" id="3eab6ad5-9ec8-4db6-973d-88510a235bd1" class="numbered-list" start="1"><li>Dashboard</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="5581fde0-e1ae-45e1-b5fb-6367d15b38b2" class="numbered-list" start="2"><li>Campaigns</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="0bec03b8-aef5-4462-8455-312fa7903a09" class="numbered-list" start="3"><li>Applicants</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="85b12c2d-0446-407d-a380-61a3631fb98f" class="numbered-list" start="4"><li>Slip Verification</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="e47cddb0-3d9e-4a2b-b018-e0227532a7ce" class="numbered-list" start="5"><li>Room Availability</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="b168a9dd-fd3c-4085-9b2f-1af75bc3a768" class="numbered-list" start="6"><li>Reservations</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="5a8c3049-f63c-4cd9-9b3a-8751180039a8" class="numbered-list" start="7"><li>Exports / Reports</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="c08a864d-bdf7-4882-af54-6bbb02aeed15" class="numbered-list" start="8"><li>Settings</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="890a9525-3f82-4660-b70b-cd402ad5b83a" class="numbered-list" start="9"><li>Audit Log</li></ol></div><div style="display:contents" dir="auto"><h2 id="4185560c-39f6-4beb-9510-201470928236" class="">Applicant flow — public application</h2></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="d8d30991-4012-41e3-baaa-d4359ae69695" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Applicant opens public campaign
+→ views dorm and room type details
+→ sees price and payment condition
+→ fills online application
+→ uploads document/payment slip
+→ submits
+→ waits for staff verification
+→ receives approved/reserved, rejected, expired, or waitlist status</code></pre></div><div style="display:contents" dir="auto"><h2 id="8bb6f5f5-ef99-4e4c-894e-c620f1a66298" class="">Applicant flow — current resident renewal</h2></div><div style="display:contents" dir="auto"><pre id="60ea7d4c-fb16-4f76-b79b-bc59c77ffc74" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Current resident opens renewal campaign
+→ confirms personal/room information
+→ chooses stayต่อ / not stayต่อ
+→ sees payment requirement
+→ uploads slip if required
+→ staff verifies
+→ reservation confirmed
+→ room is removed from public availability</code></pre></div><div style="display:contents" dir="auto"><p id="565bcf78-d79c-4009-9602-8c533e6850a5" class="">If renewal is not core product release, admin enters remaining room type quota manually after external renewal process.</p></div><div style="display:contents" dir="auto"><h2 id="deca9928-7487-414c-8eea-2ddb681c12f7" class="">Admin flow — slip verification</h2></div><div style="display:contents" dir="auto"><pre id="dcbeda11-9023-45dc-93d8-92422c49cfc0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Admin opens slip verification queue
+→ filters unverified slips
+→ opens applicant detail
+→ checks slip/payment info
+→ approves, rejects, or asks for re-upload
+→ system updates reservation status
+→ applicant sees update</code></pre></div><div style="display:contents" dir="auto"><h2 id="7c7760ee-837a-4f15-aa2d-18f004e19083" class="">Must-design applicant screens</h2></div><div style="display:contents" dir="auto"><h3 id="f7c6c698-4970-46b0-bf39-f31b73cf7243" class="">1. Campaign landing page</h3></div><div style="display:contents" dir="auto"><p id="1951f57f-0e41-4bb1-a624-5ec97585d80f" class="">Purpose:</p></div><div style="display:contents" dir="auto"><ul id="857c033c-6931-4761-bf5b-b8ed9d99f2e5" class="bulleted-list"><li style="list-style-type:disc">Show currently open affiliated dorm campaigns.</li></ul></div><div style="display:contents" dir="auto"><p id="dee3afb9-97ea-43a4-b2d3-39c44a1bb83c" class="">Content:</p></div><div style="display:contents" dir="auto"><ul id="9894a69e-34ce-413f-a020-ff0d7a855453" class="bulleted-list"><li style="list-style-type:disc">Campaign name</li></ul></div><div style="display:contents" dir="auto"><ul id="21143b3d-8096-4d7b-88f8-40e88227e325" class="bulleted-list"><li style="list-style-type:disc">Dorm name</li></ul></div><div style="display:contents" dir="auto"><ul id="e5a43682-c6a1-4a6b-a6a1-f6d981b075e2" class="bulleted-list"><li style="list-style-type:disc">Who can apply</li></ul></div><div style="display:contents" dir="auto"><ul id="3529f9a5-2b1f-4eac-927f-c3881349b531" class="bulleted-list"><li style="list-style-type:disc">Application open/close date</li></ul></div><div style="display:contents" dir="auto"><ul id="9ced5dad-36be-424a-833c-74e9fd0254d5" class="bulleted-list"><li style="list-style-type:disc">Room type availability summary</li></ul></div><div style="display:contents" dir="auto"><ul id="3b391c7c-b128-4d0f-a4dc-34e14d200d09" class="bulleted-list"><li style="list-style-type:disc">Payment requirement summary</li></ul></div><div style="display:contents" dir="auto"><ul id="9980e8cf-86be-4781-bbf8-fd09a1c42efd" class="bulleted-list"><li style="list-style-type:disc">Apply button</li></ul></div><div style="display:contents" dir="auto"><p id="69982518-451a-4c80-80dc-9c987235b932" class="">Important UX:</p></div><div style="display:contents" dir="auto"><ul id="03ca2829-f8fd-4033-afc8-ba44c4b6e2b2" class="bulleted-list"><li style="list-style-type:disc">Payment condition must be visible before applying.</li></ul></div><div style="display:contents" dir="auto"><ul id="fb222f28-8b95-4448-bb42-2ccb28ae317c" class="bulleted-list"><li style="list-style-type:disc">Closed/full campaigns must be clearly marked.</li></ul></div><div style="display:contents" dir="auto"><h3 id="bab8bc9f-077a-44c0-b958-e7b6baa7d18f" class="">2. Dorm/room type detail page</h3></div><div style="display:contents" dir="auto"><p id="bc84f1b2-a7b2-451a-b06c-4b309b4ce2a0" class="">Purpose:</p></div><div style="display:contents" dir="auto"><ul id="36580ff6-c374-49f9-b31d-a30a5b5489bf" class="bulleted-list"><li style="list-style-type:disc">Help applicant decide before applying.</li></ul></div><div style="display:contents" dir="auto"><p id="f330d8bd-f362-46ed-bdd1-f0428e9d6ba1" class="">Content:</p></div><div style="display:contents" dir="auto"><ul id="7f098cb8-b423-4ce2-b15c-489f4eb66978" class="bulleted-list"><li style="list-style-type:disc">Dorm name</li></ul></div><div style="display:contents" dir="auto"><ul id="d5823c44-85f0-4d56-9c33-53ec659b19c9" class="bulleted-list"><li style="list-style-type:disc">Room type</li></ul></div><div style="display:contents" dir="auto"><ul id="7e1967da-5e79-48f2-99f0-80c779694476" class="bulleted-list"><li style="list-style-type:disc">Capacity</li></ul></div><div style="display:contents" dir="auto"><ul id="649c2885-9a62-4bb3-8a05-dac6fde00945" class="bulleted-list"><li style="list-style-type:disc">Price</li></ul></div><div style="display:contents" dir="auto"><ul id="18abf75d-45b2-4ede-a526-5d504b027ee5" class="bulleted-list"><li style="list-style-type:disc">Damage deposit</li></ul></div><div style="display:contents" dir="auto"><ul id="9b03cb8d-9650-4a05-96e7-572de1fe884e" class="bulleted-list"><li style="list-style-type:disc">Required upfront payment</li></ul></div><div style="display:contents" dir="auto"><ul id="ea35fd0e-dbc8-40ad-9e2e-29234dcdda8c" class="bulleted-list"><li style="list-style-type:disc">Remaining quota or availability status</li></ul></div><div style="display:contents" dir="auto"><ul id="7fc0cc67-9194-495c-8fcf-19b8615b3a68" class="bulleted-list"><li style="list-style-type:disc">Facilities</li></ul></div><div style="display:contents" dir="auto"><ul id="0ad2008a-a02b-403e-a812-e3a347e752b7" class="bulleted-list"><li style="list-style-type:disc">Rules</li></ul></div><div style="display:contents" dir="auto"><ul id="7c5934a9-d479-4a8b-9bb8-6205732f85d4" class="bulleted-list"><li style="list-style-type:disc">Required documents</li></ul></div><div style="display:contents" dir="auto"><ul id="3e76d090-dd00-4dba-a3f8-be1f2bfa7f81" class="bulleted-list"><li style="list-style-type:disc">Payment deadline</li></ul></div><div style="display:contents" dir="auto"><ul id="2d427040-a1ab-47e0-8f72-30fa5541e4b6" class="bulleted-list"><li style="list-style-type:disc">Contact info</li></ul></div><div style="display:contents" dir="auto"><h3 id="13690d41-448f-4707-9c7a-c88a176f9676" class="">3. Online application form</h3></div><div style="display:contents" dir="auto"><p id="6a4e0bf0-4d5f-4079-8a26-bcb26b72c2d5" class="">Purpose:</p></div><div style="display:contents" dir="auto"><ul id="e1f1ef36-d409-4945-b23c-ce9d705002ff" class="bulleted-list"><li style="list-style-type:disc">Replace paper form as much as possible.</li></ul></div><div style="display:contents" dir="auto"><p id="c441617d-4315-446c-b762-04cd68a2d31a" class="">Sections:</p></div><div style="display:contents" dir="auto"><ul id="9852b8d0-3f67-4efb-9e03-f541f329525e" class="bulleted-list"><li style="list-style-type:disc">Applicant information</li></ul></div><div style="display:contents" dir="auto"><ul id="5ca5db88-5c46-4c7d-bf3b-e319669af60a" class="bulleted-list"><li style="list-style-type:disc">Student information</li></ul></div><div style="display:contents" dir="auto"><ul id="d97b0ef4-0f4f-4854-a294-9f1f544e01a8" class="bulleted-list"><li style="list-style-type:disc">Applicant type</li></ul></div><div style="display:contents" dir="auto"><ul id="e8df2dd6-cf32-4350-9698-69bcb4126c4d" class="bulleted-list"><li style="list-style-type:disc">Desired dorm/room type</li></ul></div><div style="display:contents" dir="auto"><ul id="73367ded-3b3e-4f0d-b618-05d8bcdb1a11" class="bulleted-list"><li style="list-style-type:disc">Contact information</li></ul></div><div style="display:contents" dir="auto"><ul id="ff8af942-82b4-43f0-9983-93373976d8ed" class="bulleted-list"><li style="list-style-type:disc">Emergency contact</li></ul></div><div style="display:contents" dir="auto"><ul id="14522f11-e2c2-49c5-a9b5-97ec20494126" class="bulleted-list"><li style="list-style-type:disc">Document upload if needed</li></ul></div><div style="display:contents" dir="auto"><ul id="15b9a438-eb95-4e53-a4d0-410e620ca44f" class="bulleted-list"><li style="list-style-type:disc">Agreement checkbox</li></ul></div><div style="display:contents" dir="auto"><p id="5e57388a-691f-4293-ae1b-7579f0c39db3" class="">Applicant type examples:</p></div><div style="display:contents" dir="auto"><ul id="217134ec-d943-4519-aed2-a6e4b5618647" class="bulleted-list"><li style="list-style-type:disc">Current resident renewing</li></ul></div><div style="display:contents" dir="auto"><ul id="8e7c4b49-f664-46a3-88fd-49804c9eac02" class="bulleted-list"><li style="list-style-type:disc">Senior student from another dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="cf578cc0-ff24-468f-b062-e85ed12d4fbe" class="bulleted-list"><li style="list-style-type:disc">New first-year student</li></ul></div><div style="display:contents" dir="auto"><ul id="65379199-dd21-4f84-957d-cbb7a50d2854" class="bulleted-list"><li style="list-style-type:disc">International student</li></ul></div><div style="display:contents" dir="auto"><ul id="5fd1cfc1-eb42-47ea-88e9-5304979cc762" class="bulleted-list"><li style="list-style-type:disc">General applicant</li></ul></div><div style="display:contents" dir="auto"><h3 id="e406676b-1e7f-4f85-9ae9-a4356849886b" class="">4. Payment instruction page</h3></div><div style="display:contents" dir="auto"><p id="27258f5f-06b2-407c-8e9e-f92d03089333" class="">Purpose:</p></div><div style="display:contents" dir="auto"><ul id="acdf5965-b9d2-4ffa-9236-8407c25f5662" class="bulleted-list"><li style="list-style-type:disc">Make payment requirement impossible to misunderstand.</li></ul></div><div style="display:contents" dir="auto"><p id="900b0b6c-021d-41e1-a36f-f6ba0a7cb120" class="">Show:</p></div><div style="display:contents" dir="auto"><ul id="64784907-7b37-4db6-8643-f0342d59da0b" class="bulleted-list"><li style="list-style-type:disc">Required amount</li></ul></div><div style="display:contents" dir="auto"><ul id="29c56a49-36a3-4017-9d6c-5ed89251f9fc" class="bulleted-list"><li style="list-style-type:disc">What the payment is for</li></ul></div><div style="display:contents" dir="auto"><ul id="0bd8e7cd-32cb-4ad9-bef5-3a016b7dafa1" class="bulleted-list"><li style="list-style-type:disc">Payment deadline</li></ul></div><div style="display:contents" dir="auto"><ul id="6c14ae6c-0f71-4fb4-8b0a-22500c26fb63" class="bulleted-list"><li style="list-style-type:disc">Bank/account/payment channel placeholder</li></ul></div><div style="display:contents" dir="auto"><ul id="2ef1553a-11a1-467d-bfec-7b8057fe57ca" class="bulleted-list"><li style="list-style-type:disc">Slip upload button</li></ul></div><div style="display:contents" dir="auto"><ul id="781b7627-fb6e-43cb-b694-3b84ee73bacf" class="bulleted-list"><li style="list-style-type:disc">Warning that reservation is not confirmed until verified</li></ul></div><div style="display:contents" dir="auto"><p id="014316c9-ca8d-49ab-a666-7ca7149f8143" class="">Thai copy:</p></div><div style="display:contents" dir="auto"><blockquote id="cfc710b8-2cd1-4e23-803b-6e7da5014bac" class="">การจองยังไม่สมบูรณ์ กรุณาอัปโหลดหลักฐานการชำระเงินและรอเจ้าหน้าที่ตรวจสอบ</blockquote></div><div style="display:contents" dir="auto"><p id="8b9d6019-43b8-4527-8b54-68b4b02ae01b" class="">English copy:</p></div><div style="display:contents" dir="auto"><blockquote id="351b79d9-5e67-4644-8f03-ff03cfb75094" class="">Your reservation is not confirmed yet. Please upload your payment slip and wait for staff verification.</blockquote></div><div style="display:contents" dir="auto"><h3 id="e15f0822-595d-41b1-85a1-8ce964e93ce3" class="">5. Slip upload screen</h3></div><div style="display:contents" dir="auto"><p id="cfa6b95d-affe-4e63-807e-9563af5cde33" class="">Fields:</p></div><div style="display:contents" dir="auto"><ul id="41d72d31-9152-4413-93a1-752758274574" class="bulleted-list"><li style="list-style-type:disc">Payment type</li></ul></div><div style="display:contents" dir="auto"><ul id="f09308f9-a0fe-44a8-9eca-142049a467d5" class="bulleted-list"><li style="list-style-type:disc">Amount paid</li></ul></div><div style="display:contents" dir="auto"><ul id="f93a82ea-ccb2-4bb7-bcfc-1d4cb1f8f856" class="bulleted-list"><li style="list-style-type:disc">Payment date/time</li></ul></div><div style="display:contents" dir="auto"><ul id="5d524879-b18a-4ea6-adf9-4ace5491b0b2" class="bulleted-list"><li style="list-style-type:disc">Slip image/file upload</li></ul></div><div style="display:contents" dir="auto"><ul id="a07313dd-301e-427b-923e-7821600dbdaf" class="bulleted-list"><li style="list-style-type:disc">Optional note</li></ul></div><div style="display:contents" dir="auto"><p id="375b9836-fe2f-4c4b-97d1-d37fbedc6e80" class="">Validation:</p></div><div style="display:contents" dir="auto"><ul id="6bd0ecf3-0dea-489d-b02c-4381ad8d6b31" class="bulleted-list"><li style="list-style-type:disc">File required</li></ul></div><div style="display:contents" dir="auto"><ul id="4e65a80a-36be-46b5-b6e0-14f68a8fa5ca" class="bulleted-list"><li style="list-style-type:disc">Amount required</li></ul></div><div style="display:contents" dir="auto"><ul id="a18fe81b-9c1f-4994-ad06-b4bbd568404e" class="bulleted-list"><li style="list-style-type:disc">Date/time required</li></ul></div><div style="display:contents" dir="auto"><ul id="50dc621e-2d5b-4759-bf3c-b541a6418006" class="bulleted-list"><li style="list-style-type:disc">Allowed file type only</li></ul></div><div style="display:contents" dir="auto"><ul id="aeea9c8d-0da7-4fe3-bd47-0c33cf50d7f6" class="bulleted-list"><li style="list-style-type:disc">Maximum file size shown before upload</li></ul></div><div style="display:contents" dir="auto"><h3 id="ccd303d7-d6cf-4f95-b2b4-387d3bff7e7c" class="">6. Reservation status tracker</h3></div><div style="display:contents" dir="auto"><p id="9dde8c9f-d13f-4799-8d5a-94652a7a0f00" class="">Statuses:</p></div><div style="display:contents" dir="auto"><ul id="39fa4c07-0b9c-4a81-8e74-f5035c4f922c" class="bulleted-list"><li style="list-style-type:disc">Application submitted</li></ul></div><div style="display:contents" dir="auto"><ul id="e0ab0b3b-c126-4e32-9ae2-8adaf4bdaa7d" class="bulleted-list"><li style="list-style-type:disc">Waiting for payment</li></ul></div><div style="display:contents" dir="auto"><ul id="d44abff6-f859-4eb3-92bd-5338381b6ea9" class="bulleted-list"><li style="list-style-type:disc">Slip uploaded</li></ul></div><div style="display:contents" dir="auto"><ul id="0f35d53f-da08-4823-a873-018729109dd6" class="bulleted-list"><li style="list-style-type:disc">Staff verifying</li></ul></div><div style="display:contents" dir="auto"><ul id="18f3a6c3-dcb9-48d8-81ea-02f08a1b6e5f" class="bulleted-list"><li style="list-style-type:disc">Need re-upload</li></ul></div><div style="display:contents" dir="auto"><ul id="0176f0f0-0567-4b29-b311-93ca76f9c4be" class="bulleted-list"><li style="list-style-type:disc">Reserved / approved</li></ul></div><div style="display:contents" dir="auto"><ul id="5a3056e7-9abf-4759-af4a-2e03afdadb81" class="bulleted-list"><li style="list-style-type:disc">Rejected</li></ul></div><div style="display:contents" dir="auto"><ul id="1d9eb047-375b-4163-a338-e1749af7b6f9" class="bulleted-list"><li style="list-style-type:disc">Cancelled</li></ul></div><div style="display:contents" dir="auto"><ul id="1d231c55-20e7-48d6-9ea8-9f9f87a46839" class="bulleted-list"><li style="list-style-type:disc">Expired</li></ul></div><div style="display:contents" dir="auto"><p id="35139d8b-9203-4134-88bd-bf6b6278ec09" class="">Recommended tracker:</p></div><div style="display:contents" dir="auto"><pre id="a0eeb91a-5620-4761-a3f5-c3885a78a58a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Submitted → Slip Uploaded → Staff Verifying → Reserved</code></pre></div><div style="display:contents" dir="auto"><p id="e1545344-54cc-4aaf-8280-b3778a331998" class="">Rejected slip tracker:</p></div><div style="display:contents" dir="auto"><pre id="ff655197-7563-4fa1-b4c7-69cafac1bbaa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Submitted → Slip Uploaded → Need Re-upload → Staff Verifying → Reserved</code></pre></div><div style="display:contents" dir="auto"><h3 id="ee47e4e2-ee4c-461a-a9e5-70b38126224b" class="">7. Approved reservation screen</h3></div><div style="display:contents" dir="auto"><p id="bf2eac2e-9311-4de3-bd91-4db47c2a05b8" class="">Show:</p></div><div style="display:contents" dir="auto"><ul id="c90b9011-3952-48f5-a69e-d09c1eade752" class="bulleted-list"><li style="list-style-type:disc">Reservation confirmed</li></ul></div><div style="display:contents" dir="auto"><ul id="4b51a732-886d-433b-a704-492294d592f8" class="bulleted-list"><li style="list-style-type:disc">Dorm/room type</li></ul></div><div style="display:contents" dir="auto"><ul id="d7501379-7d13-4882-8684-398798171c22" class="bulleted-list"><li style="list-style-type:disc">Applicant name</li></ul></div><div style="display:contents" dir="auto"><ul id="e0d23afa-c87b-45ef-959b-ee9bf3aedb6f" class="bulleted-list"><li style="list-style-type:disc">Payment verified date</li></ul></div><div style="display:contents" dir="auto"><ul id="f54a5f33-9917-4625-8104-f6ff0eabae73" class="bulleted-list"><li style="list-style-type:disc">Next steps</li></ul></div><div style="display:contents" dir="auto"><ul id="1f1732c3-168f-4d5b-8c19-854d8851a6b5" class="bulleted-list"><li style="list-style-type:disc">Contact info</li></ul></div><div style="display:contents" dir="auto"><ul id="ea37728b-5a8f-4c07-9caf-c7405f6d32fa" class="bulleted-list"><li style="list-style-type:disc">Download/print confirmation placeholder</li></ul></div><div style="display:contents" dir="auto"><h3 id="a13e58a8-54ca-4a8b-8965-04c43303a271" class="">8. Rejected or re-upload screen</h3></div><div style="display:contents" dir="auto"><p id="bb28c9b1-d69b-49a9-8f9b-c0974daba361" class="">Show:</p></div><div style="display:contents" dir="auto"><ul id="cec5eda3-fea0-4377-9868-e4c82178a2de" class="bulleted-list"><li style="list-style-type:disc">Reason for rejection</li></ul></div><div style="display:contents" dir="auto"><ul id="e510e7fb-8a75-49ed-8710-e212d25d22ea" class="bulleted-list"><li style="list-style-type:disc">What to fix</li></ul></div><div style="display:contents" dir="auto"><ul id="9ac69c14-a672-49d6-9af8-1e70782bf0aa" class="bulleted-list"><li style="list-style-type:disc">Deadline to re-upload</li></ul></div><div style="display:contents" dir="auto"><ul id="bee31147-eb01-4368-9b22-486f117395a8" class="bulleted-list"><li style="list-style-type:disc">Re-upload button</li></ul></div><div style="display:contents" dir="auto"><ul id="f6907069-bd95-4ac3-b148-f5909a60bf56" class="bulleted-list"><li style="list-style-type:disc">Contact dorm staff</li></ul></div><div style="display:contents" dir="auto"><h2 id="e8113f3b-a2dc-4932-9c90-495b7a3259e5" class="">Must-design admin screens</h2></div><div style="display:contents" dir="auto"><h3 id="28e0e6a8-5474-469f-bdcc-87a19c736964" class="">1. Dorm manager dashboard</h3></div><div style="display:contents" dir="auto"><p id="cd42356a-3ad0-4154-a877-d5e735ea6813" class="">Widgets:</p></div><div style="display:contents" dir="auto"><ul id="191e4e26-d320-438e-af3c-7aaeb4b4cf96" class="bulleted-list"><li style="list-style-type:disc">Open campaigns</li></ul></div><div style="display:contents" dir="auto"><ul id="ab3cd6e0-605c-4998-b9af-7ac9e17bac7c" class="bulleted-list"><li style="list-style-type:disc">Total applicants</li></ul></div><div style="display:contents" dir="auto"><ul id="a2219e9e-38d3-4b5d-b685-3b9b9a2fc06f" class="bulleted-list"><li style="list-style-type:disc">Waiting for payment</li></ul></div><div style="display:contents" dir="auto"><ul id="44ff8ee0-304d-4795-8be9-259f57290ca6" class="bulleted-list"><li style="list-style-type:disc">Slip uploaded</li></ul></div><div style="display:contents" dir="auto"><ul id="19cd50f2-d853-4196-bb22-97f19d2ddd24" class="bulleted-list"><li style="list-style-type:disc">Waiting verification</li></ul></div><div style="display:contents" dir="auto"><ul id="9c577b1e-ddd8-416b-847a-6f795a46c2be" class="bulleted-list"><li style="list-style-type:disc">Reserved</li></ul></div><div style="display:contents" dir="auto"><ul id="2543d339-0e6f-4afa-a502-ec25d74b69e4" class="bulleted-list"><li style="list-style-type:disc">Rejected</li></ul></div><div style="display:contents" dir="auto"><ul id="0f1c0a65-26fd-46a2-8fbd-a6ae5c68a2ef" class="bulleted-list"><li style="list-style-type:disc">Remaining rooms/room types</li></ul></div><div style="display:contents" dir="auto"><ul id="4c96b40e-5543-47bb-9b18-7267b45fc046" class="bulleted-list"><li style="list-style-type:disc">Expiring holds</li></ul></div><div style="display:contents" dir="auto"><h3 id="1dbaf539-79c9-4bf2-917e-b3a2c2d54ea3" class="">2. Campaign setup screen</h3></div><div style="display:contents" dir="auto"><p id="650a0e83-33b5-4ea9-b782-30c4cb6137e6" class="">Fields:</p></div><div style="display:contents" dir="auto"><ul id="6eb7a97a-bfc7-4b24-a976-fec1386313b3" class="bulleted-list"><li style="list-style-type:disc">Campaign name</li></ul></div><div style="display:contents" dir="auto"><ul id="50ccc9b2-abc7-400e-ab5b-600b10b775e8" class="bulleted-list"><li style="list-style-type:disc">Dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="7436ac61-7643-4200-b8d4-c6c3160e1770" class="bulleted-list"><li style="list-style-type:disc">Applicant types allowed</li></ul></div><div style="display:contents" dir="auto"><ul id="a34a8ee8-5939-4c82-bf78-57f953d103ad" class="bulleted-list"><li style="list-style-type:disc">Room types included</li></ul></div><div style="display:contents" dir="auto"><ul id="153c2526-ae30-47ec-bac9-4b1bee66fca5" class="bulleted-list"><li style="list-style-type:disc">Opening date/time</li></ul></div><div style="display:contents" dir="auto"><ul id="2c250f2c-f8b9-47cd-918f-cb14cb8508d3" class="bulleted-list"><li style="list-style-type:disc">Closing date/time</li></ul></div><div style="display:contents" dir="auto"><ul id="c5526858-9d38-41b8-a8fc-927d574544c4" class="bulleted-list"><li style="list-style-type:disc">Payment deadline</li></ul></div><div style="display:contents" dir="auto"><ul id="adc3b532-03f4-4807-876d-a7bcd29f6bc2" class="bulleted-list"><li style="list-style-type:disc">Required payment rule</li></ul></div><div style="display:contents" dir="auto"><ul id="c6ccbb85-3f09-480c-b97d-0cf7dcefa9df" class="bulleted-list"><li style="list-style-type:disc">Slip upload requirement</li></ul></div><div style="display:contents" dir="auto"><ul id="ecebff8e-d8a2-444b-81fa-db91dd6034a5" class="bulleted-list"><li style="list-style-type:disc">Auto-close when full or not</li></ul></div><div style="display:contents" dir="auto"><ul id="0bf5808c-62ef-4f07-bca8-ec8c7c6082dd" class="bulleted-list"><li style="list-style-type:disc">Current resident renewal first or not</li></ul></div><div style="display:contents" dir="auto"><h3 id="032d34be-64f6-451c-8ac8-609288e370d1" class="">3. Room availability setup screen</h3></div><div style="display:contents" dir="auto"><p id="ef5497de-dfae-48ab-8e20-ed7dd6e3e088" class="">Recommended core product release:</p></div><div style="display:contents" dir="auto"><ul id="76c7816c-d657-4729-82f0-9a854d60a17e" class="bulleted-list"><li style="list-style-type:disc">Manage room type quota, not exact room.</li></ul></div><div style="display:contents" dir="auto"><p id="9b54e58e-1c33-4e0f-b887-d21162299bdf" class="">Fields:</p></div><div style="display:contents" dir="auto"><ul id="a791ce7d-25d4-42bb-9044-687cf4e0f6cb" class="bulleted-list"><li style="list-style-type:disc">Dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="4aafd78d-a369-4f17-8dae-9a1713c46911" class="bulleted-list"><li style="list-style-type:disc">Room type</li></ul></div><div style="display:contents" dir="auto"><ul id="e55056c6-c549-47f8-905e-218d389312b0" class="bulleted-list"><li style="list-style-type:disc">Total available quota</li></ul></div><div style="display:contents" dir="auto"><ul id="c65401ee-fa78-4f82-8b4b-52a0b43df9ea" class="bulleted-list"><li style="list-style-type:disc">Reserved count</li></ul></div><div style="display:contents" dir="auto"><ul id="b84cfdf1-f272-4fdd-a6ef-b85c44a2dcd3" class="bulleted-list"><li style="list-style-type:disc">Hold count</li></ul></div><div style="display:contents" dir="auto"><ul id="ce50dfb4-638e-4677-94dd-1f086116398d" class="bulleted-list"><li style="list-style-type:disc">Remaining count</li></ul></div><div style="display:contents" dir="auto"><ul id="ca3e18d0-f812-4714-99f7-12156b247ab7" class="bulleted-list"><li style="list-style-type:disc">Closed/open status</li></ul></div><div style="display:contents" dir="auto"><h3 id="054b0478-5c0e-4a05-b88c-c410557a4fd2" class="">4. Applicant list screen</h3></div><div style="display:contents" dir="auto"><p id="473db9af-3c99-4dc3-90d2-11d272368ebb" class="">Columns:</p></div><div style="display:contents" dir="auto"><ul id="a7eb99f8-8dae-4627-a2ce-d079bca4a98c" class="bulleted-list"><li style="list-style-type:disc">Application ID</li></ul></div><div style="display:contents" dir="auto"><ul id="dea69e59-42c7-4c1c-9ea0-258e4210af2b" class="bulleted-list"><li style="list-style-type:disc">Applicant name</li></ul></div><div style="display:contents" dir="auto"><ul id="4bcc15c5-6f2d-428e-b20a-45bffe5852f1" class="bulleted-list"><li style="list-style-type:disc">Student ID</li></ul></div><div style="display:contents" dir="auto"><ul id="d1562282-6126-40f6-803c-cc9b4c362908" class="bulleted-list"><li style="list-style-type:disc">Applicant type</li></ul></div><div style="display:contents" dir="auto"><ul id="d1018d6a-eeea-40a7-9740-121fe145462e" class="bulleted-list"><li style="list-style-type:disc">Dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="c4212ea4-5fc2-4c53-aba6-2f9f28e4eb0f" class="bulleted-list"><li style="list-style-type:disc">Room type</li></ul></div><div style="display:contents" dir="auto"><ul id="b80712b1-e9d7-4db2-916b-439f97585bce" class="bulleted-list"><li style="list-style-type:disc">Application status</li></ul></div><div style="display:contents" dir="auto"><ul id="9a3721b8-7715-4ea4-8965-f3fa4a375134" class="bulleted-list"><li style="list-style-type:disc">Payment status</li></ul></div><div style="display:contents" dir="auto"><ul id="3a00db2e-b8b8-419f-87bd-da7a8fcbd33e" class="bulleted-list"><li style="list-style-type:disc">Slip status</li></ul></div><div style="display:contents" dir="auto"><ul id="60b72160-a91a-4b1e-954c-58b1b142fef0" class="bulleted-list"><li style="list-style-type:disc">Submitted time</li></ul></div><div style="display:contents" dir="auto"><ul id="fde46f51-10bb-40c2-9851-3764bedc90ba" class="bulleted-list"><li style="list-style-type:disc">Last update</li></ul></div><div style="display:contents" dir="auto"><p id="18cf9bd8-8b4b-41e4-a69f-aa13dec8b2ae" class="">Filters:</p></div><div style="display:contents" dir="auto"><ul id="a95c186e-e2fe-42d5-9dd0-e7a87731683e" class="bulleted-list"><li style="list-style-type:disc">Campaign</li></ul></div><div style="display:contents" dir="auto"><ul id="d64b84b7-2ee1-4a12-aac0-d1a0799a73a8" class="bulleted-list"><li style="list-style-type:disc">Dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="cdb82228-640d-497d-ae4d-3a978276ffd9" class="bulleted-list"><li style="list-style-type:disc">Room type</li></ul></div><div style="display:contents" dir="auto"><ul id="e3d441b3-adcb-4ee3-b4f5-5a59f70467fd" class="bulleted-list"><li style="list-style-type:disc">Applicant type</li></ul></div><div style="display:contents" dir="auto"><ul id="c1548310-cf40-4261-bbee-44269fdace49" class="bulleted-list"><li style="list-style-type:disc">Status</li></ul></div><div style="display:contents" dir="auto"><ul id="77712179-84c2-4210-8692-3d4ea6f01fbd" class="bulleted-list"><li style="list-style-type:disc">Slip status</li></ul></div><div style="display:contents" dir="auto"><ul id="0fff0327-cbbd-4194-b120-b70ef8b366da" class="bulleted-list"><li style="list-style-type:disc">Payment status</li></ul></div><div style="display:contents" dir="auto"><h3 id="84b5bb39-b4a5-4c07-992f-ab96c828fce8" class="">5. Slip verification queue</h3></div><div style="display:contents" dir="auto"><p id="c4c7cf35-1009-4477-ba8e-55199b5df579" class="">Columns:</p></div><div style="display:contents" dir="auto"><ul id="9501f842-92b9-40cd-8106-5020584b681e" class="bulleted-list"><li style="list-style-type:disc">Applicant</li></ul></div><div style="display:contents" dir="auto"><ul id="3f6e2d43-0a5f-4a69-9e28-7714d9533c2b" class="bulleted-list"><li style="list-style-type:disc">Dorm/room type</li></ul></div><div style="display:contents" dir="auto"><ul id="8269ddfd-31d5-4a37-826a-ef228141689a" class="bulleted-list"><li style="list-style-type:disc">Amount expected</li></ul></div><div style="display:contents" dir="auto"><ul id="5784635c-23a4-413e-96a8-0d9cf1d5e3d5" class="bulleted-list"><li style="list-style-type:disc">Amount submitted</li></ul></div><div style="display:contents" dir="auto"><ul id="5eaae3f6-d5fc-4674-a0c8-935b9432e9e4" class="bulleted-list"><li style="list-style-type:disc">Slip uploaded time</li></ul></div><div style="display:contents" dir="auto"><ul id="d554f243-c66c-45d6-af46-197175eafe52" class="bulleted-list"><li style="list-style-type:disc">Status</li></ul></div><div style="display:contents" dir="auto"><ul id="f40babbf-a8b8-4082-a916-2fc5a803795b" class="bulleted-list"><li style="list-style-type:disc">Assigned reviewer</li></ul></div><div style="display:contents" dir="auto"><p id="d4e8a23f-93f1-41d3-b78f-a12982d0f80d" class="">Actions:</p></div><div style="display:contents" dir="auto"><ul id="f97539da-5b56-44fe-ab2c-51896763ac68" class="bulleted-list"><li style="list-style-type:disc">Approve slip</li></ul></div><div style="display:contents" dir="auto"><ul id="24577543-2cf0-4203-919d-8f734299fa69" class="bulleted-list"><li style="list-style-type:disc">Reject slip</li></ul></div><div style="display:contents" dir="auto"><ul id="c8fbbb2c-2f34-41a2-a900-662816490085" class="bulleted-list"><li style="list-style-type:disc">Request re-upload</li></ul></div><div style="display:contents" dir="auto"><ul id="f4a3798c-b85f-46bd-8586-5138fe336abc" class="bulleted-list"><li style="list-style-type:disc">Add note</li></ul></div><div style="display:contents" dir="auto"><ul id="12c909c0-cb67-41f3-95ad-c8e127864c0b" class="bulleted-list"><li style="list-style-type:disc">Open applicant detail</li></ul></div><div style="display:contents" dir="auto"><h3 id="3b52b160-5d1e-44a4-b73c-a4db3575ce8a" class="">6. Applicant detail page</h3></div><div style="display:contents" dir="auto"><p id="9b48a593-d8bd-4269-9a19-f3143100be14" class="">Sections:</p></div><div style="display:contents" dir="auto"><ul id="bd777850-96bc-4278-b613-dd7939453ce3" class="bulleted-list"><li style="list-style-type:disc">Applicant profile</li></ul></div><div style="display:contents" dir="auto"><ul id="02e06d59-bb43-453e-85c5-5341fe495f11" class="bulleted-list"><li style="list-style-type:disc">Selected dorm/room type</li></ul></div><div style="display:contents" dir="auto"><ul id="a84590d6-ae42-4f51-b4a4-7d7444da744a" class="bulleted-list"><li style="list-style-type:disc">Payment requirement</li></ul></div><div style="display:contents" dir="auto"><ul id="eff3c30c-d5bb-4e4b-ba7c-565a82a869cd" class="bulleted-list"><li style="list-style-type:disc">Uploaded slip</li></ul></div><div style="display:contents" dir="auto"><ul id="d9058d87-20cc-45f3-a8d3-ac2e43a8fbe1" class="bulleted-list"><li style="list-style-type:disc">Verification decision</li></ul></div><div style="display:contents" dir="auto"><ul id="21aa3d84-4e23-4618-ab1c-f0a57ec709dd" class="bulleted-list"><li style="list-style-type:disc">Admin notes</li></ul></div><div style="display:contents" dir="auto"><ul id="dcff2018-e50e-4b24-b8a3-fa1ff762e79c" class="bulleted-list"><li style="list-style-type:disc">Status timeline</li></ul></div><div style="display:contents" dir="auto"><ul id="7afae4c1-0d7a-4906-b737-7743b8d07cf2" class="bulleted-list"><li style="list-style-type:disc">Audit history</li></ul></div><div style="display:contents" dir="auto"><h3 id="ca33337f-a664-490d-8a3a-8c05b205c7f9" class="">7. Export/report screen</h3></div><div style="display:contents" dir="auto"><p id="efe8953a-34f1-421e-aa39-6c6a2ce6f7d9" class="">Exports:</p></div><div style="display:contents" dir="auto"><ul id="a17fb6f7-7485-4d89-bc0c-9e9132a3d8c4" class="bulleted-list"><li style="list-style-type:disc">Approved reservations</li></ul></div><div style="display:contents" dir="auto"><ul id="b0bcc295-87c4-4d5f-a728-d7dbb2667931" class="bulleted-list"><li style="list-style-type:disc">Payment verified list</li></ul></div><div style="display:contents" dir="auto"><ul id="42fd5177-db21-4c62-8d22-8248c9b7e99d" class="bulleted-list"><li style="list-style-type:disc">Waiting slip list</li></ul></div><div style="display:contents" dir="auto"><ul id="e470d340-a736-4ec0-888a-2cd10f9f818b" class="bulleted-list"><li style="list-style-type:disc">Rejected/cancelled list</li></ul></div><div style="display:contents" dir="auto"><ul id="ee0955ef-798c-4045-8045-cdcaac4863d0" class="bulleted-list"><li style="list-style-type:disc">Room availability summary</li></ul></div><div style="display:contents" dir="auto"><ul id="824eeb2d-9622-48e4-9e3d-ab7df5e6871f" class="bulleted-list"><li style="list-style-type:disc">Campaign summary</li></ul></div><div style="display:contents" dir="auto"><h2 id="c1380f53-92b6-403c-8a32-dfb7d0dc15ff" class="">Figma priority</h2></div><div style="display:contents" dir="auto"><h3 id="eeab728f-dc5b-45a4-9cf8-46d369d059f0" class="">Must design first</h3></div><div style="display:contents" dir="auto"><ol type="1" id="8db324a5-8a5b-42af-b53e-7f9587541802" class="numbered-list" start="1"><li>Campaign landing page</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="0112ea6d-3037-42b9-8f1c-7b76aa4c442a" class="numbered-list" start="2"><li>Dorm/room type detail</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="dc1d1d02-22ac-4608-b638-a57741866088" class="numbered-list" start="3"><li>Online application form</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="e5b5b69a-2d08-4755-860e-a1b37994acbb" class="numbered-list" start="4"><li>Payment instruction / slip upload</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="76dda12a-3437-492d-afb1-3b04effd5b28" class="numbered-list" start="5"><li>Reservation status tracker</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="babe3fd3-2bfa-434b-a1ea-27005f109499" class="numbered-list" start="6"><li>Approved reservation result</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="642cd141-9901-4671-8925-46e5c54ff11c" class="numbered-list" start="7"><li>Dorm manager dashboard</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="70ea7bb3-0bdd-4bb0-ac09-d19b6c15e8f2" class="numbered-list" start="8"><li>Applicant list</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="33afc935-ea71-473f-b043-d1a8c953203e" class="numbered-list" start="9"><li>Slip verification queue</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="9becb7fd-663c-466b-999d-e3389af6bb0d" class="numbered-list numbered-list-digits-2" start="10"><li>Applicant detail / approve-reject modal</li></ol></div><div style="display:contents" dir="auto"><h3 id="90a97faf-f60f-4df1-99e3-b2cffbecfe4e" class="">Nice to have</h3></div><div style="display:contents" dir="auto"><ul id="04a0a8f6-bd9e-4c5e-b5b9-29cb243f34fe" class="bulleted-list"><li style="list-style-type:disc">Current resident renewal flow</li></ul></div><div style="display:contents" dir="auto"><ul id="3f285985-cd4d-444e-b165-ca0deca0bd5d" class="bulleted-list"><li style="list-style-type:disc">Waitlist screen</li></ul></div><div style="display:contents" dir="auto"><ul id="4bde1cbc-77b2-466a-85a3-617a4527eb05" class="bulleted-list"><li style="list-style-type:disc">Export report screen</li></ul></div><div style="display:contents" dir="auto"><ul id="e4cd72c1-d58e-45c4-bc4d-0b990ec7da77" class="bulleted-list"><li style="list-style-type:disc">Audit log screen</li></ul></div><div style="display:contents" dir="auto"><ul id="c36975c6-d243-4700-a8b8-eeb11f3e820d" class="bulleted-list"><li style="list-style-type:disc">Exact room assignment screen</li></ul></div><div style="display:contents" dir="auto"><h2 id="0a519076-f66b-4855-b488-8792cb401fc0" class="">UX principle</h2></div><div style="display:contents" dir="auto"><p id="bd55ecdf-8a64-4fd9-8f50-e73629466c9a" class="">The key UX is no longer “students wait for fair allocation result.”</p></div><div style="display:contents" dir="auto"><p id="ae8777eb-b775-4658-8692-026ce28378d9" class="">The key UX is:</p></div><div style="display:contents" dir="auto"><blockquote id="eaef5158-58db-433d-b267-b14d713dcee4" class="">Applicants must clearly understand payment requirements and reservation status, while dorm managers must quickly verify slips and control room availability.</blockquote></div><div style="display:contents" dir="auto"><h2 id="c7332e71-bb38-4a0c-ba14-038647bec537" class="">Related pages</h2></div><div style="display:contents" dir="auto"><ul id="ea03ff02-7d2f-45c1-b33c-e722dd7d908f" class="bulleted-list"><li style="list-style-type:disc"><a href="08%20%E2%80%94%20Payment%20Rules,%20Slip%20Verification%20&amp;%20Reservatio%2038f9192afd11811dbd68fd9d58063128.html">08 — Payment Rules, Slip Verification &amp; Reservation Lifecycle</a></li></ul></div><div style="display:contents" dir="auto"><ul id="bd4fa62c-e624-4c4c-b0a7-158554310214" class="bulleted-list"><li style="list-style-type:disc"><a href="09%20%E2%80%94%20Product%20Build%20Plan%20&amp;%20Roadmap%2038f9192afd11810592a9eb0e97d7d86d.html">09 — Updated core product release Build Plan &amp; Roadmap</a></li></ul></div><div style="display:contents" dir="auto"><ul id="266be483-01b3-4785-9557-ca188d8d83fc" class="bulleted-list"><li style="list-style-type:disc"><a href="11%20%E2%80%94%20Final%20Tech%20Stack%20&amp;%20Architecture%20Decision%2038f9192afd1181278fd4fc176b03d753.html">11 — Final Tech Stack &amp; Architecture Decision</a></li></ul></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

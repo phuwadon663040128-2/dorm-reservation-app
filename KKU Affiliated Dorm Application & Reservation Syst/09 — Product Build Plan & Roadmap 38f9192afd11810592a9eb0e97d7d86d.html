@@ -1,0 +1,761 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>09 — Product Build Plan &amp; Roadmap</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="38f9192a-fd11-8105-92a9-eb0e97d7d86d" class="page sans"><header><div class="page-header-icon undefined"><span class="icon">🚧</span></div><h1 class="page-title" dir="auto">09 — Product Build Plan &amp; Roadmap</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><h2 id="8e499822-2686-4889-86b1-2f536f5e4339" class="">UniPay core product release update</h2></div><div style="display:contents" dir="auto"><p id="dc629a25-16be-4626-ba64-082b9cfa72e3" class="">If UniPay access is approved, the core product release should include UniPay connector, UniPay status sync, and an official applicant checkout/status page. Manual evidence upload remains fallback if UniPay access is delayed.</p></div><div style="display:contents" dir="auto"><p id="0127464d-b6fb-4a5c-bf2c-c6579929dc18" class="">See page 12 for details.</p></div><div style="display:contents" dir="auto"><hr id="53f12187-423f-4360-ba63-79b3896e21fa"/></div><div style="display:contents" dir="auto"><h2 id="7ae37de4-5b38-421e-ae8c-f498514fe271" class="">Purpose</h2></div><div style="display:contents" dir="auto"><p id="e1263e96-4489-47a2-ab39-6d1bdbbdad13" class="">This page turns the current live-product direction into a buildable core product release plan for the <strong>KKU Affiliated Dorm Application &amp; Reservation System</strong>.</p></div><div style="display:contents" dir="auto"><p id="4e85d7b7-7c0b-4675-a442-3c69b78ef85e" class="">It has been cleaned to remove older Next.js/Node.js/Vercel-style prototype notes. The current stack is Nuxt + Go chi + PostgreSQL + GORM/sqlc + SeaweedFS + Nginx + Docker Compose.</p></div><div style="display:contents" dir="auto"><h2 id="09e2582a-f348-46ce-adbd-b5bb5afcb999" class="">Final implementation stack</h2></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="606a4be1-cd7f-40b8-8b49-a1f2a25cb9e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Frontend: Nuxt + shadcn-vue + Tailwind CSS
+Backend: Go + chi
+Database access: GORM + sqlc
+Database: PostgreSQL
+File/object storage: SeaweedFS
+Reverse proxy: Nginx
+Runtime/deployment: Docker / Docker Compose
+CI/CD: No GitHub Actions for current delivery plan</code></pre></div><div style="display:contents" dir="auto"><p id="eec5b429-e03b-44c8-80d8-ee5daf48256a" class="">Full detail: <a href="11%20%E2%80%94%20Final%20Tech%20Stack%20&amp;%20Architecture%20Decision%2038f9192afd1181278fd4fc176b03d753.html">11 — Final Tech Stack &amp; Architecture Decision</a></p></div><div style="display:contents" dir="auto"><h2 id="79a4d0c8-177f-4443-8ffc-7813942d9814" class="">Updated core product release objective</h2></div><div style="display:contents" dir="auto"><p id="e50d6294-8713-4ffb-b018-373f3168d735" class="">Build a working or clickable prototype that proves:</p></div><div style="display:contents" dir="auto"><ol type="1" id="e049566e-f8ff-450c-86bd-ef2e5d57bf1b" class="numbered-list" start="1"><li>Dorm managers can open affiliated dorm application campaigns.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="dd56e3a2-efec-4594-9afc-c56eb651ff22" class="numbered-list" start="2"><li>Applicants can apply online instead of using only paper/manual contact.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="0e98b917-6875-4a33-96f6-5c2a57be3e5b" class="numbered-list" start="3"><li>Payment requirements are shown clearly before submission.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="ea4be247-830c-492d-8688-e5d8712fe767" class="numbered-list" start="4"><li>Applicants can upload payment slips.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="93af902c-3380-4d66-aa83-98bfc47a4650" class="numbered-list" start="5"><li>Staff can verify or reject slips.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="9b4315ee-436a-48ab-adbd-54363ac37bbc" class="numbered-list" start="6"><li>Approved applications become reservations.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="86673d27-236a-4528-9227-0b95d4f1eb8c" class="numbered-list" start="7"><li>Remaining room/room-type availability updates.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="4d60abc8-8579-4114-afe8-d6792b244cfe" class="numbered-list" start="8"><li>Admin can export/report approved reservations and verified payments.</li></ol></div><div style="display:contents" dir="auto"><h2 id="b14691e0-49e3-4a2e-8e95-917d52302543" class="">Product principle</h2></div><div style="display:contents" dir="auto"><p id="51de960d-175f-41de-8c85-a741447becb4" class="">Do not overbuild integrations first.</p></div><div style="display:contents" dir="auto"><p id="7147101b-2538-44a6-a57d-9a61743d8256" class="">The core product release should still be useful even if:</p></div><div style="display:contents" dir="auto"><ul id="4d4c5a7e-0b48-4d3f-90e9-d64ec6a96b18" class="bulleted-list"><li style="list-style-type:disc">KKU SSO is not integrated yet.</li></ul></div><div style="display:contents" dir="auto"><ul id="2caaf57f-bb3e-49ed-91b2-0c838c2ad66e" class="bulleted-list"><li style="list-style-type:disc">Real payment gateway is not integrated yet.</li></ul></div><div style="display:contents" dir="auto"><ul id="5d643371-2370-4e80-a9d5-ac0f91012e4d" class="bulleted-list"><li style="list-style-type:disc">Existing invoice system is not directly integrated yet.</li></ul></div><div style="display:contents" dir="auto"><ul id="174d480b-e449-41a8-a6f4-9eb31e94de54" class="bulleted-list"><li style="list-style-type:disc">Exact room assignment is not included yet.</li></ul></div><div style="display:contents" dir="auto"><ul id="2773a0c0-494b-42f0-805f-4d22ce8f8b75" class="bulleted-list"><li style="list-style-type:disc">GitHub Actions is not used yet.</li></ul></div><div style="display:contents" dir="auto"><h2 id="e8f19b5e-b739-4329-93bb-df23ad90adf2" class="">Product feature set</h2></div><div style="display:contents" dir="auto"><h3 id="01b8cd27-50a2-40a8-9f8a-f27564711c3f" class="">Applicant side — must have</h3></div><div style="display:contents" dir="auto"><ul id="56cb68f2-33f4-426d-a25d-fd011bbcdf1e" class="bulleted-list"><li style="list-style-type:disc">View open campaigns</li></ul></div><div style="display:contents" dir="auto"><ul id="7ee63365-c9c8-4c51-a3b4-55b820a2029c" class="bulleted-list"><li style="list-style-type:disc">View dorm/room type information</li></ul></div><div style="display:contents" dir="auto"><ul id="4e51c3f9-0fe9-4256-93bd-ac0d7b498745" class="bulleted-list"><li style="list-style-type:disc">See payment requirement before applying</li></ul></div><div style="display:contents" dir="auto"><ul id="034bf957-98e0-4bc8-9838-0dcc941c7e79" class="bulleted-list"><li style="list-style-type:disc">Submit application form</li></ul></div><div style="display:contents" dir="auto"><ul id="453c96fc-ca2d-41c5-9ad9-27522a8b5e71" class="bulleted-list"><li style="list-style-type:disc">Upload payment slip</li></ul></div><div style="display:contents" dir="auto"><ul id="07b06613-355a-4a62-94e1-32044e1c1fa5" class="bulleted-list"><li style="list-style-type:disc">View application/reservation status</li></ul></div><div style="display:contents" dir="auto"><ul id="35fa0c43-25da-4238-a4cb-4884f365af92" class="bulleted-list"><li style="list-style-type:disc">See rejection reason and re-upload if allowed</li></ul></div><div style="display:contents" dir="auto"><h3 id="11ff3b00-3018-40b3-b139-15a4e4bb869a" class="">Applicant side — should have</h3></div><div style="display:contents" dir="auto"><ul id="22f90d8d-92c4-4c6f-bf60-e463f4448c3a" class="bulleted-list"><li style="list-style-type:disc">Save draft</li></ul></div><div style="display:contents" dir="auto"><ul id="2deb0517-519c-4035-892f-8d9e98abfbd5" class="bulleted-list"><li style="list-style-type:disc">Cancel application</li></ul></div><div style="display:contents" dir="auto"><ul id="7cbcf5a0-94d5-49f2-a035-93504faa5185" class="bulleted-list"><li style="list-style-type:disc">Download/print confirmation</li></ul></div><div style="display:contents" dir="auto"><ul id="a0ceaab7-4ff8-4f50-9524-50e83f3f15b4" class="bulleted-list"><li style="list-style-type:disc">Notification center or clear status page</li></ul></div><div style="display:contents" dir="auto"><h3 id="39fbf3ca-887d-4032-904a-ea59822400e4" class="">Applicant side — future</h3></div><div style="display:contents" dir="auto"><ul id="5c420d24-7541-474e-b095-dc520ac027a5" class="bulleted-list"><li style="list-style-type:disc">Login with KKU SSO</li></ul></div><div style="display:contents" dir="auto"><ul id="1291cc6b-7a17-47ee-a9ed-e53e78b08d92" class="bulleted-list"><li style="list-style-type:disc">Line/email notifications</li></ul></div><div style="display:contents" dir="auto"><ul id="07eaacbf-bdb1-4e7e-8079-d74438e14bf2" class="bulleted-list"><li style="list-style-type:disc">Exact room selection</li></ul></div><div style="display:contents" dir="auto"><ul id="13c0108f-f071-4090-8b1a-3d2042dd9b46" class="bulleted-list"><li style="list-style-type:disc">Roommate/group application</li></ul></div><div style="display:contents" dir="auto"><h3 id="98fdbac6-eca2-42b5-8f6c-1014f593c7b4" class="">Dorm manager/admin side — must have</h3></div><div style="display:contents" dir="auto"><ul id="b596784c-a3bc-4e5c-b54f-c95155512bda" class="bulleted-list"><li style="list-style-type:disc">Dashboard summary</li></ul></div><div style="display:contents" dir="auto"><ul id="211da643-3452-4f6d-babc-b2932dbeeb7f" class="bulleted-list"><li style="list-style-type:disc">Campaign setup</li></ul></div><div style="display:contents" dir="auto"><ul id="3a658731-9470-49ba-b9be-d1559e6a07af" class="bulleted-list"><li style="list-style-type:disc">Room type quota setup</li></ul></div><div style="display:contents" dir="auto"><ul id="e98f5f69-5213-42b9-bfa1-696ee8f4a948" class="bulleted-list"><li style="list-style-type:disc">Applicant list</li></ul></div><div style="display:contents" dir="auto"><ul id="98640b60-1687-44ed-8711-8c7f23387663" class="bulleted-list"><li style="list-style-type:disc">Slip verification queue</li></ul></div><div style="display:contents" dir="auto"><ul id="ff6ca726-f4ea-4552-8125-d95070590382" class="bulleted-list"><li style="list-style-type:disc">Applicant detail</li></ul></div><div style="display:contents" dir="auto"><ul id="425cb09b-8270-4a84-9d73-53d1b800bdca" class="bulleted-list"><li style="list-style-type:disc">Approve/reject reservation</li></ul></div><div style="display:contents" dir="auto"><ul id="e7b82a71-fe28-4764-98ce-90b95c453e12" class="bulleted-list"><li style="list-style-type:disc">Export report</li></ul></div><div style="display:contents" dir="auto"><ul id="6d5eea18-163a-4f02-b22b-38260c4c5df2" class="bulleted-list"><li style="list-style-type:disc">Audit log for sensitive actions</li></ul></div><div style="display:contents" dir="auto"><h3 id="41927584-dc2e-48a9-a544-78bfd1235423" class="">Dorm manager/admin side — should have</h3></div><div style="display:contents" dir="auto"><ul id="4dd6f9bc-b668-4bb0-b8b2-99ee84c0fd7b" class="bulleted-list"><li style="list-style-type:disc">Renewal-first flow for current residents</li></ul></div><div style="display:contents" dir="auto"><ul id="c60404fd-f28c-4b76-aeaf-3c3d721f7f92" class="bulleted-list"><li style="list-style-type:disc">Waitlist management</li></ul></div><div style="display:contents" dir="auto"><ul id="5b0fb8fd-7bb1-4841-8e08-e35233d6cbab" class="bulleted-list"><li style="list-style-type:disc">Temporary hold timeout</li></ul></div><div style="display:contents" dir="auto"><ul id="fae9bc2b-cad6-4a0c-8e69-5d0d017726ac" class="bulleted-list"><li style="list-style-type:disc">Staff role permissions by dorm</li></ul></div><div style="display:contents" dir="auto"><h3 id="87d85d04-ab37-49ab-8664-8319ef844874" class="">Dorm manager/admin side — future</h3></div><div style="display:contents" dir="auto"><ul id="19552e1b-fb16-4673-afe5-32e643abde07" class="bulleted-list"><li style="list-style-type:disc">Existing invoice system integration</li></ul></div><div style="display:contents" dir="auto"><ul id="51335856-efe9-4700-b3c5-de51bf4af600" class="bulleted-list"><li style="list-style-type:disc">Advanced analytics</li></ul></div><div style="display:contents" dir="auto"><ul id="980aa3fd-d246-4ded-9856-8ddbf224d0e7" class="bulleted-list"><li style="list-style-type:disc">Staff assignment workflow</li></ul></div><div style="display:contents" dir="auto"><ul id="6b3a8fef-a081-4b9e-b43b-f7b8d280e002" class="bulleted-list"><li style="list-style-type:disc">Maintenance/check-in module</li></ul></div><div style="display:contents" dir="auto"><h2 id="a4165b69-7a09-43f0-9809-906ef43a580b" class="">core product release phase plan</h2></div><div style="display:contents" dir="auto"><h3 id="25bf18b4-6eb7-47cf-85c8-03b5c4bf100a" class="">Phase 1 — Discovery and rule confirmation</h3></div><div style="display:contents" dir="auto"><p id="a7a3ab3e-3028-4765-be58-ac0212f28d3a" class="">Goal:</p></div><div style="display:contents" dir="auto"><ul id="82019d46-377b-4a1f-8389-05cb50d37ca6" class="bulleted-list"><li style="list-style-type:disc">Confirm operational rules before building.</li></ul></div><div style="display:contents" dir="auto"><p id="8b1930e9-7b6b-46a1-b703-c0289d707a95" class="">Tasks:</p></div><div style="display:contents" dir="auto"><ul id="4b653d43-dd6b-4f65-8190-553a0100a6a8" class="bulleted-list"><li style="list-style-type:disc">Meet พี่อ้อม.</li></ul></div><div style="display:contents" dir="auto"><ul id="ff6c3440-061c-462b-b50c-2e482a05fe5a" class="bulleted-list"><li style="list-style-type:disc">Meet dorm managers.</li></ul></div><div style="display:contents" dir="auto"><ul id="ff367a21-7bb1-4cfd-be07-dcc27d724537" class="bulleted-list"><li style="list-style-type:disc">Confirm exact dorm scope.</li></ul></div><div style="display:contents" dir="auto"><ul id="a85131f3-09b6-43f2-9c19-141d519a9690" class="bulleted-list"><li style="list-style-type:disc">Confirm first pilot dorm.</li></ul></div><div style="display:contents" dir="auto"><ul id="2a0f4634-3c49-484d-a095-92368a1fe8a5" class="bulleted-list"><li style="list-style-type:disc">Collect current paper application forms.</li></ul></div><div style="display:contents" dir="auto"><ul id="227744c7-4cb9-461e-a49a-df96da9f59f2" class="bulleted-list"><li style="list-style-type:disc">Confirm room type and price list.</li></ul></div><div style="display:contents" dir="auto"><ul id="3a24ff00-3466-4ddc-8ff9-99034eb7503e" class="bulleted-list"><li style="list-style-type:disc">Confirm payment conditions by dorm/applicant type.</li></ul></div><div style="display:contents" dir="auto"><ul id="810ea36f-1e23-4249-8639-4aeba3da55c2" class="bulleted-list"><li style="list-style-type:disc">Confirm slip verification owner.</li></ul></div><div style="display:contents" dir="auto"><ul id="dc7f86b2-6e83-4b6a-91c4-5b65f6ad0648" class="bulleted-list"><li style="list-style-type:disc">Confirm which status officially means “ได้ห้องแล้ว”.</li></ul></div><div style="display:contents" dir="auto"><ul id="d8f22f03-74ac-4532-abb8-079341e61a11" class="bulleted-list"><li style="list-style-type:disc">Confirm export/invoice workflow needs.</li></ul></div><div style="display:contents" dir="auto"><p id="825f06c0-27a6-4c87-aabe-b7cf01d70e22" class="">Deliverables:</p></div><div style="display:contents" dir="auto"><ul id="55418336-210f-4b28-8c66-8218d2c7084e" class="bulleted-list"><li style="list-style-type:disc">Confirmed requirement notes</li></ul></div><div style="display:contents" dir="auto"><ul id="e50cc6bb-d60e-4622-8f89-87333c255aca" class="bulleted-list"><li style="list-style-type:disc">Payment rule matrix</li></ul></div><div style="display:contents" dir="auto"><ul id="d91d68be-cd30-493f-83a7-30d54fdee1c1" class="bulleted-list"><li style="list-style-type:disc">Updated PRD</li></ul></div><div style="display:contents" dir="auto"><ul id="3eefab9e-0f82-43ea-82b0-4c8235063f5d" class="bulleted-list"><li style="list-style-type:disc">Updated Figma flow</li></ul></div><div style="display:contents" dir="auto"><ul id="39dd421c-adf9-409d-9298-6719137300ad" class="bulleted-list"><li style="list-style-type:disc">Export field list</li></ul></div><div style="display:contents" dir="auto"><h3 id="e05f3734-997f-4735-9f9e-d436e66194bd" class="">Phase 2 — Design prototype</h3></div><div style="display:contents" dir="auto"><p id="f2f986e5-a969-45af-8af2-80661b4ef1b5" class="">Goal:</p></div><div style="display:contents" dir="auto"><ul id="86981f33-1265-45b9-8dcc-1d9cbab21665" class="bulleted-list"><li style="list-style-type:disc">Show stakeholders the system flow clearly before coding too much.</li></ul></div><div style="display:contents" dir="auto"><p id="0cade11f-f3dc-4bbe-a070-a3802f763a1e" class="">Applicant screens:</p></div><div style="display:contents" dir="auto"><ul id="2d535e1e-082b-4af1-bec0-054db0ea7e87" class="bulleted-list"><li style="list-style-type:disc">Campaign page</li></ul></div><div style="display:contents" dir="auto"><ul id="57121f96-f499-4b0b-8693-db18ca0fd409" class="bulleted-list"><li style="list-style-type:disc">Dorm/room type page</li></ul></div><div style="display:contents" dir="auto"><ul id="c385f952-d5e2-4918-b968-d9e9637c4a0b" class="bulleted-list"><li style="list-style-type:disc">Application form</li></ul></div><div style="display:contents" dir="auto"><ul id="aba33e4f-c919-4391-a195-42a7bd659d6c" class="bulleted-list"><li style="list-style-type:disc">Payment instruction page</li></ul></div><div style="display:contents" dir="auto"><ul id="8d29b45b-f525-499c-9cc3-f09f8829c69a" class="bulleted-list"><li style="list-style-type:disc">Slip upload screen</li></ul></div><div style="display:contents" dir="auto"><ul id="1064699e-0b8a-4dca-b083-0df9f416996e" class="bulleted-list"><li style="list-style-type:disc">Status tracker</li></ul></div><div style="display:contents" dir="auto"><ul id="cce8c494-90af-449d-9960-2bd8d8767d13" class="bulleted-list"><li style="list-style-type:disc">Approved/rejected state</li></ul></div><div style="display:contents" dir="auto"><p id="2a264bbc-2d2d-4fef-92f2-0c482ace0f37" class="">Admin screens:</p></div><div style="display:contents" dir="auto"><ul id="fad4530b-2a59-4e13-8884-58922e97f2e4" class="bulleted-list"><li style="list-style-type:disc">Dashboard</li></ul></div><div style="display:contents" dir="auto"><ul id="a53a749a-d9b8-4c89-83ff-5754aaab1a50" class="bulleted-list"><li style="list-style-type:disc">Campaign setup</li></ul></div><div style="display:contents" dir="auto"><ul id="90163dfc-6f49-4ae4-8997-c206776ba456" class="bulleted-list"><li style="list-style-type:disc">Room type quota setup</li></ul></div><div style="display:contents" dir="auto"><ul id="32aecc56-70de-4882-9a78-c45bbf11f212" class="bulleted-list"><li style="list-style-type:disc">Applicant list</li></ul></div><div style="display:contents" dir="auto"><ul id="9e35793e-d414-4669-b094-4adc46cac875" class="bulleted-list"><li style="list-style-type:disc">Slip verification queue</li></ul></div><div style="display:contents" dir="auto"><ul id="14b47109-9207-41b4-b389-327498f8664d" class="bulleted-list"><li style="list-style-type:disc">Applicant detail</li></ul></div><div style="display:contents" dir="auto"><ul id="f125bdfe-7f50-42fe-b24c-9200478c2c9d" class="bulleted-list"><li style="list-style-type:disc">Approve/reject modal</li></ul></div><div style="display:contents" dir="auto"><ul id="2620511d-63be-4b90-8a98-65aadc356608" class="bulleted-list"><li style="list-style-type:disc">Export report</li></ul></div><div style="display:contents" dir="auto"><p id="a786b93f-5b13-4433-9d76-ee8905e5ad6d" class="">Deliverables:</p></div><div style="display:contents" dir="auto"><ul id="65006b93-7810-418f-b3df-1a024f87530f" class="bulleted-list"><li style="list-style-type:disc">Figma prototype</li></ul></div><div style="display:contents" dir="auto"><ul id="f511a4a9-e849-4a8d-b287-84bbab912e66" class="bulleted-list"><li style="list-style-type:disc">User flow diagram</li></ul></div><div style="display:contents" dir="auto"><ul id="46d82e4a-37b4-4dcd-9d5d-58680c4c36c0" class="bulleted-list"><li style="list-style-type:disc">Data model draft</li></ul></div><div style="display:contents" dir="auto"><ul id="bb7059e8-066e-4e40-ab0a-5670f96b95d2" class="bulleted-list"><li style="list-style-type:disc">Stakeholder feedback list</li></ul></div><div style="display:contents" dir="auto"><h3 id="6204d454-7a3b-402c-9331-25bc3f04b2a0" class="">Phase 3 — Technical prototype</h3></div><div style="display:contents" dir="auto"><p id="f0ceecc9-56d4-4aa9-bc06-6ab6fa92be82" class="">Goal:</p></div><div style="display:contents" dir="auto"><ul id="ee408630-afd7-4f7f-a60a-54d322fc93b9" class="bulleted-list"><li style="list-style-type:disc">Build a simple working system with mock or pilot data.</li></ul></div><div style="display:contents" dir="auto"><p id="bceb13d8-db67-4fbd-ab0b-5d72b4203563" class="">Services:</p></div><div style="display:contents" dir="auto"><pre id="8d525379-741c-47fb-ac08-5d56b72adb7e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">frontend        Nuxt app
+api             Go chi backend
+postgres        PostgreSQL database
+seaweed-master  SeaweedFS master
+seaweed-volume  SeaweedFS volume server
+seaweed-filer   SeaweedFS filer
+nginx           reverse proxy</code></pre></div><div style="display:contents" dir="auto"><p id="af7d287a-470f-4ce8-ae66-be5e436e749e" class="">Optional later:</p></div><div style="display:contents" dir="auto"><pre id="6f95f1c7-6024-42e6-acdf-4a3d55b9d52a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">seaweed-s3      SeaweedFS S3 gateway if the backend uses S3-compatible client</code></pre></div><div style="display:contents" dir="auto"><p id="b1d9288d-321e-4735-8338-0adb9e435a59" class="">Features:</p></div><div style="display:contents" dir="auto"><ul id="d9bcc28d-ff80-433f-b032-b5e0ccc3e8fa" class="bulleted-list"><li style="list-style-type:disc">Campaign CRUD</li></ul></div><div style="display:contents" dir="auto"><ul id="c9fb14bd-4462-46b5-bac8-0b09ba76ccb9" class="bulleted-list"><li style="list-style-type:disc">Room type quota CRUD</li></ul></div><div style="display:contents" dir="auto"><ul id="370f1c97-88e3-4b56-8537-ba1a113bdf88" class="bulleted-list"><li style="list-style-type:disc">Application submit</li></ul></div><div style="display:contents" dir="auto"><ul id="29295954-7ca8-45be-8a20-639b148b1316" class="bulleted-list"><li style="list-style-type:disc">Payment rule display</li></ul></div><div style="display:contents" dir="auto"><ul id="79940a45-cfb3-4565-be89-c546f5f0a7b2" class="bulleted-list"><li style="list-style-type:disc">Slip upload to SeaweedFS</li></ul></div><div style="display:contents" dir="auto"><ul id="97c60c88-b88a-4542-93a8-e3f871b9982b" class="bulleted-list"><li style="list-style-type:disc">File metadata stored in PostgreSQL</li></ul></div><div style="display:contents" dir="auto"><ul id="9301cfdf-62f0-486a-af34-cd76de15d619" class="bulleted-list"><li style="list-style-type:disc">Admin slip verification</li></ul></div><div style="display:contents" dir="auto"><ul id="73f7d66d-7ec8-43ac-a286-b116d6abcd49" class="bulleted-list"><li style="list-style-type:disc">Reservation confirmation</li></ul></div><div style="display:contents" dir="auto"><ul id="78abc4df-e32c-4f8f-82f2-72911362fa4c" class="bulleted-list"><li style="list-style-type:disc">Export CSV</li></ul></div><div style="display:contents" dir="auto"><p id="0892e050-bfa7-406a-856f-a1c30b36fb7e" class="">Deliverables:</p></div><div style="display:contents" dir="auto"><ul id="ed3fcdb0-3094-475f-bd89-de6cf2630296" class="bulleted-list"><li style="list-style-type:disc">Web app demo</li></ul></div><div style="display:contents" dir="auto"><ul id="eb882dea-330c-4767-8b34-2d2af48c0040" class="bulleted-list"><li style="list-style-type:disc">Sample data</li></ul></div><div style="display:contents" dir="auto"><ul id="7ecb118e-51c0-4dab-abc0-3c15719c2d8c" class="bulleted-list"><li style="list-style-type:disc">Basic backend/API</li></ul></div><div style="display:contents" dir="auto"><ul id="ef1feb25-43da-4165-8f25-58e7563237ba" class="bulleted-list"><li style="list-style-type:disc">Database schema and migrations</li></ul></div><div style="display:contents" dir="auto"><ul id="c1b78a83-17ec-4869-8e00-6a21a2831bbd" class="bulleted-list"><li style="list-style-type:disc">Docker Compose setup</li></ul></div><div style="display:contents" dir="auto"><h3 id="ba3837a0-f9ae-491b-9f25-ff8e3aed7553" class="">Phase 4 — Pilot readiness</h3></div><div style="display:contents" dir="auto"><p id="332517b2-0610-4602-889c-2eef5d1aac2b" class="">Goal:</p></div><div style="display:contents" dir="auto"><ul id="e274b973-7680-409d-9aae-9c666c50eea2" class="bulleted-list"><li style="list-style-type:disc">Prepare for possible real pilot with one dorm.</li></ul></div><div style="display:contents" dir="auto"><p id="c34a141e-38fe-4448-b3d8-2656f7ffa35c" class="">Tasks:</p></div><div style="display:contents" dir="auto"><ul id="72059229-1870-4760-8bc2-790643e09a26" class="bulleted-list"><li style="list-style-type:disc">Add role permissions</li></ul></div><div style="display:contents" dir="auto"><ul id="92426ab2-e02b-4b9c-9b74-bd6209eaab58" class="bulleted-list"><li style="list-style-type:disc">Improve file security</li></ul></div><div style="display:contents" dir="auto"><ul id="cdec1e3b-ff9b-4057-9b15-bb75d6e472e7" class="bulleted-list"><li style="list-style-type:disc">Add audit log</li></ul></div><div style="display:contents" dir="auto"><ul id="0acad122-95d7-4312-b133-1895a67223e9" class="bulleted-list"><li style="list-style-type:disc">Add required export format</li></ul></div><div style="display:contents" dir="auto"><ul id="9a3917e6-2669-4b2b-8855-36ba04d0d055" class="bulleted-list"><li style="list-style-type:disc">Add clear status notifications</li></ul></div><div style="display:contents" dir="auto"><ul id="4001a6f7-b31e-4ca7-9859-cde7d23227fc" class="bulleted-list"><li style="list-style-type:disc">Test overbooking prevention</li></ul></div><div style="display:contents" dir="auto"><ul id="41711234-3b32-4914-9672-82287b2a2458" class="bulleted-list"><li style="list-style-type:disc">Test rejected slip/re-upload flow</li></ul></div><div style="display:contents" dir="auto"><ul id="421d3e5c-fb67-4599-bf56-36f4f15b3ee9" class="bulleted-list"><li style="list-style-type:disc">Test backup/restore plan for PostgreSQL and SeaweedFS files</li></ul></div><div style="display:contents" dir="auto"><p id="a6ea37cd-10d3-47c5-a803-9b3db550bc05" class="">Deliverables:</p></div><div style="display:contents" dir="auto"><ul id="6b1f6605-8330-4469-956a-a324c764c5c1" class="bulleted-list"><li style="list-style-type:disc">Pilot checklist</li></ul></div><div style="display:contents" dir="auto"><ul id="ce7b4694-b964-496a-88da-531b0f91c13b" class="bulleted-list"><li style="list-style-type:disc">Security checklist</li></ul></div><div style="display:contents" dir="auto"><ul id="da4327e7-ec2c-444f-b6cf-79bba6df6700" class="bulleted-list"><li style="list-style-type:disc">Staff workflow guide</li></ul></div><div style="display:contents" dir="auto"><ul id="7edc247b-c714-4863-acfb-f85611264d6f" class="bulleted-list"><li style="list-style-type:disc">Backup/restore guide</li></ul></div><div style="display:contents" dir="auto"><ul id="41fd5fe3-f0dc-42a1-9d89-b84d597a9ecd" class="bulleted-list"><li style="list-style-type:disc">Manual fallback plan</li></ul></div><div style="display:contents" dir="auto"><h2 id="6014179d-d62c-4547-96d5-b3a36f2f26dd" class="">Build workflow without GitHub Actions</h2></div><div style="display:contents" dir="auto"><p id="14598d96-90a1-405e-a943-9685204738a6" class="">Use simple scripts or Makefile commands first.</p></div><div style="display:contents" dir="auto"><p id="7d78756f-cafe-47bc-a8a6-07671b0e680b" class="">Recommended commands:</p></div><div style="display:contents" dir="auto"><pre id="305499c5-b960-4a6c-95d8-9b65a9462941" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">make dev
+make test
+make build
+make migrate-up
+make migrate-down
+make deploy</code></pre></div><div style="display:contents" dir="auto"><p id="21e91aa4-b0af-448c-8fd0-24bb9915df7b" class="">GitHub Actions is intentionally excluded from core product release. Add CI/CD later only after repository structure, deployment target, and testing strategy are stable.</p></div><div style="display:contents" dir="auto"><h2 id="ab50db50-1c7d-44b8-9d71-f35fad0a9c12" class="">Recommended release plan</h2></div><div style="display:contents" dir="auto"><h3 id="f6cc927e-c2d8-4d85-9a23-4dbe1fc98861" class="">Release 0.1 — Figma / no code</h3></div><div style="display:contents" dir="auto"><ul id="42b22655-a7ff-4dde-8ee1-38820ffdd193" class="bulleted-list"><li style="list-style-type:disc">Screens only</li></ul></div><div style="display:contents" dir="auto"><ul id="29c2b5a6-6330-4c5e-8ddf-8ecd95ec9118" class="bulleted-list"><li style="list-style-type:disc">Stakeholder demo</li></ul></div><div style="display:contents" dir="auto"><ul id="9131c0f6-a158-41b4-8628-5cc017acd71f" class="bulleted-list"><li style="list-style-type:disc">Validate flow and payment rules</li></ul></div><div style="display:contents" dir="auto"><h3 id="6cdcd95a-1707-4a49-ade0-08ac86a0ea65" class="">Release 0.2 — Internal demo app</h3></div><div style="display:contents" dir="auto"><ul id="8b169961-612d-4fff-bfbc-81749f964a81" class="bulleted-list"><li style="list-style-type:disc">Mock dorms/campaigns</li></ul></div><div style="display:contents" dir="auto"><ul id="851a90bf-77c9-4a71-b079-571360d5f774" class="bulleted-list"><li style="list-style-type:disc">Applicant form</li></ul></div><div style="display:contents" dir="auto"><ul id="9cae5447-7f50-4706-8ebc-de99e2040b56" class="bulleted-list"><li style="list-style-type:disc">Admin verification</li></ul></div><div style="display:contents" dir="auto"><ul id="3f8497b5-1a1a-4468-a7c9-a5384e77b8f8" class="bulleted-list"><li style="list-style-type:disc">SeaweedFS file upload in dev</li></ul></div><div style="display:contents" dir="auto"><ul id="1f57343d-d417-4223-835d-8ee7ae1e01ad" class="bulleted-list"><li style="list-style-type:disc">Export CSV</li></ul></div><div style="display:contents" dir="auto"><h3 id="fe29a1bc-6771-4876-adb7-6c4f255491ff" class="">Release 0.3 — Realistic pilot demo</h3></div><div style="display:contents" dir="auto"><ul id="95fe9ae8-6feb-43c4-9899-b231551d7783" class="bulleted-list"><li style="list-style-type:disc">Real room type data from one dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="4634ec48-b1f9-4150-938d-cdcef92d01df" class="bulleted-list"><li style="list-style-type:disc">Real payment rule matrix</li></ul></div><div style="display:contents" dir="auto"><ul id="29558b27-7043-4abc-b447-094ebdc7269a" class="bulleted-list"><li style="list-style-type:disc">Staff roles</li></ul></div><div style="display:contents" dir="auto"><ul id="832a641d-6f8a-4ae8-85d3-fc8764c9cd44" class="bulleted-list"><li style="list-style-type:disc">Audit log</li></ul></div><div style="display:contents" dir="auto"><ul id="487b56f9-99dd-4891-81f8-1d1a74725740" class="bulleted-list"><li style="list-style-type:disc">Real file upload</li></ul></div><div style="display:contents" dir="auto"><ul id="6ca062fb-c141-4ce2-bc3f-c6f8ebbe8022" class="bulleted-list"><li style="list-style-type:disc">PostgreSQL migrations</li></ul></div><div style="display:contents" dir="auto"><h3 id="e90768ec-6d7d-40b4-9d55-0c2732088786" class="">Release 1.0 — Pilot with one dorm</h3></div><div style="display:contents" dir="auto"><ul id="0722630c-2207-439e-b835-1f31e792ab80" class="bulleted-list"><li style="list-style-type:disc">One dorm only</li></ul></div><div style="display:contents" dir="auto"><ul id="c329790c-b796-4f3f-bd8f-64a20a1f9e81" class="bulleted-list"><li style="list-style-type:disc">Real application campaign</li></ul></div><div style="display:contents" dir="auto"><ul id="c1f2d8c0-1444-4a25-bf03-b5b73c589282" class="bulleted-list"><li style="list-style-type:disc">Staff trained</li></ul></div><div style="display:contents" dir="auto"><ul id="e65e1ecf-52b3-4238-bde4-4ed1f9fb2d4a" class="bulleted-list"><li style="list-style-type:disc">Export to existing process</li></ul></div><div style="display:contents" dir="auto"><ul id="03a08449-5667-44f2-9511-33af982250c6" class="bulleted-list"><li style="list-style-type:disc">Manual fallback plan ready</li></ul></div><div style="display:contents" dir="auto"><h2 id="8cfe9773-1c5e-4233-b380-4a3a9bd0fcda" class="">What to avoid in first build</h2></div><div style="display:contents" dir="auto"><p id="b5743075-ff02-4f3f-a719-1b0be9bf495b" class="">Avoid these until rules are confirmed:</p></div><div style="display:contents" dir="auto"><ul id="aa065335-05db-4632-a941-c17e280daa3d" class="bulleted-list"><li style="list-style-type:disc">Automatic payment confirmation</li></ul></div><div style="display:contents" dir="auto"><ul id="290ed7f1-3d8f-4be1-900a-246d0db985ec" class="bulleted-list"><li style="list-style-type:disc">Real payment gateway</li></ul></div><div style="display:contents" dir="auto"><ul id="01b1c6ed-6196-428e-8224-beb7684c92a2" class="bulleted-list"><li style="list-style-type:disc">Exact room selection</li></ul></div><div style="display:contents" dir="auto"><ul id="58e3577d-6d00-4e7a-a8f7-de92d1c225e9" class="bulleted-list"><li style="list-style-type:disc">Complex allocation algorithm</li></ul></div><div style="display:contents" dir="auto"><ul id="dc0734e0-040f-421e-a144-e86f8ae7357a" class="bulleted-list"><li style="list-style-type:disc">Auto-refund</li></ul></div><div style="display:contents" dir="auto"><ul id="049d44f5-bc04-4ff2-89d7-6b10e6be034f" class="bulleted-list"><li style="list-style-type:disc">Deep invoice integration</li></ul></div><div style="display:contents" dir="auto"><ul id="781503e3-3319-44f6-a8c2-4a566a2e9c3b" class="bulleted-list"><li style="list-style-type:disc">Multi-dorm launch all at once</li></ul></div><div style="display:contents" dir="auto"><ul id="4e9589cd-db8a-4713-9a9c-1b1cdc1f5230" class="bulleted-list"><li style="list-style-type:disc">Kubernetes</li></ul></div><div style="display:contents" dir="auto"><ul id="39e50b68-207d-4497-b49b-72ba6fba8597" class="bulleted-list"><li style="list-style-type:disc">Kafka</li></ul></div><div style="display:contents" dir="auto"><ul id="f3becad0-f0b4-4c3d-8917-7d937a78ebce" class="bulleted-list"><li style="list-style-type:disc">Microservices</li></ul></div><div style="display:contents" dir="auto"><ul id="defa600f-8cf2-4649-ab00-52901cae009c" class="bulleted-list"><li style="list-style-type:disc">GitHub Actions</li></ul></div><div style="display:contents" dir="auto"><h2 id="29dd63eb-e59a-48d3-9f72-32f4e0f74d84" class="">core product release success metrics</h2></div><div style="display:contents" dir="auto"><h3 id="9e86663f-6a0a-4dd1-9d7b-d57884300f54" class="">For dorm managers</h3></div><div style="display:contents" dir="auto"><ul id="14e028e7-7b1e-4133-83d4-132a11b95643" class="bulleted-list"><li style="list-style-type:disc">Less paper handling</li></ul></div><div style="display:contents" dir="auto"><ul id="e6c8b685-4deb-4bc4-af4e-1ff55035c5e9" class="bulleted-list"><li style="list-style-type:disc">Fewer lost slips</li></ul></div><div style="display:contents" dir="auto"><ul id="75b98fec-85db-4a34-9cd1-b36215d576a5" class="bulleted-list"><li style="list-style-type:disc">Faster verification queue</li></ul></div><div style="display:contents" dir="auto"><ul id="5018a975-f1f3-428b-94d6-1fa795b141b7" class="bulleted-list"><li style="list-style-type:disc">Clearer room availability</li></ul></div><div style="display:contents" dir="auto"><ul id="45dde01f-0df0-43f5-b658-6871f236385e" class="bulleted-list"><li style="list-style-type:disc">Easy export of approved applicants</li></ul></div><div style="display:contents" dir="auto"><h3 id="a65bbc00-9ac0-4f43-958d-5bcaa940ac89" class="">For applicants</h3></div><div style="display:contents" dir="auto"><ul id="154ab800-1743-45c2-b2a1-4c3f3b350af9" class="bulleted-list"><li style="list-style-type:disc">Clear payment condition</li></ul></div><div style="display:contents" dir="auto"><ul id="b9316d45-0ba6-4e64-82c0-774ba9fa6177" class="bulleted-list"><li style="list-style-type:disc">Online application instead of only paper/walk-in</li></ul></div><div style="display:contents" dir="auto"><ul id="832d0a92-b0d0-4a7c-90d1-5ae6c625e470" class="bulleted-list"><li style="list-style-type:disc">Visible status</li></ul></div><div style="display:contents" dir="auto"><ul id="99875e96-4e63-4f2b-a8b4-1b75a5e565e0" class="bulleted-list"><li style="list-style-type:disc">Clear rejection/re-upload reason</li></ul></div><div style="display:contents" dir="auto"><h3 id="47b7d1e9-e466-4ffb-8de6-0f44f465dca5" class="">For project team</h3></div><div style="display:contents" dir="auto"><ul id="ef621dfd-3b8d-4f6c-b944-298dbe9fc3f5" class="bulleted-list"><li style="list-style-type:disc">Stakeholder-approved scope</li></ul></div><div style="display:contents" dir="auto"><ul id="6f78563b-0502-4ab0-807d-173e89847b60" class="bulleted-list"><li style="list-style-type:disc">Working prototype or strong Figma prototype</li></ul></div><div style="display:contents" dir="auto"><ul id="73cc3978-91ca-42a3-be35-99a82a051a2f" class="bulleted-list"><li style="list-style-type:disc">Clear data model</li></ul></div><div style="display:contents" dir="auto"><ul id="d1d4cc06-66bc-4a14-8c41-c1bb9202684b" class="bulleted-list"><li style="list-style-type:disc">Defensible technical plan</li></ul></div><div style="display:contents" dir="auto"><ul id="1bc567f9-3145-4a63-9e05-6a9c870b535a" class="bulleted-list"><li style="list-style-type:disc">Ready for pilot discussion</li></ul></div><div style="display:contents" dir="auto"><h2 id="bf36bb9a-72e4-4ed3-a513-1067cf7df996" class="">core product release backlog priority</h2></div><div style="display:contents" dir="auto"><h3 id="1f90ce7c-f33a-42fc-aaed-54dae98e11fa" class="">Priority A — absolutely core</h3></div><div style="display:contents" dir="auto"><ul id="27c8f6d0-b45f-44dd-aaf5-46f9f3a4aa27" class="bulleted-list"><li style="list-style-type:disc">Campaign setup</li></ul></div><div style="display:contents" dir="auto"><ul id="95871b69-0722-4d50-be3e-2b7b8d1ab86b" class="bulleted-list"><li style="list-style-type:disc">Room type quota</li></ul></div><div style="display:contents" dir="auto"><ul id="f7ba7298-30b4-49bc-a55a-40271bc1a0b0" class="bulleted-list"><li style="list-style-type:disc">Application form</li></ul></div><div style="display:contents" dir="auto"><ul id="4abdfd42-809f-4c45-a940-37d65cb2e04d" class="bulleted-list"><li style="list-style-type:disc">Payment rule display</li></ul></div><div style="display:contents" dir="auto"><ul id="9013bd49-9c67-4440-aba2-0ebb0f658448" class="bulleted-list"><li style="list-style-type:disc">Slip upload</li></ul></div><div style="display:contents" dir="auto"><ul id="5e7671fe-75a4-4fcf-a482-68191c240c5b" class="bulleted-list"><li style="list-style-type:disc">Slip verification</li></ul></div><div style="display:contents" dir="auto"><ul id="9b8eb77d-4e73-4bdb-a270-288e10efd3d1" class="bulleted-list"><li style="list-style-type:disc">Reservation status</li></ul></div><div style="display:contents" dir="auto"><ul id="96c90eff-9b74-43db-b22e-39af7a9c6d34" class="bulleted-list"><li style="list-style-type:disc">Export approved reservations</li></ul></div><div style="display:contents" dir="auto"><ul id="58806477-18a8-4de9-90af-bbcaf25d07d9" class="bulleted-list"><li style="list-style-type:disc">Audit log</li></ul></div><div style="display:contents" dir="auto"><h3 id="b7c8ee2f-aad6-47cc-a098-4bba86580734" class="">Priority B — important after core works</h3></div><div style="display:contents" dir="auto"><ul id="06175867-4d71-4fb3-b0fd-444636358ffd" class="bulleted-list"><li style="list-style-type:disc">Renewal-first flow</li></ul></div><div style="display:contents" dir="auto"><ul id="803df0c5-3110-4c5c-b4af-f8c148090236" class="bulleted-list"><li style="list-style-type:disc">Re-upload slip</li></ul></div><div style="display:contents" dir="auto"><ul id="403a0421-c3a8-4a62-84e2-41714baff61a" class="bulleted-list"><li style="list-style-type:disc">Temporary hold timeout</li></ul></div><div style="display:contents" dir="auto"><ul id="338fb71c-6b27-42e4-ba7f-be62e37b576b" class="bulleted-list"><li style="list-style-type:disc">Admin roles by dorm</li></ul></div><div style="display:contents" dir="auto"><ul id="21f7c49a-5481-439a-b8a8-b8d6ab0510af" class="bulleted-list"><li style="list-style-type:disc">Waitlist</li></ul></div><div style="display:contents" dir="auto"><ul id="9fe54d25-baba-413a-b231-288d2dd607b6" class="bulleted-list"><li style="list-style-type:disc">Backup/restore guide</li></ul></div><div style="display:contents" dir="auto"><h3 id="9abb2709-7215-4ff8-8363-b5c8018d30ec" class="">Priority C — future</h3></div><div style="display:contents" dir="auto"><ul id="395e44c8-26e3-4f44-9267-0e5ad4f04571" class="bulleted-list"><li style="list-style-type:disc">SSO</li></ul></div><div style="display:contents" dir="auto"><ul id="5dff010e-7734-40cc-8602-0d1130ef2ece" class="bulleted-list"><li style="list-style-type:disc">Payment gateway</li></ul></div><div style="display:contents" dir="auto"><ul id="b743ac0a-a21b-4f96-95dc-bb3ba1dc92b6" class="bulleted-list"><li style="list-style-type:disc">Invoice integration</li></ul></div><div style="display:contents" dir="auto"><ul id="7088aff1-6e77-48fb-b50d-5e47bc4e3ad5" class="bulleted-list"><li style="list-style-type:disc">Exact room assignment</li></ul></div><div style="display:contents" dir="auto"><ul id="11ca5b15-8131-4835-9f17-cb7625f0e306" class="bulleted-list"><li style="list-style-type:disc">Mobile app</li></ul></div><div style="display:contents" dir="auto"><ul id="5c1a474d-d548-4aa1-93f5-d273cd7340d8" class="bulleted-list"><li style="list-style-type:disc">Maintenance/check-in</li></ul></div><div style="display:contents" dir="auto"><ul id="706fad16-1491-49d1-a604-58c6ca23e372" class="bulleted-list"><li style="list-style-type:disc">GitHub Actions</li></ul></div><div style="display:contents" dir="auto"><h2 id="8a60a034-154e-4fe9-8f5c-d99c622043e7" class="">Final core product release statement for stakeholders</h2></div><div style="display:contents" dir="auto"><blockquote id="9f004ad8-0dd0-4b93-8f6a-f32ba61affd7" class="">For the first version, we recommend building an online application and reservation management workflow for one or more affiliated dorms. The system will not replace the official invoice/payment system immediately. Instead, it will collect applicant data, show payment conditions, receive payment slips, support staff verification, confirm reservations, track room availability, store files securely in SeaweedFS, and export approved data for the existing official process.</blockquote></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

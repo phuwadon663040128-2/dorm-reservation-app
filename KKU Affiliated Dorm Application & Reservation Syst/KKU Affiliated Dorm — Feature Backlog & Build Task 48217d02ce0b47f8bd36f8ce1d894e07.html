@@ -1,0 +1,743 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>KKU Affiliated Dorm — Feature Backlog &amp; Build Tasks</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="48217d02-ce0b-47f8-bd36-f8ce1d894e07" class="page sans"><header><h1 class="page-title" dir="auto">KKU Affiliated Dorm — Feature Backlog &amp; Build Tasks</h1><p class="page-description" dir="auto">Updated backlog for the live affiliated dorm application/reservation system. Older allocation-engine items should be treated as future/optional unless stakeholders request them.</p></header><div class="page-body"><div class="collection-content-wrapper"><table class="collection-content"><colgroup><col style="width:16.666666666666664%"/><col style="width:11.904761904761903%"/><col style="width:11.904761904761903%"/><col style="width:11.904761904761903%"/><col style="width:11.904761904761903%"/><col style="width:11.904761904761903%"/><col style="width:11.904761904761903%"/><col style="width:11.904761904761926%"/></colgroup><thead><tr><th><span class="icon property-icon"><img src="https://app.notion.com/icons/font_gray.svg" style="width:14px;height:14px;display:block"/></span>Feature</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Complexity</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/checkmark-square_gray.svg" style="width:14px;height:14px;display:block"/></span>Core Product</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Module</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/description_gray.svg" style="width:14px;height:14px;display:block"/></span>Notes</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Priority</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Status</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>User Type</th></tr></thead><tbody><tr id="38e9192a-fd11-8107-bb82-e14e6dc930f2"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Maintenance%20ticket%20submission%2038e9192afd118107bb82e14e6dc930f2.html">Maintenance ticket submission</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-green">Maintenance</span></td><td class="cell-HyQ=">Student reports repair category, urgency, description, and optional photo.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8119-b8b3-d2795057b0d6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Dorm%20list%20with%20filters%2038e9192afd118119b8b3d2795057b0d6.html">Dorm list with filters</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Filter by dorm group, room type, price, availability, student type, and facilities.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-811f-9357-f2fbfce00d1a"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Waitlist%20promotion%20after%20cancellation%20unpaid%20offer%2038e9192afd11811f9357f2fbfce00d1a.html">Waitlist promotion after cancellation/unpaid offer</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-orange">Allocation Engine</span></td><td class="cell-HyQ=">When a room is released, system offers it to the next eligible waitlisted student.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-8120-86e4-c6d4e2ed7976"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Reports%20and%20export%2038e9192afd11812086e4c6d4e2ed7976.html">Reports and export</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-gray">Reports</span></td><td class="cell-HyQ=">Export occupancy, demand, payment, waitlist, and maintenance reports.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-blue">Could Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-8123-a9f9-fb5fb73904f9"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Application%20detail%20review%20page%2038e9192afd118123a9f9fb5fb73904f9.html">Application detail review page</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Show applicant profile, preferences, eligibility checks, documents, notes, and history.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-8124-b358-e42aa8c22bff"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Check-in%20instruction%20page%2038e9192afd118124b358e42aa8c22bff.html">Check-in instruction page</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-brown">Check-in</span></td><td class="cell-HyQ=">Show date, place, documents, room assignment, and rules acknowledgement.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-812f-85af-d9b2e6e2ffec"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Room%20condition%20checklist%2038e9192afd11812f85afd9b2e6e2ffec.html">Room condition checklist</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-brown">Check-in</span></td><td class="cell-HyQ=">Useful after moving in; can be future scope if project becomes too large.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8135-8670-e1f8b8b991b7"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Allocation%20simulation%2038e9192afd1181358670e1f8b8b991b7.html">Allocation simulation</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-orange">Allocation Engine</span></td><td class="cell-HyQ=">Admin previews allocation result before publishing final result.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-8137-a291-e59b28319cab"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Waitlist%20generation%20and%20ordering%2038e9192afd118137a291e59b28319cab.html">Waitlist generation and ordering</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-orange">Allocation Engine</span></td><td class="cell-HyQ=">Generate transparent waitlist ordered by priority, preference, and tie-breaker.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-813d-92c7-e60b0bab795d"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Admin%20override%20with%20required%20reason%2038e9192afd11813d92c7e60b0bab795d.html">Admin override with required reason</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Allow special cases but require reason and audit log.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-8145-819d-c3ab962359a3"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Payment%20instruction%20and%20status%20page%2038e9192afd118145819dc3ab962359a3.html">Payment instruction and status page</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Mock invoice/payment status for prototype; real payment integration is future scope.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8148-9540-f821bdaa012f"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Appeal%20review%20request%2038e9192afd1181489540f821bdaa012f.html">Appeal / review request</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Useful future feature; not part of the core product release unless stakeholders require it.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-gray">Future</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8158-8e2f-f878538e90f0"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Ranked%20dorm%20preference%20application%20form%2038e9192afd1181588e2ff878538e90f0.html">Ranked dorm preference application form</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Students rank first, second, and third choices instead of only booking instantly.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-815a-812d-dd2acf346ce0"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Offer%20confirmation%20decline%20action%2038e9192afd11815a812ddd2acf346ce0.html">Offer confirmation / decline action</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Student can confirm or decline allocation offer before deadline.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-816a-bc26-e4344d579462"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Dorm%20building%20room%20inventory%20management%2038e9192afd11816abc26e4344d579462.html">Dorm / building / room inventory management</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-green">Dorm Inventory</span></td><td class="cell-HyQ=">Admin manages dorms, buildings, floors, rooms, beds, capacity, and room statuses.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-816d-b26a-e3a5b12987c8"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Dorm%20detail%20page%2038e9192afd11816db26ae3a5b12987c8.html">Dorm detail page</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Include photos, facilities, room types, price, rules, quota, and application button.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8183-a219-e7c3fa4d2b72"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Allocated%20result%20explanation%20screen%2038e9192afd118183a219e7c3fa4d2b72.html">Allocated result explanation screen</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Show assigned dorm/room type, confirmation deadline, payment deadline, and simple explanation.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8183-bb70-d42aee04b924"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Roommate%20group%20booking%2038e9192afd118183bb70d42aee04b924.html">Roommate / group booking</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Optional differentiator; include if team wants stronger but more complex feature.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-blue">Could Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8185-9c1e-f4abd5341538"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Preference%20matching%20algorithm%2038e9192afd1181859c1ef4abd5341538.html">Preference matching algorithm</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-orange">Allocation Engine</span></td><td class="cell-HyQ=">Match students to first available ranked preference based on eligibility and priority.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-8186-8b4b-f7ccb98335e3"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Student%20login%20mock%20KKU%20account%2038e9192afd1181868b4bf7ccb98335e3.html">Student login / mock KKU account</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Prototype can use mock login. Real KKU SSO should be future integration.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-8199-8282-ed225784ba50"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Student%20notification%20center%2038e9192afd1181998282ed225784ba50.html">Student notification center</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-pink">Notifications</span></td><td class="cell-HyQ=">Centralized application, payment, waitlist, check-in, and maintenance updates.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-81ad-a4be-cf53094a65bf"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Bilingual%20Thai%20English%20interface%2038e9192afd1181ada4becf53094a65bf.html">Bilingual Thai / English interface</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Important for international students, but can be future scope.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-gray">Future</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38e9192a-fd11-81b4-a6dd-fb59f5088749"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Payment%20status%20management%20for%20admin%2038e9192afd1181b4a6ddfb59f5088749.html">Payment status management for admin</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Admin/finance can filter pending, paid, overdue, cancelled, and manual review.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38e9192a-fd11-81b5-a64b-f58ce1360ac3"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Student%20profile%20completion%20checklist%2038e9192afd1181b5a64bf58ce1360ac3.html">Student profile completion checklist</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Collect required dorm application fields and show missing information before application.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-81bd-b9f3-ea8e350bcdf4"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Admin%20dashboard%20overview%2038e9192afd1181bdb9f3ea8e350bcdf4.html">Admin dashboard overview</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Show applications, available rooms, waitlist count, payment overdue, and maintenance summary.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-81c3-83ed-ccfff601ab8a"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Priority%20group%20score%20model%2038e9192afd1181c383edccfff601ab8a.html">Priority group / score model</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-orange">Allocation Engine</span></td><td class="cell-HyQ=">Draft policy model; should be verified before final presentation.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-81d5-a792-dbd2c9bbb235"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Applicant%20list%20with%20filters%2038e9192afd1181d5a792dbd2c9bbb235.html">Applicant list with filters</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Filter by status, document, dorm preference, student type, faculty, and priority group.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-81dc-ac5d-dfbfddff9c43"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Application%20status%20tracker%2038e9192afd1181dcac5ddfbfddff9c43.html">Application status tracker</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Track submitted, review, eligible, allocation, result, payment, check-in.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-81e4-bdaf-d7426ef047dd"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Application%20round%20setup%2038e9192afd1181e4bdafd7426ef047dd.html">Application round setup</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Admin sets open date, close date, result date, confirmation/payment deadline, dorms, and rules.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-81e9-b6a7-c4a62cc4a6cf"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Application%20review%20and%20submit%20screen%2038e9192afd1181e9b6a7c4a62cc4a6cf.html">Application review and submit screen</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Show summary before final submission to reduce errors.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-81f2-bae2-e434b2dafdff"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Audit%20log%2038e9192afd1181f2bae2e434b2dafdff.html">Audit log</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-gray">Reports</span></td><td class="cell-HyQ=">Record allocation runs, result publish, overrides, room changes, payment changes, and waitlist promotions.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-81f4-b34a-f5156fbc5be8"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Eligibility%20validation%20rules%2038e9192afd1181f4b34af5156fbc5be8.html">Eligibility validation rules</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-orange">Allocation Engine</span></td><td class="cell-HyQ=">Check profile completeness, dorm eligibility, duplicate applications, required documents, and conflicts.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38e9192a-fd11-81f9-8620-ee5154c3fe56"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Waitlist%20position%20screen%2038e9192afd1181f98620ee5154c3fe56.html">Waitlist position screen</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Show waitlist position, dorm preference, last update time, and next expected update.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38e9192a-fd11-81fd-bf82-f734d6f50da1"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Final%20presentation%20slide%20deck%2038e9192afd1181fdbf82f734d6f50da1.html">Final presentation slide deck</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-default">Research/Presentation</span></td><td class="cell-HyQ=">Use the presentation kit page as slide outline and script.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-8137-be5e-f2cc8800a567"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Slip%20verification%20queue%2038f9192afd118137be5ef2cc8800a567.html">Slip verification queue</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Staff filters slips waiting for verification and approves, rejects, or requests re-upload.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38f9192a-fd11-813b-bc0d-c2bf76e0ff1e"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Affiliated%20dorm%20online%20application%20form%2038f9192afd11813bbc0dc2bf76e0ff1e.html">Affiliated dorm online application form</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Replace paper form as much as possible. Collect applicant info, student info, contact, applicant type, selected dorm/room type, and agreement.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-814b-ad53-d6c884e31633"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Payment%20slip%20upload%2038f9192afd11814bad53d6c884e31633.html">Payment slip upload</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Applicant uploads slip with amount, date/time, file, and optional note.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-8164-b6d2-dafabebdd825"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Room%20type%20quota%20management%2038f9192afd118164b6d2dafabebdd825.html">Room type quota management</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-green">Dorm Inventory</span></td><td class="cell-HyQ=">Track availability by room type/quota first. Exact room assignment can be future scope.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-8182-8174-c65da6261fbd"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Campaign%20landing%20page%20for%20affiliated%20dorms%2038f9192afd1181828174c65da6261fbd.html">Campaign landing page for affiliated dorms</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Applicant sees open campaigns, dorm scope, room type availability, required upfront conditions, and apply button.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-819d-97f3-d08be60af348"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Applicant%20type%20selection%2038f9192afd11819d97f3d08be60af348.html">Applicant type selection</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Applicant selects current resident, senior from other dorm, new first-year, international student, or general applicant.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-81bb-9d80-df33ec1c9bc9"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Applicant%20detail%20with%20slip%20review%20panel%2038f9192afd1181bb9d80df33ec1c9bc9.html">Applicant detail with slip review panel</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Admin sees applicant profile, selected dorm/room type, expected amount, uploaded slip, status timeline, and notes.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-81bb-b7ea-c22cda50b9f1"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Configurable%20payment%20rule%20matrix%2038f9192afd1181bbb7eac22cda50b9f1.html">Configurable payment rule matrix</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Rules vary by dorm, campaign, applicant type, and room type. This is the key live-product rule engine.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-81c0-ae9b-d9542194c812"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Dorm%20manager%20campaign%20setup%2038f9192afd1181c0ae9bd9542194c812.html">Dorm manager campaign setup</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Admin creates early recruitment/application campaign with open date, close date, dorm, applicant types, required conditions, and room type quota.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-81f4-97fd-e62e3b2c5e22"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Required%20payment%20condition%20display%20before%20submit%2038f9192afd1181f497fde62e3b2c5e22.html">Required payment condition display before submit</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Show required item, amount, deadline, and warning that reservation is not confirmed until staff verification.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-8119-8225-e1b9065bbec4"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Manual%20remaining-room%20input%20after%20renewal%2038f9192afd1181198225e1b9065bbec4.html">Manual remaining-room input after renewal</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-green">Dorm Inventory</span></td><td class="cell-HyQ=">If renewal is handled outside system in phase 1, admin manually enters remaining room type quota.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-8121-a006-e24fe6f9680b"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Dorm%20manager%20dashboard%20for%20live%20operations%2038f9192afd118121a006e24fe6f9680b.html">Dorm manager dashboard for live operations</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Show open campaigns, applicants, waiting slips, verified reservations, remaining quota, and expiring holds.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-8128-9a0b-e784093c44cf"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Reservation%20status%20tracker%2038f9192afd1181289a0be784093c44cf.html">Reservation status tracker</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Show Submitted, Waiting for Payment, Slip Uploaded, Verifying, Need Re-upload, Reserved, Rejected, Expired.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-8129-98ed-d1550ca4d206"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Export%20verification%20report%2038f9192afd11812998edd1550ca4d206.html">Export verification report</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-gray">Reports</span></td><td class="cell-HyQ=">Export expected amount, submitted amount, status, verified by, verified at, and rejection reason.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38f9192a-fd11-8157-8725-d3844ee36291"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Reject%20slip%20with%20reason%20and%20re-upload%20option%2038f9192afd1181578725d3844ee36291.html">Reject slip with reason and re-upload option</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Admin or finance rejects slip with reason and can allow applicant to re-upload before deadline.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38f9192a-fd11-818a-9d29-f4b076494c25"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Current%20resident%20renewal-first%20flow%2038f9192afd11818a9d29f4b076494c25.html">Current resident renewal-first flow</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Current residents reserve first. Could be a later production phase if first release starts with admin-entered remaining quota.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-818a-b00d-f869c5639401"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Export%20approved%20reservations%2038f9192afd11818ab00df869c5639401.html">Export approved reservations</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-gray">Reports</span></td><td class="cell-HyQ=">Export approved applicant list for existing invoice or official processing workflow.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-8199-89c2-f85eeb4bdf31"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Manual%20expiration%20for%20unpaid%20applications%2038f9192afd11819989c2f85eeb4bdf31.html">Manual expiration for unpaid applications</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Staff can mark applications expired if slip is not uploaded before deadline. Automation can come later.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-8199-9156-f668f0e153bd"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Temporary%20hold%20after%20slip%20upload%2038f9192afd1181999156f668f0e153bd.html">Temporary hold after slip upload</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Recommended policy: hold after slip upload, confirm after verification. Need stakeholder confirmation.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-81e4-8007-da863d89d2c3"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Approve%20reservation%20after%20verification%2038f9192afd1181e48007da863d89d2c3.html">Approve reservation after verification</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Approve action confirms reservation, updates room quota, notifies applicant, and writes audit log.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-811b-a7a1-f34fcad546c5"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Pilot%20one%20dorm%20before%20multi-dorm%20launch%2038f9192afd11811ba7a1f34fcad546c5.html">Pilot one dorm before multi-dorm launch</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-default">Research/Presentation</span></td><td class="cell-HyQ=">Recommended live rollout strategy: support multi-dorm structure, but pilot with one dorm first.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-811c-b77f-d52fa383a1c1"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/UniPay%20official%20payment%20integration%2038f9192afd11811cb77fd52fa383a1c1.html">UniPay / official payment integration</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Now part of the core product direction when university access is approved. Manual evidence remains fallback.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-gray">Future</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38f9192a-fd11-8143-8c5a-ffb23d429d3e"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Audit%20log%20for%20approve%20reject%20cancel%20actions%2038f9192afd1181438c5affb23d429d3e.html">Audit log for approve reject cancel actions</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-gray">Reports</span></td><td class="cell-HyQ=">Important because verification and reservation changes must be accountable.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-8144-a377-c9effe5765b6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Staff%20role%20permissions%20for%20dorm-specific%20access%2038f9192afd118144a377c9effe5765b6.html">Staff role permissions for dorm-specific access</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-purple">Admin Dashboard</span></td><td class="cell-HyQ=">Managers should probably see only their dorm unless they are division-level admin. Confirm policy.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-orange">Should Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-8145-90d8-cecaebeaa91a"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Stakeholder%20meeting%20preparation%20and%20decision%20captu%2038f9192afd11814590d8cecaebeaa91a.html">Stakeholder meeting preparation and decision capture</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-default">Research/Presentation</span></td><td class="cell-HyQ=">Use the meeting agenda page to confirm rules before implementation.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-816c-af6f-c1bb1ea36b56"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Applicant%20re-upload%20history%2038f9192afd11816caf6fc1bb1ea36b56.html">Applicant re-upload history</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Store previous rejected slips and reasons if audit requirements need it.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-blue">Could Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38f9192a-fd11-8173-bcd2-ee62620e2d0f"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/CSV%20export%20for%20existing%20invoice%20workflow%2038f9192afd118173bcd2ee62620e2d0f.html">CSV export for existing invoice workflow</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-gray">Reports</span></td><td class="cell-HyQ=">Fallback/export option if direct official integration is not ready for the first production release.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-purple">Admin</span></td></tr><tr id="38f9192a-fd11-817c-9461-c455c92c5e38"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Waitlist%20when%20room%20type%20is%20full%2038f9192afd11817c9461c455c92c5e38.html">Waitlist when room type is full</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Useful after core application and verification workflow works. Confirm whether managers want waitlist or simply close applications when full.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-blue">Could Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-8187-b97c-d2d31ee8110d"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Existing%20invoice%20system%20integration%2038f9192afd118187b97cd2d31ee8110d.html">Existing invoice system integration</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Future only. Requires access and official technical coordination.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-gray">Future</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-yellow">Finance</span></td></tr><tr id="38f9192a-fd11-81f0-aecd-cdd205147496"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Exact%20room%20selection%2038f9192afd1181f0aecdcdd205147496.html">Exact room selection</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-off"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-green">Dorm Inventory</span></td><td class="cell-HyQ=">Do not build first. Start with room type/quota to reduce booking conflicts.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-gray">Future</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-gray">Idea</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr><tr id="38f9192a-fd11-815f-a744-d1d7992cee71"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/UniPay%20connector%2038f9192afd11815fa744d1d7992cee71.html">UniPay connector</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Preferred official path when the university allows access. Manual evidence remains fallback.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-8177-af60-f90d0c5abaf5"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/UniPay%20status%20sync%2038f9192afd118177af60f90d0c5abaf5.html">UniPay status sync</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-red">High</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-yellow">Payment</span></td><td class="cell-HyQ=">Keep local reservation state aligned with UniPay result.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-gray">All</span></td></tr><tr id="38f9192a-fd11-81d5-857a-e8d9d7706675"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task/Official%20confirmation%20page%2038f9192afd1181d5857ae8d9d7706675.html">Official confirmation page</a></td><td class="cell-kR:m"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-qrCo"><div class="checkbox checkbox-on"></div></td><td class="cell-LX`I"><span class="selected-value select-value-color-blue">Student Portal</span></td><td class="cell-HyQ=">Show the official university step after application submission.</td><td class="cell-}AmQ"><span class="selected-value select-value-color-red">Must Have</span></td><td class="cell-sw=m"><span class="selected-value select-value-color-yellow">To Design</span></td><td class="cell-S\{A"><span class="selected-value select-value-color-blue">Student</span></td></tr></tbody></table></div><br/><br/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

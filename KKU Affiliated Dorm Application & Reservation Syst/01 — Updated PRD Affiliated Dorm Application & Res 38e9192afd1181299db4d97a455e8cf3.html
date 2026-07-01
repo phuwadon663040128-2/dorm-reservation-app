@@ -1,0 +1,760 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>01 — Updated PRD: Affiliated Dorm Application &amp; Reservation System</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="38e9192a-fd11-8129-9db4-d97a455e8cf3" class="page sans"><header><div class="page-header-icon undefined"><span class="icon">📌</span></div><h1 class="page-title" dir="auto">01 — Updated PRD: Affiliated Dorm Application &amp; Reservation System</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><h2 id="05767773-756e-4b3d-b47d-ffdac11b34a6" class="">Purpose</h2></div><div style="display:contents" dir="auto"><p id="57dcfbfa-f89e-455f-a0ec-4d8ee9152b05" class="">This is the current product requirements document for the <strong>KKU Affiliated Dorm Application &amp; Reservation System</strong>.</p></div><div style="display:contents" dir="auto"><p id="c8badb69-da73-4021-8a13-2f6077fba831" class="">This page supersedes the old allocation-first PRD. Older ideas such as lottery allocation, priority scoring, and central-dorm-style fairness rules are now treated as future/optional unless stakeholders request them.</p></div><div style="display:contents" dir="auto"><h2 id="77aec238-0e9e-4002-93d7-e1efd8376ea5" class="">Product name</h2></div><div style="display:contents" dir="auto"><p id="c2d2abc7-152e-4ce2-9daa-c1d50d0723e4" class=""><strong>English:</strong> KKU Affiliated Dorm Application &amp; Reservation System</p></div><div style="display:contents" dir="auto"><p id="019905f4-6cec-4ec2-a15f-013b511d27a3" class=""><strong>Thai:</strong> ระบบรับสมัครและจองหอพักในกำกับ มข. พร้อมตรวจสอบการชำระเงิน</p></div><div style="display:contents" dir="auto"><h2 id="ffe465eb-44c1-4c2d-9f97-535c0fc6870c" class="">Product direction</h2></div><div style="display:contents" dir="auto"><p id="ef4771c4-1a84-4a52-85a0-3bbf80937912" class="">This is a real operational product concept for affiliated dorms under KKU, not only a senior-project prototype.</p></div><div style="display:contents" dir="auto"><p id="e388b4b1-0ddc-4d48-9c21-dd1f90388e3a" class="">The system should help affiliated dorms receive applications earlier than central dorm rounds, manage different payment conditions, verify payment slips, reserve rooms or room types, and track availability without relying mainly on paper forms, phone calls, Line chats, and manual spreadsheets.</p></div><div style="display:contents" dir="auto"><h2 id="353e0335-4de4-427c-8a66-bfd39028a9ec" class="">Dorm scope</h2></div><div style="display:contents" dir="auto"><p id="1953392f-aa85-4c27-a043-7f1b33d6c664" class="">Dorms discussed so far:</p></div><div style="display:contents" dir="auto"><ul id="e2dc4b06-a577-46e8-b587-05349dc07f45" class="bulleted-list"><li style="list-style-type:disc">หอพักนพรัตน์ / หอพัก 9 หลัง</li></ul></div><div style="display:contents" dir="auto"><ul id="fba8fc2d-b0eb-44cc-a12f-61c947dde788" class="bulleted-list"><li style="list-style-type:disc">หอพักสวัสดิการนักศึกษา / วรเรสซิเดนซ์</li></ul></div><div style="display:contents" dir="auto"><ul id="38c9af75-77de-4085-b906-1daf77eaa8cd" class="bulleted-list"><li style="list-style-type:disc">หอพักวรอินเตอร์</li></ul></div><div style="display:contents" dir="auto"><p id="caf3293b-895d-4615-a134-78f933704ebf" class="">Need to confirm exact first pilot dorm and official naming with stakeholders.</p></div><div style="display:contents" dir="auto"><h2 id="ccce1505-7c0e-46b4-83ad-79561a7f657d" class="">Stakeholders</h2></div><div style="display:contents" dir="auto"><h3 id="641ca017-1cc3-4ddf-a188-dc1ba1508028" class="">ผอ. อ้อม</h3></div><div style="display:contents" dir="auto"><p id="6c7a338d-9416-4509-a8aa-58592fc91905" class="">Role:</p></div><div style="display:contents" dir="auto"><ul id="7487628d-7e26-45cd-83bd-6814e4256410" class="bulleted-list"><li style="list-style-type:disc">รักษาการแทนผู้อำนวยการกองบริการหอพักนักศึกษา</li></ul></div><div style="display:contents" dir="auto"><p id="dedd10c3-76d1-4f74-9aa3-4cfb5c099b06" class="">Importance:</p></div><div style="display:contents" dir="auto"><ul id="4c0c0ff3-b7c6-41c5-94aa-31ccc94b7828" class="bulleted-list"><li style="list-style-type:disc">Confirms policy direction</li></ul></div><div style="display:contents" dir="auto"><ul id="c92d06a2-62f9-45bd-babd-9c00d84df8ac" class="bulleted-list"><li style="list-style-type:disc">Connects project team with dorm managers</li></ul></div><div style="display:contents" dir="auto"><ul id="69c1914b-c703-42a8-8ff3-d8fc7000dc3f" class="bulleted-list"><li style="list-style-type:disc">Helps decide real feasibility and official constraints</li></ul></div><div style="display:contents" dir="auto"><h3 id="ccc4e56f-b654-403d-ad34-c7d7c4fee7bc" class="">อาจารย์กานดา</h3></div><div style="display:contents" dir="auto"><p id="ef8d9155-a127-4695-8925-8c34d14e22bc" class="">Role:</p></div><div style="display:contents" dir="auto"><ul id="b11b0d91-3610-4a23-89cd-4f88c9876b5b" class="bulleted-list"><li style="list-style-type:disc">อาจารย์ที่ปรึกษาหลัก</li></ul></div><div style="display:contents" dir="auto"><p id="0dc59a8d-8763-4448-9ff4-e02dc35314fd" class="">Importance:</p></div><div style="display:contents" dir="auto"><ul id="b0a1886c-b025-4e3b-abc5-b1c9e3fe7700" class="bulleted-list"><li style="list-style-type:disc">Guides project scope</li></ul></div><div style="display:contents" dir="auto"><ul id="fb568420-ae2c-4b7b-9d8d-3f289889a440" class="bulleted-list"><li style="list-style-type:disc">Helps align academic deliverable with real stakeholder needs</li></ul></div><div style="display:contents" dir="auto"><h3 id="bae39563-ae5e-4356-bc3f-f3437b2964ef" class="">ผู้จัดการหอพักในกำกับ</h3></div><div style="display:contents" dir="auto"><p id="8d131e15-be67-44aa-afba-e68cd4d3d7af" class="">Importance:</p></div><div style="display:contents" dir="auto"><ul id="e97e5ec9-8b7b-4f1c-9288-49dec7d28a11" class="bulleted-list"><li style="list-style-type:disc">Main operational users</li></ul></div><div style="display:contents" dir="auto"><ul id="d15a8f36-8de8-4bab-a5bf-5d0571f37b52" class="bulleted-list"><li style="list-style-type:disc">Define payment rules</li></ul></div><div style="display:contents" dir="auto"><ul id="97bdad6e-fb0e-443a-a1ce-93ebb474f3c3" class="bulleted-list"><li style="list-style-type:disc">Define application/reservation flow</li></ul></div><div style="display:contents" dir="auto"><ul id="24e0c471-885f-4ac2-95b2-bb542cf4ec9b" class="bulleted-list"><li style="list-style-type:disc">Confirm dashboard and report needs</li></ul></div><div style="display:contents" dir="auto"><h2 id="27d113d2-f895-4168-9bbe-4db7b9f7c71b" class="">Problem statement</h2></div><div style="display:contents" dir="auto"><p id="76cf33e5-deb6-4fc7-a3ba-567b5f8f7f67" class="">Affiliated dorms need a flexible online workflow to recruit residents early, collect applications, require payment according to dorm-specific rules, verify payment slips, and confirm reservations while keeping room availability and reports organized.</p></div><div style="display:contents" dir="auto"><p id="02eb87b4-f52e-442e-bc79-3e54ac4efbe1" class="">Applicants need a clear way to know:</p></div><div style="display:contents" dir="auto"><ul id="c37c10e6-f343-4639-92e5-c8efb3dac9d3" class="bulleted-list"><li style="list-style-type:disc">Which affiliated dorm campaigns are open</li></ul></div><div style="display:contents" dir="auto"><ul id="e5fcc4f5-4e5d-4d71-8bac-7a6bca931d68" class="bulleted-list"><li style="list-style-type:disc">What room types are available</li></ul></div><div style="display:contents" dir="auto"><ul id="e8cf75a1-ffa4-44f4-a542-18437e98419e" class="bulleted-list"><li style="list-style-type:disc">What must be paid at application or reservation time</li></ul></div><div style="display:contents" dir="auto"><ul id="89d0f82a-6adf-4222-9820-6f3baab8b5c4" class="bulleted-list"><li style="list-style-type:disc">Whether payment means damage deposit, 1 term, 2 terms, or another condition</li></ul></div><div style="display:contents" dir="auto"><ul id="ee239e43-6194-4aa4-b10b-56a6eb70c67a" class="bulleted-list"><li style="list-style-type:disc">How to submit an application online</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4569d1-cb00-4dce-b552-ee0ee254e235" class="bulleted-list"><li style="list-style-type:disc">How to upload payment slip</li></ul></div><div style="display:contents" dir="auto"><ul id="33be795c-2e86-4939-ae9d-799f52abb741" class="bulleted-list"><li style="list-style-type:disc">Whether the slip has been verified</li></ul></div><div style="display:contents" dir="auto"><ul id="d325c880-8a99-48f8-bcbc-004e2abbb9e2" class="bulleted-list"><li style="list-style-type:disc">Whether the reservation is confirmed</li></ul></div><div style="display:contents" dir="auto"><ul id="93e26f21-b978-4dbf-ad4d-0eb3f113a4e0" class="bulleted-list"><li style="list-style-type:disc">What to do next after approval</li></ul></div><div style="display:contents" dir="auto"><p id="249867f3-4e30-48db-a45f-978ca50727ab" class="">Dorm managers need a system that helps them fill rooms quickly while keeping records clean, payment evidence organized, and reservation status visible.</p></div><div style="display:contents" dir="auto"><h2 id="fbdbfdba-f3f2-4e63-8d1b-665c86a39a83" class="">Product thesis</h2></div><div style="display:contents" dir="auto"><blockquote id="3b9cc614-bde5-4d5f-aec5-fc0fed15925e" class="">This system helps KKU affiliated dorms move from scattered manual recruitment to a controlled online reservation workflow with configurable payment rules, slip verification, room availability tracking, admin approval, and export/reporting for official processing.</blockquote></div><div style="display:contents" dir="auto"><h2 id="1b744ba2-5fff-4549-9fae-e6fb282ef36e" class="">What changed from the old concept</h2></div><div style="display:contents" dir="auto"><h3 id="ee01543e-e151-438e-98a9-b3347c35c2b1" class="">Old concept</h3></div><div style="display:contents" dir="auto"><p id="c4ce9f83-7f49-4454-9c23-24fca9a26705" class="">The old concept focused on:</p></div><div style="display:contents" dir="auto"><ul id="bfd0a677-c5be-432f-b1e5-54f32d2a3e56" class="bulleted-list"><li style="list-style-type:disc">Fair allocation</li></ul></div><div style="display:contents" dir="auto"><ul id="3f52a34c-da59-4a73-bf49-81c5c8034264" class="bulleted-list"><li style="list-style-type:disc">Priority scoring</li></ul></div><div style="display:contents" dir="auto"><ul id="270a7699-a64f-4c34-bd79-8d4f75e138c5" class="bulleted-list"><li style="list-style-type:disc">Lottery/tie-breaker rules</li></ul></div><div style="display:contents" dir="auto"><ul id="86f7f2d4-43e3-4deb-a568-c23778a8cfc7" class="bulleted-list"><li style="list-style-type:disc">Waitlist transparency</li></ul></div><div style="display:contents" dir="auto"><ul id="fa75e956-f24d-4923-8c6b-b9108b2321c5" class="bulleted-list"><li style="list-style-type:disc">Central-dorm-style allocation rounds</li></ul></div><div style="display:contents" dir="auto"><h3 id="399fd186-fb92-4d49-a197-5873e2ee395f" class="">Current concept</h3></div><div style="display:contents" dir="auto"><p id="1a809377-8900-49f9-bcc0-caa96186e59b" class="">The current concept focuses on:</p></div><div style="display:contents" dir="auto"><ul id="645e94f1-2707-47cb-a6b4-6cfbe1650a5e" class="bulleted-list"><li style="list-style-type:disc">Online application campaigns</li></ul></div><div style="display:contents" dir="auto"><ul id="9613cebb-4008-4a9a-b095-a4c3a9c1f471" class="bulleted-list"><li style="list-style-type:disc">Early recruitment by affiliated dorms</li></ul></div><div style="display:contents" dir="auto"><ul id="4531dd82-6293-4d67-a911-518f868f87b5" class="bulleted-list"><li style="list-style-type:disc">Payment conditions by dorm/applicant type</li></ul></div><div style="display:contents" dir="auto"><ul id="6e425452-3c28-45e4-b010-87f2c2660a24" class="bulleted-list"><li style="list-style-type:disc">UniPay payment or manual evidence upload</li></ul></div><div style="display:contents" dir="auto"><ul id="756e15d6-321f-436e-a201-4408e4a96c2f" class="bulleted-list"><li style="list-style-type:disc">Staff verification</li></ul></div><div style="display:contents" dir="auto"><ul id="14733518-f69c-4c0f-b451-f55ddf4b183d" class="bulleted-list"><li style="list-style-type:disc">Reservation confirmation</li></ul></div><div style="display:contents" dir="auto"><ul id="3c4f6c5d-1bb3-4e4f-90ec-558edb2c544b" class="bulleted-list"><li style="list-style-type:disc">Room type quota tracking</li></ul></div><div style="display:contents" dir="auto"><ul id="fa6ad608-6b68-4fbd-aca4-e082552e3f46" class="bulleted-list"><li style="list-style-type:disc">Export to existing invoice/payment workflow</li></ul></div><div style="display:contents" dir="auto"><h2 id="47e8febc-8499-4557-82ca-da31be1cfb70" class="">Updated product goal</h2></div><div style="display:contents" dir="auto"><p id="91a13fdf-1af8-4ab9-9502-f530cfb1205c" class="">Build an online application and reservation management system for KKU affiliated dorms that supports:</p></div><div style="display:contents" dir="auto"><ol type="1" id="575caed7-fa84-45f1-acac-89c71aa38113" class="numbered-list" start="1"><li>Early application campaigns by dorm.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="660320c5-2d61-45e7-8619-0fc7f2eb20a9" class="numbered-list" start="2"><li>Optional renewal-first reservation for current residents.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2c556c68-82ad-4d25-bf48-b28cdb70931b" class="numbered-list" start="3"><li>Public application after remaining rooms are known.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="21e1648a-80e5-4c2d-b838-be6de533d0af" class="numbered-list" start="4"><li>Configurable payment rules per dorm, room type, campaign, and applicant type.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3ee2d4ce-87ce-4ea3-8281-d98087e1a5dd" class="numbered-list" start="5"><li>UniPay payment or manual evidence upload and staff verification.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="239946bd-fbc3-4f06-8462-e09e2824e95f" class="numbered-list" start="6"><li>Reservation approval, rejection, cancellation, expiration, and status tracking.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="74a91f96-5609-48ba-9d4a-d61440e21b0b" class="numbered-list" start="7"><li>Room or room-type availability tracking.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="f1f60c2a-14e8-4c07-bce6-3fca14798208" class="numbered-list" start="8"><li>Export/reporting for existing invoice/payment process.</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="e2ad6ca3-a2c1-4ac3-b214-682d3d55fed6" class="numbered-list" start="9"><li>Future integration with official KKU systems if access is granted.</li></ol></div><div style="display:contents" dir="auto"><h2 id="20724169-4b10-45aa-b305-513bda0844c1" class="">core product release scope</h2></div><div style="display:contents" dir="auto"><h3 id="305949ee-2e6d-4dc2-835d-9441a971c248" class="">Must have</h3></div><div style="display:contents" dir="auto"><ul id="c4660cd3-a7db-42b6-af07-b1bff8fcbe62" class="bulleted-list"><li style="list-style-type:disc">Dorm manager/admin login concept</li></ul></div><div style="display:contents" dir="auto"><ul id="28d51904-70c0-40d2-ac39-db1549bd8861" class="bulleted-list"><li style="list-style-type:disc">Applicant form access or applicant login concept</li></ul></div><div style="display:contents" dir="auto"><ul id="3ad681f5-ba4b-4d07-800d-48705f52ee47" class="bulleted-list"><li style="list-style-type:disc">Dorm/campaign landing page</li></ul></div><div style="display:contents" dir="auto"><ul id="288bb515-ae6e-480d-bb6d-7eaa06dd5c05" class="bulleted-list"><li style="list-style-type:disc">Dorm profile and room type display</li></ul></div><div style="display:contents" dir="auto"><ul id="fad5ab3b-5586-4fcc-8075-6e747ddd0344" class="bulleted-list"><li style="list-style-type:disc">Room type price and availability display</li></ul></div><div style="display:contents" dir="auto"><ul id="c5ad6408-7142-4c78-9cd5-a7b36bfaa5f3" class="bulleted-list"><li style="list-style-type:disc">Application campaign setup</li></ul></div><div style="display:contents" dir="auto"><ul id="f0f3265a-1c35-4ffa-be87-879380e624c5" class="bulleted-list"><li style="list-style-type:disc">Online application form</li></ul></div><div style="display:contents" dir="auto"><ul id="21c93b45-0318-4bdb-8945-1d8e9a2b36ae" class="bulleted-list"><li style="list-style-type:disc">Applicant type selection</li></ul></div><div style="display:contents" dir="auto"><ul id="3a7f0452-1468-43a7-8491-847fc3da60ad" class="bulleted-list"><li style="list-style-type:disc">Payment rule display before submission</li></ul></div><div style="display:contents" dir="auto"><ul id="b766475f-05ae-47f1-8715-dbbda5355e85" class="bulleted-list"><li style="list-style-type:disc">Payment UniPay payment or manual evidence upload</li></ul></div><div style="display:contents" dir="auto"><ul id="c7291281-6eed-43fc-b634-78245db33d5e" class="bulleted-list"><li style="list-style-type:disc">Staff slip verification</li></ul></div><div style="display:contents" dir="auto"><ul id="05b883c5-1294-4dc0-b39c-340ca30155dc" class="bulleted-list"><li style="list-style-type:disc">Application/reservation status tracker</li></ul></div><div style="display:contents" dir="auto"><ul id="cf2a4eee-124a-47a8-967c-66329b58fb8b" class="bulleted-list"><li style="list-style-type:disc">Admin applicant list</li></ul></div><div style="display:contents" dir="auto"><ul id="85323955-3af3-41f8-8cc8-7d5954e4bf78" class="bulleted-list"><li style="list-style-type:disc">Admin approve/reject/cancel actions</li></ul></div><div style="display:contents" dir="auto"><ul id="dd1d6c79-1409-474e-8d1f-e208f531ec70" class="bulleted-list"><li style="list-style-type:disc">Remaining room/room-type count</li></ul></div><div style="display:contents" dir="auto"><ul id="1836b6e0-f847-4f36-8e64-804d9c8ad23e" class="bulleted-list"><li style="list-style-type:disc">Export/report for approved reservations and verified payments</li></ul></div><div style="display:contents" dir="auto"><ul id="289379db-b8d0-4647-ae8b-8891e26c5094" class="bulleted-list"><li style="list-style-type:disc">Audit log for admin actions</li></ul></div><div style="display:contents" dir="auto"><h3 id="392b0956-af01-4e5b-9dc8-5a8f4129ddb5" class="">Should have</h3></div><div style="display:contents" dir="auto"><ul id="4b7f70dc-3bd7-4030-8fdb-fa906d29889a" class="bulleted-list"><li style="list-style-type:disc">Current resident renewal-first flow</li></ul></div><div style="display:contents" dir="auto"><ul id="2a16b7fa-0895-4ced-a4bc-d8ef86614361" class="bulleted-list"><li style="list-style-type:disc">Payment deadline / temporary hold timeout</li></ul></div><div style="display:contents" dir="auto"><ul id="0f6b1bac-8fe6-4d13-bb6f-c858cea14aa2" class="bulleted-list"><li style="list-style-type:disc">Re-upload slip after rejection</li></ul></div><div style="display:contents" dir="auto"><ul id="77a50fda-0cbb-4789-99bc-45febf2c9773" class="bulleted-list"><li style="list-style-type:disc">Admin notes and applicant notification</li></ul></div><div style="display:contents" dir="auto"><ul id="4e9ccd13-f258-4722-9519-11f5f8d63b28" class="bulleted-list"><li style="list-style-type:disc">Waitlist when room types are full</li></ul></div><div style="display:contents" dir="auto"><ul id="cae077ca-d83a-4d81-b9c8-14a5634f59c6" class="bulleted-list"><li style="list-style-type:disc">Dashboard summary by dorm/campaign</li></ul></div><div style="display:contents" dir="auto"><h3 id="e6d825dc-d86e-4969-81a6-c76632132ca4" class="">Could have / future</h3></div><div style="display:contents" dir="auto"><ul id="33339960-f216-4c24-bc4d-e2abbfe0693d" class="bulleted-list"><li style="list-style-type:disc">Exact room selection</li></ul></div><div style="display:contents" dir="auto"><ul id="3dc49736-6bc0-414c-a799-7ea280e03c17" class="bulleted-list"><li style="list-style-type:disc">Roommate/group application</li></ul></div><div style="display:contents" dir="auto"><ul id="4de13cd2-00e7-41a9-92d3-f19d5658f15f" class="bulleted-list"><li style="list-style-type:disc">Automatic slip verification</li></ul></div><div style="display:contents" dir="auto"><ul id="3e4550e2-ea5b-46f4-beb8-a27a43785932" class="bulleted-list"><li style="list-style-type:disc">Real payment gateway</li></ul></div><div style="display:contents" dir="auto"><ul id="584a3654-f3f2-4ce1-b18a-2f5a8ecc5aae" class="bulleted-list"><li style="list-style-type:disc">KKU SSO integration</li></ul></div><div style="display:contents" dir="auto"><ul id="555a1498-2b0f-4e49-ae5c-14d35a8fd407" class="bulleted-list"><li style="list-style-type:disc">Existing invoice system integration</li></ul></div><div style="display:contents" dir="auto"><ul id="2d4cbad8-7baa-4f9c-bf1a-aeee8829b219" class="bulleted-list"><li style="list-style-type:disc">Maintenance reporting</li></ul></div><div style="display:contents" dir="auto"><ul id="a5d24c8b-65da-439c-a1be-6e37fa966df1" class="bulleted-list"><li style="list-style-type:disc">Check-in workflow</li></ul></div><div style="display:contents" dir="auto"><ul id="5b4b0dce-0f82-4e19-ad2a-f6764e8d1f66" class="bulleted-list"><li style="list-style-type:disc">Advanced allocation/fairness engine</li></ul></div><div style="display:contents" dir="auto"><h2 id="fb61afa0-fe04-4a87-9dd1-e1848b562c43" class="">Non-goals for core product release</h2></div><div style="display:contents" dir="auto"><p id="dbe45144-7e98-4e08-965f-b8d69da1c47d" class="">The core product release should not try to:</p></div><div style="display:contents" dir="auto"><ul id="e72e5410-6d87-4b37-b644-5709a4a801ed" class="bulleted-list"><li style="list-style-type:disc">Replace the official invoice system immediately</li></ul></div><div style="display:contents" dir="auto"><ul id="1cba1689-45aa-4c93-9cbc-0bdb486c3798" class="bulleted-list"><li style="list-style-type:disc">Integrate real payment gateway immediately</li></ul></div><div style="display:contents" dir="auto"><ul id="713f401a-cff1-473c-96a7-17057b53a769" class="bulleted-list"><li style="list-style-type:disc">Force affiliated dorms into central dorm booking rules</li></ul></div><div style="display:contents" dir="auto"><ul id="c69a1108-7b62-40ed-81b0-7cd92aaad0e8" class="bulleted-list"><li style="list-style-type:disc">Implement exact room selection before room-type quota is stable</li></ul></div><div style="display:contents" dir="auto"><ul id="693cf59c-ee57-4f5d-b142-ad407df1d0da" class="bulleted-list"><li style="list-style-type:disc">Automate refunds</li></ul></div><div style="display:contents" dir="auto"><ul id="8c523caa-1d61-4ddd-a8ff-b8ef8bae209d" class="bulleted-list"><li style="list-style-type:disc">Launch all dorms at once without a pilot</li></ul></div><div style="display:contents" dir="auto"><ul id="7313874b-458d-4940-99f9-a2e7a292425a" class="bulleted-list"><li style="list-style-type:disc">Use AI to decide who gets a room</li></ul></div><div style="display:contents" dir="auto"><h2 id="02aca7c0-307a-4d75-8903-3ae8e121c294" class="">User roles</h2></div><div style="display:contents" dir="auto"><h3 id="599dec92-d9c9-4a97-9b4e-63e732644caf" class="">Applicant / student</h3></div><div style="display:contents" dir="auto"><p id="2db336f4-ad97-494b-97be-3e6f315488fa" class="">Can:</p></div><div style="display:contents" dir="auto"><ul id="c428af9c-5d58-4eda-8803-85ef46e0a731" class="bulleted-list"><li style="list-style-type:disc">View open affiliated dorm campaigns</li></ul></div><div style="display:contents" dir="auto"><ul id="7c6ced6c-5819-46c0-b160-8423beb3e959" class="bulleted-list"><li style="list-style-type:disc">View dorm and room type details</li></ul></div><div style="display:contents" dir="auto"><ul id="2c6f147a-a1dc-4232-a56a-d0fe57e9d20c" class="bulleted-list"><li style="list-style-type:disc">See payment conditions before applying</li></ul></div><div style="display:contents" dir="auto"><ul id="f8631919-261d-4275-882b-2f0b83dd183f" class="bulleted-list"><li style="list-style-type:disc">Submit online application</li></ul></div><div style="display:contents" dir="auto"><ul id="d89790d5-8e61-46ee-86aa-66b072f19588" class="bulleted-list"><li style="list-style-type:disc">Upload payment slip</li></ul></div><div style="display:contents" dir="auto"><ul id="28bcd911-d9e6-416d-8042-856a006ffb05" class="bulleted-list"><li style="list-style-type:disc">Track application/reservation status</li></ul></div><div style="display:contents" dir="auto"><ul id="bb9d4971-8502-45c3-a0ba-376215f8ce0d" class="bulleted-list"><li style="list-style-type:disc">See rejection reason and re-upload if allowed</li></ul></div><div style="display:contents" dir="auto"><ul id="10714936-f794-4b42-8c7c-43ecd097d29d" class="bulleted-list"><li style="list-style-type:disc">Receive next-step instructions after approval</li></ul></div><div style="display:contents" dir="auto"><h3 id="d715b4a4-5d15-44f6-ba2f-16d621defd0a" class="">Current resident</h3></div><div style="display:contents" dir="auto"><p id="45c50d8e-ad5b-4190-a067-b0979afe7856" class="">Can:</p></div><div style="display:contents" dir="auto"><ul id="8c97672c-520b-4b5d-8c10-826b8c040346" class="bulleted-list"><li style="list-style-type:disc">Confirm intention to stay for next term/year if renewal is included</li></ul></div><div style="display:contents" dir="auto"><ul id="58a6ea7a-6382-422d-83d5-f4ecba753574" class="bulleted-list"><li style="list-style-type:disc">Reserve before public applicants if dorm policy allows</li></ul></div><div style="display:contents" dir="auto"><ul id="0aa7d9d9-26d4-43c2-a98d-f5f3351354fc" class="bulleted-list"><li style="list-style-type:disc">Upload required payment slip</li></ul></div><div style="display:contents" dir="auto"><ul id="8cbdcecf-a192-4d75-b94b-b626f6bb0249" class="bulleted-list"><li style="list-style-type:disc">Keep same room or request change if policy allows</li></ul></div><div style="display:contents" dir="auto"><h3 id="d92c0609-4fab-491d-ad42-7cad14884dfe" class="">Dorm manager / dorm admin</h3></div><div style="display:contents" dir="auto"><p id="fb692557-085d-461c-978c-ef902df6aba5" class="">Can:</p></div><div style="display:contents" dir="auto"><ul id="3a6c6fa0-2bf9-4331-8c7f-63c360ad85d0" class="bulleted-list"><li style="list-style-type:disc">Create application campaigns</li></ul></div><div style="display:contents" dir="auto"><ul id="8d532e91-69f3-43ec-930d-12bacbda35f1" class="bulleted-list"><li style="list-style-type:disc">Set room type availability/quota</li></ul></div><div style="display:contents" dir="auto"><ul id="eb1ff9c4-fb59-47b0-9dca-7ec0f1ac361e" class="bulleted-list"><li style="list-style-type:disc">Set payment conditions</li></ul></div><div style="display:contents" dir="auto"><ul id="f52e3691-6953-416b-a762-15ceb611c2f1" class="bulleted-list"><li style="list-style-type:disc">Review applications</li></ul></div><div style="display:contents" dir="auto"><ul id="d969f587-69d2-49b5-97dc-cc88936910d6" class="bulleted-list"><li style="list-style-type:disc">Verify or reject slips</li></ul></div><div style="display:contents" dir="auto"><ul id="687230f0-1331-45cd-bc90-3cf1cac17e3d" class="bulleted-list"><li style="list-style-type:disc">Approve or reject reservations</li></ul></div><div style="display:contents" dir="auto"><ul id="64760347-e0bf-419e-a705-d285725b6b06" class="bulleted-list"><li style="list-style-type:disc">Manage cancellations and expirations</li></ul></div><div style="display:contents" dir="auto"><ul id="13689f11-28b5-474f-8483-0502e927b091" class="bulleted-list"><li style="list-style-type:disc">Export applicant/payment reports</li></ul></div><div style="display:contents" dir="auto"><h3 id="9ea55eb0-fec5-420b-910e-6b48e91989c4" class="">Finance/admin staff</h3></div><div style="display:contents" dir="auto"><p id="758749e2-1c55-4050-87e1-22a547ab505b" class="">Can:</p></div><div style="display:contents" dir="auto"><ul id="80436a4a-748e-4918-a906-d90982b361e0" class="bulleted-list"><li style="list-style-type:disc">Review payment evidence</li></ul></div><div style="display:contents" dir="auto"><ul id="305aff7b-ddce-4549-bedc-cdb8476d95b9" class="bulleted-list"><li style="list-style-type:disc">Confirm payment status</li></ul></div><div style="display:contents" dir="auto"><ul id="2fea8ff8-8d9c-456f-ab58-391fb1814ffc" class="bulleted-list"><li style="list-style-type:disc">Export payment reports</li></ul></div><div style="display:contents" dir="auto"><ul id="deb5dbc1-cb83-4dee-a82f-573fc2d4f5b9" class="bulleted-list"><li style="list-style-type:disc">Coordinate with existing invoice/payment workflow</li></ul></div><div style="display:contents" dir="auto"><h3 id="410def1f-b4b9-4c3d-adf9-b4eef35a9479" class="">Dorm service division admin / super admin</h3></div><div style="display:contents" dir="auto"><p id="41559cd1-2309-44a2-9244-5acd3c21eddf" class="">Can:</p></div><div style="display:contents" dir="auto"><ul id="a9f45fec-78e8-4dee-b980-9757b537f6fb" class="bulleted-list"><li style="list-style-type:disc">View all dorms</li></ul></div><div style="display:contents" dir="auto"><ul id="58bd5435-18a0-4231-b01c-a30dd3f883de" class="bulleted-list"><li style="list-style-type:disc">Manage system settings</li></ul></div><div style="display:contents" dir="auto"><ul id="6baa76b1-e5a6-4f72-aa51-043b2af298ea" class="bulleted-list"><li style="list-style-type:disc">Manage roles</li></ul></div><div style="display:contents" dir="auto"><ul id="e37f3385-ef56-483b-aa5b-b9e0e9beb9cd" class="bulleted-list"><li style="list-style-type:disc">Review reports</li></ul></div><div style="display:contents" dir="auto"><ul id="f2860664-8d53-4781-a1ed-62ca90cfb52f" class="bulleted-list"><li style="list-style-type:disc">Monitor audit logs</li></ul></div><div style="display:contents" dir="auto"><h2 id="2dc501ca-ec8e-4996-9eaf-32320af96ebc" class="">Core workflow</h2></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="229d92f0-636a-41c9-8844-60784547b425" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Dorm manager opens application campaign
+→ Admin sets room type availability and payment condition
+→ Applicant views dorm/room type and payment condition
+→ Applicant submits online form
+→ System creates application and payment requirement
+→ Applicant uploads payment slip
+→ Staff verifies slip and applicant information
+→ Admin approves or rejects reservation
+→ Room count/status updates
+→ Applicant tracks reservation status
+→ Admin exports list/report for invoice or official processing</code></pre></div><div style="display:contents" dir="auto"><h2 id="f5dc921b-3922-4286-b355-ad8ae1ccf7eb" class="">Status model</h2></div><div style="display:contents" dir="auto"><h3 id="1fc4d7e8-1727-466b-8d5f-14ff33d9ff4e" class="">Application statuses</h3></div><div style="display:contents" dir="auto"><ul id="70dd6f81-3d1f-4298-b2ee-7d79d143789c" class="bulleted-list"><li style="list-style-type:disc">Draft</li></ul></div><div style="display:contents" dir="auto"><ul id="ee921d95-0ccf-4686-9b85-c49a1b4131ac" class="bulleted-list"><li style="list-style-type:disc">Submitted</li></ul></div><div style="display:contents" dir="auto"><ul id="7f25c1f7-7b42-4b4a-b4e9-e9a919840575" class="bulleted-list"><li style="list-style-type:disc">Waiting for Payment</li></ul></div><div style="display:contents" dir="auto"><ul id="4de174cb-465e-431a-ac33-0bf58836dc2d" class="bulleted-list"><li style="list-style-type:disc">Slip Uploaded</li></ul></div><div style="display:contents" dir="auto"><ul id="8835f1ce-9164-4594-a9d2-d317fe94b2f6" class="bulleted-list"><li style="list-style-type:disc">Payment Verifying</li></ul></div><div style="display:contents" dir="auto"><ul id="1ba25f0d-13d6-4e84-b6af-3354794032f4" class="bulleted-list"><li style="list-style-type:disc">Need Re-upload Slip</li></ul></div><div style="display:contents" dir="auto"><ul id="d3a41303-5c6c-41a0-a6f0-68f57f5b2070" class="bulleted-list"><li style="list-style-type:disc">Approved / Reserved</li></ul></div><div style="display:contents" dir="auto"><ul id="f51001ef-03fb-44ac-a4d8-acbfbae8244b" class="bulleted-list"><li style="list-style-type:disc">Rejected</li></ul></div><div style="display:contents" dir="auto"><ul id="df7aadcd-5272-485d-8546-02a82b2ce1f1" class="bulleted-list"><li style="list-style-type:disc">Cancelled by Applicant</li></ul></div><div style="display:contents" dir="auto"><ul id="3bf55830-d144-4282-9896-64d58c50c813" class="bulleted-list"><li style="list-style-type:disc">Cancelled by Admin</li></ul></div><div style="display:contents" dir="auto"><ul id="a9d8ecba-d195-44ef-9760-369dfd8be387" class="bulleted-list"><li style="list-style-type:disc">Expired</li></ul></div><div style="display:contents" dir="auto"><ul id="a6404b0b-69d7-4b5f-a3e9-ad6abc37df8f" class="bulleted-list"><li style="list-style-type:disc">Waitlisted</li></ul></div><div style="display:contents" dir="auto"><h3 id="f3ac6db1-93d7-489e-92c0-b83c33f122e1" class="">Payment statuses</h3></div><div style="display:contents" dir="auto"><ul id="51cc7c93-4433-40aa-92e5-cd98ad91e973" class="bulleted-list"><li style="list-style-type:disc">Not Required Yet</li></ul></div><div style="display:contents" dir="auto"><ul id="dce9030f-ab32-4c40-9554-31dfa6a9760a" class="bulleted-list"><li style="list-style-type:disc">Required</li></ul></div><div style="display:contents" dir="auto"><ul id="5e6e35d9-d37a-4349-b90c-bcf6b8938d01" class="bulleted-list"><li style="list-style-type:disc">Pending Slip</li></ul></div><div style="display:contents" dir="auto"><ul id="8bd6d16f-b15c-49da-85aa-b85130867102" class="bulleted-list"><li style="list-style-type:disc">Slip Uploaded</li></ul></div><div style="display:contents" dir="auto"><ul id="843090b6-ecf5-4f50-bd00-bb2a4e9b395e" class="bulleted-list"><li style="list-style-type:disc">Verifying</li></ul></div><div style="display:contents" dir="auto"><ul id="81c2175f-748a-47fa-9d4f-ebaf666ad80d" class="bulleted-list"><li style="list-style-type:disc">Verified</li></ul></div><div style="display:contents" dir="auto"><ul id="92b5a80f-7c34-4d2e-8c0d-8386d4a09d91" class="bulleted-list"><li style="list-style-type:disc">Rejected Slip</li></ul></div><div style="display:contents" dir="auto"><ul id="a2270651-747b-4fc1-a799-f441175dc82d" class="bulleted-list"><li style="list-style-type:disc">Overdue</li></ul></div><div style="display:contents" dir="auto"><ul id="b20a445a-a969-4db8-b9c6-63159450b82f" class="bulleted-list"><li style="list-style-type:disc">Refunded / Cancelled</li></ul></div><div style="display:contents" dir="auto"><h3 id="3dbff2e3-0292-49d5-afb0-15be1ce477d0" class="">Reservation statuses</h3></div><div style="display:contents" dir="auto"><ul id="abce93c3-ffd9-41b7-97c5-bfb19dc820f9" class="bulleted-list"><li style="list-style-type:disc">Not Reserved</li></ul></div><div style="display:contents" dir="auto"><ul id="a72ba614-a7ea-4450-8fe3-6061928dbd9b" class="bulleted-list"><li style="list-style-type:disc">Temporary Hold</li></ul></div><div style="display:contents" dir="auto"><ul id="a94d1117-a97c-4b1e-a947-4c29f3aaaed3" class="bulleted-list"><li style="list-style-type:disc">Reserved</li></ul></div><div style="display:contents" dir="auto"><ul id="44f48590-3aaa-4800-bb5a-d1eb01e3fb53" class="bulleted-list"><li style="list-style-type:disc">Confirmed</li></ul></div><div style="display:contents" dir="auto"><ul id="788731e2-554b-4d08-a846-81bbc858ae75" class="bulleted-list"><li style="list-style-type:disc">Cancelled</li></ul></div><div style="display:contents" dir="auto"><ul id="a3e77407-173e-4293-8491-d0b0a7dbca19" class="bulleted-list"><li style="list-style-type:disc">Expired</li></ul></div><div style="display:contents" dir="auto"><ul id="358ba730-6189-4d33-b4a2-ce9040dfead2" class="bulleted-list"><li style="list-style-type:disc">Moved to Waitlist</li></ul></div><div style="display:contents" dir="auto"><h2 id="05481f01-9f8a-4c7b-9e95-ac269d26cb07" class="">Key business rules to confirm</h2></div><div style="display:contents" dir="auto"><p id="5d01ca75-5467-4e4a-b994-805a0ecc39b3" class="">These are blocking questions for stakeholders:</p></div><div style="display:contents" dir="auto"><ol type="1" id="95dc2e43-6901-43e9-bc7a-8ef759a2295a" class="numbered-list" start="1"><li>Which dorm should be the first pilot?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="5d9740b4-f904-4755-8807-fbd82206bc39" class="numbered-list" start="2"><li>Does the applicant choose exact room or only room type?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="62ad7006-e93d-4653-8ab6-8ca8eecb0840" class="numbered-list" start="3"><li>What payment is required for each dorm/applicant type?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="ede305df-583b-473b-87fe-ff4dc68f391d" class="numbered-list" start="4"><li>Who verifies payment slips?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="4c1fbf16-bd18-4bb9-9abd-a52228d26668" class="numbered-list" start="5"><li>Which status officially means “ได้ห้องแล้ว”?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="b6abe42f-bcb1-4df9-920b-affd985b2955" class="numbered-list" start="6"><li>How long should payment/slip deadlines be?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="7be7a39a-604b-44d8-9642-533b9366bcc5" class="numbered-list" start="7"><li>What happens if a slip is rejected?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="d2bd3503-0862-414a-92db-5ab904430a9c" class="numbered-list" start="8"><li>What happens if quota is full after applicant pays?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="02d5f45c-4670-494f-aa6e-ed170e5e7dce" class="numbered-list" start="9"><li>What is the cancellation/refund policy?</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="f94b8e0c-0cc2-49d4-818f-7ec2de34a98c" class="numbered-list numbered-list-digits-2" start="10"><li>What export format does the existing invoice workflow need?</li></ol></div><div style="display:contents" dir="auto"><h2 id="320f64c7-ffcc-4e9e-9ef7-35ea94b67154" class="">Current stack decision</h2></div><div style="display:contents" dir="auto"><pre id="73b4469a-4bf3-4b0d-aacb-64aff8c2cef3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Frontend: Nuxt + shadcn-vue + Tailwind CSS
+Backend: Go + chi
+Database access: GORM + sqlc
+Database: PostgreSQL
+File/object storage: SeaweedFS
+Reverse proxy: Nginx
+Runtime/deployment: Docker / Docker Compose
+CI/CD: No GitHub Actions for core product release</code></pre></div><div style="display:contents" dir="auto"><p id="4d46638b-9c10-44eb-b225-b715c3564441" class="">Full detail: <a href="11%20%E2%80%94%20Final%20Tech%20Stack%20&amp;%20Architecture%20Decision%2038f9192afd1181278fd4fc176b03d753.html">11 — Final Tech Stack &amp; Architecture Decision</a></p></div><div style="display:contents" dir="auto"><h2 id="c345f8b1-8a6e-4bf8-af8d-b0a5f943f3f5" class="">Success metrics</h2></div><div style="display:contents" dir="auto"><h3 id="66c12393-9db5-4398-a49d-ca0a737c5607" class="">For dorm managers</h3></div><div style="display:contents" dir="auto"><ul id="4e7e3b87-5831-4c16-a670-13d5feca0915" class="bulleted-list"><li style="list-style-type:disc">Less paper handling</li></ul></div><div style="display:contents" dir="auto"><ul id="52016179-3879-4409-88a6-4c52b4eec56a" class="bulleted-list"><li style="list-style-type:disc">Fewer lost slips</li></ul></div><div style="display:contents" dir="auto"><ul id="92e0cb7a-36a8-48b2-94f2-0012fa2a32ad" class="bulleted-list"><li style="list-style-type:disc">Faster verification queue</li></ul></div><div style="display:contents" dir="auto"><ul id="92bb1f41-d26a-4931-88ac-0aff2cae1324" class="bulleted-list"><li style="list-style-type:disc">Clearer room type availability</li></ul></div><div style="display:contents" dir="auto"><ul id="efbc4117-9b9b-4b45-9ec7-a2f4655d1ce5" class="bulleted-list"><li style="list-style-type:disc">Easier export of approved applicants</li></ul></div><div style="display:contents" dir="auto"><h3 id="cd5d3497-21f2-4501-9096-806867cf5f29" class="">For applicants</h3></div><div style="display:contents" dir="auto"><ul id="d68f67ad-be1a-435a-8642-42e8dd9957fd" class="bulleted-list"><li style="list-style-type:disc">Clear payment condition before applying</li></ul></div><div style="display:contents" dir="auto"><ul id="8a5a4aa0-9a5d-4866-ae5a-e8e5152b62eb" class="bulleted-list"><li style="list-style-type:disc">Online application instead of only paper/walk-in</li></ul></div><div style="display:contents" dir="auto"><ul id="81da5669-0240-4d31-9a2e-54b31c6e2da7" class="bulleted-list"><li style="list-style-type:disc">Visible reservation status</li></ul></div><div style="display:contents" dir="auto"><ul id="bc8e5e40-26ed-4149-bd71-2aa9766ab4be" class="bulleted-list"><li style="list-style-type:disc">Clear rejection/re-upload reason</li></ul></div><div style="display:contents" dir="auto"><h3 id="c78660f8-3c88-45c6-82cf-e4d133092ed1" class="">For project team</h3></div><div style="display:contents" dir="auto"><ul id="ef75aef7-ec43-4476-8809-7f8e08795505" class="bulleted-list"><li style="list-style-type:disc">Stakeholder-approved scope</li></ul></div><div style="display:contents" dir="auto"><ul id="8d3f90e6-86dc-409e-80ac-63d7076890cb" class="bulleted-list"><li style="list-style-type:disc">Clear data model</li></ul></div><div style="display:contents" dir="auto"><ul id="680b2ba4-f516-492d-a875-344a76216ad3" class="bulleted-list"><li style="list-style-type:disc">Working prototype or strong Figma prototype</li></ul></div><div style="display:contents" dir="auto"><ul id="2d39bd21-e107-4bdf-8a87-8f0c0fdf7be3" class="bulleted-list"><li style="list-style-type:disc">Defensible technical plan</li></ul></div><div style="display:contents" dir="auto"><ul id="73689021-7486-4e10-aaf8-37fdfeeec564" class="bulleted-list"><li style="list-style-type:disc">Ready for pilot discussion</li></ul></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

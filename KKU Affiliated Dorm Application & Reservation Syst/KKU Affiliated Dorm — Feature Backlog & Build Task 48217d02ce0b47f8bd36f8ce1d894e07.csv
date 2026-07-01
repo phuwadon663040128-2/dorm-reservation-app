@@ -1,0 +1,68 @@
+﻿Feature,Complexity,Core Product,Module,Notes,Priority,Status,User Type
+Maintenance ticket submission,Medium,Yes,Maintenance,"Student reports repair category, urgency, description, and optional photo.",Should Have,Idea,Student
+Dorm list with filters,Medium,Yes,Student Portal,"Filter by dorm group, room type, price, availability, student type, and facilities.",Must Have,To Design,Student
+Waitlist promotion after cancellation/unpaid offer,High,Yes,Allocation Engine,"When a room is released, system offers it to the next eligible waitlisted student.",Must Have,Idea,Admin
+Reports and export,Medium,No,Reports,"Export occupancy, demand, payment, waitlist, and maintenance reports.",Could Have,Idea,Admin
+Application detail review page,Medium,Yes,Admin Dashboard,"Show applicant profile, preferences, eligibility checks, documents, notes, and history.",Must Have,To Design,Admin
+Check-in instruction page,Low,Yes,Check-in,"Show date, place, documents, room assignment, and rules acknowledgement.",Should Have,Idea,Student
+Room condition checklist,Medium,No,Check-in,Useful after moving in; can be future scope if project becomes too large.,Should Have,Idea,Student
+Allocation simulation,High,Yes,Allocation Engine,Admin previews allocation result before publishing final result.,Must Have,To Design,Admin
+Waitlist generation and ordering,High,Yes,Allocation Engine,"Generate transparent waitlist ordered by priority, preference, and tie-breaker.",Must Have,To Design,Admin
+Admin override with required reason,Medium,Yes,Admin Dashboard,Allow special cases but require reason and audit log.,Should Have,Idea,Admin
+Payment instruction and status page,Medium,Yes,Payment,Mock invoice/payment status for prototype; real payment integration is future scope.,Should Have,To Design,Student
+Appeal / review request,Medium,No,Student Portal,Useful future feature; not part of the core product release unless stakeholders require it.,Future,Idea,Student
+Ranked dorm preference application form,High,Yes,Student Portal,"Students rank first, second, and third choices instead of only booking instantly.",Must Have,To Design,Student
+Offer confirmation / decline action,Medium,Yes,Student Portal,Student can confirm or decline allocation offer before deadline.,Must Have,To Design,Student
+Dorm / building / room inventory management,High,Yes,Dorm Inventory,"Admin manages dorms, buildings, floors, rooms, beds, capacity, and room statuses.",Must Have,To Design,Admin
+Dorm detail page,Medium,Yes,Student Portal,"Include photos, facilities, room types, price, rules, quota, and application button.",Must Have,To Design,Student
+Allocated result explanation screen,Medium,Yes,Student Portal,"Show assigned dorm/room type, confirmation deadline, payment deadline, and simple explanation.",Must Have,To Design,Student
+Roommate / group booking,High,No,Student Portal,Optional differentiator; include if team wants stronger but more complex feature.,Could Have,Idea,Student
+Preference matching algorithm,High,Yes,Allocation Engine,Match students to first available ranked preference based on eligibility and priority.,Must Have,To Design,Admin
+Student login / mock KKU account,Low,Yes,Student Portal,Prototype can use mock login. Real KKU SSO should be future integration.,Must Have,To Design,Student
+Student notification center,Medium,No,Notifications,"Centralized application, payment, waitlist, check-in, and maintenance updates.",Should Have,Idea,Student
+Bilingual Thai / English interface,Medium,No,Student Portal,"Important for international students, but can be future scope.",Future,Idea,All
+Payment status management for admin,Medium,Yes,Payment,"Admin/finance can filter pending, paid, overdue, cancelled, and manual review.",Should Have,Idea,Finance
+Student profile completion checklist,Medium,Yes,Student Portal,Collect required dorm application fields and show missing information before application.,Must Have,To Design,Student
+Admin dashboard overview,Medium,Yes,Admin Dashboard,"Show applications, available rooms, waitlist count, payment overdue, and maintenance summary.",Must Have,To Design,Admin
+Priority group / score model,High,Yes,Allocation Engine,Draft policy model; should be verified before final presentation.,Must Have,To Design,Admin
+Applicant list with filters,Medium,Yes,Admin Dashboard,"Filter by status, document, dorm preference, student type, faculty, and priority group.",Must Have,To Design,Admin
+Application status tracker,Medium,Yes,Student Portal,"Track submitted, review, eligible, allocation, result, payment, check-in.",Must Have,To Design,Student
+Application round setup,High,Yes,Admin Dashboard,"Admin sets open date, close date, result date, confirmation/payment deadline, dorms, and rules.",Must Have,To Design,Admin
+Application review and submit screen,Medium,Yes,Student Portal,Show summary before final submission to reduce errors.,Must Have,To Design,Student
+Audit log,Medium,Yes,Reports,"Record allocation runs, result publish, overrides, room changes, payment changes, and waitlist promotions.",Should Have,Idea,Admin
+Eligibility validation rules,High,Yes,Allocation Engine,"Check profile completeness, dorm eligibility, duplicate applications, required documents, and conflicts.",Must Have,To Design,Admin
+Waitlist position screen,Medium,Yes,Student Portal,"Show waitlist position, dorm preference, last update time, and next expected update.",Must Have,To Design,Student
+Final presentation slide deck,Medium,Yes,Research/Presentation,Use the presentation kit page as slide outline and script.,Must Have,Idea,All
+Slip verification queue,Medium,Yes,Payment,"Staff filters slips waiting for verification and approves, rejects, or requests re-upload.",Must Have,To Design,Finance
+Affiliated dorm online application form,High,Yes,Student Portal,"Replace paper form as much as possible. Collect applicant info, student info, contact, applicant type, selected dorm/room type, and agreement.",Must Have,To Design,Student
+Payment slip upload,Medium,Yes,Payment,"Applicant uploads slip with amount, date/time, file, and optional note.",Must Have,To Design,Student
+Room type quota management,High,Yes,Dorm Inventory,Track availability by room type/quota first. Exact room assignment can be future scope.,Must Have,To Design,Admin
+Campaign landing page for affiliated dorms,Medium,Yes,Student Portal,"Applicant sees open campaigns, dorm scope, room type availability, required upfront conditions, and apply button.",Must Have,To Design,Student
+Applicant type selection,Low,Yes,Student Portal,"Applicant selects current resident, senior from other dorm, new first-year, international student, or general applicant.",Must Have,To Design,Student
+Applicant detail with slip review panel,Medium,Yes,Admin Dashboard,"Admin sees applicant profile, selected dorm/room type, expected amount, uploaded slip, status timeline, and notes.",Must Have,To Design,Admin
+Configurable payment rule matrix,High,Yes,Payment,"Rules vary by dorm, campaign, applicant type, and room type. This is the key live-product rule engine.",Must Have,To Design,Admin
+Dorm manager campaign setup,High,Yes,Admin Dashboard,"Admin creates early recruitment/application campaign with open date, close date, dorm, applicant types, required conditions, and room type quota.",Must Have,To Design,Admin
+Required payment condition display before submit,Medium,Yes,Payment,"Show required item, amount, deadline, and warning that reservation is not confirmed until staff verification.",Must Have,To Design,Student
+Manual remaining-room input after renewal,Low,Yes,Dorm Inventory,"If renewal is handled outside system in phase 1, admin manually enters remaining room type quota.",Must Have,To Design,Admin
+Dorm manager dashboard for live operations,Medium,Yes,Admin Dashboard,"Show open campaigns, applicants, waiting slips, verified reservations, remaining quota, and expiring holds.",Must Have,To Design,Admin
+Reservation status tracker,Medium,Yes,Student Portal,"Show Submitted, Waiting for Payment, Slip Uploaded, Verifying, Need Re-upload, Reserved, Rejected, Expired.",Must Have,To Design,Student
+Export verification report,Medium,Yes,Reports,"Export expected amount, submitted amount, status, verified by, verified at, and rejection reason.",Must Have,To Design,Finance
+Reject slip with reason and re-upload option,Medium,Yes,Payment,Admin or finance rejects slip with reason and can allow applicant to re-upload before deadline.,Must Have,To Design,Finance
+Current resident renewal-first flow,High,No,Student Portal,Current residents reserve first. Could be a later production phase if first release starts with admin-entered remaining quota.,Should Have,Idea,Student
+Export approved reservations,Medium,Yes,Reports,Export approved applicant list for existing invoice or official processing workflow.,Must Have,To Design,Admin
+Manual expiration for unpaid applications,Medium,No,Payment,Staff can mark applications expired if slip is not uploaded before deadline. Automation can come later.,Should Have,Idea,All
+Temporary hold after slip upload,High,Yes,Payment,"Recommended policy: hold after slip upload, confirm after verification. Need stakeholder confirmation.",Should Have,Idea,All
+Approve reservation after verification,High,Yes,Payment,"Approve action confirms reservation, updates room quota, notifies applicant, and writes audit log.",Must Have,To Design,Admin
+Pilot one dorm before multi-dorm launch,Medium,Yes,Research/Presentation,"Recommended live rollout strategy: support multi-dorm structure, but pilot with one dorm first.",Should Have,Idea,All
+UniPay / official payment integration,High,No,Payment,Now part of the core product direction when university access is approved. Manual evidence remains fallback.,Future,Idea,Finance
+Audit log for approve reject cancel actions,Medium,Yes,Reports,Important because verification and reservation changes must be accountable.,Should Have,To Design,Admin
+Staff role permissions for dorm-specific access,Medium,Yes,Admin Dashboard,Managers should probably see only their dorm unless they are division-level admin. Confirm policy.,Should Have,Idea,Admin
+Stakeholder meeting preparation and decision capture,Low,Yes,Research/Presentation,Use the meeting agenda page to confirm rules before implementation.,Must Have,To Design,All
+Applicant re-upload history,Medium,No,Payment,Store previous rejected slips and reasons if audit requirements need it.,Could Have,Idea,Finance
+CSV export for existing invoice workflow,Medium,Yes,Reports,Fallback/export option if direct official integration is not ready for the first production release.,Must Have,To Design,Admin
+Waitlist when room type is full,Medium,No,Student Portal,Useful after core application and verification workflow works. Confirm whether managers want waitlist or simply close applications when full.,Could Have,Idea,Student
+Existing invoice system integration,High,No,Payment,Future only. Requires access and official technical coordination.,Future,Idea,Finance
+Exact room selection,High,No,Dorm Inventory,Do not build first. Start with room type/quota to reduce booking conflicts.,Future,Idea,Student
+UniPay connector,High,Yes,Payment,Preferred official path when the university allows access. Manual evidence remains fallback.,Must Have,To Design,All
+UniPay status sync,High,Yes,Payment,Keep local reservation state aligned with UniPay result.,Must Have,To Design,All
+Official confirmation page,Medium,Yes,Student Portal,Show the official university step after application submission.,Must Have,To Design,Student
