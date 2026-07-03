@@ -1,0 +1,12 @@
+:root {
+  --kku-red-soil: #A73B24;
+  --kku-red-soil-rgb: 167 59 36;
+}
+
+.kku-brand-primary {
+  color: var(--kku-red-soil);
+}
+
+.kku-brand-bg {
+  background-color: var(--kku-red-soil);
+}

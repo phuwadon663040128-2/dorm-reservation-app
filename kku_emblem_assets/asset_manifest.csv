@@ -1,0 +1,22 @@
+bytes,format,height,path,sha256,source_url,width
+184,,,data/kku_brand_color.css,291333830a70c6d85a5c45d5a7f5714abd07e6f8e94b3ba0383b29ff42fb0d42,,
+676,,,data/kku_brand_color.json,18cb9d17be25c7675bc06cfb6a81bb540040fc54146ecda50f8a20183c8a189c,,
+127,,,data/tailwind-kku-color-snippet.ts,f86311676b9443a47ec178b25d930bb6f730e3e39100f2491e2c229f664bad22,,
+594458,,,docs/60th-Anniversary-of-KKU_announce.pdf,6f16f5a995d495802d8c61b9556c75d8a3717c4dfc5efd6f7f122270e8d85401,https://kku.ac.th/wp-content/uploads/2023/02/60th-Anniversary-of-KKU_announce.pdf,
+395603,PNG,789,images/anniversary_60/kku_60th_logo_en.png,f8d0a75595d4a5de2528788bf114fe4c0aa41ec8a2fedc46bd121a4dc0d78b37,extracted from https://kku.ac.th/wp-content/uploads/2023/02/60th-Anniversary-of-KKU_announce.pdf,1304
+400661,PNG,795,images/anniversary_60/kku_60th_logo_th.png,cfe5c8d787fa75842842993811d010e7ef11ab2ac7d467d116396ad594f2a507,extracted from https://kku.ac.th/wp-content/uploads/2023/02/60th-Anniversary-of-KKU_announce.pdf,1268
+40557,PNG,314,images/anniversary_60/official_emblem_black_from_60th_pdf.png,31a51ef6f7572b54ae9a0606b5e175d7cfe52c2e0a7db5620430bc5c79670151,extracted from https://kku.ac.th/wp-content/uploads/2023/02/60th-Anniversary-of-KKU_announce.pdf,177
+81563,PNG,465,images/official_png/official_logo_en_black_outline_vertical.png,2a24924f9853b4b1e89838c41216a59160b2d9d9c957d53e470ee60332d063da,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-28-500x465.png,500
+81093,PNG,465,images/official_png/official_logo_en_color_vertical.png,3bcd87ee9b6ff1f3e0b7bdd04d99607ac263cf8fd7ab91f42195cc0d88f20423,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-26-500x465.png,500
+28603,PNG,210,images/official_png/official_logo_en_horizontal_color.png,76813437ecdfa184a8811dfdf80278995eacdc969dea21c99269ff4b1de7aa38,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-03-500x210.png,500
+81467,PNG,465,images/official_png/official_logo_en_red_outline_vertical.png,ae42cc4739910ee731cc9fc44377d40675824395e678eb25bf2a5507791fe45a,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-27-500x465.png,500
+33631,PNG,210,images/official_png/official_logo_th_en_horizontal_color.png,bd50c3b2054e1695f25d7bb2b89ad62260444e999aa8cdea55a8097ca73f20bf,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-01-500x210.png,500
+61942,PNG,465,images/official_png/official_logo_th_en_stacked_color.png,c69e4e73e786c04ee0fa2b0cdf441c63fbfc37a7e02b677c01d801f7a9d44504,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-04-500x465.png,500
+28520,PNG,210,images/official_png/official_logo_th_horizontal_color.png,4c0653a22de322a8573a7ebd4b568c64abd710816e170ab5230fbc48ae2d31d9,https://www.kku.ac.th/wp-content/uploads/2022/01/1.-official-logo-2022-02-500x210.png,500
+47938,PNG,267,images/official_png/official_logo_th_small_150px.png,5fbc5789b99771453a267127c51ed186af145393cb983a50257ecbb495ed88b2,https://www.kku.ac.th/wp-content/uploads/2019/11/LogoKKUthai_150px.png,150
+14991,JPEG,150,images/previews/kku_color_swatch.jpg,5f8dcdcfaffcd5395f412a77d4c37bff6a6d91c555280f7c3074417477c43edb,https://www.kku.ac.th/wp-content/uploads/2019/11/color_kku_150px.jpg,150
+714,,,images/previews/kku_red_soil_swatch.svg,90c2d436b3ffea7d4f8fef92d35634a4dfb0c2f79871ff5a292c6227a21db882,generated from official color values on source page,
+83891,JPEG,464,images/previews/monogram_logo_preview.jpg,36ce1537ee5201325a2122a4cfe1c85655ef892ee943306bda92febc69910cfc,https://www.kku.ac.th/wp-content/uploads/2022/01/MONOGRAM-LOGO.jpg,1640
+24568,JPEG,217,images/previews/official_logo2_preview.jpg,91950fd326917dbda88560f00419ce5e859f21afcb97660e8d0293182f0b11a3,https://www.kku.ac.th/wp-content/uploads/2022/01/Official-LOGO2-768x217.jpg,768
+95920,JPEG,464,images/previews/official_logo_preview.jpg,9795fc64bd0e8ac32cdd11536e4a231f583a8bcf4b21fcd1ff57157727b7667d,https://www.kku.ac.th/wp-content/uploads/2022/01/Official-LOGO.jpg,1640
+24956,JPEG,217,images/previews/sub_logo_preview.jpg,6f6de400fe942c2796ae054ef3b1e65ee0398838f3e81298d100377bcd3dfc9f,https://www.kku.ac.th/wp-content/uploads/2022/01/SUB-LOGO-768x217.jpg,768

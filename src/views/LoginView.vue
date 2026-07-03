@@ -45,6 +45,7 @@ import woraInternationalCommonImage from '@/assets/kku_dorm_images/wora_internat
 import woraInternationalLaundryImage from '@/assets/kku_dorm_images/wora_international/15_wora_inter_laundry_phanumas.jpg'
 import { kkuDormFeeData } from '../../kku_dorm_fee_assets/fees_ui_data'
 import personnelCardsData from '../../dorm_kku_ui_assets/data/personnel_cards.json'
+import kkuOfficialLogo from '../../kku_emblem_assets/images/official_png/official_logo_th_small_150px.png'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -1375,8 +1376,8 @@ function handleLogin() {
     <header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
       <div class="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 sm:px-5 lg:px-8">
         <button class="flex min-w-0 items-center gap-2.5 text-left" type="button">
-          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Building class="size-5" />
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-background bg-background p-1">
+            <img :src="kkuOfficialLogo" alt="Khon Kaen University logo" class="max-h-8 w-auto object-contain">
           </span>
           <span class="min-w-0">
             <span class="block truncate text-sm font-bold uppercase leading-tight tracking-wide text-primary">

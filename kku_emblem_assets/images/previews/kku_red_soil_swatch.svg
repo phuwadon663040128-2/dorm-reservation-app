@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">KKU Red Soil Color Swatch</title>
+  <desc id="desc">Khon Kaen University brand color: #A73B24, RGB 167 59 36, CMYK 24 88 99 17.</desc>
+  <rect width="640" height="360" fill="#A73B24"/>
+  <rect x="32" y="216" width="576" height="112" rx="20" fill="white" opacity="0.95"/>
+  <text x="60" y="260" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#A73B24">KKU Red Soil / สีดินแดง</text>
+  <text x="60" y="298" font-family="Arial, sans-serif" font-size="22" fill="#222">HEX #A73B24 · RGB 167 59 36 · CMYK 24 88 99 17</text>
+</svg>

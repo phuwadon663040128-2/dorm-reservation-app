@@ -1,0 +1,20 @@
+{
+  "main_source": "https://www.kku.ac.th/th/about/emblem/",
+  "official_logo_gallery": "https://www.kku.ac.th/th/rl_gallery/official-logo/",
+  "download_folders_found_on_source_page": {
+    "official_png": "https://kku.world/fficial -> Google Drive folder",
+    "official_ai": "https://kku.world/v6q78 -> Google Drive folder",
+    "sub_logo_png": "https://drive.google.com/drive/folders/114prXjQsz1h2fKWmLEifGMY0SJMITMuL?usp=sharing",
+    "sub_logo_ai": "https://drive.google.com/drive/folders/1aMxuf_HtRjxrIPzwQaLFgKvCywLzdWoY?usp=sharing",
+    "monogram_png": "https://drive.google.com/drive/folders/1dRSO82huISQ9ygFVwg0mEdgWEHb7UCuT?usp=sharing",
+    "monogram_ai": "https://drive.google.com/drive/folders/1tDJ-tZH9XdA0jlWlhrlKtMcDbMNkpee1?usp=sharing",
+    "60th_logo_folder": "https://kku.world/29ddj -> Google Drive folder",
+    "60th_logo_2022_folder": "https://kku.world/kkulogo2022 -> Google Drive folder"
+  },
+  "notes_th": [
+    "ไฟล์ ZIP นี้เก็บรูปจากหน้าเว็บและแกลเลอรีที่เข้าถึงได้โดยตรง รวมถึงภาพที่ extract จาก PDF ประกาศ 60 ปี",
+    "ไม่ได้รวมไฟล์ฟอนต์ เพราะคำขอนี้ต้องการเฉพาะสีและโลโก้",
+    "ลิงก์ Google Drive/AI ต้นฉบับถูกบันทึกไว้เพื่ออ้างอิง แต่ไม่ได้แตกไฟล์จากโฟลเดอร์ Google Drive ลงใน ZIP นี้"
+  ],
+  "generated_at_utc": "2026-07-03T07:24:53.297813+00:00"
+}
