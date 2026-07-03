@@ -8,6 +8,7 @@ import {
   Eye,
   FileText,
   Plus,
+  Search,
   Settings,
   Users,
   XCircle,
@@ -27,7 +28,6 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldGroup, FieldLabel, FieldSet, FieldTitle } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
@@ -59,136 +59,70 @@ const emit = defineEmits<{
   (e: 'showToast', msg: string): void
 }>()
 
-const showTab = (tab: string) => props.currentAdminTab === tab
-
-const statTotalApps = computed(() => props.applicants.length)
-const statPendingVerify = computed(() => props.applicants.filter(a => a.status === 'Staff Verifying').length)
-const statConfirmed = computed(() => props.applicants.filter(a => a.status === 'Confirmed').length)
-
-const totalCapacityAndBeds = computed(() => {
-  let reserved = 0
-  let total = 0
-  props.campaigns.forEach(campaign => {
-    campaign.roomTypes.forEach(room => {
-      reserved += room.capacity - room.active
-      total += room.capacity
-    })
-  })
-  return {
-    reserved,
-    total,
-    pct: total > 0 ? Number(((reserved / total) * 100).toFixed(1)) : 0,
-  }
-})
-
-const recentApplicants = computed(() => props.applicants.slice(0, 5))
-const uniqueDorms = computed(() => Array.from(new Set(props.applicants.map(app => app.dormName))))
-
 const campaignModalOpen = ref(false)
-const cmName = ref('')
-const cmOpenDate = ref('')
-const cmCloseDate = ref('')
-const cmRequiredAmount = ref<number | ''>('')
-const cmType = ref('หอพักเครือข่าย')
-const cmPaymentRequirement = ref('ค่าประกันความเสียหาย')
+const verifyModalOpen = ref(false)
+const selectedApp = ref<Applicant | null>(null)
+const actionReason = ref('')
 
 const adminSearch = ref('')
 const adminFilterDorm = ref('all')
 const adminFilterStatus = ref('all')
 const adminFilterType = ref('all')
 
-const verifyModalOpen = ref(false)
-const selectedApp = ref<Applicant | null>(null)
-const drawerActionReason = ref('')
+const cmName = ref('')
+const cmType = ref('หอพักเครือข่าย')
+const cmOpenDate = ref('')
+const cmCloseDate = ref('')
+const cmRequiredAmount = ref<number | ''>('')
+const cmPaymentRequirement = ref('ค่าประกันความเสียหาย')
+
+const showTab = (tab: string) => props.currentAdminTab === tab
+
+const totalApplicants = computed(() => props.applicants.length)
+const waitingPayment = computed(() => props.applicants.filter(app => app.status === 'Submitted').length)
+const waitingVerify = computed(() => props.applicants.filter(app => app.status === 'Staff Verifying').length)
+const confirmed = computed(() => props.applicants.filter(app => app.status === 'Confirmed').length)
+const uniqueDorms = computed(() => Array.from(new Set(props.applicants.map(app => app.dormName))))
+const recentApplicants = computed(() => props.applicants.slice(0, 6))
+
+const quotaSummary = computed(() => {
+  let total = 0
+  let active = 0
+  props.campaigns.forEach(campaign => {
+    campaign.roomTypes.forEach(room => {
+      total += room.capacity
+      active += room.active
+    })
+  })
+
+  const reserved = total - active
+  return {
+    total,
+    active,
+    reserved,
+    percent: total ? Math.round((reserved / total) * 100) : 0,
+  }
+})
+
+const roomCount = computed(() => {
+  return Object.values(props.dormRooms).reduce((sum, dorm) => {
+    return sum + dorm.floors.reduce((floorSum, floor) => floorSum + floor.rooms.length, 0)
+  }, 0)
+})
 
 const filteredApplicants = computed(() => {
-  const query = adminSearch.value.toLowerCase()
+  const query = adminSearch.value.trim().toLowerCase()
   return props.applicants.filter(app => {
-    const matchesQuery = app.name.toLowerCase().includes(query)
-      || app.studentId.toLowerCase().includes(query)
+    const matchesSearch = !query
       || app.id.toLowerCase().includes(query)
+      || app.name.toLowerCase().includes(query)
+      || app.studentId.toLowerCase().includes(query)
     const matchesDorm = adminFilterDorm.value === 'all' || app.dormName === adminFilterDorm.value
     const matchesStatus = adminFilterStatus.value === 'all' || app.status === adminFilterStatus.value
     const matchesType = adminFilterType.value === 'all' || app.applicantType === adminFilterType.value
-    return matchesQuery && matchesDorm && matchesStatus && matchesType
+    return matchesSearch && matchesDorm && matchesStatus && matchesType
   })
 })
-
-function handleOpenCampaignModal() {
-  cmName.value = ''
-  cmOpenDate.value = ''
-  cmCloseDate.value = ''
-  cmRequiredAmount.value = ''
-  campaignModalOpen.value = true
-}
-
-function handleSaveCampaign() {
-  if (!cmName.value || !cmRequiredAmount.value) {
-    emit('showToast', 'กรุณากรอกข้อมูลแคมเปญให้ครบถ้วน')
-    return
-  }
-
-  const newCampaign: DormCampaign = {
-    id: `dorm-${Math.floor(1000 + Math.random() * 9000)}`,
-    name: cmName.value,
-    type: cmType.value,
-    status: 'open',
-    description: `รับสมัครเข้าพักอาศัย ${cmName.value} ประจำปีการศึกษา 2568`,
-    openDate: cmOpenDate.value,
-    closeDate: cmCloseDate.value,
-    roomTypes: [
-      { name: 'ห้องเตียงคู่ (เครื่องปรับอากาศ)', price: 9000, capacity: 50, active: 50 },
-      { name: 'ห้องเตียงคู่ (พัดลม)', price: 4000, capacity: 30, active: 30 },
-    ],
-    rules: 'การชำระเงินตามเงื่อนไขของโครงการเพื่อยืนยันห้อง',
-    paymentRequirement: cmPaymentRequirement.value,
-    requiredAmount: Number(cmRequiredAmount.value),
-    facilities: ['WiFi', 'เครื่องปรับอากาศ', 'เตียงนอน', 'ตู้เสื้อผ้า'],
-  }
-
-  emit('createCampaign', newCampaign)
-  campaignModalOpen.value = false
-}
-
-function openVerifyModal(app: Applicant) {
-  selectedApp.value = app
-  drawerActionReason.value = ''
-  verifyModalOpen.value = true
-}
-
-function closeVerifyModal() {
-  selectedApp.value = null
-  verifyModalOpen.value = false
-}
-
-function handleApprove() {
-  if (!selectedApp.value) return
-  emit('approveApp', selectedApp.value.id)
-  emit('showToast', 'อนุมัติสิทธิ์ห้องพักสำเร็จ')
-  closeVerifyModal()
-}
-
-function handleRequestReupload() {
-  if (!selectedApp.value) return
-  if (!drawerActionReason.value.trim()) {
-    emit('showToast', 'กรุณาระบุเหตุผลที่ต้องการให้ส่งสลิปใหม่')
-    return
-  }
-  emit('reuploadApp', { appId: selectedApp.value.id, reason: drawerActionReason.value.trim() })
-  emit('showToast', 'ส่งคำขอสลิปใหม่สำเร็จ')
-  closeVerifyModal()
-}
-
-function handleReject() {
-  if (!selectedApp.value) return
-  if (!drawerActionReason.value.trim()) {
-    emit('showToast', 'กรุณาระบุเหตุผลการปฏิเสธสิทธิ์')
-    return
-  }
-  emit('rejectApp', { appId: selectedApp.value.id, reason: drawerActionReason.value.trim() })
-  emit('showToast', 'ปฏิเสธคำขอสิทธิ์การจองเรียบร้อย')
-  closeVerifyModal()
-}
 
 function getThaiAppType(type: string) {
   switch (type) {
@@ -203,7 +137,7 @@ function getThaiAppType(type: string) {
 function getStatusLabel(status: Applicant['status']) {
   switch (status) {
     case 'Submitted': return 'รอชำระเงิน'
-    case 'Staff Verifying': return 'รอตรวจสอบ'
+    case 'Staff Verifying': return 'รอตรวจสลิป'
     case 'Confirmed': return 'ยืนยันแล้ว'
     case 'Need Re-upload': return 'ขอสลิปใหม่'
     case 'Rejected': return 'ปฏิเสธ'
@@ -218,162 +152,276 @@ function getStatusVariant(status: Applicant['status']) {
 }
 
 function roomProgress(capacity: number, active: number) {
-  return capacity > 0 ? Math.round(((capacity - active) / capacity) * 100) : 0
+  return capacity ? Math.round(((capacity - active) / capacity) * 100) : 0
+}
+
+function openApplicant(app: Applicant) {
+  selectedApp.value = app
+  actionReason.value = ''
+  verifyModalOpen.value = true
+}
+
+function closeApplicant() {
+  selectedApp.value = null
+  verifyModalOpen.value = false
+}
+
+function openCampaignModal() {
+  cmName.value = ''
+  cmOpenDate.value = ''
+  cmCloseDate.value = ''
+  cmRequiredAmount.value = ''
+  cmType.value = 'หอพักเครือข่าย'
+  cmPaymentRequirement.value = 'ค่าประกันความเสียหาย'
+  campaignModalOpen.value = true
+}
+
+function saveCampaign() {
+  if (!cmName.value || !cmRequiredAmount.value) {
+    emit('showToast', 'กรุณากรอกข้อมูลแคมเปญให้ครบถ้วน')
+    return
+  }
+
+  emit('createCampaign', {
+    id: `dorm-${Math.floor(1000 + Math.random() * 9000)}`,
+    name: cmName.value,
+    type: cmType.value,
+    status: 'open',
+    description: `รอบรับสมัคร ${cmName.value}`,
+    openDate: cmOpenDate.value,
+    closeDate: cmCloseDate.value,
+    requiredAmount: Number(cmRequiredAmount.value),
+    paymentRequirement: cmPaymentRequirement.value,
+    rules: `ชำระ ${cmPaymentRequirement.value} เพื่อยืนยันสิทธิ์`,
+    facilities: ['WiFi', 'ระบบรักษาความปลอดภัย', 'พื้นที่ส่วนกลาง'],
+    roomTypes: [
+      { name: 'ห้องเตียงคู่ (เครื่องปรับอากาศ)', price: 9000, capacity: 40, active: 40 },
+      { name: 'ห้องเตียงคู่ (พัดลม)', price: 4000, capacity: 30, active: 30 },
+    ],
+  })
+  campaignModalOpen.value = false
+}
+
+function approveApplicant() {
+  if (!selectedApp.value) return
+  emit('approveApp', selectedApp.value.id)
+  emit('showToast', 'อนุมัติสิทธิ์ห้องพักสำเร็จ')
+  closeApplicant()
+}
+
+function requestReupload() {
+  if (!selectedApp.value) return
+  if (!actionReason.value.trim()) {
+    emit('showToast', 'กรุณาระบุเหตุผลสำหรับการขอสลิปใหม่')
+    return
+  }
+  emit('reuploadApp', { appId: selectedApp.value.id, reason: actionReason.value.trim() })
+  emit('showToast', 'ส่งคำขอสลิปใหม่สำเร็จ')
+  closeApplicant()
+}
+
+function rejectApplicant() {
+  if (!selectedApp.value) return
+  if (!actionReason.value.trim()) {
+    emit('showToast', 'กรุณาระบุเหตุผลสำหรับการปฏิเสธ')
+    return
+  }
+  emit('rejectApp', { appId: selectedApp.value.id, reason: actionReason.value.trim() })
+  emit('showToast', 'ปฏิเสธใบสมัครเรียบร้อย')
+  closeApplicant()
 }
 </script>
 
 <template>
   <div class="space-y-6">
-    <div v-if="showTab('dashboard')" class="space-y-6">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm text-muted-foreground">Dorm operations workspace</p>
+        <h1 class="text-2xl font-semibold tracking-tight">
+          {{
+            showTab('dashboard') ? 'แดชบอร์ดภาพรวม'
+            : showTab('campaigns') ? 'จัดการรอบรับสมัคร'
+            : showTab('applicants') ? 'รายการใบสมัคร'
+            : showTab('rooms') ? 'โควตาห้องพัก'
+            : showTab('reports') ? 'รายงานและส่งออก'
+            : 'ตั้งค่าระบบ'
+          }}
+        </h1>
+      </div>
+      <div class="flex gap-2">
+        <Button v-if="showTab('campaigns')" @click="openCampaignModal">
+          <Plus class="size-4" />
+          สร้างแคมเปญ
+        </Button>
+        <Button v-if="showTab('reports')" variant="outline" @click="emit('exportData', 'residents')">
+          <Download class="size-4" />
+          Export residents
+        </Button>
+      </div>
+    </div>
+
+    <section v-if="showTab('dashboard')" class="space-y-5">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader class="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">ผู้สมัครทั้งหมด</CardTitle>
+            <CardTitle class="text-sm font-medium">ใบสมัครทั้งหมด</CardTitle>
             <FileText class="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ statTotalApps }}</div>
-            <p class="text-xs text-muted-foreground">ใบสมัครรวมในระบบ</p>
+            <p class="text-2xl font-semibold">{{ totalApplicants }}</p>
+            <p class="text-xs text-muted-foreground">รายการในระบบจำลอง</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader class="flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle class="text-sm font-medium">รอชำระเงิน</CardTitle>
+            <Clock class="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p class="text-2xl font-semibold">{{ waitingPayment }}</p>
+            <p class="text-xs text-muted-foreground">ผู้สมัครที่ยังไม่ส่งหลักฐาน</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader class="flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">รอตรวจสลิป</CardTitle>
-            <Clock class="size-4 text-muted-foreground" />
+            <AlertCircle class="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ statPendingVerify }}</div>
-            <p class="text-xs text-muted-foreground">ต้องตรวจสอบหลักฐาน</p>
+            <p class="text-2xl font-semibold">{{ waitingVerify }}</p>
+            <p class="text-xs text-muted-foreground">ต้องดำเนินการโดยเจ้าหน้าที่</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader class="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">ยืนยันสิทธิ์แล้ว</CardTitle>
+            <CardTitle class="text-sm font-medium">ยืนยันแล้ว</CardTitle>
             <Check class="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ statConfirmed }}</div>
-            <p class="text-xs text-muted-foreground">จองห้องพักสำเร็จ</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader class="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle class="text-sm font-medium">อัตราจอง</CardTitle>
-            <Users class="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent class="space-y-2">
-            <div class="text-2xl font-bold">{{ totalCapacityAndBeds.pct }}%</div>
-            <Progress :model-value="totalCapacityAndBeds.pct" />
-            <p class="text-xs text-muted-foreground">
-              จองแล้ว {{ totalCapacityAndBeds.reserved }} / โควตา {{ totalCapacityAndBeds.total }}
-            </p>
+            <p class="text-2xl font-semibold">{{ confirmed }}</p>
+            <p class="text-xs text-muted-foreground">ผ่านเงื่อนไขการจอง</p>
           </CardContent>
         </Card>
       </div>
 
+      <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <Card>
+          <CardHeader>
+            <CardTitle>ใบสมัครล่าสุด</CardTitle>
+            <CardDescription>คลิกแถวเพื่อเปิดรายละเอียดและตรวจสอบหลักฐาน</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>รหัส</TableHead>
+                  <TableHead>ผู้สมัคร</TableHead>
+                  <TableHead class="hidden md:table-cell">หอพัก</TableHead>
+                  <TableHead>สถานะ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow v-for="app in recentApplicants" :key="app.id" class="cursor-pointer" @click="openApplicant(app)">
+                  <TableCell class="font-medium">{{ app.id }}</TableCell>
+                  <TableCell>{{ app.name }}</TableCell>
+                  <TableCell class="hidden md:table-cell">{{ app.dormName }}</TableCell>
+                  <TableCell>
+                    <Badge :variant="getStatusVariant(app.status)">{{ getStatusLabel(app.status) }}</Badge>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>ภาพรวมโควตา</CardTitle>
+            <CardDescription>{{ roomCount }} ห้องในข้อมูลจำลอง</CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-4">
+            <div class="rounded-lg border bg-muted/40 p-4">
+              <p class="text-sm text-muted-foreground">อัตราจองรวม</p>
+              <p class="mt-1 text-3xl font-semibold">{{ quotaSummary.percent }}%</p>
+              <Progress :model-value="quotaSummary.percent" class="mt-3" />
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="rounded-lg border p-3">
+                <p class="text-muted-foreground">จองแล้ว</p>
+                <p class="font-semibold">{{ quotaSummary.reserved }}</p>
+              </div>
+              <div class="rounded-lg border p-3">
+                <p class="text-muted-foreground">คงเหลือ</p>
+                <p class="font-semibold">{{ quotaSummary.active }}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+
+    <section v-if="showTab('campaigns')" class="space-y-5">
       <Card>
         <CardHeader>
-          <CardTitle>ใบสมัครล่าสุด</CardTitle>
-          <CardDescription>รายการที่เจ้าหน้าที่ควรตรวจดูเป็นลำดับแรก</CardDescription>
+          <CardTitle>แคมเปญรับสมัคร</CardTitle>
+          <CardDescription>กำหนดรอบสมัคร เงื่อนไขชำระเงิน และ quota ตามประเภทห้อง</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>รหัส</TableHead>
-                <TableHead>ชื่อ</TableHead>
-                <TableHead class="hidden sm:table-cell">หอพัก</TableHead>
+                <TableHead>หอพัก</TableHead>
+                <TableHead>ประเภท</TableHead>
+                <TableHead class="hidden md:table-cell">ช่วงเวลา</TableHead>
+                <TableHead>โควตา</TableHead>
                 <TableHead>สถานะ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow
-                v-for="app in recentApplicants"
-                :key="app.id"
-                class="cursor-pointer"
-                @click="emit('update:currentAdminTab', 'applicants'); openVerifyModal(app)"
-              >
-                <TableCell class="font-medium">{{ app.id }}</TableCell>
-                <TableCell>{{ app.name }}</TableCell>
-                <TableCell class="hidden sm:table-cell">{{ app.dormName }}</TableCell>
+              <TableRow v-for="campaign in campaigns" :key="campaign.id">
+                <TableCell class="font-medium">{{ campaign.name }}</TableCell>
+                <TableCell>{{ campaign.type }}</TableCell>
+                <TableCell class="hidden md:table-cell">{{ campaign.openDate }} - {{ campaign.closeDate }}</TableCell>
                 <TableCell>
-                  <Badge :variant="getStatusVariant(app.status)">{{ getStatusLabel(app.status) }}</Badge>
+                  {{ campaign.roomTypes.reduce((sum, room) => sum + room.active, 0) }}
+                  /
+                  {{ campaign.roomTypes.reduce((sum, room) => sum + room.capacity, 0) }}
+                </TableCell>
+                <TableCell>
+                  <Badge :variant="campaign.status === 'open' ? 'secondary' : 'outline'">
+                    {{ campaign.status === 'open' ? 'เปิดรับ' : 'ปิดรับ' }}
+                  </Badge>
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </section>
 
-    <Card v-if="showTab('campaigns')">
-      <CardHeader class="gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <CardTitle>จัดการแคมเปญรับสมัคร</CardTitle>
-          <CardDescription>สร้าง แก้ไข และเปิด/ปิดรอบรับสมัครหอพัก</CardDescription>
-        </div>
-        <Button @click="handleOpenCampaignModal">
-          <Plus class="size-4" />
-          สร้างแคมเปญใหม่
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ชื่อหอพัก</TableHead>
-              <TableHead>ประเภท</TableHead>
-              <TableHead class="hidden md:table-cell">ว่าง/ทั้งหมด</TableHead>
-              <TableHead>สถานะ</TableHead>
-              <TableHead class="text-right">จัดการ</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="campaign in campaigns" :key="campaign.id">
-              <TableCell class="font-medium">{{ campaign.name }}</TableCell>
-              <TableCell>{{ campaign.type }}</TableCell>
-              <TableCell class="hidden md:table-cell">
-                {{ campaign.roomTypes.reduce((s, r) => s + r.active, 0) }} /
-                {{ campaign.roomTypes.reduce((s, r) => s + r.capacity, 0) }}
-              </TableCell>
-              <TableCell>
-                <Badge :variant="campaign.status === 'open' ? 'secondary' : 'outline'">
-                  {{ campaign.status === 'open' ? 'เปิดรับสมัคร' : 'ปิดการรับ' }}
-                </Badge>
-              </TableCell>
-              <TableCell class="text-right">
-                <Button variant="ghost" size="sm" @click="emit('showToast', `แก้ไขแคมเปญ ${campaign.name}`)">แก้ไข</Button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-
-    <Card v-if="showTab('applicants')">
-      <CardHeader>
-        <CardTitle>รายการใบสมัคร</CardTitle>
-        <CardDescription>ค้นหา กรอง และตรวจสอบหลักฐานการชำระเงิน</CardDescription>
-      </CardHeader>
-      <CardContent class="space-y-4">
-        <div class="grid gap-3 md:grid-cols-4">
-          <Input v-model="adminSearch" placeholder="ค้นหาชื่อ รหัสนักศึกษา หรือเลขใบสมัคร" />
+    <section v-if="showTab('applicants')" class="space-y-5">
+      <Card>
+        <CardHeader>
+          <CardTitle>ค้นหาและกรองใบสมัคร</CardTitle>
+          <CardDescription>ใช้ตัวกรองเพื่อจัดคิวงานตรวจสลิปและอนุมัติสิทธิ์</CardDescription>
+        </CardHeader>
+        <CardContent class="grid gap-3 md:grid-cols-[minmax(16rem,1.4fr)_repeat(3,minmax(11rem,1fr))]">
+          <div class="relative">
+            <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input v-model="adminSearch" class="pl-9" placeholder="ค้นหาชื่อ รหัสนักศึกษา หรือเลขใบสมัคร" />
+          </div>
           <Select v-model="adminFilterDorm">
-            <SelectTrigger class="w-full">
-              <SelectValue placeholder="ทุกหอพัก" />
-            </SelectTrigger>
+            <SelectTrigger class="w-full"><SelectValue placeholder="ทุกหอพัก" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">ทุกหอพัก</SelectItem>
               <SelectItem v-for="dorm in uniqueDorms" :key="dorm" :value="dorm">{{ dorm }}</SelectItem>
             </SelectContent>
           </Select>
           <Select v-model="adminFilterStatus">
-            <SelectTrigger class="w-full">
-              <SelectValue placeholder="ทุกสถานะ" />
-            </SelectTrigger>
+            <SelectTrigger class="w-full"><SelectValue placeholder="ทุกสถานะ" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">ทุกสถานะ</SelectItem>
               <SelectItem value="Submitted">รอชำระเงิน</SelectItem>
@@ -384,9 +432,7 @@ function roomProgress(capacity: number, active: number) {
             </SelectContent>
           </Select>
           <Select v-model="adminFilterType">
-            <SelectTrigger class="w-full">
-              <SelectValue placeholder="ทุกประเภทสิทธิ์" />
-            </SelectTrigger>
+            <SelectTrigger class="w-full"><SelectValue placeholder="ทุกประเภทสิทธิ์" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">ทุกประเภทสิทธิ์</SelectItem>
               <SelectItem value="General Student">นักศึกษาทั่วไป</SelectItem>
@@ -395,155 +441,167 @@ function roomProgress(capacity: number, active: number) {
               <SelectItem value="International Student">ต่างชาติ</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </CardContent>
+      </Card>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>รหัส</TableHead>
-              <TableHead>ชื่อ</TableHead>
-              <TableHead class="hidden sm:table-cell">หอพัก</TableHead>
-              <TableHead class="hidden md:table-cell">ประเภทห้อง</TableHead>
-              <TableHead class="hidden lg:table-cell">ประเภทสิทธิ์</TableHead>
-              <TableHead>สถานะ</TableHead>
-              <TableHead class="text-right">ดู</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="app in filteredApplicants" :key="app.id" class="cursor-pointer" @click="openVerifyModal(app)">
-              <TableCell class="font-medium">{{ app.id }}</TableCell>
-              <TableCell>{{ app.name }}</TableCell>
-              <TableCell class="hidden sm:table-cell">{{ app.dormName }}</TableCell>
-              <TableCell class="hidden md:table-cell">{{ app.roomType }}</TableCell>
-              <TableCell class="hidden lg:table-cell">{{ getThaiAppType(app.applicantType) }}</TableCell>
-              <TableCell>
-                <Badge :variant="getStatusVariant(app.status)">{{ getStatusLabel(app.status) }}</Badge>
-              </TableCell>
-              <TableCell class="text-right" @click.stop>
-                <Button variant="ghost" size="icon-sm" @click="openVerifyModal(app)">
-                  <Eye class="size-4" />
-                  <span class="sr-only">ดูรายละเอียด</span>
-                </Button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>รายการใบสมัคร</CardTitle>
+          <CardDescription>{{ filteredApplicants.length }} รายการจาก {{ applicants.length }} รายการทั้งหมด</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>รหัส</TableHead>
+                <TableHead>ผู้สมัคร</TableHead>
+                <TableHead class="hidden md:table-cell">หอพัก</TableHead>
+                <TableHead class="hidden lg:table-cell">ประเภทสิทธิ์</TableHead>
+                <TableHead>สถานะ</TableHead>
+                <TableHead class="text-right">เปิด</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="app in filteredApplicants" :key="app.id" class="cursor-pointer" @click="openApplicant(app)">
+                <TableCell class="font-medium">{{ app.id }}</TableCell>
+                <TableCell>
+                  <div class="font-medium">{{ app.name }}</div>
+                  <div class="text-xs text-muted-foreground">{{ app.studentId }}</div>
+                </TableCell>
+                <TableCell class="hidden md:table-cell">{{ app.dormName }}</TableCell>
+                <TableCell class="hidden lg:table-cell">{{ getThaiAppType(app.applicantType) }}</TableCell>
+                <TableCell>
+                  <Badge :variant="getStatusVariant(app.status)">{{ getStatusLabel(app.status) }}</Badge>
+                </TableCell>
+                <TableCell class="text-right" @click.stop>
+                  <Button variant="ghost" size="icon-sm" @click="openApplicant(app)">
+                    <Eye class="size-4" />
+                    <span class="sr-only">เปิดรายละเอียด</span>
+                  </Button>
+                </TableCell>
+              </TableRow>
+              <TableRow v-if="!filteredApplicants.length">
+                <TableCell colspan="6" class="h-24 text-center text-muted-foreground">ไม่พบใบสมัครตามเงื่อนไข</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </section>
 
-    <Card v-if="showTab('rooms')">
-      <CardHeader>
-        <CardTitle>โควตาห้องพักตามประเภท</CardTitle>
-        <CardDescription>แสดงการจองแบบ room type/quota สำหรับ mock-up ระยะแรก</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <template v-for="campaign in campaigns" :key="campaign.id">
-            <Card v-for="roomType in campaign.roomTypes" :key="roomType.name">
-              <CardHeader>
-                <Badge variant="outline" class="w-fit">{{ campaign.name }}</Badge>
-                <CardTitle class="text-base">{{ roomType.name }}</CardTitle>
-                <CardDescription>{{ roomType.active }} ว่าง จาก {{ roomType.capacity }}</CardDescription>
-              </CardHeader>
-              <CardContent class="space-y-2">
-                <Progress :model-value="roomProgress(roomType.capacity, roomType.active)" />
-                <p class="text-xs text-muted-foreground">
-                  จองแล้ว {{ roomType.capacity - roomType.active }} ({{ roomProgress(roomType.capacity, roomType.active) }}%)
-                </p>
-              </CardContent>
-            </Card>
-          </template>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card v-if="showTab('reports')">
-      <CardHeader>
-        <CardTitle>รายงานและส่งออกข้อมูล</CardTitle>
-        <CardDescription>เตรียมข้อมูลสำหรับงานเอกสารและระบบการเงินเดิม</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <Card>
+    <section v-if="showTab('rooms')" class="space-y-5">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <template v-for="campaign in campaigns" :key="campaign.id">
+          <Card v-for="roomType in campaign.roomTypes" :key="`${campaign.id}-${roomType.name}`">
             <CardHeader>
-              <Users class="size-5 text-muted-foreground" />
-              <CardTitle class="text-base">รายชื่อผู้จองที่ยืนยันสิทธิ์แล้ว</CardTitle>
-              <CardDescription>ส่งออก CSV รายชื่อนักศึกษาที่จองสำเร็จ</CardDescription>
+              <Badge variant="outline" class="w-fit">{{ campaign.name }}</Badge>
+              <CardTitle class="text-base">{{ roomType.name }}</CardTitle>
+              <CardDescription>{{ roomType.active }} ว่าง จาก {{ roomType.capacity }}</CardDescription>
             </CardHeader>
-            <CardFooter>
-              <Button variant="outline" class="w-full" @click="emit('exportData', 'residents')">
-                <Download class="size-4" />
-                ดาวน์โหลด CSV
-              </Button>
-            </CardFooter>
+            <CardContent class="space-y-3">
+              <Progress :model-value="roomProgress(roomType.capacity, roomType.active)" />
+              <div class="flex justify-between text-sm">
+                <span class="text-muted-foreground">จองแล้ว</span>
+                <span class="font-medium">{{ roomType.capacity - roomType.active }} ห้อง/เตียง</span>
+              </div>
+            </CardContent>
           </Card>
+        </template>
+      </div>
+    </section>
 
-          <Card>
-            <CardHeader>
-              <FileText class="size-5 text-muted-foreground" />
-              <CardTitle class="text-base">ข้อมูลการเงินการชำระเงิน</CardTitle>
-              <CardDescription>ส่งออก CSV รายละเอียดเงินโอนสำหรับฝ่ายบัญชี</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button variant="outline" class="w-full" @click="emit('exportData', 'payments')">
-                <Download class="size-4" />
-                ดาวน์โหลด CSV
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Card v-if="showTab('settings')">
-      <CardHeader>
-        <CardTitle>ตั้งค่าเงื่อนไขระบบ</CardTitle>
-        <CardDescription>ค่าจำลองสำหรับรอบรับสมัครและการตรวจสลิป</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <FieldSet class="max-w-md">
-          <FieldTitle>เงื่อนไขหลัก</FieldTitle>
-          <FieldGroup>
-            <Field>
-              <FieldLabel>เวลาการจอง (ชั่วโมง) ก่อนสิทธิ์หมดอายุหากไม่จ่ายเงิน</FieldLabel>
-              <Input type="number" value="12" />
-            </Field>
-            <Field>
-              <FieldLabel>จำนวนครั้งสูงสุดในการส่งสลิปซ้ำ</FieldLabel>
-              <Input type="number" value="3" />
-            </Field>
-          </FieldGroup>
-          <Button class="w-fit" @click="emit('showToast', 'บันทึกการตั้งค่าระบบเรียบร้อย')">
-            <Settings class="size-4" />
-            บันทึกการตั้งค่า
+    <section v-if="showTab('reports')" class="grid gap-5 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <Users class="size-5 text-muted-foreground" />
+          <CardTitle class="text-base">รายชื่อผู้จองที่ยืนยันแล้ว</CardTitle>
+          <CardDescription>ส่งออกข้อมูลผู้สมัครที่ได้รับสิทธิ์</CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" class="w-full" @click="emit('exportData', 'residents')">
+            <Download class="size-4" />
+            ดาวน์โหลด CSV
           </Button>
-        </FieldSet>
-      </CardContent>
-    </Card>
+        </CardFooter>
+      </Card>
 
-    <Card v-if="showTab('auditlog')">
-      <CardHeader>
-        <CardTitle>บันทึกกิจกรรมในระบบ</CardTitle>
-        <CardDescription>System Audit Trail</CardDescription>
-      </CardHeader>
-      <CardContent class="max-h-[350px] space-y-2 overflow-y-auto">
-        <div v-for="log in auditLogs" :key="log.timestamp + log.detail" class="border-b pb-2 text-sm">
-          <span class="font-mono text-xs text-muted-foreground">[{{ log.timestamp }}]</span>
-          <p>{{ log.detail }}</p>
-        </div>
-      </CardContent>
-    </Card>
+      <Card>
+        <CardHeader>
+          <FileText class="size-5 text-muted-foreground" />
+          <CardTitle class="text-base">ข้อมูลการชำระเงิน</CardTitle>
+          <CardDescription>ส่งออกข้อมูลการชำระเงินเพื่อกระทบยอด</CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" class="w-full" @click="emit('exportData', 'payments')">
+            <Download class="size-4" />
+            ดาวน์โหลด CSV
+          </Button>
+        </CardFooter>
+      </Card>
+    </section>
+
+    <section v-if="showTab('settings')" class="grid gap-5 xl:grid-cols-[minmax(0,34rem)_minmax(0,1fr)]">
+      <Card>
+        <CardHeader>
+          <CardTitle>ตั้งค่า Workflow</CardTitle>
+          <CardDescription>ค่าจำลองสำหรับกฎการสมัครและตรวจสอบหลักฐาน</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FieldSet>
+            <FieldTitle>เงื่อนไขหลัก</FieldTitle>
+            <FieldGroup>
+              <Field>
+                <FieldLabel>เวลาถือสิทธิ์หลังยื่นสมัคร (ชั่วโมง)</FieldLabel>
+                <Input type="number" value="12" />
+              </Field>
+              <Field>
+                <FieldLabel>จำนวนครั้งสูงสุดในการส่งสลิปซ้ำ</FieldLabel>
+                <Input type="number" value="3" />
+              </Field>
+              <Button class="w-fit" @click="emit('showToast', 'บันทึกการตั้งค่าระบบเรียบร้อย')">
+                <Settings class="size-4" />
+                บันทึก
+              </Button>
+            </FieldGroup>
+          </FieldSet>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Audit log</CardTitle>
+          <CardDescription>กิจกรรมล่าสุดในระบบจำลอง</CardDescription>
+        </CardHeader>
+        <CardContent class="max-h-[28rem] space-y-3 overflow-y-auto">
+          <div v-for="log in auditLogs" :key="log.timestamp + log.detail" class="rounded-lg border p-3 text-sm">
+            <p class="font-mono text-xs text-muted-foreground">{{ log.timestamp }}</p>
+            <p class="mt-1">{{ log.detail }}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
 
     <Dialog v-model:open="campaignModalOpen">
       <DialogContent class="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>สร้างแคมเปญใหม่</DialogTitle>
-          <DialogDescription>กำหนดข้อมูลรอบรับสมัครและเงื่อนไขการชำระเงินเบื้องต้น</DialogDescription>
+          <DialogTitle>สร้างแคมเปญรับสมัคร</DialogTitle>
+          <DialogDescription>กำหนดข้อมูลเบื้องต้นสำหรับรอบรับสมัครใหม่</DialogDescription>
         </DialogHeader>
         <div class="space-y-4">
           <Field>
-            <FieldLabel>ชื่อหอพัก / แคมเปญ</FieldLabel>
-            <Input v-model="cmName" placeholder="เช่น หอพักวรเรสซิเดนซ์ รอบที่ 1/2568" />
+            <FieldLabel>ชื่อแคมเปญ / หอพัก</FieldLabel>
+            <Input v-model="cmName" placeholder="หอพักวรเรสซิเดนซ์ รอบ 1/2568" />
+          </Field>
+          <Field>
+            <FieldLabel>ประเภทหอพัก</FieldLabel>
+            <Select v-model="cmType">
+              <SelectTrigger class="w-full"><SelectValue placeholder="เลือกประเภท" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="หอพักเครือข่าย">หอพักเครือข่าย</SelectItem>
+                <SelectItem value="หอพักหญิง มข.">หอพักหญิง มข.</SelectItem>
+                <SelectItem value="หอพักนานาชาติ">หอพักนานาชาติ</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
           <FieldGroup class="grid gap-4 sm:grid-cols-2">
             <Field>
@@ -557,64 +615,88 @@ function roomProgress(capacity: number, active: number) {
           </FieldGroup>
           <Field>
             <FieldLabel>เงื่อนไขชำระเงิน</FieldLabel>
-            <NativeSelect v-model="cmPaymentRequirement" class="w-full">
-              <NativeSelectOption value="ค่าประกันความเสียหาย">ค่าประกันความเสียหาย</NativeSelectOption>
-              <NativeSelectOption value="ค่าหอพักล่วงหน้า 1 เทอม">ค่าหอพักล่วงหน้า 1 เทอม</NativeSelectOption>
-              <NativeSelectOption value="ค่าหอพัก 2 เทอม">ค่าหอพัก 2 เทอม</NativeSelectOption>
-              <NativeSelectOption value="ค่าประกัน + ค่าหอพัก 1 เทอม">ค่าประกัน + ค่าหอพัก 1 เทอม</NativeSelectOption>
-            </NativeSelect>
+            <Select v-model="cmPaymentRequirement">
+              <SelectTrigger class="w-full"><SelectValue placeholder="เลือกเงื่อนไข" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ค่าประกันความเสียหาย">ค่าประกันความเสียหาย</SelectItem>
+                <SelectItem value="ค่าหอพักล่วงหน้า 1 เทอม">ค่าหอพักล่วงหน้า 1 เทอม</SelectItem>
+                <SelectItem value="ค่าหอพัก 2 เทอม">ค่าหอพัก 2 เทอม</SelectItem>
+                <SelectItem value="ค่าประกัน + ค่าหอพัก 1 เทอม">ค่าประกัน + ค่าหอพัก 1 เทอม</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
           <Field>
-            <FieldLabel>จำนวนเงินที่ต้องชำระ (บาท)</FieldLabel>
+            <FieldLabel>ยอดที่ต้องชำระ (บาท)</FieldLabel>
             <Input v-model="cmRequiredAmount" type="number" placeholder="3000" />
           </Field>
         </div>
         <DialogFooter>
           <Button variant="outline" @click="campaignModalOpen = false">ยกเลิก</Button>
-          <Button @click="handleSaveCampaign">บันทึกแคมเปญ</Button>
+          <Button @click="saveCampaign">บันทึกแคมเปญ</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
 
     <Dialog v-model:open="verifyModalOpen">
-      <DialogContent class="sm:max-w-4xl">
+      <DialogContent class="sm:max-w-6xl">
         <DialogHeader>
-          <DialogTitle>รายละเอียดใบสมัครและการตรวจสอบ</DialogTitle>
-          <DialogDescription v-if="selectedApp">
-            {{ selectedApp.id }} - {{ selectedApp.name }}
-          </DialogDescription>
+          <DialogTitle>รายละเอียดใบสมัคร</DialogTitle>
+          <DialogDescription v-if="selectedApp">{{ selectedApp.id }} / {{ selectedApp.name }}</DialogDescription>
         </DialogHeader>
 
-        <div v-if="selectedApp" class="grid max-h-[70vh] gap-6 overflow-y-auto md:grid-cols-2">
-          <div class="space-y-4 text-sm">
+        <div v-if="selectedApp" class="grid max-h-[72vh] gap-5 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_24rem]">
+          <div class="space-y-5">
             <Card>
               <CardHeader>
                 <CardTitle class="text-base">ข้อมูลผู้สมัคร</CardTitle>
               </CardHeader>
-              <CardContent class="space-y-2">
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">รหัสใบสมัคร</span><strong>{{ selectedApp.id }}</strong></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">ชื่อ</span><strong>{{ selectedApp.name }}</strong></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">รหัสนักศึกษา</span><strong>{{ selectedApp.studentId }}</strong></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">คณะ</span><span class="text-right">{{ selectedApp.faculty }} ({{ selectedApp.gender }})</span></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">ประเภทสิทธิ์</span><span>{{ getThaiAppType(selectedApp.applicantType) }}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">ติดต่อ</span><span class="text-right">{{ selectedApp.phone }}<br>{{ selectedApp.email }}</span></div>
+              <CardContent class="grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <p class="text-muted-foreground">ชื่อ</p>
+                  <p class="font-medium">{{ selectedApp.name }}</p>
+                </div>
+                <div>
+                  <p class="text-muted-foreground">รหัสนักศึกษา</p>
+                  <p class="font-medium">{{ selectedApp.studentId }}</p>
+                </div>
+                <div>
+                  <p class="text-muted-foreground">คณะ</p>
+                  <p class="font-medium">{{ selectedApp.faculty }}</p>
+                </div>
+                <div>
+                  <p class="text-muted-foreground">ติดต่อ</p>
+                  <p class="font-medium">{{ selectedApp.phone }}</p>
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle class="text-base">รายละเอียดห้องพัก</CardTitle>
+                <CardTitle class="text-base">รายละเอียดการจอง</CardTitle>
               </CardHeader>
-              <CardContent class="space-y-2">
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">หอพัก</span><span class="text-right font-medium">{{ selectedApp.dormName }}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">ประเภทห้อง</span><span class="text-right">{{ selectedApp.roomType }}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">ห้อง</span><span>{{ selectedApp.roomNumber || '-' }}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-muted-foreground">สถานะ</span><Badge :variant="getStatusVariant(selectedApp.status)">{{ getStatusLabel(selectedApp.status) }}</Badge></div>
+              <CardContent class="grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <p class="text-muted-foreground">หอพัก</p>
+                  <p class="font-medium">{{ selectedApp.dormName }}</p>
+                </div>
+                <div>
+                  <p class="text-muted-foreground">ประเภทห้อง</p>
+                  <p class="font-medium">{{ selectedApp.roomType }}</p>
+                </div>
+                <div>
+                  <p class="text-muted-foreground">ประเภทสิทธิ์</p>
+                  <p class="font-medium">{{ getThaiAppType(selectedApp.applicantType) }}</p>
+                </div>
+                <div>
+                  <p class="text-muted-foreground">สถานะ</p>
+                  <Badge :variant="getStatusVariant(selectedApp.status)">{{ getStatusLabel(selectedApp.status) }}</Badge>
+                </div>
               </CardContent>
             </Card>
+
           </div>
 
-          <div class="space-y-4">
+          <aside class="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle class="text-base">หลักฐานการชำระเงิน</CardTitle>
@@ -622,51 +704,41 @@ function roomProgress(capacity: number, active: number) {
               </CardHeader>
               <CardContent>
                 <div v-if="selectedApp.paymentMethod" class="rounded-lg border bg-muted/30 p-4 font-mono text-xs">
-                  <div class="border-b pb-2 text-center font-bold">KKU PAYMENT RECEIPT</div>
-                  <div class="mt-3 space-y-2">
-                    <div class="flex justify-between"><span>Ref No:</span><span>{{ selectedApp.id }}</span></div>
-                    <div class="flex justify-between"><span>Date:</span><span>{{ selectedApp.paymentDate }}</span></div>
-                    <div class="flex justify-between"><span>Time:</span><span>{{ selectedApp.paymentTime || '10:15' }}</span></div>
-                    <div class="flex justify-between"><span>Method:</span><span>{{ selectedApp.paymentMethod }}</span></div>
-                    <Separator />
-                    <div class="flex justify-between font-bold"><span>TOTAL PAID:</span><span>{{ selectedApp.amountPaid.toLocaleString() }} THB</span></div>
-                  </div>
+                  <div class="flex justify-between"><span>Ref</span><span>{{ selectedApp.id }}</span></div>
+                  <div class="flex justify-between"><span>Date</span><span>{{ selectedApp.paymentDate }}</span></div>
+                  <div class="flex justify-between"><span>Time</span><span>{{ selectedApp.paymentTime }}</span></div>
+                  <Separator class="my-3" />
+                  <div class="flex justify-between font-semibold"><span>Total</span><span>{{ selectedApp.amountPaid.toLocaleString() }} THB</span></div>
                 </div>
                 <Alert v-else>
                   <AlertCircle class="size-4" />
-                  <AlertTitle>ยังไม่มีประวัติการโอนเงิน</AlertTitle>
-                  <AlertDescription>ผู้สมัครยังไม่ได้ชำระเงินหรืออัปโหลดหลักฐาน</AlertDescription>
+                  <AlertTitle>ยังไม่มีหลักฐาน</AlertTitle>
+                  <AlertDescription>ผู้สมัครยังไม่ได้ชำระเงินหรืออัปโหลดสลิป</AlertDescription>
                 </Alert>
               </CardContent>
             </Card>
 
-            <Card v-if="selectedApp.status !== 'Confirmed' && selectedApp.status !== 'Rejected'">
-              <CardHeader>
-                <CardTitle class="text-base">การดำเนินการ</CardTitle>
-                <CardDescription>อนุมัติ ขอเอกสารใหม่ หรือปฏิเสธใบสมัคร</CardDescription>
-              </CardHeader>
-              <CardContent class="space-y-3">
-                <Button class="w-full" @click="handleApprove">
-                  <Check class="size-4" />
-                  อนุมัติสิทธิ์ห้องพัก
+            <div class="space-y-3 rounded-lg border bg-card p-4 shadow-sm">
+              <Button class="w-full" :disabled="selectedApp.status === 'Confirmed' || selectedApp.status === 'Rejected'" @click="approveApplicant">
+                <Check class="size-4" />
+                อนุมัติสิทธิ์
+              </Button>
+              <Field>
+                <FieldLabel>เหตุผล</FieldLabel>
+                <Textarea v-model="actionReason" placeholder="เช่น รูปสลิปไม่ชัด ยอดเงินไม่ตรง หรือเอกสารไม่ครบ" />
+              </Field>
+              <div class="grid gap-2">
+                <Button variant="outline" :disabled="selectedApp.status === 'Confirmed' || selectedApp.status === 'Rejected'" @click="requestReupload">
+                  <AlertCircle class="size-4" />
+                  ขอให้ส่งสลิปใหม่
                 </Button>
-                <Field>
-                  <FieldLabel>เหตุผล (กรณีขอสลิปใหม่ / ปฏิเสธ)</FieldLabel>
-                  <Textarea v-model="drawerActionReason" placeholder="ระบุเหตุผล เช่น รูปเบลอ, ยอดเงินไม่ถูกต้อง..." />
-                </Field>
-                <div class="grid grid-cols-2 gap-2">
-                  <Button variant="outline" @click="handleRequestReupload">
-                    <AlertCircle class="size-4" />
-                    อัปโหลดใหม่
-                  </Button>
-                  <Button variant="outline" @click="handleReject">
-                    <XCircle class="size-4" />
-                    ปฏิเสธสิทธิ์
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                <Button variant="outline" :disabled="selectedApp.status === 'Confirmed' || selectedApp.status === 'Rejected'" @click="rejectApplicant">
+                  <XCircle class="size-4" />
+                  ปฏิเสธใบสมัคร
+                </Button>
+              </div>
+            </div>
+          </aside>
         </div>
       </DialogContent>
     </Dialog>

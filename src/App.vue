@@ -2,9 +2,6 @@
 import { ref, reactive } from 'vue'
 import { toast } from 'vue-sonner'
 import type { DormCampaign, DormRooms, Applicant, AuditLog } from './types'
-import TopNavbar from './components/TopNavbar.vue'
-import ApplicantView from './views/ApplicantView.vue'
-import AdminView from './views/AdminView.vue'
 import LoginView from './views/LoginView.vue'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -61,8 +58,6 @@ function handleLogout() {
   currentUser.value = null
   currentAdminTab.value = 'dashboard'
   showToast('ออกจากระบบและรีเซ็ตข้อมูลจำลองเรียบร้อยแล้ว')
-  return
-  showToast('ออกจากระบบเรียบร้อยแล้ว')
 }
 
 // System Roles
@@ -627,73 +622,37 @@ function handleReset(showMessage = true) {
 
 }
 
-function handleShowMyStatus() {
-  if (activeApplicantApp.value) {
-    const latest = applicantsList.value.find(a => a.id === activeApplicantApp.value?.id)
-    if (latest) {
-      activeApplicantApp.value = latest
-      showToast('นำทางไปยังหน้าติดตามสถานะ')
-    }
-  } else {
-    showToast('ยังไม่มีการยื่นใบสมัครที่แอคทีฟในระบบ')
-  }
-}
 </script>
 
 <template>
   <div class="min-h-screen bg-background text-foreground font-sans">
-    
-    <!-- Top Nav Bar Component -->
-    <TopNavbar
-      v-if="isLoggedIn"
-      :role="currentRole"
-      v-model:currentAdminTab="currentAdminTab"
-      :user="currentUser"
-      @showMyStatus="handleShowMyStatus"
-      @backToCampaigns="activeApplicantApp = null"
-      @logout="handleLogout"
-    />
-
     <!-- Main Container -->
-    <main :class="isLoggedIn ? 'mx-auto max-w-screen-2xl px-5 py-6 sm:px-8 lg:px-10' : 'min-h-screen'">
+    <main class="min-h-screen">
       
-      <!-- LOGIN VIEW -->
       <LoginView
-        v-if="!isLoggedIn"
+        v-model:currentAdminTab="currentAdminTab"
+        :is-logged-in="isLoggedIn"
+        :role="currentRole"
+        :user="currentUser"
+        :campaigns="campaignList"
+        :dorm-rooms="dormRoomsDb"
+        :active-app="activeApplicantApp"
+        :applicants="applicantsList"
+        :audit-logs="auditLogList"
         @login="handleLogin"
+        @logout="handleLogout"
+        @submitApp="handleAppSubmit"
+        @simulateUniPay="handleSimulateUniPay"
+        @submitManualSlip="handleManualSlipSubmit"
+        @printTicket="showToast('Printed reservation ticket in the mock workflow.')"
+        @createCampaign="handleCreateCampaign"
+        @approveApp="handleApproveApp"
+        @reuploadApp="handleReuploadApp"
+        @rejectApp="handleRejectApp"
+        @exportData="handleExportData"
         @showToast="showToast"
       />
 
-      <template v-else>
-        <!-- APPLICANT VIEW -->
-        <ApplicantView
-          v-if="currentRole === 'applicant'"
-          :campaigns="campaignList"
-          :dorm-rooms="dormRoomsDb"
-          :active-app="activeApplicantApp"
-          @submitApp="handleAppSubmit"
-          @simulateUniPay="handleSimulateUniPay"
-          @submitManualSlip="handleManualSlipSubmit"
-          @printTicket="showToast('จำลองการพิมพ์ใบเสร็จและใบแจ้งเข้าหอพัก')"
-          @showToast="showToast"
-        />
-
-        <!-- ADMIN VIEW -->
-        <AdminView
-          v-else
-          v-model:currentAdminTab="currentAdminTab"
-          :campaigns="campaignList"
-          :applicants="applicantsList"
-          :dorm-rooms="dormRoomsDb"
-          :audit-logs="auditLogList"
-          @createCampaign="handleCreateCampaign"
-          @approveApp="handleApproveApp"
-          @reuploadApp="handleReuploadApp"
-          @rejectApp="handleRejectApp"
-          @exportData="handleExportData"
-          @showToast="showToast"
-        />
-      </template>
 
     </main>
 

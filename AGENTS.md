@@ -81,8 +81,8 @@ Important uncertainty:
 - Prefer room type/quota selection over exact room selection for core mock-ups.
 - Show reservation and payment status clearly: submitted, waiting for payment, slip uploaded, verifying, needs re-upload, reserved, rejected, expired.
 - Use semantic Tailwind tokens such as `bg-background`, `text-foreground`, `border-border`, `bg-card`, `text-muted-foreground`, `bg-primary`, `text-primary-foreground`.
-- Current mock-up palette should stay strictly white, gray, and black. Do not add maroon, brand-color accents, or any extra accent color unless the user explicitly re-approves it.
-- Never add colored strips, colored top borders, colored divider lines, or decorative color rules to cards, buttons, page sections, alerts, tabs, nav bars, or any other UI element. Use neutral borders, spacing, typography, and shadcn-vue states instead.
+- Default mock-up palette should stay white, gray, and black. When the user explicitly provides a KKU red reference, use KKU red only as the primary brand accent for buttons, icons, small status dots, selected states, and important text.
+- Never add arbitrary colored strips, colored top borders, colored divider lines, or decorative color rules to cards, buttons, page sections, alerts, tabs, nav bars, or any other UI element. Use neutral borders, spacing, typography, and shadcn-vue states; KKU red accents must be intentional and restrained.
 - Keep layouts responsive for mobile and desktop.
 
 ## Verification

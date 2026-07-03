@@ -1,0 +1,422 @@
+{
+  "source_page": "https://dorm.kku.ac.th/personal-dorm/",
+  "unique_person_count": 34,
+  "people": [
+    {
+      "name": "เพ็ญนภา ชนะทัพ",
+      "email": "cpenna@kku.ac.th",
+      "roles": [
+        {
+          "section": "บุคลากรกองบริการหอพักนักศึกษา",
+          "position": "รักษาการแทนผู้อำนวยการกองบริการหอพักนักศึกษา"
+        }
+      ],
+      "primary_image_path": "images/personnel/01-pen-napha-chana-thap.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5215-2-scaled.jpg"
+    },
+    {
+      "name": "ก้องฟ้า ขันธ์ชารี",
+      "email": "kongkh@kku.ac.th",
+      "roles": [
+        {
+          "section": "บุคลากรกองบริการหอพักนักศึกษา",
+          "position": "หัวหน้างานพัฒนาและบำรุงรักษาหอพัก"
+        },
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยบริการหอพักที่ 5"
+        }
+      ],
+      "primary_image_path": "images/personnel/02-kongfa-khancharee.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/%E0%B8%81%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B8%9F%E0%B9%89%E0%B8%B2.jpg"
+    },
+    {
+      "name": "พัชราภรณ์ ภัทรารักษ์",
+      "email": "patcharpronph@kku.ac.th",
+      "roles": [
+        {
+          "section": "บุคลากรกองบริการหอพักนักศึกษา",
+          "position": "หัวหน้างานบริหารหอพัก"
+        },
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยบริการหอพักที่ 4"
+        }
+      ],
+      "primary_image_path": "images/personnel/03-patcharaporn-phatrarak.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/41004.jpg"
+    },
+    {
+      "name": "วลีรัตน์ คำสีทา",
+      "email": "kitaratka@kku.ac.th",
+      "roles": [
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยบริการหอพักที่ 1"
+        }
+      ],
+      "primary_image_path": "images/personnel/07-waleerat-kamsitha.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/%E0%B8%A7%E0%B8%A5%E0%B8%B5%E0%B8%A3%E0%B8%B1%E0%B8%95%E0%B8%99%E0%B9%8C.jpg"
+    },
+    {
+      "name": "นภัสนันท์ สุดใด",
+      "email": "napapi@kku.ac.th",
+      "roles": [
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยบริการหอพักที่ 2"
+        }
+      ],
+      "primary_image_path": "images/personnel/08-napassanun-sudai.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5048-1.jpg"
+    },
+    {
+      "name": "กรรณฏา ยศสุ",
+      "email": "swarar@kku.ac.th",
+      "roles": [
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยบริการหอพักที่ 3"
+        }
+      ],
+      "primary_image_path": "images/personnel/09-kannata-yotsu.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/%E0%B8%81%E0%B8%A3%E0%B8%A3%E0%B8%93%E0%B8%8E%E0%B8%B2-1.jpg"
+    },
+    {
+      "name": "นฤมล โฮมป่า",
+      "email": "naruho@kku.ac.th",
+      "roles": [
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยบริการหอพักที่ 6"
+        }
+      ],
+      "primary_image_path": "images/personnel/10-narumon-hompa.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/66131.jpg"
+    },
+    {
+      "name": "เจษฎาภรณ์ สมประสงค์",
+      "email": "jedsaso@kku.ac.th",
+      "roles": [
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยอำนวยการ"
+        }
+      ],
+      "primary_image_path": "images/personnel/11-jetsadaporn-somprasong.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5092-scaled.jpg"
+    },
+    {
+      "name": "ทรงวุฒิ อดทน",
+      "email": "songod@kku.ac.th",
+      "roles": [
+        {
+          "section": "หัวหน้าหน่วยบริการหอพัก",
+          "position": "หัวหน้าหน่วยซ่อมบำรุง"
+        }
+      ],
+      "primary_image_path": "images/personnel/12-songwut-odthon.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4978-1.jpg"
+    },
+    {
+      "name": "กัญญาณัฏฐ์ ประดับคำ",
+      "email": "kanypad@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "ธุรการประจำหน่วยอำนวยการ"
+        }
+      ],
+      "primary_image_path": "images/personnel/13-kanyanat-pradubkham.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/420104.jpg"
+    },
+    {
+      "name": "อรุณี ศรีจำนงค์",
+      "email": "aruneesr@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "ธุรการหน่วยบริการหอพักที่ 2"
+        }
+      ],
+      "primary_image_path": "images/personnel/14-arunee-srichamnong.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/153000.jpg"
+    },
+    {
+      "name": "กนกศรี สุขวิเศษ",
+      "email": "kanoksuk@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "ธุรการหน่วยบริการหอพักที่ 3"
+        }
+      ],
+      "primary_image_path": "images/personnel/15-kanoksri-sukwiset.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/%E0%B9%80%E0%B8%9A%E0%B9%87%E0%B8%99.jpg"
+    },
+    {
+      "name": "ญาณิฐา ลำเพ็ง",
+      "email": "chamermtla@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "ธุรการหน่วยบริการหอพักที่ 4"
+        }
+      ],
+      "primary_image_path": "images/personnel/16-yanitha-lampheng.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5230-scaled.jpg"
+    },
+    {
+      "name": "ธนิดา พลศักดิ์",
+      "email": "tanidapo@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "ธุรการหน่วยบริการหอพักที่ 6"
+        }
+      ],
+      "primary_image_path": "images/personnel/17-thanida-phonsak.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/41436.jpg"
+    },
+    {
+      "name": "จันทิรา ไชยสิน",
+      "email": "jantch@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วยหอพักที่ 1"
+        }
+      ],
+      "primary_image_path": "images/personnel/18-chantira-chaiyasin.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4994-scaled.jpg"
+    },
+    {
+      "name": "ชาลี แก้วประดิษฐ์",
+      "email": "chakae@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วยหอพักที่ 5"
+        }
+      ],
+      "primary_image_path": "images/personnel/19-chalee-kaewpradit.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4983-scaled.jpg"
+    },
+    {
+      "name": "บัว โนนศรี",
+      "email": "buanon@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วยหอพัก"
+        }
+      ],
+      "primary_image_path": "images/personnel/20-bua-nonsri.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5011-scaled.jpg"
+    },
+    {
+      "name": "อาทิตย์ อุปฮาต",
+      "email": "rathau@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วยหอพัก"
+        }
+      ],
+      "primary_image_path": "images/personnel/21-athit-upahat.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5003-scaled.jpg"
+    },
+    {
+      "name": "อุไรพร อิ่มนาง",
+      "email": "auraim@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วยหอพัก"
+        }
+      ],
+      "primary_image_path": "images/personnel/22-uraiporn-imnang.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5006-scaled.jpg"
+    },
+    {
+      "name": "พัชรินทร์ แสนนา",
+      "email": "patcsa@kku.ac.th",
+      "roles": [
+        {
+          "section": "ธุรการหน่วยหอพักและเจ้าหน้าที่หอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วยอำนวยการ"
+        }
+      ],
+      "primary_image_path": "images/personnel/23-patcharin-saenna.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_5196-scaled.jpg"
+    },
+    {
+      "name": "ปาคม ครุฑชัย",
+      "email": "pakokr@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไฟฟ้า"
+        }
+      ],
+      "primary_image_path": "images/personnel/25-pakom-krutchai.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4930-scaled.jpg"
+    },
+    {
+      "name": "ศุภการย์ คลังบุญครอง",
+      "email": "supakl@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไฟฟ้า"
+        }
+      ],
+      "primary_image_path": "images/personnel/26-supakan-klangboonkrong.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4947-1.jpg"
+    },
+    {
+      "name": "จิตรติทร คุณธะรักษ์",
+      "email": "jittku@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไฟฟ้า"
+        }
+      ],
+      "primary_image_path": "images/personnel/27-jittitorn-khuntharak.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4936-1.jpg"
+    },
+    {
+      "name": "ปรีชา จุลมา",
+      "email": "peecju@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไฟฟ้า"
+        }
+      ],
+      "primary_image_path": "images/personnel/28-preecha-junma.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4923-scaled.jpg"
+    },
+    {
+      "name": "วิทวัส โกกอุ่น",
+      "email": "withgo@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไม้ – ช่างปูน"
+        }
+      ],
+      "primary_image_path": "images/personnel/29-withawat-kokoon.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4917-scaled.jpg"
+    },
+    {
+      "name": "สกล กันหา",
+      "email": "sakogu@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไม้ – ช่างปูน"
+        }
+      ],
+      "primary_image_path": "images/personnel/30-sakon-kanha.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4955-scaled.jpg"
+    },
+    {
+      "name": "ณัฐวุฒิ อิ่มนาง",
+      "email": "..@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไม้ – ช่างปูน"
+        }
+      ],
+      "primary_image_path": "images/personnel/31-nattawut-imnang.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4967-scaled.jpg"
+    },
+    {
+      "name": "นัฐพล มาโสภา",
+      "email": "natthma@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างไม้ – ช่างปูน"
+        }
+      ],
+      "primary_image_path": "images/personnel/32-natthapol-masopha.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4943-scaled.jpg"
+    },
+    {
+      "name": "อรรถพล ชนะการี",
+      "email": "attapch@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างประปา"
+        }
+      ],
+      "primary_image_path": "images/personnel/33-attapol-chanakaree.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4956-scaled.jpg"
+    },
+    {
+      "name": "ธรรมนูญ เนื่องอาชา",
+      "email": "thamnu@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างประปา"
+        }
+      ],
+      "primary_image_path": "images/personnel/34-thamnu-nueangacha.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4964-scaled.jpg"
+    },
+    {
+      "name": "โสภา เดชแพง",
+      "email": "sopade@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างประปา"
+        }
+      ],
+      "primary_image_path": "images/personnel/35-sopha-dechphaeng.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4910-scaled.jpg"
+    },
+    {
+      "name": "วิมล ทันเขิม",
+      "email": "wimoth@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างประปา"
+        }
+      ],
+      "primary_image_path": "images/personnel/36-wimon-thankheum.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4925-scaled.jpg"
+    },
+    {
+      "name": "นายกฤษฎา แสนนา",
+      "email": "kitsan@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "ช่างประปา"
+        }
+      ],
+      "primary_image_path": "images/personnel/37-kritsada-saenna.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2025/08/416444.jpg"
+    },
+    {
+      "name": "อรุณ เพียหอชัย",
+      "email": "aroopr@kku.ac.th",
+      "roles": [
+        {
+          "section": "ช่างหน่วยซ่อมบำรุงหอพัก",
+          "position": "เจ้าหน้าที่ประจำหน่วย"
+        }
+      ],
+      "primary_image_path": "images/personnel/38-arun-piahorchai.jpg",
+      "image_source_url": "https://dorm.kku.ac.th/wp-content/uploads/2024/09/DSC_4970-scaled.jpg"
+    }
+  ]
+}
