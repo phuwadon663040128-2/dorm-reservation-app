@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import type { DateValue } from 'reka-ui'
+import { computed, ref, watch, type Ref } from 'vue'
+import type { DateValue } from '@internationalized/date'
+import { CalendarDate, fromDate, getLocalTimeZone } from '@internationalized/date'
 import {
   AlertCircle,
   ArrowRight,
+  Armchair,
+  Bath,
   Bed,
   Building,
   Calendar,
@@ -11,6 +14,7 @@ import {
   ChevronDown,
   ClipboardList,
   CreditCard,
+  DoorOpen,
   Download,
   Eye,
   EyeOff,
@@ -18,10 +22,12 @@ import {
   Globe,
   Headphones,
   Home,
+  LayoutGrid,
   Lock,
   LogOut,
   Menu,
   Plus,
+  Route,
   Search,
   ShieldCheck,
   Snowflake,
@@ -142,6 +148,7 @@ interface TestAccount {
 
 interface DormitoryCard {
   name: string
+  nameTh: string
   subtitle: string
   subtitleTh: string
   image: string
@@ -151,6 +158,14 @@ interface DormitoryCard {
   roomTypeTh: string
   availability: string
   availabilityTh: string
+  criteria: {
+    applicantType: string
+    applicantTypeTh: string
+    timing: string
+    timingTh: string
+    slipRequired: string
+    slipRequiredTh: string
+  }
 }
 
 type DormFeeGroup = (typeof kkuDormFeeData.groups)[number]
@@ -269,9 +284,9 @@ const copy = {
     fanRoom: 'ห้องพัดลม',
     premiumRoom: 'ห้องพรีเมียม',
     allStudents: 'ทั้งหมด',
-    femaleOnly: 'หญิงเท่านั้น',
-    maleOnly: 'ชายเท่านั้น',
-    international: 'นักศึกษานานาชาติ',
+    femaleOnly: 'โซนหญิง',
+    maleOnly: 'โซนชาย',
+    international: 'ไทย/ต่างชาติ',
     checkAvailability: 'ตรวจสอบห้องว่าง',
     featuredDormitories: 'หอพักแนะนำ',
     viewAllDormitories: 'ดูหอพักทั้งหมด',
@@ -365,15 +380,15 @@ const copy = {
     moveInDate: 'Move-in Date',
     moveOutDate: 'Move-out Date',
     roomType: 'Room Type',
-    gender: 'Gender',
+    gender: 'Resident group',
     allTypes: 'All Types',
     airConditioned: 'Air-conditioned',
     fanRoom: 'Fan room',
     premiumRoom: 'Premium room',
     allStudents: 'All',
-    femaleOnly: 'Female Only',
-    maleOnly: 'Male Only',
-    international: 'International',
+    femaleOnly: 'Female zone',
+    maleOnly: 'Male zone',
+    international: 'Thai/International',
     checkAvailability: 'Check Availability',
     featuredDormitories: 'Featured Dormitories',
     viewAllDormitories: 'View all Dormitories',
@@ -448,10 +463,14 @@ const loginRole = ref<UserRole>('applicant')
 const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
-const moveInDate = ref('')
-const moveOutDate = ref('')
-const moveInDateValue = ref<DateValue>()
-const moveOutDateValue = ref<DateValue>()
+const defaultCalendarDate = fromDate(new Date(), getLocalTimeZone())
+const minCalendarDate = new CalendarDate(1925, 1, 1)
+const maxCalendarDate = new CalendarDate(2035, 1, 1)
+const defaultCalendarDateText = defaultCalendarDate.toString().slice(0, 10)
+const moveInDate = ref(defaultCalendarDateText)
+const moveOutDate = ref(defaultCalendarDateText)
+const moveInDateValue = ref(defaultCalendarDate) as Ref<DateValue>
+const moveOutDateValue = ref(defaultCalendarDate) as Ref<DateValue>
 const roomType = ref('all')
 const gender = ref('all')
 const currentPage = ref<PageView>('home')
@@ -466,6 +485,10 @@ const manualSlip = ref({
   time: '',
   fileName: 'manual_transfer_receipt.png',
 })
+const profileEditMode = ref(false)
+const uniPayDialogOpen = ref(false)
+const uniPayProcessing = ref(false)
+const uniPaySuccess = ref(false)
 const applicantForm = ref({
   name: '',
   studentId: '',
@@ -582,39 +605,66 @@ const featureCardIcons = [
 const dormitories: DormitoryCard[] = [
   {
     name: 'Nopparat 9',
+    nameTh: 'หอพักนพรัตน์ / หอ 9 หลัง',
     subtitle: 'Nopparat Dormitory',
     image: nopparatImage,
     subtitleTh: 'หอพักนพรัตน์',
-    gender: 'Female Only',
-    genderTh: 'หญิงเท่านั้น',
+    gender: 'Male and female buildings',
+    genderTh: 'ชาย 4 หลัง / หญิง 5 หลัง',
     roomType: 'Air-conditioned',
     roomTypeTh: 'ห้องปรับอากาศ',
     availability: 'Rooms Available',
     availabilityTh: 'มีห้องว่าง',
+    criteria: {
+      applicantType: 'General Applicant',
+      applicantTypeTh: 'ผู้สมัครทั่วไป',
+      timing: 'Before deadline',
+      timingTh: 'ชำระก่อนกำหนด',
+      slipRequired: 'Slip required',
+      slipRequiredTh: 'ต้องแนบหลักฐานชำระเงิน',
+    },
   },
   {
     name: 'Wora International',
+    nameTh: 'หอพักวรอินเตอร์',
     subtitle: 'International Dormitory',
     image: woraInternationalImage,
     subtitleTh: 'หอพักนานาชาติ',
-    gender: 'All Students',
-    genderTh: 'นักศึกษาทุกกลุ่ม',
+    gender: 'Female A-C / Male D',
+    genderTh: 'หญิง A-C / ชาย D',
     roomType: 'Premium AC rooms',
     roomTypeTh: 'ห้องปรับอากาศพรีเมียม',
     availability: 'Limited Rooms',
     availabilityTh: 'ห้องว่างจำกัด',
+    criteria: {
+      applicantType: 'Thai and International Students',
+      applicantTypeTh: 'นักศึกษาไทยและต่างชาติ',
+      timing: 'Pay when applying',
+      timingTh: 'ชำระเมื่อสมัคร',
+      slipRequired: 'Slip required',
+      slipRequiredTh: 'ต้องแนบหลักฐานชำระเงิน',
+    },
   },
   {
     name: 'Wora Residence 8',
+    nameTh: 'วรเรสซิเดนซ์ / หอ 8 หลัง',
     subtitle: 'Wora Residence',
     image: woraResidenceEntranceImage,
     subtitleTh: 'วรเรสซิเดนซ์',
-    gender: 'Female Only',
-    genderTh: 'หญิงเท่านั้น',
+    gender: 'Male and female buildings',
+    genderTh: 'ชาย 2 หลัง / หญิง 6 หลัง',
     roomType: 'Fan and AC rooms',
     roomTypeTh: 'ห้องพัดลมและปรับอากาศ',
     availability: 'Rooms Available',
     availabilityTh: 'มีห้องว่าง',
+    criteria: {
+      applicantType: 'General Applicant',
+      applicantTypeTh: 'ผู้สมัครทั่วไป',
+      timing: 'Pay when applying',
+      timingTh: 'ชำระเมื่อสมัคร',
+      slipRequired: 'Slip required',
+      slipRequiredTh: 'ต้องแนบหลักฐานชำระเงิน',
+    },
   },
 ]
 
@@ -623,8 +673,8 @@ const dormDetailContent: Record<string, DormDetailContent> = {
     summaryTh: 'หอพักนพรัตน์ หรือหอพัก 9 หลัง เป็นกลุ่มหอพักในกำกับมหาวิทยาลัย รองรับทั้งอาคารชายและหญิง เหมาะกับนักศึกษาที่ต้องการหอพักใกล้พื้นที่บริการหลักของมหาวิทยาลัย มีห้องธรรมดา ห้องปรับอากาศ และห้องปรับอากาศพิเศษ',
     summaryEn: 'Nopparat 9 is an affiliated dormitory group with male and female buildings, standard rooms, air-conditioned rooms, and special air-conditioned rooms.',
     gallery: [nopparatImage, nopparatOfficeImage, nopparatRoomImage, nopparatCanteenImage],
-    highlightsTh: ['อาคารรวม 9 หลัง', 'แยกอาคารชายและหญิง', 'คิดค่าธรรมเนียมรายภาคการศึกษา', 'มีห้องอ่านหนังสือ ตู้กดน้ำ และพื้นที่บริการประจำหอ'],
-    highlightsEn: ['9 buildings', 'Male and female buildings', 'Semester-based fee model', 'Study areas, water dispensers, and dorm service points'],
+    highlightsTh: ['อาคารรวม 9 หลัง', 'หอพักชาย 4 หลัง / หอพักหญิง 5 หลัง', 'คิดค่าธรรมเนียมรายภาคการศึกษา', 'มีห้องอ่านหนังสือ ตู้กดน้ำ และพื้นที่บริการประจำหอ'],
+    highlightsEn: ['9 buildings', '4 male buildings / 5 female buildings', 'Semester-based fee model', 'Study areas, water dispensers, and dorm service points'],
     documents: [
       { titleTh: 'กฎของหอพักนักศึกษา', titleEn: 'Dormitory rules', href: '/dorm-documents/dorm-rules.pdf' },
       { titleTh: 'คู่มือจองหอพักออนไลน์', titleEn: 'Online reservation guide', href: '/dorm-documents/online-reservation-guide.pdf' },
@@ -632,11 +682,11 @@ const dormDetailContent: Record<string, DormDetailContent> = {
     ],
   },
   'dorm-8': {
-    summaryTh: 'หอพักวรเรสซิเดนซ์ 8 หลัง เป็นหอพักสวัสดิการนักศึกษาในกำกับมหาวิทยาลัย มีห้องพัดลม ห้องปรับอากาศ และห้องปรับอากาศภาคพิเศษ รูปแบบค่าธรรมเนียมเป็นรายปีพร้อมทางเลือกแบ่งชำระตามภาคการศึกษา',
-    summaryEn: 'Wora Residence 8 is an affiliated welfare dormitory with fan rooms, air-conditioned rooms, and special AC rooms. Fees are annual with split-payment options.',
+    summaryTh: 'หอพักวรเรสซิเดนซ์ 8 หลัง เป็นหอพักสวัสดิการนักศึกษาในกำกับมหาวิทยาลัย แบ่งเป็นหอพักชาย 2 หลังและหอพักหญิง 6 หลัง มีห้องพัดลม ห้องปรับอากาศ และห้องปรับอากาศภาคพิเศษ รูปแบบค่าธรรมเนียมเป็นรายปีพร้อมทางเลือกแบ่งชำระตามภาคการศึกษา',
+    summaryEn: 'Wora Residence 8 is an affiliated welfare dormitory with 2 male buildings and 6 female buildings, fan rooms, air-conditioned rooms, and special AC rooms. Fees are annual with split-payment options.',
     gallery: [woraResidenceEntranceImage, woraResidenceImage, woraResidenceGateImage, woraResidenceCanteenImage, woraResidenceStoreImage],
-    highlightsTh: ['อาคารรวม 8 หลัง', 'รองรับห้องพัดลมและห้องปรับอากาศ', 'ค่าธรรมเนียมเหมาจ่ายรายปี', 'มีโรงอาหาร ร้านค้า และสำนักงานบริการประจำหอ'],
-    highlightsEn: ['8 buildings', 'Fan and AC room options', 'Annual fee model', 'Canteen, shops, and dorm service office'],
+    highlightsTh: ['อาคารรวม 8 หลัง', 'หอพักชาย 2 หลัง / หอพักหญิง 6 หลัง', 'รองรับห้องพัดลมและห้องปรับอากาศ', 'มีโรงอาหาร ร้านค้า และสำนักงานบริการประจำหอ'],
+    highlightsEn: ['8 buildings', '2 male buildings / 6 female buildings', 'Fan and AC room options', 'Canteen, shops, and dorm service office'],
     documents: [
       { titleTh: 'ข้อตกลงการบริหารจัดการหอพักสวัสดิการนักศึกษา 8 หลัง', titleEn: 'Wora Residence 8 management agreement', href: '/dorm-documents/wora-residence-8-agreement.pdf' },
       { titleTh: 'กฎของหอพักนักศึกษา', titleEn: 'Dormitory rules', href: '/dorm-documents/dorm-rules.pdf' },
@@ -644,11 +694,11 @@ const dormDetailContent: Record<string, DormDetailContent> = {
     ],
   },
   'dorm-inter': {
-    summaryTh: 'หอพักวรอินเตอร์เป็นหอพักนานาชาติในกำกับมหาวิทยาลัย รองรับนักศึกษาไทยและนักศึกษาต่างชาติ มีห้องพักมาตรฐานสูงกว่า พร้อมพื้นที่ส่วนกลาง ห้องอ่านหนังสือ และบริการซักรีด',
-    summaryEn: 'Wora International is an affiliated international dormitory for Thai and international students with premium rooms, common areas, study rooms, and laundry services.',
+    summaryTh: 'หอพักวรอินเตอร์เป็นหอพักสวัสดิการนักศึกษา 4 หลังในกำกับมหาวิทยาลัย แบ่งเป็นหอพักหญิง A, B, C และหอพักชาย D รองรับนักศึกษาไทยและนักศึกษาต่างชาติ พร้อมพื้นที่ส่วนกลาง ห้องอ่านหนังสือ และบริการซักรีด',
+    summaryEn: 'Wora International is a 4-building affiliated dormitory with female buildings A, B, C and male building D. It serves Thai and international students with common areas, study rooms, and laundry services.',
     gallery: [woraInternationalImage, woraInternationalWideImage, woraInternationalRoomImage, woraInternationalCommonImage, woraInternationalLaundryImage],
-    highlightsTh: ['อาคารรวม 4 หลัง', 'รองรับนักศึกษาทุกกลุ่ม', 'ค่าธรรมเนียมเหมาจ่ายรายปี', 'มีพื้นที่ส่วนกลาง ห้องอ่านหนังสือ และบริการซักรีด'],
-    highlightsEn: ['4 buildings', 'All student groups', 'Annual fee model', 'Common areas, study room, and laundry service'],
+    highlightsTh: ['อาคารรวม 4 หลัง', 'หอพักหญิง A-C / หอพักชาย D', 'รองรับนักศึกษาไทยและต่างชาติ', 'มีพื้นที่ส่วนกลาง ห้องอ่านหนังสือ และบริการซักรีด'],
+    highlightsEn: ['4 buildings', 'Female A-C / Male D', 'Thai and international students', 'Common areas, study room, and laundry service'],
     documents: [
       { titleTh: 'กฎของหอพักนักศึกษา', titleEn: 'Dormitory rules', href: '/dorm-documents/dorm-rules.pdf' },
       { titleTh: 'คู่มือจองหอพักออนไลน์', titleEn: 'Online reservation guide', href: '/dorm-documents/online-reservation-guide.pdf' },
@@ -765,13 +815,6 @@ const activeCampaigns = computed(() => props.campaigns.filter(campaign => campai
 const selectedDormId = computed(() => getDormId(selectedDorm.value || dormitories[0]))
 const selectedCampaign = computed(() => props.campaigns.find(campaign => campaign.id === selectedDormId.value) || null)
 const selectedRoomTypes = computed(() => selectedCampaign.value?.roomTypes || [])
-const selectedRooms = computed(() => {
-  const dorm = props.dormRooms[selectedDormId.value]
-  if (!dorm) return []
-  return dorm.floors
-    .flatMap(floor => floor.rooms.map(room => ({ ...room, floor: floor.floor })))
-    .filter(room => room.occupied < room.capacity)
-})
 const selectedDormRooms = computed(() => props.dormRooms[selectedDormId.value] || null)
 const availableFloors = computed(() => selectedDormRooms.value?.floors.map(floor => String(floor.floor)) || [])
 const selectedFloorRooms = computed(() => {
@@ -783,6 +826,24 @@ const visibleFloorRooms = computed(() => {
   if (!applicantForm.value.roomType) return selectedFloorRooms.value
   return selectedFloorRooms.value.filter(room => room.type === applicantForm.value.roomType)
 })
+const visibleFloorAvailability = computed(() => {
+  const capacity = visibleFloorRooms.value.reduce((sum, room) => sum + room.capacity, 0)
+  const occupied = visibleFloorRooms.value.reduce((sum, room) => sum + room.occupied, 0)
+  return { capacity, occupied, available: capacity - occupied }
+})
+const floorPlanLeftRooms = computed(() => visibleFloorRooms.value.filter((_, index) => index % 2 === 0))
+const floorPlanRightRooms = computed(() => visibleFloorRooms.value.filter((_, index) => index % 2 === 1))
+const selectedApplicantRoom = computed(() => {
+  if (!applicantForm.value.roomNumber) return null
+  return selectedFloorRooms.value.find(room => room.number === applicantForm.value.roomNumber) || null
+})
+const selectedDormDetail = computed(() => selectedDormId.value ? dormDetailContent[selectedDormId.value] : null)
+const selectedRoomGallery = computed(() => selectedDormDetail.value?.gallery.slice(0, 4) || [])
+const activePaymentCampaign = computed(() => {
+  if (!props.activeApp?.dormId) return null
+  return props.campaigns.find(campaign => campaign.id === props.activeApp?.dormId) || null
+})
+const selectedPaymentAmount = computed(() => activePaymentCampaign.value?.requiredAmount || selectedCampaign.value?.requiredAmount || 3000)
 
 watch(selectedDormId, () => {
   selectedFloor.value = availableFloors.value[0] || ''
@@ -805,6 +866,19 @@ watch(selectedFloor, () => {
   const stillOnFloor = visibleFloorRooms.value.some(room => room.number === applicantForm.value.roomNumber)
   if (!stillOnFloor) applicantForm.value.roomNumber = ''
 })
+watch(() => props.activeApp?.id, () => {
+  if (!props.activeApp || bookingDraftMode.value) return
+  setSelectedDormById(props.activeApp.dormId)
+  applicantForm.value.name = props.activeApp.name
+  applicantForm.value.studentId = props.activeApp.studentId
+  applicantForm.value.phone = props.activeApp.phone
+  applicantForm.value.email = props.activeApp.email
+  applicantForm.value.faculty = props.activeApp.faculty
+  applicantForm.value.gender = props.activeApp.gender || applicantForm.value.gender
+  applicantForm.value.applicantType = props.activeApp.applicantType || applicantForm.value.applicantType
+  applicantForm.value.roomType = props.activeApp.roomType || applicantForm.value.roomType
+  applicantForm.value.roomNumber = props.activeApp.roomNumber || applicantForm.value.roomNumber
+}, { immediate: true })
 const applicantStepIndex = computed(() => {
   if (bookingDraftMode.value) return 1
   if (!props.activeApp) return 1
@@ -817,8 +891,8 @@ const displayApplicantStepIndex = computed(() => simulatedProgressStep.value || 
 const applicantSteps = computed(() => {
   const current = displayApplicantStepIndex.value
   const labels = locale.value === 'th'
-    ? ['สมัคร', 'ชำระเงิน', 'ตรวจสอบ', 'ยืนยันสิทธิ์']
-    : ['Apply', 'Payment', 'Staff Review', 'Confirmation']
+    ? ['เลือกห้อง', 'ชำระเงิน', 'ตรวจสอบ', 'ยืนยันสิทธิ์']
+    : ['Select room', 'Payment', 'Staff Review', 'Confirmation']
   return labels.map((label, index) => ({
     label,
     done: index + 1 < current,
@@ -827,18 +901,18 @@ const applicantSteps = computed(() => {
 })
 const applicantStatusCopy = computed(() => {
   if (locale.value === 'th') {
-    if (bookingDraftMode.value) return 'เลือกหอพักและส่งแบบฟอร์มการจองประจำปี'
-    if (!props.activeApp) return 'เลือกหอพักและส่งแบบฟอร์มการจองประจำปี'
+    if (bookingDraftMode.value) return 'เลือกห้องว่างจากผังชั้น ระบบจะดึงข้อมูลผู้สมัครจากบัญชี KKU ให้อัตโนมัติ'
+    if (!props.activeApp) return 'เลือกห้องว่างจากผังชั้นเพื่อเริ่มการจองประจำปี'
     if (displayApplicantStepIndex.value >= 4 || props.activeApp.status === 'Confirmed') return 'ยืนยันสิทธิ์การจองสำเร็จ สามารถพิมพ์เอกสารการจองได้'
-    if (props.activeApp.status === 'Submitted') return 'ส่งใบสมัครแล้ว กรุณาดำเนินการชำระเงินเพื่อจองสิทธิ์'
+    if (props.activeApp.status === 'Submitted') return 'ตรวจสอบข้อมูลผู้สมัครและดำเนินการชำระเงินเพื่อจองสิทธิ์'
     if (props.activeApp.status === 'Staff Verifying') return 'เจ้าหน้าที่กำลังตรวจสอบหลักฐานการชำระเงิน'
     if (props.activeApp.status === 'Need Re-upload') return 'เจ้าหน้าที่ขอให้ส่งหลักฐานการชำระเงินใหม่'
     return 'ใบสมัครถูกปฏิเสธ กรุณาติดต่อหน่วยบริการหอพัก'
   }
-  if (bookingDraftMode.value) return 'Choose a dormitory and submit the annual reservation form.'
-  if (!props.activeApp) return 'Choose a dormitory and submit the annual reservation form.'
+  if (bookingDraftMode.value) return 'Choose an available room from the floor plan. Applicant details are pulled from the KKU account.'
+  if (!props.activeApp) return 'Choose an available room from the floor plan to start the annual reservation.'
   if (displayApplicantStepIndex.value >= 4 || props.activeApp.status === 'Confirmed') return 'Reservation confirmed. You can print the reservation ticket.'
-  if (props.activeApp.status === 'Submitted') return 'Application submitted. Complete payment to reserve the room.'
+  if (props.activeApp.status === 'Submitted') return 'Review applicant details and complete payment to reserve the room.'
   if (props.activeApp.status === 'Staff Verifying') return 'Payment evidence is being reviewed by dormitory staff.'
   if (props.activeApp.status === 'Need Re-upload') return 'Staff requested a new payment slip. Please upload a clearer receipt.'
   return 'Application was rejected. Please contact dormitory support.'
@@ -1007,12 +1081,16 @@ function floorLabel() {
 }
 
 function selectedDormLabel() {
-  return (selectedDorm.value || dormitories[0]).name
+  return dormName(selectedDorm.value || dormitories[0])
+}
+
+function dateValueToDateString(value: DateValue | string) {
+  return value.toString().slice(0, 10)
 }
 
 function formatDateButton(value: string) {
   if (!value) return locale.value === 'th' ? 'เลือกวันที่' : 'Select date'
-  const [year, month, day] = value.split('-').map(Number)
+  const [year, month, day] = dateValueToDateString(value).split('-').map(Number)
   if (!year || !month || !day) return value
   return new Intl.DateTimeFormat(locale.value === 'th' ? 'th-TH' : 'en-US', {
     day: '2-digit',
@@ -1022,7 +1100,8 @@ function formatDateButton(value: string) {
 }
 
 function setAvailabilityDate(field: 'moveIn' | 'moveOut', value: DateValue | undefined) {
-  const formatted = value?.toString() || ''
+  if (!value) return
+  const formatted = dateValueToDateString(value)
   if (field === 'moveIn') {
     moveInDateValue.value = value
     moveInDate.value = formatted
@@ -1045,10 +1124,71 @@ function roomProgress(room: RoomInfo) {
   return room.capacity > 0 ? Math.round((room.occupied / room.capacity) * 100) : 0
 }
 
+function isSelectedApplicantRoom(room: RoomInfo) {
+  return applicantForm.value.roomNumber === room.number
+}
+
+function roomPlanClass(room: RoomInfo) {
+  if (roomAvailability(room) <= 0) {
+    return 'cursor-not-allowed border-muted bg-muted/40 text-muted-foreground opacity-70'
+  }
+  if (isSelectedApplicantRoom(room)) {
+    return 'border-primary/70 bg-primary/10 text-foreground shadow-sm ring-1 ring-primary/25'
+  }
+  return 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5'
+}
+
+function roomPlanPillClass(room: RoomInfo) {
+  if (roomAvailability(room) <= 0) return 'bg-muted text-muted-foreground ring-border'
+  if (isSelectedApplicantRoom(room)) return 'bg-primary text-primary-foreground ring-primary'
+  return 'bg-background text-foreground ring-border'
+}
+
+function roomPlanBarClass(room: RoomInfo) {
+  if (roomAvailability(room) <= 0) return 'bg-muted-foreground/45'
+  if (isSelectedApplicantRoom(room)) return 'bg-primary'
+  return 'bg-primary/70'
+}
+
+function roomPlanStatusLabel(room: RoomInfo) {
+  if (roomAvailability(room) <= 0) return locale.value === 'th' ? 'เต็ม' : 'Full'
+  if (isSelectedApplicantRoom(room)) return locale.value === 'th' ? 'เลือกแล้ว' : 'Selected'
+  return locale.value === 'th' ? 'ว่าง' : 'Available'
+}
+
 function chooseApplicantRoom(room: RoomInfo) {
   if (roomAvailability(room) <= 0) return
   applicantForm.value.roomType = room.type
   applicantForm.value.roomNumber = room.number
+}
+
+function hydrateApplicantFormFromSession() {
+  if (!props.user) return
+  applicantForm.value.name ||= props.user.displayName
+  applicantForm.value.studentId ||= props.user.identifier
+  applicantForm.value.email ||= `${props.user.identifier}@kku.ac.th`
+  applicantForm.value.faculty ||= props.user.unit || 'Khon Kaen University'
+}
+
+function openUniPayDialog() {
+  uniPaySuccess.value = false
+  uniPayProcessing.value = false
+  uniPayDialogOpen.value = true
+}
+
+function confirmUniPayPayment() {
+  if (uniPayProcessing.value || uniPaySuccess.value) return
+  uniPayProcessing.value = true
+  window.setTimeout(() => {
+    uniPayProcessing.value = false
+    uniPaySuccess.value = true
+  }, 900)
+}
+
+function finishUniPayStatusUpdate() {
+  if (!uniPaySuccess.value) return
+  emit('simulateUniPay')
+  uniPayDialogOpen.value = false
 }
 
 function goToPage(page: PageView) {
@@ -1097,6 +1237,10 @@ function pageTitle(page: PageView) {
   return menuText(labels[page])
 }
 
+function dormName(dorm: DormitoryCard) {
+  return locale.value === 'th' ? dorm.nameTh : dorm.name
+}
+
 function dormSubtitle(dorm: DormitoryCard) {
   return locale.value === 'th' ? dorm.subtitleTh : dorm.subtitle
 }
@@ -1111,6 +1255,18 @@ function dormRoomType(dorm: DormitoryCard) {
 
 function dormAvailability(dorm: DormitoryCard) {
   return locale.value === 'th' ? dorm.availabilityTh : dorm.availability
+}
+
+function dormApplicantType(dorm: DormitoryCard) {
+  return locale.value === 'th' ? dorm.criteria.applicantTypeTh : dorm.criteria.applicantType
+}
+
+function dormPaymentTiming(dorm: DormitoryCard) {
+  return locale.value === 'th' ? dorm.criteria.timingTh : dorm.criteria.timing
+}
+
+function dormSlipRequirement(dorm: DormitoryCard) {
+  return locale.value === 'th' ? dorm.criteria.slipRequiredTh : dorm.criteria.slipRequired
 }
 
 function getDormId(dorm: DormitoryCard) {
@@ -1183,6 +1339,7 @@ function openApplicantWorkflow(dorm?: DormitoryCard, options: { fresh?: boolean 
     return
   }
 
+  hydrateApplicantFormFromSession()
   scrollToSection('applicant-workflow')
 }
 
@@ -1194,6 +1351,10 @@ function logout() {
   selectedDorm.value = null
   selectedStaffApp.value = null
   staffReviewOpen.value = false
+  uniPayDialogOpen.value = false
+  uniPayProcessing.value = false
+  uniPaySuccess.value = false
+  profileEditMode.value = false
   emit('logout')
 }
 
@@ -1220,13 +1381,16 @@ function money(value: number) {
 }
 
 function submitApplicantApplication() {
+  hydrateApplicantFormFromSession()
   const dorm = selectedDorm.value || dormitories[0]
   const campaign = selectedCampaign.value
-  const room = selectedRooms.value.find(item => (
-    (!applicantForm.value.roomType || item.type === applicantForm.value.roomType)
-    && (!applicantForm.value.roomNumber || item.number === applicantForm.value.roomNumber)
-  )) || selectedRooms.value.find(item => !applicantForm.value.roomType || item.type === applicantForm.value.roomType) || selectedRooms.value[0]
-  const roomTypeName = applicantForm.value.roomType || selectedRoomTypes.value[0]?.name || dorm.roomType
+  const room = selectedApplicantRoom.value
+  const roomTypeName = room?.type || applicantForm.value.roomType || selectedRoomTypes.value[0]?.name || dorm.roomType
+
+  if (!room) {
+    emit('showToast', locale.value === 'th' ? 'กรุณาเลือกห้องจากผังชั้นก่อนจอง' : 'Please choose a room from the floor plan first.')
+    return
+  }
 
   if (!applicantForm.value.name || !applicantForm.value.studentId) {
     emit('showToast', t.value.toast.missingApplicantForm)
@@ -1241,14 +1405,15 @@ function submitApplicantApplication() {
     faculty: applicantForm.value.faculty || 'Khon Kaen University',
     gender: applicantForm.value.gender,
     dormId: getDormId(dorm),
-    dormName: campaign?.name || dorm.name,
+    dormName: campaign?.name || dormName(dorm),
     roomType: roomTypeName,
-    roomNumber: applicantForm.value.roomNumber || room?.number || '',
+    roomNumber: room.number,
     applicantType: applicantForm.value.applicantType,
     docFile: 'student_card.pdf',
   })
   bookingDraftMode.value = false
   simulatedProgressStep.value = null
+  profileEditMode.value = false
 }
 
 function submitManualPayment() {
@@ -1708,8 +1873,12 @@ function handleLogin() {
                       </PopoverTrigger>
                       <PopoverContent align="start" class="z-50 w-auto p-0">
                         <DatePickerCalendar
-                          :model-value="moveInDateValue"
+                          v-model="moveInDateValue"
+                          class="rounded-md border shadow-sm"
                           initial-focus
+                          layout="month-and-year"
+                          :min-value="minCalendarDate"
+                          :max-value="maxCalendarDate"
                           @update:model-value="value => setAvailabilityDate('moveIn', value)"
                         />
                       </PopoverContent>
@@ -1733,8 +1902,12 @@ function handleLogin() {
                       </PopoverTrigger>
                       <PopoverContent align="start" class="z-50 w-auto p-0">
                         <DatePickerCalendar
-                          :model-value="moveOutDateValue"
+                          v-model="moveOutDateValue"
+                          class="rounded-md border shadow-sm"
                           initial-focus
+                          layout="month-and-year"
+                          :min-value="minCalendarDate"
+                          :max-value="maxCalendarDate"
                           @update:model-value="value => setAvailabilityDate('moveOut', value)"
                         />
                       </PopoverContent>
@@ -1816,25 +1989,29 @@ function handleLogin() {
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <Card v-for="dorm in dormitories" :key="dorm.name" class="gap-0 overflow-hidden rounded-lg py-0 shadow-sm">
             <div class="h-40 overflow-hidden bg-muted sm:h-44 xl:h-[10.5rem]">
-              <img :src="dorm.image" :alt="dorm.name" class="size-full object-cover">
+              <img :src="dorm.image" :alt="dormName(dorm)" class="size-full object-cover">
             </div>
             <CardContent class="grid min-h-[11rem] gap-3 p-4">
               <div class="space-y-2">
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <h3 class="truncate text-base font-semibold">{{ dorm.name }}</h3>
+                    <h3 class="truncate text-base font-semibold">{{ dormName(dorm) }}</h3>
                     <p class="truncate text-xs text-muted-foreground">{{ dormSubtitle(dorm) }}</p>
                   </div>
                   <Badge variant="secondary" class="shrink-0 text-[11px] text-primary">{{ dormAvailability(dorm) }}</Badge>
                 </div>
-                <div class="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <div class="flex flex-wrap gap-x-3 gap-y-2 text-xs text-muted-foreground">
                   <span class="inline-flex items-center gap-1.5">
                     <Users class="size-4 text-primary" />
-                    {{ dormGender(dorm) }}
+                    {{ dormApplicantType(dorm) }}
                   </span>
                   <span class="inline-flex items-center gap-1.5">
-                    <Snowflake class="size-4 text-primary" />
-                    {{ dormRoomType(dorm) }}
+                    <CreditCard class="size-4 text-primary" />
+                    {{ dormPaymentTiming(dorm) }}
+                  </span>
+                  <span class="inline-flex items-center gap-1.5">
+                    <FileText class="size-4 text-primary" />
+                    {{ dormSlipRequirement(dorm) }}
                   </span>
                 </div>
               </div>
@@ -1873,7 +2050,7 @@ function handleLogin() {
         <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <Badge variant="secondary" class="mb-2 text-primary">{{ groupLabel('dormitories') }}</Badge>
-            <h1 class="text-2xl font-bold tracking-normal sm:text-3xl">{{ currentDormPage.name }}</h1>
+            <h1 class="text-2xl font-bold tracking-normal sm:text-3xl">{{ dormName(currentDormPage) }}</h1>
             <p class="mt-1 text-sm text-muted-foreground">{{ dormSubtitle(currentDormPage) }}</p>
           </div>
           <Button class="h-11 px-5 text-sm font-semibold" @click="openApplicantWorkflow(currentDormPage, { fresh: true })">
@@ -1882,37 +2059,37 @@ function handleLogin() {
           </Button>
         </div>
 
-        <div class="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(24rem,0.85fr)]">
-          <Card class="gap-0 overflow-hidden rounded-lg py-0 shadow-sm">
-            <div class="relative h-80 overflow-hidden bg-muted">
-              <img :src="currentDormPage.image" :alt="currentDormPage.name" class="size-full object-cover">
+        <div class="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(25rem,0.92fr)]">
+          <Card class="h-full gap-0 overflow-hidden rounded-lg py-0 shadow-sm">
+            <div class="relative h-72 overflow-hidden bg-muted sm:h-80">
+              <img :src="currentDormPage.image" :alt="dormName(currentDormPage)" class="size-full object-cover">
               <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-5 text-white">
                 <Badge class="mb-3 bg-white/95 text-primary hover:bg-white">{{ dormAvailability(currentDormPage) }}</Badge>
-                <p class="text-xl font-bold">{{ currentDormPage.name }}</p>
+                <p class="text-xl font-bold">{{ dormName(currentDormPage) }}</p>
                 <p class="text-sm text-white/80">{{ dormSubtitle(currentDormPage) }}</p>
               </div>
             </div>
-            <CardContent class="grid gap-4 p-5 lg:grid-cols-4">
-              <div class="rounded-lg border p-4">
+            <CardContent class="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="rounded-lg border bg-background p-3">
                 <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ห้องว่าง' : 'Available' }}</p>
                 <p class="mt-1 text-2xl font-bold">{{ currentDormRoomsSummary.available }}</p>
               </div>
-              <div class="rounded-lg border p-4">
+              <div class="rounded-lg border bg-background p-3">
                 <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'จำนวนชั้น' : 'Floors' }}</p>
                 <p class="mt-1 text-2xl font-bold">{{ currentDormRoomsSummary.floors }}</p>
               </div>
-              <div class="rounded-lg border p-4">
+              <div class="rounded-lg border bg-background p-3">
                 <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ความจุรวม' : 'Capacity' }}</p>
                 <p class="mt-1 text-2xl font-bold">{{ currentDormRoomsSummary.capacity }}</p>
               </div>
-              <div class="rounded-lg border p-4">
+              <div class="rounded-lg border bg-background p-3">
                 <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ประเภทผู้พัก' : 'Residents' }}</p>
-                <p class="mt-1 truncate text-sm font-semibold">{{ dormGender(currentDormPage) }}</p>
+                <p class="mt-1 text-sm font-semibold leading-5">{{ dormGender(currentDormPage) }}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card class="gap-0 rounded-lg py-0 shadow-sm">
+          <Card class="h-full gap-0 rounded-lg py-0 shadow-sm">
             <CardHeader class="px-5 pb-2 pt-5">
               <CardTitle>{{ locale === 'th' ? 'รายละเอียดหอพัก' : 'Dormitory details' }}</CardTitle>
             </CardHeader>
@@ -1954,12 +2131,12 @@ function handleLogin() {
           </Card>
         </div>
 
-        <div class="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.45fr)]">
-          <Card v-if="currentDormDetail" class="gap-0 rounded-lg py-0 shadow-sm">
+        <div class="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(25rem,0.92fr)]">
+          <Card v-if="currentDormDetail" class="h-full gap-0 rounded-lg py-0 shadow-sm">
             <CardHeader class="px-5 pb-2 pt-5">
               <CardTitle>{{ locale === 'th' ? 'รูปภาพหอพักและพื้นที่ใช้งาน' : 'Dormitory photos and facilities' }}</CardTitle>
             </CardHeader>
-            <CardContent class="grid gap-3 px-5 pb-5 sm:grid-cols-2 lg:grid-cols-4">
+            <CardContent class="grid gap-3 px-5 pb-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
               <div
                 v-for="(image, index) in currentDormDetail.gallery"
                 :key="`${currentDormPage.name}-${index}`"
@@ -1970,7 +2147,7 @@ function handleLogin() {
             </CardContent>
           </Card>
 
-          <Card class="gap-0 rounded-lg py-0 shadow-sm">
+          <Card class="h-full gap-0 rounded-lg py-0 shadow-sm">
             <CardHeader class="px-5 pb-2 pt-5">
               <CardTitle>{{ locale === 'th' ? 'ข้อมูลจากรอบจอง' : 'Reservation round' }}</CardTitle>
             </CardHeader>
@@ -2352,7 +2529,7 @@ function handleLogin() {
             <h2 class="text-2xl font-bold tracking-normal">{{ locale === 'th' ? 'ขั้นตอนการจองหอพักประจำปี' : 'Annual dormitory reservation workflow' }}</h2>
             <p class="mt-1 text-sm text-muted-foreground">{{ applicantStatusCopy }}</p>
           </div>
-          <Button variant="outline" class="border-primary/30 text-primary hover:bg-primary/10" @click="advanceApplicantProgress">
+          <Button v-if="props.activeApp && !bookingDraftMode" variant="outline" class="border-primary/30 text-primary hover:bg-primary/10" @click="advanceApplicantProgress">
             <ClipboardList class="size-4" />
             {{ t.refreshStatus }}
           </Button>
@@ -2378,127 +2555,33 @@ function handleLogin() {
           </Card>
         </div>
 
-        <div v-if="!props.activeApp || bookingDraftMode" class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(32rem,0.75fr)]">
+        <div v-if="!props.activeApp || bookingDraftMode" class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.45fr)]">
           <Card class="gap-0 rounded-lg py-0 shadow-sm">
             <CardHeader class="px-4 pb-2 pt-4">
-              <CardTitle class="text-base">{{ t.applicationForm }}</CardTitle>
+              <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <CardTitle class="text-lg">{{ locale === 'th' ? 'เลือกห้องจากผังชั้น' : 'Select a room from the floor plan' }}</CardTitle>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {{ locale === 'th' ? 'สถานะแรกใช้ข้อมูลจากบัญชี KKU และให้ผู้สมัครเลือกห้องที่ต้องการก่อนเข้าสู่ขั้นชำระเงิน' : 'The first step uses KKU account data and lets the applicant choose a room before payment.' }}
+                  </p>
+                </div>
+                <Badge variant="secondary" class="w-fit text-primary">
+                  {{ visibleFloorAvailability.available }}/{{ visibleFloorAvailability.capacity }} {{ locale === 'th' ? 'ที่ว่าง' : 'slots available' }}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent class="px-4 pb-4">
-              <form class="grid gap-3 md:grid-cols-2" @submit.prevent="submitApplicantApplication">
-                <Field>
-                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'ชื่อ-นามสกุล' : 'Full name' }}</FieldLabel>
-                  <Input v-model="applicantForm.name" :placeholder="locale === 'th' ? 'ชื่อ-นามสกุลนักศึกษา' : 'Student full name'" />
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ t.modal.studentId }}</FieldLabel>
-                  <Input v-model="applicantForm.studentId" placeholder="653020XXX-X" />
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'คณะ/วิทยาลัย' : 'Faculty' }}</FieldLabel>
-                  <Input v-model="applicantForm.faculty" :placeholder="locale === 'th' ? 'คณะหรือวิทยาลัย' : 'Faculty / College'" />
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'เบอร์ติดต่อ' : 'Phone' }}</FieldLabel>
-                  <Input v-model="applicantForm.phone" placeholder="08X-XXX-XXXX" />
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'อีเมล' : 'Email' }}</FieldLabel>
-                  <Input v-model="applicantForm.email" placeholder="student@kku.ac.th" />
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ t.gender }}</FieldLabel>
-                  <Select v-model="applicantForm.gender">
-                    <SelectTrigger class="w-full">
-                      <span class="truncate">{{ applicantGenderLabel() }}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Female">{{ locale === 'th' ? 'หญิง' : 'Female' }}</SelectItem>
-                      <SelectItem value="Male">{{ locale === 'th' ? 'ชาย' : 'Male' }}</SelectItem>
-                      <SelectItem value="Other">{{ locale === 'th' ? 'อื่น ๆ' : 'Other' }}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'ประเภทผู้สมัคร' : 'Applicant type' }}</FieldLabel>
-                  <Select v-model="applicantForm.applicantType">
-                    <SelectTrigger class="w-full">
-                      <span class="truncate">{{ applicantTypeLabel() }}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="General Student">{{ locale === 'th' ? 'นักศึกษาทั่วไป' : 'General Student' }}</SelectItem>
-                      <SelectItem value="New First-Year">{{ locale === 'th' ? 'นักศึกษาใหม่' : 'New First-Year' }}</SelectItem>
-                      <SelectItem value="Current Resident">{{ locale === 'th' ? 'นักศึกษาหอพักเดิม' : 'Current Resident' }}</SelectItem>
-                      <SelectItem value="International Student">{{ locale === 'th' ? 'นักศึกษาต่างชาติ' : 'International Student' }}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field>
-                  <FieldLabel class="text-xs">{{ t.roomType }}</FieldLabel>
-                  <Select v-model="applicantForm.roomType">
-                    <SelectTrigger class="w-full min-w-0 overflow-hidden">
-                      <Bed class="size-4 text-muted-foreground" />
-                      <span class="truncate">{{ applicantRoomTypeLabel() }}</span>
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      align="start"
-                      class="z-50 w-[var(--reka-select-trigger-width)] min-w-80 max-w-[calc(100vw-2rem)]"
-                    >
-                      <SelectItem v-for="type in selectedRoomTypes" :key="type.name" :value="type.name" class="whitespace-normal py-2">
-                        {{ localizedRoomTypeName(type.name) }} - {{ money(type.price) }} THB
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+            <CardContent class="space-y-4 px-4 pb-4">
+              <div class="grid gap-3 md:grid-cols-4">
                 <Field class="md:col-span-2">
-                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'ห้องที่ต้องการ' : 'Preferred room' }}</FieldLabel>
-                  <Input
-                    v-model="applicantForm.roomNumber"
-                    :placeholder="selectedRooms[0] ? (locale === 'th' ? `แนะนำห้อง ${selectedRooms[0].number}` : `Recommended room ${selectedRooms[0].number}`) : (locale === 'th' ? 'ให้เจ้าหน้าที่จัดสรรอัตโนมัติ' : 'Auto assign by staff')"
-                  />
-                </Field>
-                <div class="md:col-span-2">
-                  <Button type="submit" class="w-full sm:w-auto">
-                    <FileText class="size-4" />
-                    {{ t.submitApplication }}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card class="gap-0 overflow-hidden rounded-lg py-0 shadow-sm">
-            <div class="relative h-40 bg-muted">
-              <img :src="(selectedDorm || dormitories[0]).image" :alt="(selectedDorm || dormitories[0]).name" class="size-full object-cover">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
-              <div class="absolute inset-x-0 bottom-0 p-4 text-white">
-                <p class="text-sm font-medium text-white/80">{{ locale === 'th' ? 'เลือกห้องว่าง' : 'Available room blocks' }}</p>
-                <p class="truncate text-xl font-bold">{{ (selectedDorm || dormitories[0]).name }}</p>
-              </div>
-            </div>
-            <CardContent class="space-y-4 px-4 pb-4 pt-4">
-              <div class="grid grid-cols-2 gap-3 text-sm">
-                <div class="rounded-lg border p-3">
-                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ห้องว่างทั้งหมด' : 'Available rooms' }}</p>
-                  <p class="text-xl font-bold">{{ selectedRooms.length }}</p>
-                </div>
-                <div class="rounded-lg border p-3">
-                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ยอดชำระเริ่มต้น' : 'Initial payment' }}</p>
-                  <p class="text-xl font-bold">{{ money(selectedCampaign?.requiredAmount || 3000) }}</p>
-                </div>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <Field>
                   <FieldLabel class="text-xs">{{ locale === 'th' ? 'หอพัก' : 'Dormitory' }}</FieldLabel>
                   <Select :model-value="selectedDormId" @update:model-value="value => setSelectedDormById(String(value))">
-                    <SelectTrigger class="w-full min-w-0">
+                    <SelectTrigger class="h-11 w-full min-w-0 bg-background">
                       <Building class="size-4 text-muted-foreground" />
                       <span class="truncate">{{ selectedDormLabel() }}</span>
                     </SelectTrigger>
                     <SelectContent position="popper" align="start" class="z-50 w-[var(--reka-select-trigger-width)] min-w-[18rem]">
                       <SelectItem v-for="dorm in dormitories" :key="getDormId(dorm)" :value="getDormId(dorm)">
-                        {{ dorm.name }}
+                        {{ dormName(dorm) }}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -2507,7 +2590,7 @@ function handleLogin() {
                 <Field>
                   <FieldLabel class="text-xs">{{ locale === 'th' ? 'ชั้น' : 'Floor' }}</FieldLabel>
                   <Select v-model="selectedFloor">
-                    <SelectTrigger class="w-full">
+                    <SelectTrigger class="h-11 w-full bg-background">
                       <Home class="size-4 text-muted-foreground" />
                       <span class="truncate">{{ floorLabel() }}</span>
                     </SelectTrigger>
@@ -2518,39 +2601,340 @@ function handleLogin() {
                     </SelectContent>
                   </Select>
                 </Field>
+
+                <Field>
+                  <FieldLabel class="text-xs">{{ t.roomType }}</FieldLabel>
+                  <Select v-model="applicantForm.roomType">
+                    <SelectTrigger class="h-11 w-full min-w-0 overflow-hidden bg-background">
+                      <Bed class="size-4 text-muted-foreground" />
+                      <span class="truncate">{{ applicantRoomTypeLabel() }}</span>
+                    </SelectTrigger>
+                    <SelectContent position="popper" align="start" class="z-50 w-[var(--reka-select-trigger-width)] min-w-80 max-w-[calc(100vw-2rem)]">
+                      <SelectItem v-for="type in selectedRoomTypes" :key="type.name" :value="type.name" class="whitespace-normal py-2">
+                        {{ localizedRoomTypeName(type.name) }} - {{ money(type.price) }} THB
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
 
-              <div class="space-y-2">
-                <div class="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  <span>{{ locale === 'th' ? 'ผังห้องในชั้นที่เลือก' : 'Rooms on selected floor' }}</span>
-                  <span>{{ visibleFloorRooms.length }} {{ locale === 'th' ? 'ห้อง' : 'rooms' }}</span>
+              <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div class="rounded-lg border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ห้องในชั้นนี้' : 'Rooms on floor' }}</p>
+                  <p class="mt-1 text-2xl font-bold">{{ visibleFloorRooms.length }}</p>
                 </div>
-                <div v-if="visibleFloorRooms.length" class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
-                  <Button
-                    v-for="room in visibleFloorRooms"
-                    :key="`${selectedDormId}-${selectedFloor}-${room.number}`"
-                    type="button"
-                    :variant="applicantForm.roomNumber === room.number ? 'default' : 'outline'"
-                    :disabled="roomAvailability(room) <= 0"
-                    class="h-20 flex-col items-stretch justify-between whitespace-normal p-2.5 text-left"
-                    @click="chooseApplicantRoom(room)"
-                  >
-                    <span class="flex items-center justify-between gap-2">
-                      <span class="text-sm font-semibold">{{ locale === 'th' ? `ห้อง ${room.number}` : `Room ${room.number}` }}</span>
-                      <Badge :variant="roomAvailability(room) > 0 ? 'outline' : 'secondary'" class="px-1.5 text-[10px]">
-                        {{ roomAvailability(room) }}/{{ room.capacity }}
-                      </Badge>
-                    </span>
-                    <Progress :model-value="roomProgress(room)" class="h-1" />
-                    <span class="truncate text-[11px] text-muted-foreground">
-                      {{ localizedRoomTypeName(room.type) }}
-                    </span>
-                  </Button>
+                <div class="rounded-lg border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ยังว่าง' : 'Available' }}</p>
+                  <p class="mt-1 text-2xl font-bold">{{ visibleFloorAvailability.available }}</p>
                 </div>
-                <div v-else class="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                  {{ locale === 'th' ? 'ไม่พบห้องในเงื่อนไขนี้ ลองเปลี่ยนประเภทห้องหรือชั้น' : 'No rooms match this filter. Try another type or floor.' }}
+                <div class="rounded-lg border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ยอดชำระเริ่มต้น' : 'Initial payment' }}</p>
+                  <p class="mt-1 text-2xl font-bold">{{ money(selectedPaymentAmount) }}</p>
+                </div>
+                <div class="rounded-lg border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ห้องที่เลือก' : 'Selected room' }}</p>
+                  <p class="mt-1 text-2xl font-bold">{{ selectedApplicantRoom?.number || '-' }}</p>
                 </div>
               </div>
+
+              <div v-if="visibleFloorRooms.length" class="rounded-xl border bg-muted/20 p-3 sm:p-4">
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div class="inline-flex items-center gap-2 text-sm font-semibold">
+                    <LayoutGrid class="size-4 text-primary" />
+                    {{ locale === 'th' ? 'ผังห้องในชั้นที่เลือก' : 'Selected floor plan' }}
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                    <span class="inline-flex items-center gap-1 rounded-full border bg-emerald-50 px-2 py-1 text-emerald-700">
+                      <span class="size-2 rounded-full bg-emerald-500" />
+                      {{ locale === 'th' ? 'ว่าง' : 'Available' }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-full border bg-primary/10 px-2 py-1 text-primary">
+                      <span class="size-2 rounded-full bg-primary" />
+                      {{ locale === 'th' ? 'เลือกแล้ว' : 'Selected' }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-full border bg-muted px-2 py-1">
+                      <span class="size-2 rounded-full bg-muted-foreground/50" />
+                      {{ locale === 'th' ? 'เต็ม' : 'Full' }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)]">
+                  <div class="grid content-start gap-2">
+                    <button
+                      v-for="room in floorPlanLeftRooms"
+                      :key="`${selectedDormId}-${selectedFloor}-left-${room.number}`"
+                      type="button"
+                      :disabled="roomAvailability(room) <= 0"
+                      class="min-h-24 rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      :class="roomPlanClass(room)"
+                      @click="chooseApplicantRoom(room)"
+                    >
+                      <span class="flex items-start justify-between gap-2">
+                        <span>
+                          <span class="flex items-center gap-1.5 text-base font-bold">
+                            <Users class="size-4 text-primary" />
+                            {{ locale === 'th' ? `ห้อง ${room.number}` : `Room ${room.number}` }}
+                          </span>
+                          <span class="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">{{ localizedRoomTypeName(room.type) }}</span>
+                        </span>
+                        <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1" :class="roomPlanPillClass(room)">
+                          {{ roomAvailability(room) }}/{{ room.capacity }}
+                        </span>
+                      </span>
+                      <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div class="h-full rounded-full" :class="roomPlanBarClass(room)" :style="{ width: `${roomProgress(room)}%` }" />
+                      </div>
+                      <span class="mt-2 inline-flex text-xs font-medium text-muted-foreground">{{ roomPlanStatusLabel(room) }}</span>
+                    </button>
+                    <div class="flex min-h-20 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-800">
+                      {{ locale === 'th' ? 'ระเบียง' : 'Balcony' }}
+                    </div>
+                  </div>
+
+                  <div class="flex min-h-[28rem] flex-col items-center justify-between rounded-xl border border-slate-200 bg-slate-100 px-2 py-4 text-slate-700 shadow-inner">
+                    <DoorOpen class="size-5 text-slate-500" />
+                    <div class="flex flex-1 flex-col items-center justify-center gap-2">
+                      <Route class="size-3.5 text-slate-500" />
+                      <span class="whitespace-nowrap text-[11px] font-semibold leading-none tracking-normal">
+                        {{ locale === 'th' ? 'ทางเดิน' : 'Corridor' }}
+                      </span>
+                    </div>
+                    <Badge variant="outline" class="bg-white text-[10px] text-slate-700">{{ floorLabel() }}</Badge>
+                  </div>
+
+                  <div class="grid content-start gap-2">
+                    <button
+                      v-for="room in floorPlanRightRooms"
+                      :key="`${selectedDormId}-${selectedFloor}-right-${room.number}`"
+                      type="button"
+                      :disabled="roomAvailability(room) <= 0"
+                      class="min-h-24 rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      :class="roomPlanClass(room)"
+                      @click="chooseApplicantRoom(room)"
+                    >
+                      <span class="flex items-start justify-between gap-2">
+                        <span>
+                          <span class="flex items-center gap-1.5 text-base font-bold">
+                            <Users class="size-4 text-primary" />
+                            {{ locale === 'th' ? `ห้อง ${room.number}` : `Room ${room.number}` }}
+                          </span>
+                          <span class="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">{{ localizedRoomTypeName(room.type) }}</span>
+                        </span>
+                        <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1" :class="roomPlanPillClass(room)">
+                          {{ roomAvailability(room) }}/{{ room.capacity }}
+                        </span>
+                      </span>
+                      <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div class="h-full rounded-full" :class="roomPlanBarClass(room)" :style="{ width: `${roomProgress(room)}%` }" />
+                      </div>
+                      <span class="mt-2 inline-flex text-xs font-medium text-muted-foreground">{{ roomPlanStatusLabel(room) }}</span>
+                    </button>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                      <div class="flex min-h-20 items-center justify-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 text-sm font-semibold text-sky-800">
+                        <Bath class="size-4" />
+                        {{ locale === 'th' ? 'ห้องน้ำ' : 'Bathroom' }}
+                      </div>
+                      <div class="flex min-h-20 items-center justify-center gap-2 rounded-lg border border-dashed bg-background px-3 text-center text-sm font-semibold">
+                        <Armchair class="size-4 text-primary" />
+                        {{ locale === 'th' ? 'ห้องส่วนรวม' : 'Common room' }}
+                      </div>
+                    </div>
+                    <div class="flex min-h-16 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-800">
+                      {{ locale === 'th' ? 'ระเบียง / จุดพักคอย' : 'Balcony / waiting area' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                {{ locale === 'th' ? 'ไม่พบห้องในเงื่อนไขนี้ ลองเปลี่ยนประเภทห้องหรือชั้น' : 'No rooms match this filter. Try another type or floor.' }}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card class="gap-0 overflow-hidden rounded-lg py-0 shadow-sm">
+            <div class="relative h-44 bg-muted">
+              <img :src="(selectedDorm || dormitories[0]).image" :alt="dormName(selectedDorm || dormitories[0])" class="size-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+              <div class="absolute inset-x-0 bottom-0 p-4 text-white">
+                <p class="text-sm font-medium text-white/80">{{ locale === 'th' ? 'รายละเอียดห้องที่เลือก' : 'Selected room details' }}</p>
+                <p class="truncate text-xl font-bold">{{ selectedApplicantRoom ? (locale === 'th' ? `ห้อง ${selectedApplicantRoom.number}` : `Room ${selectedApplicantRoom.number}`) : dormName(selectedDorm || dormitories[0]) }}</p>
+              </div>
+            </div>
+            <CardContent class="space-y-4 px-4 pb-4 pt-4">
+              <div v-if="selectedApplicantRoom" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="rounded-lg border p-3">
+                    <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ที่ว่างในห้อง' : 'Available slots' }}</p>
+                    <p class="mt-1 text-2xl font-bold">{{ roomAvailability(selectedApplicantRoom) }}/{{ selectedApplicantRoom.capacity }}</p>
+                  </div>
+                  <div class="rounded-lg border p-3">
+                    <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ยอดชำระเริ่มต้น' : 'Initial payment' }}</p>
+                    <p class="mt-1 text-2xl font-bold">{{ money(selectedPaymentAmount) }}</p>
+                  </div>
+                </div>
+
+                <div class="rounded-lg border p-3 text-sm">
+                  <p class="font-semibold">{{ localizedRoomTypeName(selectedApplicantRoom.type) }}</p>
+                  <p class="mt-1 text-muted-foreground">
+                    {{ locale === 'th' ? 'ระบบจะใช้ข้อมูลบัญชี KKU เพื่อสร้างใบจอง และนำคุณไปขั้นตรวจสอบข้อมูล/ชำระเงิน' : 'The system will use KKU account data to create the reservation and continue to payment review.' }}
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div v-for="(image, index) in selectedRoomGallery" :key="`selected-room-${index}`" class="aspect-[4/3] overflow-hidden rounded-lg border bg-muted">
+                    <img :src="image" :alt="`${selectedDormLabel()} ${index + 1}`" class="size-full object-cover">
+                  </div>
+                </div>
+
+                <Button class="h-11 w-full text-sm font-semibold" @click="submitApplicantApplication">
+                  <ClipboardList class="size-4" />
+                  {{ locale === 'th' ? `จองห้อง ${selectedApplicantRoom.number}` : `Reserve room ${selectedApplicantRoom.number}` }}
+                </Button>
+              </div>
+
+              <div v-else class="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                <p class="font-semibold text-foreground">{{ locale === 'th' ? 'ยังไม่ได้เลือกห้อง' : 'No room selected' }}</p>
+                <p class="mt-1">{{ locale === 'th' ? 'กดบล็อกห้องว่างในผังชั้นเพื่อดูรายละเอียดและเริ่มจอง' : 'Select an available room block in the floor plan to see details and reserve it.' }}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div
+          v-else-if="props.activeApp.status === 'Submitted' || props.activeApp.status === 'Need Re-upload'"
+          class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.48fr)]"
+        >
+          <Card class="gap-0 rounded-lg py-0 shadow-sm">
+            <CardHeader class="px-4 pb-2 pt-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle class="text-base">{{ locale === 'th' ? 'ตรวจสอบข้อมูลผู้สมัคร' : 'Review applicant information' }}</CardTitle>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {{ locale === 'th' ? 'ข้อมูลส่วนใหญ่ดึงจากบัญชี KKU หากข้อมูลติดต่อไม่ถูกต้องสามารถแก้ไขก่อนชำระเงินได้' : 'Most fields are pulled from the KKU account. Contact details can be edited before payment.' }}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="border-primary/30 text-primary hover:bg-primary/10"
+                  @click="profileEditMode = !profileEditMode"
+                >
+                  <FileText class="size-4" />
+                  {{ profileEditMode ? (locale === 'th' ? 'บันทึกข้อมูล' : 'Save details') : (locale === 'th' ? 'แก้ไขข้อมูล' : 'Edit details') }}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent class="space-y-4 px-4 pb-4">
+              <div class="grid gap-3 md:grid-cols-2">
+                <Field>
+                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'ชื่อ-นามสกุล' : 'Full name' }}</FieldLabel>
+                  <Input v-model="applicantForm.name" :disabled="!profileEditMode" />
+                </Field>
+                <Field>
+                  <FieldLabel class="text-xs">{{ t.modal.studentId }}</FieldLabel>
+                  <Input v-model="applicantForm.studentId" disabled />
+                </Field>
+                <Field>
+                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'คณะ/วิทยาลัย' : 'Faculty' }}</FieldLabel>
+                  <Input v-model="applicantForm.faculty" :disabled="!profileEditMode" />
+                </Field>
+                <Field>
+                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'เบอร์ติดต่อ' : 'Phone' }}</FieldLabel>
+                  <Input v-model="applicantForm.phone" :disabled="!profileEditMode" placeholder="08X-XXX-XXXX" />
+                </Field>
+                <Field>
+                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'อีเมล KKU' : 'KKU Email' }}</FieldLabel>
+                  <Input v-model="applicantForm.email" disabled />
+                </Field>
+                <Field>
+                  <FieldLabel class="text-xs">{{ t.gender }}</FieldLabel>
+                  <Select v-model="applicantForm.gender" :disabled="!profileEditMode">
+                    <SelectTrigger class="w-full bg-background">
+                      <span class="truncate">{{ applicantGenderLabel() }}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Female">{{ locale === 'th' ? 'หญิง' : 'Female' }}</SelectItem>
+                      <SelectItem value="Male">{{ locale === 'th' ? 'ชาย' : 'Male' }}</SelectItem>
+                      <SelectItem value="Other">{{ locale === 'th' ? 'อื่น ๆ' : 'Other' }}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field class="md:col-span-2">
+                  <FieldLabel class="text-xs">{{ locale === 'th' ? 'ประเภทผู้สมัคร' : 'Applicant type' }}</FieldLabel>
+                  <Select v-model="applicantForm.applicantType" :disabled="!profileEditMode">
+                    <SelectTrigger class="w-full bg-background">
+                      <span class="truncate">{{ applicantTypeLabel() }}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="General Student">{{ locale === 'th' ? 'นักศึกษาทั่วไป' : 'General Student' }}</SelectItem>
+                      <SelectItem value="New First-Year">{{ locale === 'th' ? 'นักศึกษาใหม่' : 'New First-Year' }}</SelectItem>
+                      <SelectItem value="Current Resident">{{ locale === 'th' ? 'นักศึกษาหอพักเดิม' : 'Current Resident' }}</SelectItem>
+                      <SelectItem value="International Student">{{ locale === 'th' ? 'นักศึกษาต่างชาติ' : 'International Student' }}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+
+              <div class="grid gap-3 md:grid-cols-3">
+                <div class="rounded-lg border bg-muted/20 p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'หอพัก' : 'Dormitory' }}</p>
+                  <p class="mt-1 font-semibold">{{ props.activeApp.dormName }}</p>
+                </div>
+                <div class="rounded-lg border bg-muted/20 p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ห้อง' : 'Room' }}</p>
+                  <p class="mt-1 font-semibold">{{ props.activeApp.roomNumber || applicantForm.roomNumber }}</p>
+                </div>
+                <div class="rounded-lg border bg-muted/20 p-3">
+                  <p class="text-xs text-muted-foreground">{{ locale === 'th' ? 'ประเภทห้อง' : 'Room type' }}</p>
+                  <p class="mt-1 line-clamp-2 font-semibold">{{ localizedRoomTypeName(props.activeApp.roomType || applicantForm.roomType) }}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card class="gap-0 overflow-hidden rounded-lg py-0 shadow-sm">
+            <div class="relative h-36 bg-muted">
+              <img :src="(selectedDorm || dormitories[0]).image" :alt="selectedDormLabel()" class="size-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+              <div class="absolute inset-x-0 bottom-0 p-4 text-white">
+                <p class="text-sm font-medium text-white/80">{{ locale === 'th' ? 'ขั้นตอนชำระเงิน' : 'Payment step' }}</p>
+                <p class="truncate text-lg font-bold">{{ props.activeApp.id }}</p>
+              </div>
+            </div>
+            <CardContent class="space-y-4 px-4 pb-4 pt-4">
+              <div class="rounded-lg border p-4">
+                <div class="flex items-start gap-3">
+                  <CreditCard class="mt-0.5 size-5 shrink-0 text-primary" />
+                  <div>
+                    <p class="font-semibold">{{ locale === 'th' ? 'ยอดที่ต้องชำระเพื่อจองสิทธิ์' : 'Reservation payment amount' }}</p>
+                    <p class="mt-1 text-3xl font-bold text-primary">{{ money(selectedPaymentAmount) }} THB</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                      {{ locale === 'th' ? 'จำลองชำระผ่าน UniPay หรือส่งสลิปโอนเงินสำหรับทดสอบ workflow' : 'Use the UniPay simulation or submit a manual transfer slip for the workflow demo.' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button class="h-11 w-full text-sm font-semibold" @click="openUniPayDialog">
+                <CreditCard class="size-4" />
+                {{ locale === 'th' ? 'ชำระผ่าน UniPay' : 'Pay with UniPay' }}
+              </Button>
+
+              <form class="rounded-lg border p-4" @submit.prevent="submitManualPayment">
+                <p class="font-semibold">{{ locale === 'th' ? 'อัปโหลดสลิปโอนเงิน' : 'Manual transfer slip' }}</p>
+                <div class="mt-3 grid gap-3">
+                  <Input v-model="manualSlip.amount" type="number" :placeholder="locale === 'th' ? 'ยอดชำระ' : 'Amount'" />
+                  <div class="grid grid-cols-2 gap-2">
+                    <Input v-model="manualSlip.date" type="date" />
+                    <Input v-model="manualSlip.time" type="time" />
+                  </div>
+                  <Input v-model="manualSlip.fileName" :placeholder="locale === 'th' ? 'ชื่อไฟล์สลิป' : 'receipt file name'" />
+                  <Button type="submit" variant="outline" class="border-primary/30 text-primary hover:bg-primary/10">
+                    {{ locale === 'th' ? 'ส่งสลิป' : 'Submit slip' }}
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>
@@ -2579,38 +2963,19 @@ function handleLogin() {
                 </div>
               </div>
 
-              <div v-if="props.activeApp.status === 'Submitted' || props.activeApp.status === 'Need Re-upload'" class="grid gap-4 md:grid-cols-2">
-                <div class="rounded-lg border p-4">
-                  <p class="font-semibold">{{ locale === 'th' ? 'จำลองชำระผ่าน UniPay' : 'UniPay simulation' }}</p>
-                  <p class="mt-1 text-sm text-muted-foreground">{{ locale === 'th' ? 'ยืนยันการชำระเงินทันทีสำหรับทดสอบ mock-up' : 'Confirm the payment instantly for demo testing.' }}</p>
-                  <Button class="mt-4 w-full" @click="emit('simulateUniPay')">
-                    <CreditCard class="size-4" />
-                    {{ locale === 'th' ? 'ชำระผ่าน UniPay' : 'Pay with UniPay' }}
-                  </Button>
-                </div>
-                <form class="rounded-lg border p-4" @submit.prevent="submitManualPayment">
-                  <p class="font-semibold">{{ locale === 'th' ? 'อัปโหลดสลิปโอนเงิน' : 'Manual transfer slip' }}</p>
-                  <div class="mt-3 grid gap-3">
-                    <Input v-model="manualSlip.amount" type="number" :placeholder="locale === 'th' ? 'ยอดชำระ' : 'Amount'" />
-                    <div class="grid grid-cols-2 gap-2">
-                      <Input v-model="manualSlip.date" type="date" />
-                      <Input v-model="manualSlip.time" type="time" />
-                    </div>
-                    <Input v-model="manualSlip.fileName" :placeholder="locale === 'th' ? 'ชื่อไฟล์สลิป' : 'receipt file name'" />
-                    <Button type="submit" variant="outline" class="border-primary/30 text-primary hover:bg-primary/10">
-                      {{ locale === 'th' ? 'ส่งสลิป' : 'Submit slip' }}
-                    </Button>
-                  </div>
-                </form>
-              </div>
-
-              <div v-else-if="props.activeApp.status === 'Confirmed'" class="rounded-lg border p-4">
+              <div v-if="props.activeApp.status === 'Confirmed'" class="rounded-lg border p-4">
                 <p class="font-semibold">{{ locale === 'th' ? 'ยืนยันสิทธิ์การจองแล้ว' : 'Reservation confirmed' }}</p>
                 <p class="mt-1 text-sm text-muted-foreground">{{ locale === 'th' ? 'ดาวน์โหลดหรือพิมพ์เอกสารจำลองสำหรับวันเข้าพัก' : 'Download or print the mock reservation ticket for check-in.' }}</p>
                 <Button class="mt-4" @click="emit('printTicket')">
                   <Download class="size-4" />
                   {{ locale === 'th' ? 'พิมพ์เอกสาร' : 'Print ticket' }}
                 </Button>
+              </div>
+              <div v-else class="rounded-lg border p-4">
+                <p class="font-semibold">{{ locale === 'th' ? 'รอเจ้าหน้าที่ดำเนินการ' : 'Waiting for staff action' }}</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                  {{ locale === 'th' ? 'ระบบจำลองส่งรายการนี้เข้าสู่คิวเจ้าหน้าที่เพื่อตรวจสอบและยืนยันสิทธิ์' : 'This mock item has been sent to the staff queue for review and confirmation.' }}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -2908,6 +3273,72 @@ function handleLogin() {
         </div>
       </section>
     </main>
+
+    <Dialog v-model:open="uniPayDialogOpen">
+      <DialogContent class="sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle>{{ locale === 'th' ? 'จำลองการชำระเงิน UniPay' : 'UniPay payment simulation' }}</DialogTitle>
+          <DialogDescription>
+            {{ locale === 'th' ? 'หน้าจอนี้จำลองการชำระเงินเพื่อทดสอบ workflow เท่านั้น' : 'This modal simulates payment for workflow testing only.' }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-4">
+          <div class="rounded-lg border bg-muted/20 p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm text-muted-foreground">{{ locale === 'th' ? 'เลขที่ใบสมัคร' : 'Application ID' }}</p>
+                <p class="mt-1 font-semibold">{{ props.activeApp?.id || '-' }}</p>
+              </div>
+              <Badge variant="secondary" class="text-primary">UniPay</Badge>
+            </div>
+            <Separator class="my-3" />
+            <div class="flex items-end justify-between gap-4">
+              <div>
+                <p class="text-sm text-muted-foreground">{{ locale === 'th' ? 'ยอดชำระ' : 'Amount' }}</p>
+                <p class="mt-1 text-2xl font-bold text-primary">{{ money(selectedPaymentAmount) }} THB</p>
+              </div>
+              <CreditCard class="size-8 text-primary" />
+            </div>
+          </div>
+
+          <div v-if="uniPayProcessing" class="rounded-lg border p-4 text-center">
+            <div class="mx-auto size-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <p class="mt-3 font-semibold">{{ locale === 'th' ? 'กำลังตรวจสอบการชำระเงิน' : 'Verifying payment' }}</p>
+            <p class="mt-1 text-sm text-muted-foreground">{{ locale === 'th' ? 'กรุณารอสักครู่ ระบบกำลังจำลองการตอบกลับจาก UniPay' : 'Please wait while the mock UniPay response is processed.' }}</p>
+          </div>
+
+          <div v-else-if="uniPaySuccess" class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+            <div class="flex items-start gap-3">
+              <Check class="mt-0.5 size-5 shrink-0" />
+              <div>
+                <p class="font-semibold">{{ locale === 'th' ? 'ชำระเงินสำเร็จ' : 'Payment successful' }}</p>
+                <p class="mt-1 text-sm">{{ locale === 'th' ? 'กดอัปเดตสถานะเพื่อส่งใบสมัครเข้าสู่ขั้นเจ้าหน้าที่ตรวจสอบ' : 'Update the status to send this application to staff review.' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="rounded-lg border p-4">
+            <p class="font-semibold">{{ locale === 'th' ? 'พร้อมจำลองการชำระเงิน' : 'Ready to simulate payment' }}</p>
+            <p class="mt-1 text-sm text-muted-foreground">{{ locale === 'th' ? 'เมื่อกดยืนยัน ระบบจะหมุนสักครู่ก่อนแสดงผลชำระสำเร็จ' : 'After confirming, the system will briefly process before showing success.' }}</p>
+          </div>
+
+          <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" :disabled="uniPayProcessing" @click="uniPayDialogOpen = false">
+              {{ locale === 'th' ? 'ปิด' : 'Close' }}
+            </Button>
+            <Button v-if="!uniPaySuccess" :disabled="uniPayProcessing" @click="confirmUniPayPayment">
+              <CreditCard class="size-4" />
+              {{ locale === 'th' ? 'จำลองชำระเงิน' : 'Simulate payment' }}
+            </Button>
+            <Button v-else @click="finishUniPayStatusUpdate">
+              <ClipboardList class="size-4" />
+              {{ locale === 'th' ? 'อัปเดตสถานะ' : 'Update status' }}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
 
     <Dialog v-model:open="staffReviewOpen">
       <DialogContent class="max-h-[calc(100vh-1.5rem)] overflow-y-auto sm:max-w-5xl">

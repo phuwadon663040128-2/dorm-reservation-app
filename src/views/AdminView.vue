@@ -598,7 +598,7 @@ function rejectApplicant() {
               <SelectTrigger class="w-full"><SelectValue placeholder="เลือกประเภท" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="หอพักเครือข่าย">หอพักเครือข่าย</SelectItem>
-                <SelectItem value="หอพักหญิง มข.">หอพักหญิง มข.</SelectItem>
+                <SelectItem value="หอพักในกำกับ มข.">หอพักในกำกับ มข.</SelectItem>
                 <SelectItem value="หอพักนานาชาติ">หอพักนานาชาติ</SelectItem>
               </SelectContent>
             </Select>
