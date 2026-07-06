@@ -102,6 +102,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import type { Applicant, AuditLog, DormCampaign, DormRooms, RoomInfo } from '@/types'
+import DormFloorPlan3D from '@/components/DormFloorPlan3D.vue'
 
 const personnelImages = import.meta.glob('../../dorm_kku_ui_assets/images/personnel/*', {
   eager: true,
@@ -488,6 +489,7 @@ const manualSlip = ref({
 const profileEditMode = ref(false)
 const uniPayDialogOpen = ref(false)
 const uniPayProcessing = ref(false)
+const floorViewMode = ref<'3d' | '2d'>('3d')
 const uniPaySuccess = ref(false)
 const applicantForm = ref({
   name: '',
@@ -2638,10 +2640,30 @@ function handleLogin() {
               </div>
 
               <div v-if="visibleFloorRooms.length" class="rounded-xl border bg-muted/20 p-3 sm:p-4">
-                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <div class="inline-flex items-center gap-2 text-sm font-semibold">
-                    <LayoutGrid class="size-4 text-primary" />
-                    {{ locale === 'th' ? 'ผังห้องในชั้นที่เลือก' : 'Selected floor plan' }}
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                  <div class="flex items-center gap-3">
+                    <div class="inline-flex items-center gap-2 text-sm font-semibold">
+                      <LayoutGrid class="size-4 text-primary" />
+                      {{ locale === 'th' ? 'ผังห้องในชั้นที่เลือก' : 'Selected floor plan' }}
+                    </div>
+                    <div class="inline-flex rounded-lg border bg-background p-0.5 shadow-sm">
+                      <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 text-[11px] font-bold transition-all"
+                        :class="floorViewMode === '3d' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+                        @click="floorViewMode = '3d'"
+                      >
+                        3D Plan
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 text-[11px] font-bold transition-all"
+                        :class="floorViewMode === '2d' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
+                        @click="floorViewMode = '2d'"
+                      >
+                        2D Plan
+                      </button>
+                    </div>
                   </div>
                   <div class="flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
                     <span class="inline-flex items-center gap-1 rounded-full border bg-emerald-50 px-2 py-1 text-emerald-700">
@@ -2659,7 +2681,18 @@ function handleLogin() {
                   </div>
                 </div>
 
-                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)]">
+                <div v-show="floorViewMode === '3d'" class="transition-all duration-300">
+                  <DormFloorPlan3D
+                    :left-rooms="floorPlanLeftRooms"
+                    :right-rooms="floorPlanRightRooms"
+                    :selected-room-number="applicantForm.roomNumber"
+                    :locale="locale"
+                    :selected-floor="selectedFloor"
+                    @select-room="chooseApplicantRoom"
+                  />
+                </div>
+
+                <div v-show="floorViewMode === '2d'" class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)]">
                   <div class="grid content-start gap-2">
                     <button
                       v-for="room in floorPlanLeftRooms"
@@ -2746,6 +2779,7 @@ function handleLogin() {
                   </div>
                 </div>
               </div>
+
               <div v-else class="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
                 {{ locale === 'th' ? 'ไม่พบห้องในเงื่อนไขนี้ ลองเปลี่ยนประเภทห้องหรือชั้น' : 'No rooms match this filter. Try another type or floor.' }}
               </div>
