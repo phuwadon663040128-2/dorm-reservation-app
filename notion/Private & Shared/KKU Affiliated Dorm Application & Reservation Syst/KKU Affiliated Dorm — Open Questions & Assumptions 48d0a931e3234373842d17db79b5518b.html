@@ -1,0 +1,767 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>KKU Affiliated Dorm — Open Questions &amp; Assumptions</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="48d0a931-e323-4373-842d-17db79b5518b" class="page sans"><header><h1 class="page-title" dir="auto">KKU Affiliated Dorm — Open Questions &amp; Assumptions</h1><p class="page-description" dir="auto">Updated decision log for live affiliated dorm application/reservation product. Use this to confirm rules with พี่อ้อม, อาจารย์กานดา, and dorm managers.</p></header><div class="page-body"><div class="collection-content-wrapper"><table class="collection-content"><colgroup><col style="width:31.162566328991797%"/><col style="width:9.64785335262904%"/><col style="width:39.89387361312108%"/><col style="width:9.64785335262904%"/><col style="width:9.647853352629042%"/></colgroup><thead><tr><th><span class="icon property-icon"><img src="https://app.notion.com/icons/font_gray.svg" style="width:14px;height:14px;display:block"/></span>Question / Assumption</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Category</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/description_gray.svg" style="width:14px;height:14px;display:block"/></span>Notes</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Priority</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Status</th></tr></thead><tbody><tr id="38e9192a-fd11-8101-a9a0-ef62ce9d71cf"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20happens%20when%20the%2072-hour%20group%20payment%20deadli%2038e9192afd118101a9a0ef62ce9d71cf.html" data-notion-page-id="38e9192a-fd11-8101-a9a0-ef62ce9d71cf" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What happens when the 72-hour group payment deadline expires?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Provisional baseline: release/cancel the exact-room group at the shared deadline. If any payment exists, preserve it and open staff/refund resolution. One-paid/one-unpaid alternatives remain stakeholder review.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38e9192a-fd11-8106-a9ae-c51f7bdf1811"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20documents%20are%20required%20for%20dorm%20application%2038e9192afd118106a9aec51f7bdf1811.html" data-notion-page-id="38e9192a-fd11-8106-a9ae-c51f7bdf1811" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What documents are required for dorm application?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Prototype can use generic document status without specifying official document names.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-8135-b307-d67d30602ddf"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Can%20admin%20manually%20override%20reservation%20status%20or%20%2038e9192afd118135b307d67d30602ddf.html" data-notion-page-id="38e9192a-fd11-8135-b307-d67d30602ddf" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Can admin manually override reservation status or quota?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Likely necessary for real operations; should require role permission, reason, and audit log.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38e9192a-fd11-814b-a097-ed8615ffd2b8"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20Figma%20screens%20are%20required%20for%20presentation%2038e9192afd11814ba097ed8615ffd2b8.html" data-notion-page-id="38e9192a-fd11-814b-a097-ed8615ffd2b8" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which Figma screens are required for presentation?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-blue">Student UX</span></td><td class="cell-r~lk">Minimum: student home, dorm list/detail, application form, status/result, admin dashboard, allocation screen.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-8153-9742-d9a35e5f0927"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20allocation%20be%20first-come,%20random,%20priority-%2038e9192afd1181539742d9a35e5f0927.html" data-notion-page-id="38e9192a-fd11-8153-9742-d9a35e5f0927" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should allocation be first-come, random, priority-based, or hybrid?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Old central allocation question. Current direction rejects allocation-first logic for the core release; keep only as future/optional if stakeholders request it.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-red">Rejected</span></td></tr><tr id="38e9192a-fd11-815b-a925-f873b22d15bf"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Do%20international%20students%20follow%20a%20separate%20dorm%20p%2038e9192afd11815ba925f873b22d15bf.html" data-notion-page-id="38e9192a-fd11-815b-a925-f873b22d15bf" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Do international students follow a separate dorm process?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Important if หออินเตอร์ is included in scope.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-815d-b0b3-fd0213e194b7"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20the%20prototype%20be%20mobile-first%2038e9192afd11815db0b3fd0213e194b7.html" data-notion-page-id="38e9192a-fd11-815d-b0b3-fd0213e194b7" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should the prototype be mobile-first?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-blue">Student UX</span></td><td class="cell-r~lk">Student side should be mobile-friendly; admin side can be desktop-first.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38e9192a-fd11-815e-9b0c-ca565c14cd52"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Do%20applicants%20choose%20exact%20rooms%2038e9192afd11815e9b0cca565c14cd52.html" data-notion-page-id="38e9192a-fd11-815e-9b0c-ca565c14cd52" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Do applicants choose exact rooms?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Decided: yes. The pilot uses building → floor → exact-room selection. Exact room is authoritative for holds, pricing, payment references, contracts and occupancy.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38e9192a-fd11-8177-9096-ed673ab24e19"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Do%20we%20need%20appeal%20request%20review%20feature%2038e9192afd1181779096ed673ab24e19.html" data-notion-page-id="38e9192a-fd11-8177-9096-ed673ab24e19" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Do we need appeal/request review feature?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-gray">Scope</span></td><td class="cell-r~lk">Future feature unless stakeholders require it.</td><td class="cell-THhZ"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38e9192a-fd11-8191-ac5f-fb66e9525df6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Is%20direct%20real-time%20bank%20API%20integration%20required%2038e9192afd118191ac5ffb66e9525df6.html" data-notion-page-id="38e9192a-fd11-8191-ac5f-fb66e9525df6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Is direct real-time bank API integration required?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Decided: no for MVP. The accepted operational integration is SCB file exchange: XLSX SLIPS export, returned multipage QR PDF import, and downloadable payment-result report import. Direct API/callback remains future.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38e9192a-fd11-81a4-be55-d6ecb9b99a6c"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20database%20stack%20will%20the%20team%20use%2038e9192afd1181a4be55d6ecb9b99a6c.html" data-notion-page-id="38e9192a-fd11-81a4-be55-d6ecb9b99a6c" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What database stack will the team use?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Recommended for design: PostgreSQL/MySQL. For fast prototype: Supabase or Firebase.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-81ac-b213-ca2fdde196e9"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Is%20roommate%20booking%20required%20for%20shared%20rooms%2038e9192afd1181acb213ca2fdde196e9.html" data-notion-page-id="38e9192a-fd11-81ac-b213-ca2fdde196e9" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Is roommate booking required for shared rooms?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Decided: yes. Both profiles complete; leader sends 48-hour invitation; one active group per resident; maximum two; roommate accepts before exact-room selection; campaign may require 15-minute room confirmation.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38e9192a-fd11-81b3-bd54-d4d8c6fff36b"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Is%20production%20KKU%20SSO%20required%20for%20the%20pilot%20workf%2038e9192afd1181b3bd54d4d8c6fff36b.html" data-notion-page-id="38e9192a-fd11-81b3-bd54-d4d8c6fff36b" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Is production KKU SSO required for the pilot workflow?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Decided: no. A verified personal-email account supports application, payment, reservation, printed contract, physical signing, and check-in. KKU SSO is optional and may be added or linked later.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38e9192a-fd11-81cd-bff3-e7a9e4e8467e"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20dorm%20groups%20are%20officially%20in%20scope%2038e9192afd1181cdbff3e7a9e4e8467e.html" data-notion-page-id="38e9192a-fd11-81cd-bff3-e7a9e4e8467e" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which dorm groups are officially in scope?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-gray">Scope</span></td><td class="cell-r~lk">Decide whether project focuses on หอ 8 หลัง, หอ 9 หลัง, หออินเตอร์, or all KKU dorms.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-81cf-a9b7-c5c785d713de"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20priority%20rules%20are%20acceptable%2038e9192afd1181cfa9b7c5c785d713de.html" data-notion-page-id="38e9192a-fd11-81cf-a9b7-c5c785d713de" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What priority rules are acceptable?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Priority score/group must not be presented as official unless verified.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-81ea-90b1-d251bdfe20b9"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20waitlist%20show%20exact%20position%2038e9192afd1181ea90b1d251bdfe20b9.html" data-notion-page-id="38e9192a-fd11-81ea-90b1-d251bdfe20b9" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should waitlist show exact position?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-blue">Student UX</span></td><td class="cell-r~lk">Exact position improves transparency but may require policy approval.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38e9192a-fd11-81eb-84b9-fcf7f7d785ff"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/How%20will%20we%20test%20allocation%20fairness%2038e9192afd1181eb84b9fcf7f7d785ff.html" data-notion-page-id="38e9192a-fd11-81eb-84b9-fcf7f7d785ff" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">How will we test allocation fairness?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Use sample data with different priority groups and show expected allocation outcomes.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-81f7-8fdd-fc79afedfec4"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Is%20maintenance%20part%20of%20core%20product%20release%20or%20fut%2038e9192afd1181f78fddfc79afedfec4.html" data-notion-page-id="38e9192a-fd11-81f7-8fdd-fc79afedfec4" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Is maintenance part of core product release or future scope?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-gray">Scope</span></td><td class="cell-r~lk">Maintenance strengthens dorm lifecycle but can be moved to future if scope is too large.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38e9192a-fd11-81fb-a9bc-f1178c30d2b7"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20interface%20be%20Thai-only%20or%20bilingual%20Thai%20En%2038e9192afd1181fba9bcf1178c30d2b7.html" data-notion-page-id="38e9192a-fd11-81fb-a9bc-f1178c30d2b7" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should interface be Thai-only or bilingual Thai/English?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-blue">Student UX</span></td><td class="cell-r~lk">Bilingual support is useful for international students but adds design effort.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38e9192a-fd11-81fd-be4d-e1ad37287dc6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Can%20official%20dorm%20data%20or%20photos%20be%20used%20in%20protot%2038e9192afd1181fdbe4de1ad37287dc6.html" data-notion-page-id="38e9192a-fd11-81fd-be4d-e1ad37287dc6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Can official dorm data or photos be used in prototype?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-yellow">Research</span></td><td class="cell-r~lk">Use placeholders unless permission/source is clear.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-811c-ab50-dd3cc7d48809"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Does%20the%20first%20version%20need%20direct%20integration%20wit%2038f9192afd11811cab50dd3cc7d48809.html" data-notion-page-id="38f9192a-fd11-811c-ab50-dd3cc7d48809" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Does the first version need direct integration with existing invoice system?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Recommended first production path: export if direct integration is not ready; direct integration remains later phase.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="38f9192a-fd11-8121-9e64-c4ccaa3e662e"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Current%20resident%20renewal%20in%20core%20product%20release%2038f9192afd1181219e64c4ccaa3e662e.html" data-notion-page-id="38f9192a-fd11-8121-9e64-c4ccaa3e662e" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Current resident renewal in core product release</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-gray">Scope</span></td><td class="cell-r~lk">Recommended phase 1: admin enters remaining quota after renewal if online renewal is too large.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-8126-8d8a-e637d39839f6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/When%20does%20the%20system%20hold%20an%20exact%20room%2038f9192afd1181268d8ae637d39839f6.html" data-notion-page-id="38f9192a-fd11-8126-8d8a-e637d39839f6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">When does the system hold an exact room?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Decided: leader clicking Reserve creates an immediate exact-room hold. If second roommate confirmation is required, it expires after 15 minutes; successful group then enters a 72-hour payment hold. Exact-room hold replaces vague room-quota hold.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-8127-bf1b-ddf85bc2a3d7"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20dorm%20managers%20see%20only%20their%20dorm%20data%2038f9192afd118127bf1bddf85bc2a3d7.html" data-notion-page-id="38f9192a-fd11-8127-bf1b-ddf85bc2a3d7" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should dorm managers see only their dorm data?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Role permission question. Division-level admins may see all dorms.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-812a-82e6-c54f68bebca2"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20status%20officially%20means%20%E0%B9%84%E0%B8%94%E0%B9%89%E0%B8%AB%E0%B9%89%E0%B8%AD%E0%B8%87%E0%B9%81%E0%B8%A5%E0%B9%89%E0%B8%A7%2038f9192afd11812a82e6c54f68bebca2.html" data-notion-page-id="38f9192a-fd11-812a-82e6-c54f68bebca2" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which status officially means ได้ห้องแล้ว?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Critical. Options: application submitted, slip uploaded, slip verified, reservation approved, or existing invoice system confirmed.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-8135-a96d-e1d1fab19927"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20are%20the%20temporary-hold%20durations%2038f9192afd118135a96de1d1fab19927.html" data-notion-page-id="38f9192a-fd11-8135-a96d-e1d1fab19927" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What are the temporary-hold durations?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Current design decision: 15 minutes for required roommate confirmation after leader reserves; then 72 hours for group payment. The 72-hour outcome for one-paid/one-unpaid remains provisional for later review.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-813b-b737-d0a0d5cf4fce"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20payment%20rule%20differ%20for%20international%20stude%2038f9192afd11813bb737d0a0d5cf4fce.html" data-notion-page-id="38f9192a-fd11-813b-b737-d0a0d5cf4fce" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should payment rule differ for international students?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Important for หอพักวรอินเตอร์ and bilingual UX.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-8143-b955-c251b3865c92"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20happens%20if%20applicant%20pays%20but%20quota%20is%20full%2038f9192afd118143b955c251b3865c92.html" data-notion-page-id="38f9192a-fd11-8143-b955-c251b3865c92" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What happens if applicant pays but quota is full?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Avoid this by checking quota before payment/slip upload unless a waitlist payment policy is defined.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-814d-9629-faef2babc28c"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Authorized%20staff%20verify%20payment%20slips%2038f9192afd11814d9629faef2babc28c.html" data-notion-page-id="38f9192a-fd11-814d-9629-faef2babc28c" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Authorized staff verify payment slips</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Decision recorded 2026-07-10 08:28 GMT+7: authorized payment-verification staff can access the existing bank statement or transaction list and verify, reject, request re-upload, or mark manual review. Exact staff position names and dorm scopes still need configuration.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-8160-9485-e2eb8f2635ae"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20happens%20if%20slip%20is%20rejected%2038f9192afd1181609485e2eb8f2635ae.html" data-notion-page-id="38f9192a-fd11-8160-9485-e2eb8f2635ae" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What happens if slip is rejected?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Need decide whether applicant can re-upload and whether quota hold remains while fixing.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-8163-a4cd-ff88bf74ebef"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20room%20type%20and%20price%20list%20should%20be%20used%20in%20pr%2038f9192afd118163a4cdff88bf74ebef.html" data-notion-page-id="38f9192a-fd11-8163-a4cd-ff88bf74ebef" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What room type and price list should be used in prototype?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-yellow">Research</span></td><td class="cell-r~lk">Need official or stakeholder-provided room type names, prices, deposit, capacity, and conditions.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-8166-8f39-e9179390cbc8"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20current%20paper%20forms%20must%20be%20converted%20into%20on%2038f9192afd1181668f39e9179390cbc8.html" data-notion-page-id="38f9192a-fd11-8166-8f39-e9179390cbc8" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What current paper forms must be converted into online form fields?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-yellow">Research</span></td><td class="cell-r~lk">Ask stakeholders for current application forms and required fields.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-8187-8494-e597255f8e14"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20applicants%20choose%20exact%20room%20or%20only%20room%20t%2038f9192afd1181878494e597255f8e14.html" data-notion-page-id="38f9192a-fd11-8187-8494-e597255f8e14" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should applicants choose exact room or only room type?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Decided: exact room. This duplicates the older exact-room question and is retained as history. Room-type counts are derived summaries only.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-81b4-835e-f843c095ad56"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20is%20the%20cancellation%20refund%20policy%20after%20verif%2038f9192afd1181b4835ef843c095ad56.html" data-notion-page-id="38f9192a-fd11-81b4-835e-f843c095ad56" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What is the cancellation/refund policy after verified payment?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Track status first; automation waits for official policy.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-81bc-b407-c6c004dec99b"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20dorms%20are%20in%20the%20accepted%20pilot%2038f9192afd1181bcb407c6c004dec99b.html" data-notion-page-id="38f9192a-fd11-81bc-b407-c6c004dec99b" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which dorms are in the accepted pilot?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-gray">Scope</span></td><td class="cell-r~lk">Decided: วรเรสซิเดนซ์ / หอ 8 หลัง and หอพักวรอินเตอร์ are delivered together. Other dorms remain expansion/research context.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-81c6-9090-d7efd8b5273d"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Should%20notification%20be%20in-app%20only%20or%20include%20Line%2038f9192afd1181c69090d7efd8b5273d.html" data-notion-page-id="38f9192a-fd11-81c6-9090-d7efd8b5273d" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Should notification be in-app only or include Line/email?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-blue">Student UX</span></td><td class="cell-r~lk">First production release can start with in-app status only; Line/email can be later if integration is complex.</td><td class="cell-THhZ"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-81ed-8db8-de7d29e04266"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Can%20managers%20close%20campaign%20automatically%20when%20quo%2038f9192afd1181ed8db8de7d29e04266.html" data-notion-page-id="38f9192a-fd11-81ed-8db8-de7d29e04266" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Can managers close campaign automatically when quota is full?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Options: auto-close, mark full, keep waitlist, or admin manual close.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-81fb-ac0a-c4f84c17285b"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Do%20new%20first-year%20students%20always%20pay%202%20terms%20or%20o%2038f9192afd1181fbac0ac4f84c17285b.html" data-notion-page-id="38f9192a-fd11-81fb-ac0a-c4f84c17285b" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Do new first-year students always pay 2 terms or only in some dorms?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Stakeholder mentioned some dorms may require 2-term full payment when booking. Must confirm which dorms.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-81fd-9c28-f2dcfc9b7f36"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20payment-action%20codes%20and%20installment%20variants%2038f9192afd1181fd9c28f2dcfc9b7f36.html" data-notion-page-id="38f9192a-fd11-81fd-9c28-f2dcfc9b7f36" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What payment-action codes and installment variants exist beyond ROOM and HL?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Partly confirmed: HL room always creates separate ROOM and HL obligations. Need remaining action codes, recipient/account, price rules, and semester Ref.2 format (for example whether T1/T2 is used).</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-81fd-ada1-defad04ed1cd"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20payment-document%20export%20import%20formats%20are%20re%2038f9192afd1181fdada1defad04ed1cd.html" data-notion-page-id="38f9192a-fd11-81fd-ada1-defad04ed1cd" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What payment-document export/import formats are required?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Decided for SCB workflow: .xlsx with sheet SLIPS and exact bank columns; SCB returns one combined multipage QR PDF and a downloadable payment-result report. University handoff/correction schema remains Need Verify.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-8184-8977-e96c2acdb89f"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Official%20payment%20integration%20availability%20after%20MV%2038f9192afd1181848977e96c2acdb89f.html" data-notion-page-id="38f9192a-fd11-8184-8977-e96c2acdb89f" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Official payment integration availability after MVP</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Not required for the pilot MVP. Reconsider only after manual shared-QR verification is stable and the university approves an official integration.</td><td class="cell-THhZ"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="38f9192a-fd11-81af-bd76-fdee53506381"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Static%20QR%20configuration%20and%20bank-account%20ownership%2038f9192afd1181afbd76fdee53506381.html" data-notion-page-id="38f9192a-fd11-81af-bd76-fdee53506381" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Static QR configuration and bank-account ownership</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Partial decision recorded 2026-07-10 08:28 GMT+7: only selected admin roles with explicit QR-management permission may change the shared QR; payment-verification staff do not receive this permission by default. Still confirm the pilot QR image, destination account owner, exact admin assignments, bank/account display, and change-approval process.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="38f9192a-fd11-81e9-8932-d919e732ceed"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20event%20permanently%20confirms%20the%20exact%20room%2038f9192afd1181e98932d919e732ceed.html" data-notion-page-id="38f9192a-fd11-81e9-8932-d919e732ceed" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What event permanently confirms the exact room?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Provisional design: all required resident ROOM/HL obligations are paid according to SCB result/manual evidence, then authorized staff confirms the reservation. Stakeholder must confirm whether any additional manager approval is required.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-gray">Assumption</span></td></tr><tr id="3999192a-fd11-8148-bc31-ff23385a513f"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20day%20is%20the%20weekly%20payment-verification%20off-d%203999192afd118148bc31ff23385a513f.html" data-notion-page-id="3999192a-fd11-8148-bc31-ff23385a513f" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which day is the weekly payment-verification off-day?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Manager reported that payment-verification staff work six days per week with one regular day off. Record the exact day and holiday substitution rule so queue deadlines and expected review dates use working days correctly.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-811b-88e1-e6761cd33aec"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Does%20the%20pilot%20require%20mandatory%20KKU%20SSO%20linking%203999192afd11811b88e1e6761cd33aec.html" data-notion-page-id="3999192a-fd11-811b-88e1-e6761cd33aec" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Does the pilot require mandatory KKU SSO linking?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Decided: no. KKU SSO is optional and does not gate reservation, printed contract, physical signing, or check-in.</td><td class="cell-THhZ"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="3999192a-fd11-8143-97bc-cf7ec4554eb4"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Who%20may%20review%20optional%20KKU%20identity-link%20mismatch%203999192afd11814397bccf7ec4554eb4.html" data-notion-page-id="3999192a-fd11-8143-97bc-cf7ec4554eb4" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Who may review optional KKU identity-link mismatches?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Need stakeholder confirmation only if optional KKU linking is included in the pilot. No temporary identity exception is needed because KKU SSO does not gate any current workflow.</td><td class="cell-THhZ"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-8171-b44b-e2f43ab3ae63"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/May%20applicants%20reserve%20before%20receiving%20a%20KKU%20acco%203999192afd118171b44be2f43ab3ae63.html" data-notion-page-id="3999192a-fd11-8171-b44b-e2f43ab3ae63" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">May applicants reserve before receiving a KKU account?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-blue">Student UX</span></td><td class="cell-r~lk">Decided: yes. Use a verified personal-email applicant account. Applicants may complete application, payment, reservation, printed contract, physical signing, and check-in without KKU SSO. Optional linking never creates a duplicate record.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-blue">Decided</span></td></tr><tr id="3999192a-fd11-8134-b8b3-c2a3fc25d07b"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20is%20the%20official%20paper%20contract%20template%20and%20c%203999192afd118134b8b3c2a3fc25d07b.html" data-notion-page-id="3999192a-fd11-8134-b8b3-c2a3fc25d07b" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What is the official paper contract template and contract-number format?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Confirm the approved template owner/version, fields, clauses, fee/term wording, contract number generation, number of copies, and whether the system should retain a rendered PDF artifact.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-8155-aafe-d4cebd0992f6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Who%20may%20generate,%20print%20reprint,%20and%20receive%20signe%203999192afd118155aafed4cebd0992f6.html" data-notion-page-id="3999192a-fd11-8155-aafe-d4cebd0992f6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Who may generate, print/reprint, and receive signed contracts?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Confirm exact staff roles and dorm scope for template management, generation, preview, print, reprint, correction, cancellation, and recording physical signature receipt. Reprint should require a reason.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-819c-8334-dd9571b7e947"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/How%20are%20signed%20paper%20contracts%20stored%20and%20retained%203999192afd11819c8334dd9571b7e947.html" data-notion-page-id="3999192a-fd11-819c-8334-dd9571b7e947" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">How are signed paper contracts stored and retained?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Confirm signing location/appointment, required supporting documents, paper-storage location/reference, handover procedure, retention period, authorized access, and secure destruction process.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-811e-8083-cb7a693c1d51"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20are%20the%20official%20contract,%20signed-scan%20and%20ke%203999192afd11811e8083cb7a693c1d51.html" data-notion-page-id="3999192a-fd11-811e-8083-cb7a693c1d51" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What are the official contract, signed-scan and key-handover requirements?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Confirm template/version, copies, photos/supporting documents, signing location, separate key-handover signers, scan/photo format, paper/digital storage, retention and secure destruction.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-8126-9cf8-f49c7aafb0be"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20exact%20staff%20positions%20receive%20each%20operation%203999192afd1181269cf8f49c7aafb0be.html" data-notion-page-id="3999192a-fd11-8126-9cf8-f49c7aafb0be" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which exact staff positions receive each operational permission?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-purple">Admin Operations</span></td><td class="cell-r~lk">Confirm room/manual reservation, pricing override, SCB export, PDF import/rematch, result import/manual payment, payment confirmation, contract actions, key handover, university export and correction scopes.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-8182-8485-da1224a7b44e"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20columns%20and%20identifiers%20are%20in%20the%20SCB%20paymen%203999192afd1181828485da1224a7b44e.html" data-notion-page-id="3999192a-fd11-8182-8485-da1224a7b44e" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What columns and identifiers are in the SCB payment-result report?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Obtain sample report and define transaction ID, payer/resident fields, references, amount, payment time, status, fee, and duplicate/failed cases for import matching.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-8191-9156-f49edd6b57fa"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Can%20ROOM%20and%20HL%20always%20be%20uploaded%20in%20the%20same%20SCB%203999192afd1181919156f49edd6b57fa.html" data-notion-page-id="3999192a-fd11-8191-9156-f49edd6b57fa" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Can ROOM and HL always be uploaded in the same SCB batch?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Current design allows one configurable combined batch. Confirm internal software behavior when ROOM and HL have different receiving entities/accounts.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81b5-be95-f180cccf3523"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20is%20the%20final%20policy%20when%20one%20roommate%20pays%20an%203999192afd1181b5be95f180cccf3523.html" data-notion-page-id="3999192a-fd11-81b5-be95-f180cccf3523" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What is the final policy when one roommate pays and the other does not?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Current provisional rule keeps room until shared 72-hour deadline then releases/cancels group and sends paid amount to manual/refund review. Confirm replacement or whole-room conversion alternatives.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81b9-b5d4-c11940247cb5"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/How%20should%20semester%20installments%20be%20encoded%20in%20Ref%203999192afd1181b9b5d4c11940247cb5.html" data-notion-page-id="3999192a-fd11-81b9-b5d4-c11940247cb5" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">How should semester installments be encoded in Ref.2?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Confirm whether senior installments reuse ROOM2569 or use term-specific codes such as ROOM2569T1/T2. Also confirm corresponding HL behavior.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81bc-8202-f380d88f566a"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20fields%20and%20correction%20format%20are%20required%20for%203999192afd1181bc8202f380d88f566a.html" data-notion-page-id="3999192a-fd11-81bc-8202-f380d88f566a" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What fields and correction format are required for university-system handoff?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Obtain current import/export sample, target system/round, required columns, identifiers, and official correction process after room, roommate or amount changes.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81d3-a013-c0caa9001068"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/Which%20resident-specific%20field%20identifies%20a%20returne%203999192afd1181d3a013c0caa9001068.html" data-notion-page-id="3999192a-fd11-81d3-a013-c0caa9001068" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">Which resident-specific field identifies a returned SCB PDF page?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-green">Technical</span></td><td class="cell-r~lk">Need a roommate sample with identical Ref.1/Ref.2, exact field printed on each page, actual page sort order, filename, and whether SCB returns a manifest.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81d6-8bdb-c34d32302a9e"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20is%20the%20authoritative%20source%20for%20room%20dimensio%203999192afd1181d68bdbc34d32302a9e.html" data-notion-page-id="3999192a-fd11-81d6-8bdb-c34d32302a9e" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What is the authoritative source for room dimensions and floor plans?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-yellow">Research</span></td><td class="cell-r~lk">Confirm room master, old PDF/image plan owners, onsite verification method, update responsibility, and which data is safe/accurate enough for applicant display.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81df-8495-f99a27a58fb6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/What%20are%20the%20official%20annual%20renewal%20dates%20and%20cha%203999192afd1181df8495f99a27a58fb6.html" data-notion-page-id="3999192a-fd11-81df-8495-f99a27a58fb6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">What are the official annual renewal dates and change deadlines?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Confirm renewal open/close, roommate replacement deadline, whole-room conversion deadline, move/release deadline, and date remaining rooms open to new applicants.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr><tr id="3999192a-fd11-81e4-bdec-f8679b18eed6"><td class="cell-title"><a href="KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions/How%20should%20fee-exempt%20dorm%20advisers%20or%20occupants%20b%203999192afd1181e4bdecf8679b18eed6.html" data-notion-page-id="3999192a-fd11-81e4-bdec-f8679b18eed6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">How should fee-exempt dorm advisers or occupants be represented?</a></td><td class="cell-P^QE"><span class="selected-value select-value-color-red">Dorm Policy</span></td><td class="cell-r~lk">Decide explicit exemption with no bill, zero-amount bill, or outside-system handling. Must preserve room occupancy and reporting without creating incorrect SCB rows.</td><td class="cell-THhZ"><span class="selected-value select-value-color-red">High</span></td><td class="cell-njiv"><span class="selected-value select-value-color-yellow">Need Verify</span></td></tr></tbody></table></div><br/><br/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

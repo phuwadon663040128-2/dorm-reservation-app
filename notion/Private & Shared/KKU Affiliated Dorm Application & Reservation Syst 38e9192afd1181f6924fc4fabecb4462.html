@@ -1,0 +1,790 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>KKU Affiliated Dorm Application &amp; Reservation System — Project Hub</title><meta name="data-notion-page-icon" content="🏢"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8F%A2%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="38e9192a-fd11-81f6-924f-c4fabecb4462" class="page sans" data-notion-page-icon="🏢"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🏢"></span></div><h1 class="page-title" dir="auto">KKU Affiliated Dorm Application &amp; Reservation System — Project Hub</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="85ec8775-4284-48c4-b5de-d41b12c28af2" class="" dir="auto">Current exact-room and SCB pilot decision</h2><p id="8c21cbec-6515-4ada-8363-bae582c659dd" class="" dir="auto"><strong>Decision date:</strong> 2026-07-10</p><p id="d4b044e8-0461-4d43-befd-2370685ca549" class="" dir="auto">The accepted pilot covers <strong>วรเรสซิเดนซ์ / หอ 8 หลัง and หอพักวรอินเตอร์ together</strong>.</p><p id="a2e6a0bd-9392-43fe-926a-c28e775492ae" class="" dir="auto">Applicants may use a verified personal-email account before receiving a KKU account. KKU SSO is optional and does not gate reservation, payment, printed contracts, physical signing, or key handover.</p><p id="9d34ee4b-6586-4d20-8de0-fb683f56479b" class="" dir="auto">The MVP uses exact rooms, shared/whole-room occupancy, roommate groups, short room holds, resident payment obligations, SCB bulk Excel export, returned multipage QR PDF import, SCB payment-result import, annual renewal, printed contracts, signed scans, key handover, and later university handoff.</p><p id="82484fdb-d214-46dc-9910-cd9b2fad3ab3" class="" dir="auto">Our app does <strong>not</strong> generate the official QR payment form. It exports the required <code>.xlsx</code>/<code>SLIPS</code> batch to the existing SCB/internal workflow, imports the returned combined PDF, matches pages to resident obligations, and imports the payment-result report.</p><p id="347c207f-04db-4c72-955a-cb4e0c51696e" class="" dir="auto">Key timings:</p><ul id="0bf9623a-aa43-4bd7-9a7b-5f1cf50a56cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate invitation: 48 hours;</li></ul><ul id="1202ac10-5d06-4997-a29f-3ce99f8ce9ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">selected-room confirmation hold: 15 minutes when required;</li></ul><ul id="6b6dd2f0-f267-4717-aa93-57a8e2943b42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">group payment hold: 72 hours under current baseline.</li></ul><p id="673476a1-68b1-4517-8826-08a1e044d13d" class="" dir="auto">Current provisional confirmation rule:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="d53a7c37-c5d3-4094-a379-f6d1ae291e55" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">all required resident payment obligations received
++ authorized staff confirmation
+→ exact room permanently confirmed</code></pre><p id="2a0cc57b-57f8-4400-abfb-9acb771b6939" class="" dir="auto">Detailed payment page: <a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></p><hr id="d353a548-5549-4d1b-ab33-2acda43cc141" dir="auto"/><h2 id="b9502047-64e5-42ed-be64-81c5693a1a34" class="" dir="auto">Delivery plan decision</h2><p id="0ec72e4b-acd3-4c70-9556-741b4567da13" class="" dir="auto"><strong>Last revised:</strong> 2026-07-10</p><p id="85fab652-8991-4584-8cb7-23aba6076315" class="" dir="auto">The accepted eight-month delivery target is one combined pilot for <strong>หอ 8 หลัง + วรอินเตอร์</strong>, using a reusable architecture but implementing the two pilot groups together.</p><p id="127c8afb-76ec-48b2-8cbe-3c842a245670" class="" dir="auto">The canonical schedule and acceptance gates are maintained in <a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/09%20%E2%80%94%20Product%20Build%20Plan%20&amp;%20Roadmap%2038f9192afd11810592a9eb0e97d7d86d.html">09 — Product Build Plan &amp; Roadmap</a>.</p><p id="04968bfd-18c3-4d23-8128-2c174a2841b4" class="" dir="auto">Key delivery rules:</p><ul id="8fe344da-c257-42c1-a5b4-7d43221281f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room inventory is core;</li></ul><ul id="0002f86a-741a-4736-bb06-eb9128a408ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate and whole-room reservation are core;</li></ul><ul id="a5b3fe3c-1419-49a1-865c-5dd2390d0f9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB XLSX/PDF/result file exchange is core;</li></ul><ul id="c70a87f1-547d-4dd7-a53a-f32192dfcc6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">annual renewal, printed contracts, signed scans, key handover, and university handoff are core;</li></ul><ul id="19e1c015-6f28-4012-aec3-dfebc4a019da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room locks, imports, and confirmations must be concurrency-safe and idempotent;</li></ul><ul id="4fe98834-bb40-4c23-b37e-104ff28e8c3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KKU SSO is optional;</li></ul><ul id="54420b04-ed41-479c-b8fa-fdd760ab4403" class="bulleted-list" dir="auto"><li style="list-style-type:disc">monthly utilities are designed for later extension but not implemented now;</li></ul><ul id="a91416f6-b34d-4431-92a4-fc849e878a03" class="bulleted-list" dir="auto"><li style="list-style-type:disc">parcel and maintenance remain outside scope.</li></ul><hr id="859ba118-8bc3-4233-9c8e-889a70e8770c" dir="auto"/><h2 id="2a348e33-39aa-42d9-8a9f-2e742a774e02" class="" dir="auto">Current source of truth</h2><p id="c9dd23ad-0dc1-4f53-97c0-819ac7ae2f12" class="" dir="auto">This hub is the master note for the <strong>KKU Affiliated Dorm Application &amp; Reservation System</strong>.</p><p id="c1261f2b-67b0-4a82-afde-9b48cae0c0fa" class="" dir="auto">The live product is now focused on:</p><pre id="5a6b5cf2-4db4-4e47-97f8-f41f0368a9bc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">verified applicant profile
+→ roommate group or whole-room choice
+→ exact-room selection
+→ short confirmation hold
+→ 72-hour payment hold
+→ resident ROOM/HL obligations
+→ SCB XLSX export
+→ returned QR PDF import/matching
+→ SCB payment-result import
+→ staff confirms exact room
+→ printed contracts and signed scans
+→ key handover
+→ university handoff/correction export</code></pre><h2 id="9ce203a4-e8f5-4175-b80f-8c9832f82206" class="" dir="auto">Final implementation stack</h2><pre id="e69e0149-0e28-42b0-8816-2a0786099980" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Frontend: Nuxt + shadcn-vue + Tailwind CSS
+Backend: Go + chi
+Database access: GORM + sqlc
+Database: PostgreSQL
+File/object storage: SeaweedFS via S3-compatible gateway
+Reverse proxy: Nginx
+Runtime/deployment: Docker / Docker Compose
+Identity/authentication: internal verified applicant accounts + linkable KKU SSO identity
+Local mock integration: optional Mock KKU SSO plus exact-room, SCB XLSX/PDF/result, renewal, contract, and key-handover fixtures
+CI/CD: No GitHub Actions for current delivery plan</code></pre><h2 id="4b65785f-e401-459e-8a61-8816858bdd70" class="" dir="auto">Product name</h2><p id="47756f35-481e-4801-b48f-7b25d6a9507b" class="" dir="auto"><strong>English:</strong> KKU Affiliated Dorm Application &amp; Reservation System</p><p id="85457aae-ab94-43b0-9e66-032a1b31b32c" class="" dir="auto"><strong>Thai:</strong> ระบบรับสมัครและจองหอพักในกำกับ มข. พร้อมตรวจสอบการชำระเงิน</p><h2 id="50abde7d-d4f1-4178-b060-e0eb53a889e5" class="" dir="auto">Pilot scope</h2><p id="96afd71f-210e-4da1-9b17-81c4e4336182" class="" dir="auto">Accepted pilot:</p><ul id="6e99db22-643b-49b1-aed7-1491106ba52c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>วรเรสซิเดนซ์ / หอ 8 หลัง</strong></li></ul><ul id="99ee012d-35e5-4867-9074-82e500bb7f81" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>หอพักวรอินเตอร์</strong></li></ul><p id="7013a8b0-6dab-4b20-a205-29c44a0e7b62" class="" dir="auto">They are delivered together under one configurable exact-room product. Other dorm workflows remain research/expansion context.</p><h2 id="cc46ca97-eefb-4f35-9581-add3a72d4653" class="" dir="auto">Stakeholders</h2><ul id="978040cc-f02b-4e17-9f42-bfb73a0e3263" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ผอ. อ้อม — รักษาการแทนผู้อำนวยการกองบริการหอพักนักศึกษา</li></ul><ul id="53300865-0a84-4ed2-a394-1a63669cdb5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">อาจารย์กานดา — อาจารย์ที่ปรึกษาหลัก</li></ul><ul id="d4251b5f-b93a-406b-8cca-432195bd6b45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ผู้จัดการหอพักในกำกับ</li></ul><ul id="917df3bc-0439-403c-8790-91afd7afed25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Finance/admin staff involved in payment verification or invoice workflow</li></ul><h2 id="e2045821-a158-4b81-b0ff-a2c6ebc1aa31" class="" dir="auto">Current product thesis</h2><blockquote id="2ec2a8ac-43cc-4b12-9934-ff828c582c7e" class="" dir="auto">This system helps KKU affiliated dorms recruit and reserve residents earlier by moving paper/Line/manual application processes into a controlled online workflow with configurable payment rules, slip verification, room availability tracking, admin approval, and export/reporting.</blockquote><h2 id="96269f28-2940-4868-9ca8-455ec2029fa4" class="" dir="auto">Why this pivot happened</h2><p id="384ba997-7325-4de0-9c55-b6e15010d7cb" class="" dir="auto">Stakeholder discussion showed that affiliated dorms do not simply follow central dorm booking rules.</p><p id="47a72722-9e4b-4574-b40e-f77169cb842d" class="" dir="auto">Key points:</p><ol type="1" id="c287787f-58aa-465a-95ef-c2ad2ec715d2" class="numbered-list" start="1" dir="auto"><li>Some affiliated dorms want residents to pay when applying or reserving.</li></ol><ol type="1" id="f0c4030a-63d8-4fcb-a019-3afda57c993e" class="numbered-list" start="2" dir="auto"><li>Payment conditions vary by dorm and applicant type.</li></ol><ol type="1" id="5b13022a-6145-43f8-aeb4-3e90159417d3" class="numbered-list" start="3" dir="auto"><li>Some dorms may require damage deposit immediately.</li></ol><ol type="1" id="5d158707-5d70-43d0-8773-6913e18a759e" class="numbered-list" start="4" dir="auto"><li>Some dorms may require first-year students to pay full 2 terms immediately when booking.</li></ol><ol type="1" id="6b419842-c3b9-488d-bd46-dec9b1fc0f49" class="numbered-list" start="5" dir="auto"><li>หอ 8 หลัง / วรเรสซิเดนซ์ and หออินเตอร์ want to recruit earlier and fill rooms quickly.</li></ol><ol type="1" id="9dac8df8-5452-4858-ad9a-eae77187c342" class="numbered-list" start="6" dir="auto"><li>หอ 9 หลัง may have only a small portion using central booking; most rooms may prefer earlier recruitment.</li></ol><ol type="1" id="67a1b59b-5655-4ee9-a9a3-d367a764d9b1" class="numbered-list" start="7" dir="auto"><li>Invoice printing/payment documents may still go through the existing shared system, so core product should support export before full integration.</li></ol><ol type="1" id="27b2c66a-5f01-4de2-a145-00dc7e7baebe" class="numbered-list" start="8" dir="auto"><li>Current residents who want to stay may reserve first; remaining rooms then open to others/new students.</li></ol><ol type="1" id="11ec9cac-b2a2-4e82-9724-4204ca431f3c" class="numbered-list" start="9" dir="auto"><li>There is no fixed central-dorm-style freshman/senior quota unless each dorm defines one.</li></ol><h2 id="55d11478-cd7f-4101-b91d-679e0af7c61c" class="" dir="auto">Core product scope</h2><h3 id="88cec4eb-723a-4f9a-8c86-34dd38c9ce55" class="" dir="auto">Must have</h3><ul id="80c73431-6df9-48b5-9e36-bf38387fe4a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Combined campaign for หอ 8 หลัง + วรอินเตอร์</li></ul><ul id="e6f56a6a-88ef-4ebd-a6d8-7697ae2447a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Verified personal-email applicant account</li></ul><ul id="a64a9ba4-6dab-4212-b527-fb946495bf00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Optional KKU SSO login/linking</li></ul><ul id="686d297c-b08f-4c5b-9611-dc568dac797f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Building/floor/exact-room inventory</li></ul><ul id="2b76c1de-8b7a-490a-8da4-a7dcd8eb6094" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Room dimensions/plan references when available</li></ul><ul id="bf53daff-49ba-4a76-84e9-140d06e1c964" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared and whole-room occupancy</li></ul><ul id="a84c422f-1507-4712-8c33-e9d09ff4102c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Roommate invitation, leader, and group</li></ul><ul id="2650abc6-d661-4902-b0ad-f2d01bf89cdc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">48-hour invitation expiry</li></ul><ul id="50fc5846-666a-40da-9113-920e83e344da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Configurable second room confirmation</li></ul><ul id="57220905-9833-4610-8de8-92f84c48a91e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute room-confirmation hold</li></ul><ul id="2e520b19-a6fb-428e-bfd1-27f3ee121353" class="bulleted-list" dir="auto"><li style="list-style-type:disc">72-hour group payment hold</li></ul><ul id="80c92dbe-a749-4216-9e96-573927a706b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff manual reservation</li></ul><ul id="2086a224-00d7-4b1d-a9f9-08f8137a9307" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Annual renewal and roommate replacement</li></ul><ul id="ad084c61-8a64-406d-a4ab-cf94406d34bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pricing rules and finance-only override</li></ul><ul id="743fddca-efbc-4874-8338-aa47efad5f9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Separate resident payment obligations</li></ul><ul id="247b7d94-1dae-4830-9e1b-18a281be90f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Separate <code>ROOM</code> and <code>HL</code> obligations</li></ul><ul id="fa945e3e-d733-41c5-a37c-09ed25bcb26d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB <code>.xlsx</code>/<code>SLIPS</code> export</li></ul><ul id="070bb3ad-c821-4686-86e5-e0d5a8d8f72c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Combined returned PDF import and page matching</li></ul><ul id="0aabb080-4c52-4890-a2bf-c3966e69773a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB payment-result report import</li></ul><ul id="78218a7f-f63d-4cf6-8fdb-1e045cddda85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Manual payment with bank reference and note</li></ul><ul id="0390a646-734d-4129-a2f5-7950e0aa0c05" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Payment exception review</li></ul><ul id="17d34787-4abd-4104-8427-8470ed92d732" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff-confirmed exact-room reservation</li></ul><ul id="871db5b3-83ed-4eb8-9412-6dfb1f8f71ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Grouped paper contracts and signed scans/photos</li></ul><ul id="010281a0-222a-468a-8a47-c358703da613" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Separate signed key handover</li></ul><ul id="14d2ac77-8a4b-4e42-969e-84c36c5ba5a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">University handoff queue and correction export</li></ul><ul id="fe3a3364-17dd-4896-bd97-0671a740dc4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reports, scoped permissions, private files, and audit</li></ul><h3 id="85eff4c6-1885-4d0c-bc14-8def6a2f9b6c" class="" dir="auto">Future / optional</h3><ul id="c4da0e9e-19d4-4c91-b47a-73f1f84afebc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">direct real-time bank API;</li></ul><ul id="6361b048-2b16-4ac9-bf43-535a745cd760" class="bulleted-list" dir="auto"><li style="list-style-type:disc">digital contract signature;</li></ul><ul id="eef44bd4-ebee-48fe-85e0-425212bfec7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">monthly water/electricity implementation;</li></ul><ul id="eb05355e-1144-449c-b8b9-f817d81cfae6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">richer interactive floor-plan map;</li></ul><ul id="3f50618c-d5c5-4237-93d6-16ea9dd1d5e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">additional dorm groups;</li></ul><ul id="1a7faf92-3677-4923-b10a-0663e75ce03d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">complex central-dorm allocation;</li></ul><ul id="bc05fbd7-8854-4a57-b9e1-0de5dcfab9ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Actions.</li></ul><h3 id="35c90ac9-3eee-482c-a1c4-45164197e077" class="" dir="auto">Outside current project</h3><ul id="2e27f961-bb31-4918-815d-6930b4518c15" class="bulleted-list" dir="auto"><li style="list-style-type:disc">parcel notification;</li></ul><ul id="cc8d9c3b-20f2-42a2-b014-36dbf86e8e30" class="bulleted-list" dir="auto"><li style="list-style-type:disc">maintenance workflow.</li></ul><h2 id="7938b5c4-b38c-40dd-abb7-52ab70ebe2d5" class="" dir="auto">Recommended reading/editing order</h2><ol type="1" id="12886374-dddd-46f0-a312-5e76892caaea" class="numbered-list" start="1" dir="auto"><li>07 — Live Product Pivot &amp; Stakeholder Notes</li></ol><ol type="1" id="9ad6c763-78cd-4fc8-a2d3-8371c23cd78e" class="numbered-list" start="2" dir="auto"><li>08 — Payment Rules, SCB Documents &amp; Reservation Lifecycle</li></ol><ol type="1" id="d45ef61d-4b7f-4163-a9e2-8f5e66b691df" class="numbered-list" start="3" dir="auto"><li>01 — PRD</li></ol><ol type="1" id="67995e39-94c4-4478-b927-46b83a8c0044" class="numbered-list" start="4" dir="auto"><li>03 — Exact-Room Applicant UX &amp; Staff Dashboard</li></ol><ol type="1" id="c1d628e1-9247-4e66-8735-b549e572131b" class="numbered-list" start="5" dir="auto"><li>04 — Technical Architecture: Exact Rooms, Roommates &amp; SCB File Exchange</li></ol><ol type="1" id="9ad7837e-bbc6-41bf-9c97-54cabc7926ca" class="numbered-list" start="6" dir="auto"><li>09 — Product Build Plan &amp; Roadmap</li></ol><ol type="1" id="21e3d122-f018-4132-89cc-916a7edc6686" class="numbered-list" start="7" dir="auto"><li>16 — Detailed Implementation Plan &amp; Sprint Execution</li></ol><ol type="1" id="94342e54-aaac-48c2-8242-bbe8c5dd3702" class="numbered-list" start="8" dir="auto"><li>17 — AI-Ready Test-First Implementation Plan</li></ol><ol type="1" id="bf00ddf5-af03-4e56-9675-ac105a1c0d10" class="numbered-list" start="9" dir="auto"><li>10 — Next Stakeholder Meeting Agenda &amp; Script</li></ol><ol type="1" id="0d053ee8-2c4f-463e-a977-4c9c28030173" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>11 — Final Tech Stack &amp; Architecture Decision</li></ol><h2 id="d2ffb61b-44be-47f3-a86f-e5f78aa23241" class="" dir="auto">Important current decisions</h2><h3 id="29b09c8c-57b4-4f5a-b234-5940df6e15d2" class="" dir="auto">Product decision</h3><p id="66673792-2f21-4f6e-b0b7-9c563be4a42b" class="" dir="auto">The system is <strong>not</strong> mainly a fairness allocation engine. It is an affiliated dorm online application and reservation management system.</p><h3 id="6baf5605-f307-4ea7-977e-8993db4a059a" class="" dir="auto">Payment decision</h3><p id="7ea66860-d4a5-4834-8e61-7deacac017c1" class="" dir="auto">Our app prepares resident payment obligations and exports the SCB-required Excel batch. The existing SCB/internal application generates the official QR payment forms and result report. Our app imports/matches those files, manages exceptions, and lets authorized staff confirm payment. Applicant slip upload and one shared static QR are not the normal path.</p><h3 id="79cb3fca-58ad-4995-9760-f8387552cad2" class="" dir="auto">Applicant identity, exact-room, and contract decision</h3><p id="5979e603-10b9-4a41-bc8b-8f55976803d3" class="" dir="auto">Applicants may begin with KKU SSO or a verified personal-email account. Both paths resolve to one internal user. KKU SSO remains optional.</p><p id="91cc1364-9c6d-4c08-9a5f-5e8adf76bdf9" class="" dir="auto">Shared residents form a two-person group before exact-room selection; one resident may instead rent the whole room. After all required resident obligations are paid and staff confirms the reservation, the system generates printable contracts. Signed scans/photos and separate key handover are permission-controlled and audited.</p><h3 id="457070d4-dd9a-456c-a97a-c981ef13ab48" class="" dir="auto">Storage decision</h3><p id="320b3e48-173d-40d4-a350-b811f8d0df44" class="" dir="auto">Use <strong>SeaweedFS through its S3-compatible gateway</strong> for slips/documents. PostgreSQL stores metadata only. Backend code should use an S3-compatible client instead of writing directly to raw SeaweedFS/Filer endpoints.</p><h3 id="a4d81e02-dfbc-41d9-88a3-2b1251046dbd" class="" dir="auto">Backend decision</h3><p id="8945e85b-7b29-424d-80fb-ee66e98539fd" class="" dir="auto">Use <strong>GORM + sqlc</strong>:</p><ul id="1b300e6b-d288-4def-8adb-7e1f0b9a9f7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GORM for normal CRUD and admin screens</li></ul><ul id="1f7e8f80-c760-454b-8141-e13fff678232" class="bulleted-list" dir="auto"><li style="list-style-type:disc">sqlc for critical quota/reservation/payment verification/reporting queries</li></ul><h3 id="8352eafa-bcc9-4ff1-8291-4013fd627128" class="" dir="auto">Deployment decision</h3><p id="e42f9b49-728c-46a8-a55b-3b15f7f5d3aa" class="" dir="auto">Use Docker Compose and Nginx. No GitHub Actions in core product.</p><h2 id="b7a933bb-948b-4b71-823c-199504bb614b" class="" dir="auto">Critical question to confirm next</h2><blockquote id="2ff427c5-1e4d-45ef-a6a3-0370338b4e4f" class="" dir="auto">สถานะไหนถือว่า “ได้ห้องแน่นอน” — สมัครแล้ว, อัปโหลดสลิปแล้ว, ตรวจสลิปแล้ว, กดยืนยันการจองแล้ว, หรือออกใบแจ้งหนี้ในระบบเดิมแล้ว?</blockquote><p id="0c2ee046-c8be-4487-ad69-39607d9e4eb2" class="" dir="auto">This answer controls the reservation lifecycle and database rules.</p><h2 id="24a3bd01-7c2c-478b-b0df-20617d3542d0" class="" dir="auto">Next stakeholder meeting output checklist</h2><ul id="d06a2f12-7588-488a-ae81-3fad1a0344c4" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">Pilot = หอ 8 หลัง + วรอินเตอร์ together</span><div class="indented"></div></li></ul><ul id="fd3d0a24-dc39-413d-bff5-136b807a10c5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">Exact-room selection</span><div class="indented"></div></li></ul><ul id="0733da59-01ad-4a6a-a8c7-372032302cc0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">Shared and whole-room occupancy</span><div class="indented"></div></li></ul><ul id="5280f18b-1d47-46e7-a32b-35335dd080de" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">Roommate invitation/group baseline</span><div class="indented"></div></li></ul><ul id="c6541fe8-d988-4ffd-85e0-05ac93d7d3bc" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">15-minute room-confirmation hold</span><div class="indented"></div></li></ul><ul id="ec3fb93a-03b8-4ada-a549-8d8c4927c604" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">72-hour payment hold baseline</span><div class="indented"></div></li></ul><ul id="bf8317c0-7358-40c3-a4be-57baa9a69640" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">Separate resident obligations</span><div class="indented"></div></li></ul><ul id="0bd75944-2825-4c0e-9a53-d1ecf0efdea2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">HL creates <code>ROOM</code> + <code>HL</code></span><div class="indented"></div></li></ul><ul id="f75e6acd-e344-4a1a-a56a-93e0ea7ddf85" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">SCB Excel export and returned PDF workflow</span><div class="indented"></div></li></ul><ul id="c00b2dc4-58c7-473d-bc8e-ce748ca90caf" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">Printed contract, signed scan, and key handover direction</span><div class="indented"></div></li></ul><ul id="8263cfd4-ff69-4bf1-83b5-f4513b56e8b3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-on" disabled="" checked=""/> <span class="to-do-children-checked">KKU SSO optional</span><div class="indented"></div></li></ul><ul id="e673c2e9-3779-4bdc-85eb-dd975ca9642d" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Fee-exempt occupant rule</span><div class="indented"></div></li></ul><ul id="e6fb25cf-4046-46ac-84cd-07a3e59d8a72" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Semester installment <code>Ref.2</code></span><div class="indented"></div></li></ul><ul id="669ad925-cf60-409c-8d78-cdb40aaeb3a9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked"><code>ROOM</code>/<code>HL</code> batch/account behavior</span><div class="indented"></div></li></ul><ul id="70b80407-19bc-4914-8704-5619d57d8c2a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Returned PDF resident field/order/manifest</span><div class="indented"></div></li></ul><ul id="80ac267f-8c86-4a87-921b-94cdbaf3054b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">SCB result-report fields</span><div class="indented"></div></li></ul><ul id="207f40ab-7788-4523-9088-bc8b1cca0acc" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Final room-confirmation authority</span><div class="indented"></div></li></ul><ul id="9001216f-2204-4658-beb2-9b0c42c59b3b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One-paid/one-unpaid roommate policy</span><div class="indented"></div></li></ul><ul id="d626b7c6-5002-4ff3-8733-99cdb967fde1" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Renewal dates</span><div class="indented"></div></li></ul><ul id="2bc593ee-ec61-47ae-98bb-8dc1bbc77744" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Contract copies/documents/retention</span><div class="indented"></div></li></ul><ul id="6a21c681-08b5-4248-8355-c5e5081aedae" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">University export/correction columns</span><div class="indented"></div></li></ul><ul id="dfd57aa8-e973-4148-844d-f8da9e6d6aba" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Exact staff positions and scopes</span><div class="indented"></div></li></ul><ul id="51bbf3cd-138b-4083-b750-c2e673a142a3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Verified room-plan/dimension source</span><div class="indented"></div></li></ul><h2 id="6e8cb6d4-eeae-4342-a547-5ab251dad548" class="" dir="auto">Workspace pages and databases</h2><figure id="38e9192a-fd11-8129-9db4-d97a455e8cf3" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/01%20%E2%80%94%20PRD%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%2038e9192afd1181299db4d97a455e8cf3.html" data-notion-page-id="38e9192a-fd11-8129-9db4-d97a455e8cf3" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="📌"></span>01 — PRD: Affiliated Dorm Application &amp; Reservation System</a></figure><figure id="38e9192a-fd11-8147-84aa-f757075f4a65" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/02%20%E2%80%94%20Exact-Room%20Reservation,%20Roommates%20&amp;%20Holds%2038e9192afd11814784aaf757075f4a65.html" data-notion-page-id="38e9192a-fd11-8147-84aa-f757075f4a65" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="📋"></span>02 — Exact-Room Reservation, Roommates &amp; Holds</a></figure><figure id="38e9192a-fd11-81ef-b0cf-f4548f584f30" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/03%20%E2%80%94%20Exact-Room%20Applicant%20UX%20&amp;%20Staff%20Dashboard%2038e9192afd1181efb0cff4548f584f30.html" data-notion-page-id="38e9192a-fd11-81ef-b0cf-f4548f584f30" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🎨"></span>03 — Exact-Room Applicant UX &amp; Staff Dashboard</a></figure><figure id="38e9192a-fd11-8132-9d23-ceef5a8c2356" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/04%20%E2%80%94%20Technical%20Architecture%20Exact%20Rooms,%20Roommates%2038e9192afd1181329d23ceef5a8c2356.html" data-notion-page-id="38e9192a-fd11-8132-9d23-ceef5a8c2356" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🧱"></span>04 — Technical Architecture: Exact Rooms, Roommates &amp; SCB File Exchange</a></figure><figure id="38e9192a-fd11-81f6-94c3-cc73f6e79e77" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/05%20%E2%80%94%20Operations%20Exact%20Rooms,%20Renewals,%20Payments%20&amp;%20%2038e9192afd1181f694c3cc73f6e79e77.html" data-notion-page-id="38e9192a-fd11-81f6-94c3-cc73f6e79e77" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🛠️"></span>05 — Operations: Exact Rooms, Renewals, Payments &amp; Contracts</a></figure><figure id="38e9192a-fd11-81e1-bcbc-ea9644546e14" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/06%20%E2%80%94%20Research,%20Stakeholder%20Questions%20&amp;%20Presentatio%2038e9192afd1181e1bcbcea9644546e14.html" data-notion-page-id="38e9192a-fd11-81e1-bcbc-ea9644546e14" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🗂️"></span>06 — Research, Stakeholder Questions &amp; Presentation Kit</a></figure><figure id="38f9192a-fd11-81b8-af92-d51f148bdd29" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/07%20%E2%80%94%20Live%20Product%20Pivot%20&amp;%20Stakeholder%20Notes%2038f9192afd1181b8af92d51f148bdd29.html" data-notion-page-id="38f9192a-fd11-81b8-af92-d51f148bdd29" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🧭"></span>07 — Live Product Pivot &amp; Stakeholder Notes</a></figure><figure id="38f9192a-fd11-811d-bd68-fd9d58063128" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/08%20%E2%80%94%20Payment%20Rules,%20SCB%20Documents%20&amp;%20Reservation%20Li%2038f9192afd11811dbd68fd9d58063128.html" data-notion-page-id="38f9192a-fd11-811d-bd68-fd9d58063128" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="💳"></span>08 — Payment Rules, SCB Documents &amp; Reservation Lifecycle</a></figure><figure id="38f9192a-fd11-8105-92a9-eb0e97d7d86d" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/09%20%E2%80%94%20Product%20Build%20Plan%20&amp;%20Roadmap%2038f9192afd11810592a9eb0e97d7d86d.html" data-notion-page-id="38f9192a-fd11-8105-92a9-eb0e97d7d86d" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🚧"></span>09 — Product Build Plan &amp; Roadmap</a></figure><figure id="38f9192a-fd11-8125-9960-dfbc640ab8b6" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/10%20%E2%80%94%20Next%20Stakeholder%20Meeting%20Agenda%20&amp;%20Script%2038f9192afd1181259960dfbc640ab8b6.html" data-notion-page-id="38f9192a-fd11-8125-9960-dfbc640ab8b6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="📝"></span>10 — Next Stakeholder Meeting Agenda &amp; Script</a></figure><figure id="38f9192a-fd11-8127-8fd4-fc176b03d753" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/11%20%E2%80%94%20Final%20Tech%20Stack%20&amp;%20Architecture%20Decision%2038f9192afd1181278fd4fc176b03d753.html" data-notion-page-id="38f9192a-fd11-8127-8fd4-fc176b03d753" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🧰"></span>11 — Final Tech Stack &amp; Architecture Decision</a></figure><figure id="48217d02-ce0b-47f8-bd36-f8ce1d894e07" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/KKU%20Affiliated%20Dorm%20%E2%80%94%20Feature%20Backlog%20&amp;%20Build%20Task%2048217d02ce0b47f8bd36f8ce1d894e07.html" data-notion-page-id="48217d02-ce0b-47f8-bd36-f8ce1d894e07" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">KKU Affiliated Dorm — Feature Backlog &amp; Build Tasks</a></figure><figure id="48d0a931-e323-4373-842d-17db79b5518b" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/KKU%20Affiliated%20Dorm%20%E2%80%94%20Open%20Questions%20&amp;%20Assumptions%2048d0a931e3234373842d17db79b5518b.html" data-notion-page-id="48d0a931-e323-4373-842d-17db79b5518b" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">KKU Affiliated Dorm — Open Questions &amp; Assumptions</a></figure><figure id="85c1f401-c7d4-4929-b70f-a91d84f21022" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/KKU%20Affiliated%20Dorm%20%E2%80%94%20Payment%20Rule%20Matrix%2085c1f401c7d44929b70fa91d84f21022.html" data-notion-page-id="85c1f401-c7d4-4929-b70f-a91d84f21022" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80">KKU Affiliated Dorm — Payment Rule Matrix</a></figure><figure id="38f9192a-fd11-8163-8c9c-c957b4b97b22" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html" data-notion-page-id="38f9192a-fd11-8163-8c9c-c957b4b97b22" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🏦"></span>12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></figure><figure id="38f9192a-fd11-8166-ae56-e0e7d7374fc8" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/13%20%E2%80%94%20Integration%20Addendum%2038f9192afd118166ae56e0e7d7374fc8.html" data-notion-page-id="38f9192a-fd11-8166-ae56-e0e7d7374fc8" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="📌"></span>13 — Integration Addendum</a></figure><figure id="3969192a-fd11-8140-9181-def1bb02a3ae" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/14%20%E2%80%94%20Thai%20PDPA%20Legal%20Notes%20&amp;%20System%20Implications%203969192afd1181409181def1bb02a3ae.html" data-notion-page-id="3969192a-fd11-8140-9181-def1bb02a3ae" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="⚖️"></span>14 — Thai PDPA Legal Notes &amp; System Implications</a></figure><figure id="3979192a-fd11-816a-a5d9-e9d5ba1602f3" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html" data-notion-page-id="3979192a-fd11-816a-a5d9-e9d5ba1602f3" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🧪"></span>15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a></figure><h2 id="2ddaeade-4e58-4f4f-a83b-c97ce426cbe8" class="" dir="auto">Page 15 — Mock integration server</h2><p id="2b60d07b-22ef-4f6d-a7a8-f22e0dd2abeb" class="" dir="auto">See <a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html">15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a> for exact-room, roommate, SCB XLSX/PDF/result, payment exception, renewal, contract, and key-handover fixtures.</p><figure id="3999192a-fd11-8156-9367-f493d00dd1f8" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/16%20%E2%80%94%20Detailed%20Implementation%20Plan%20&amp;%20Sprint%20Executi%203999192afd1181569367f493d00dd1f8.html" data-notion-page-id="3999192a-fd11-8156-9367-f493d00dd1f8" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🧭"></span>16 — Detailed Implementation Plan &amp; Sprint Execution</a></figure><figure id="39a9192a-fd11-8138-a1ce-e6dacd4022b6" class="link-to-page"><a href="KKU%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%20Syst/17%20%E2%80%94%20AI-Ready%20Test-First%20Implementation%20Plan%2039a9192afd118138a1cee6dacd4022b6.html" data-notion-page-id="39a9192a-fd11-8138-a1ce-e6dacd4022b6" data-notion-space-id="91d9192a-fd11-810d-b2a6-0003348c2a80"><span class="icon" data-emoji="🧪"></span>17 — AI-Ready Test-First Implementation Plan</a></figure></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

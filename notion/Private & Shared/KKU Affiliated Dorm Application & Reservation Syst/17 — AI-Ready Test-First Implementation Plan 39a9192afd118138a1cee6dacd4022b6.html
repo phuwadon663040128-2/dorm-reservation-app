@@ -1,0 +1,955 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>17 — AI-Ready Test-First Implementation Plan</title><meta name="data-notion-page-icon" content="🧪"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%AA%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="39a9192a-fd11-8138-a1ce-e6dacd4022b6" class="page sans" data-notion-page-icon="🧪"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🧪"></span></div><h1 class="page-title" dir="auto">17 — AI-Ready Test-First Implementation Plan</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="69023fdd-46dd-4469-89ce-9683562f0069" class="" dir="auto">Purpose and status</h2><p id="8d951d53-34ee-4fef-ae33-aeff1c141e23" class="" dir="auto"><strong>Last revised:</strong> 2026-07-11  </p><p id="2a604e7a-7bed-42da-8cc9-787136ae14e5" class="" dir="auto"><strong>Status:</strong> Canonical test-first execution plan for AI-assisted implementation  </p><p id="d9386dac-efeb-40a5-a1e7-d2d619df00c4" class="" dir="auto"><strong>Implementation plan:</strong> <a href="16%20%E2%80%94%20Detailed%20Implementation%20Plan%20&amp;%20Sprint%20Executi%203999192afd1181569367f493d00dd1f8.html">16 — Detailed Implementation Plan &amp; Sprint Execution</a>  </p><p id="2e1b3629-a180-4e9c-8918-fbfd2fee96c4" class="" dir="auto"><strong>Fixture source:</strong> <a href="15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html">15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a></p><p id="66bbea35-490f-448f-9e67-9c7e156f08d2" class="" dir="auto">This page turns the approved implementation plan into a deterministic test base that a coding AI can follow one vertical slice at a time. It does not change product scope or unresolved policy. Every implementation change must begin from named test cases, fixed fixtures, explicit API/data contracts, and a limited file-change boundary.</p><h2 id="838cd497-d884-433f-960f-ca9e7741dd58" class="" dir="auto">Primary objective</h2><p id="4492a650-3aa9-4844-a97f-144be010c609" class="" dir="auto">Make implementation safe for an AI coding agent by ensuring that each task has:</p><ul id="ba5c5505-c5f0-43b0-9f3b-6a8c95d29436" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one unambiguous behavior;</li></ul><ul id="f1925fb3-dd5b-4c51-ab15-6c0b74744fed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">stable fixture inputs;</li></ul><ul id="f9028218-ca47-4cf6-9f2a-83052b3e3a57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">a failing test before production code changes;</li></ul><ul id="61c67ed0-1fb7-4342-936f-404ce2ca9e4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact commands to run;</li></ul><ul id="33a2cbef-0142-4807-ae1c-01fd790be0d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">expected outputs and error codes;</li></ul><ul id="7791ce89-6b5b-40b2-a975-f53636084666" class="bulleted-list" dir="auto"><li style="list-style-type:disc">explicit permitted files/migrations;</li></ul><ul id="fd3f55d4-d8ec-43f7-bc19-54579e8ef53b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">no hidden policy assumptions;</li></ul><ul id="669e668e-9f44-4a36-aca9-6c078aede2d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">traceability to requirement, sprint, and test ID;</li></ul><ul id="b53dc0bb-6dd1-4f41-abbc-ced4d1d0ac44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">a human-reviewable diff and completion report.</li></ul><h2 id="d928bece-f0cb-4ba0-8911-f2306d46ec25" class="" dir="auto">AI test-first delivery loop</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="b73004d5-3b51-40e0-93ed-9997a2b5418e" class="code code-wrap" data-notion-code-syntax="mermaid"><code class="language-mermaid" style="white-space:pre-wrap;word-break:break-all">flowchart LR
+    A[Requirement and test ID] --&gt; B[Fixture and contract selected]
+    B --&gt; C[Write failing unit or integration test]
+    C --&gt; D[Implement minimum production code]
+    D --&gt; E[Run targeted test]
+    E --&gt;|Fail| D
+    E --&gt;|Pass| F[Run module suite]
+    F --&gt;|Fail| D
+    F --&gt;|Pass| G[Run API, document, and database contract tests]
+    G --&gt;|Fail| D
+    G --&gt;|Pass| H[Run end-to-end and concurrency tests]
+    H --&gt;|Fail| D
+    H --&gt;|Pass| I[Update manifest, docs, and traceability]
+    I --&gt; J[Human review and merge]
+
+    K[Provisional policy flag] --&gt; A
+    L[No real personal or bank data] --&gt; B
+    M[Deterministic clock and IDs] --&gt; C
+    N[Immutable history and audit] --&gt; D</code></pre><h2 id="b0b3fe32-6411-4a13-9ad3-5be5d2375645" class="" dir="auto">Non-negotiable AI coding rules</h2><ol type="1" id="c52b7213-b40b-4625-8ea7-09b4a7886dff" class="numbered-list" start="1" dir="auto"><li>Do not invent or change dorm policy. Unknown policy remains behind configuration or a clearly named provisional feature flag.</li></ol><ol type="1" id="64bd468e-a603-4152-92b0-17fe4474079b" class="numbered-list" start="2" dir="auto"><li>Do not implement more than one vertical behavior packet at a time.</li></ol><ol type="1" id="502a3068-4170-44e6-ae0c-a2229f9dc786" class="numbered-list" start="3" dir="auto"><li>Add the failing test first. Record the initial failing output in the task summary.</li></ol><ol type="1" id="117fc6f3-c17a-4455-a5c0-cb732297d3a2" class="numbered-list" start="4" dir="auto"><li>Use deterministic clocks, IDs, and fixture data. Production code must not call <code>time.Now()</code> or generate random IDs inside critical domain logic without an injected interface.</li></ol><ol type="1" id="d0fe9c54-885c-47fb-9cd5-cb4abedd96e9" class="numbered-list" start="5" dir="auto"><li>Do not use <code>Ref.1 + Ref.2</code> as a unique key.</li></ol><ol type="1" id="aab4e5d6-5b9a-488c-b784-04d32c5a0b74" class="numbered-list" start="6" dir="auto"><li>Do not depend on returned-PDF page order or an assumed descending room sort.</li></ol><ol type="1" id="03504362-b916-4ba3-81e1-ae2a3f7b5a48" class="numbered-list" start="7" dir="auto"><li>Do not use an in-memory database to prove room locking, uniqueness, transaction, or idempotency behavior. Those tests use real PostgreSQL.</li></ol><ol type="1" id="21adcf39-775e-4b60-8599-ee7323c08541" class="numbered-list" start="8" dir="auto"><li>Do not mutate golden fixture files during tests.</li></ol><ol type="1" id="9d170713-17bd-4515-ba4b-6093a83b5a22" class="numbered-list" start="9" dir="auto"><li>Do not use real resident, contract, bank, SCB, or university data.</li></ol><ol type="1" id="5d04bd6f-502c-4bbc-9b17-f99a6e8ccc75" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Do not expose raw SeaweedFS/S3 URLs.</li></ol><ol type="1" id="114ce30d-a063-4263-9462-2fa3b015621c" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>Do not overwrite superseded payment, contract, export, or university-handoff history.</li></ol><ol type="1" id="80a897d4-698a-4c70-9296-166f10550729" class="numbered-list numbered-list-digits-2" start="12" dir="auto"><li>Do not weaken permission or audit checks merely to make a test pass.</li></ol><ol type="1" id="29aabca1-3b51-4d4c-92be-48700fd2dc3c" class="numbered-list numbered-list-digits-2" start="13" dir="auto"><li>Do not skip failing P0 tests. A skip requires a linked blocker and human approval.</li></ol><ol type="1" id="864aaed9-eeb1-4f06-b44c-62b3332aedb0" class="numbered-list numbered-list-digits-2" start="14" dir="auto"><li>Do not refactor unrelated modules in the same task packet.</li></ol><ol type="1" id="52375728-91c8-48d8-941a-43170547db59" class="numbered-list numbered-list-digits-2" start="15" dir="auto"><li>End every task with targeted tests, module tests, and the required broader gate from this page.</li></ol><h2 id="9c368d90-1c78-4836-9412-27987e12f453" class="" dir="auto">Test ID convention</h2><pre id="f3bb4775-9524-4aac-ac75-85eea0eb4ef3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AUTH-###       account, identity and permission
+ROOM-###       room master, configuration and public projection
+GROUP-###      roommate invitation and reservation group
+HOLD-###       exact-room hold, expiry and concurrency
+PRICE-###      pricing rules, overrides and obligations
+XLSX-###       SCB SLIPS workbook generation
+PDF-###        returned multipage PDF import and matching
+RESULT-###     SCB result import and payment reconciliation
+RESV-###       group completion and final reservation
+RENEW-###      annual renewal and resident replacement
+CONTRACT-###   contract generation, scan and status
+KEY-###        key handover
+HANDOFF-###    university export and correction
+SEC-###        authorization, privacy and file security
+OPS-###        migrations, backup, restore and deployment
+E2E-###        cross-module journeys
+PERF-###       performance and capacity baselines</code></pre><p id="168c11be-1956-4249-9364-405af116a4cc" class="" dir="auto">Use the test ID in:</p><ul id="0d1a7c83-3ce3-41e6-b988-618ccefc521c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test function or test title;</li></ul><ul id="9652bb76-5b72-4b7b-bb8b-b6da2f5cff4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test manifest;</li></ul><ul id="a54dba35-42f7-415d-b3ed-a104fc4f83e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">implementation task title;</li></ul><ul id="9d3f6b4a-9130-4045-aa8b-508af83f91d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">commit or change summary;</li></ul><ul id="5c221da1-86a9-4c74-a4fa-a2fc622d4a8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API/fixture documentation when relevant.</li></ul><h2 id="7fc7903a-e759-4a16-9687-9b90481f699e" class="" dir="auto">Priority and status</h2><ul id="07e1aae8-71b2-4972-9263-4dff42dd740c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>P0</code> — safety or money-critical; blocks merge and release.</li></ul><ul id="13bba450-0329-41a3-b5d7-e5c00ffdd62e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>P1</code> — core workflow; blocks milestone acceptance.</li></ul><ul id="54387c4c-d37f-4ab2-8db6-bc7a2d96a9fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>P2</code> — important UX, reporting, or operational edge behavior.</li></ul><p id="6671e5b2-aa2a-4295-8e9a-776721e3453d" class="" dir="auto">Test status values:</p><pre id="ffb2d522-4e05-4697-9a93-64edc79eabf6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Draft
+Ready
+Red
+Passing
+Blocked
+Provisional
+Retired</code></pre><h2 id="adc50f70-5a7a-4e81-b429-08d34a1fd2ff" class="" dir="auto">AI task packet template</h2><p id="f8b9fdbd-39bf-4dcb-846a-0a77f47bc0f1" class="" dir="auto">Every AI implementation request should contain exactly this structure:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="eb30b1b2-ec66-4ed2-9500-9d3d36e8d69c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">task_id: HOLD-001
+objective: Atomically acquire one exact-room hold
+requirement_refs:
+  - Page 02 Exact-Room Reservation, Roommates &amp; Holds
+  - Page 04 Technical Architecture
+sprint: 5
+priority: P0
+preconditions:
+  - room A101 exists and is Available
+  - reservation group G1 is eligible
+fixtures:
+  - fixtures/rooms/base.json
+  - fixtures/reservations/shared-group.json
+tests_to_add_or_enable:
+  - HOLD-001
+  - HOLD-002
+allowed_changes:
+  - db/migrations/*
+  - db/queries/room_holds.sql
+  - apps/api/internal/domain/reservation/*
+  - apps/api/internal/service/room_hold_service.go
+  - apps/api/internal/http/handlers/reservation_hold.go
+forbidden_changes:
+  - pricing rules
+  - SCB document code
+  - contract workflow
+commands:
+  - make test-id TEST=HOLD-001
+  - make test-integration MODULE=reservation
+  - make test-concurrency MODULE=reservation
+expected_result:
+  - exactly one of two concurrent hold requests succeeds
+  - loser receives ROOM_NOT_AVAILABLE
+  - one audit event and one active hold exist
+completion_report:
+  - changed files
+  - migration/API changes
+  - first failing output
+  - final passing output
+  - assumptions or blockers</code></pre><h2 id="f16cda7c-8a2d-4c26-90dc-a97bc5b87b9f" class="" dir="auto">Required test manifest</h2><p id="43c908d4-174a-4a94-8b2b-6fdc4ad0e929" class="" dir="auto">Create <code>tests/manifest.yaml</code> as the machine-readable source of test traceability.</p><pre id="36e7d153-cb3b-4ec0-ad07-96b36e625ddc" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">- id: HOLD-001
+  title: atomic exact-room hold
+  priority: P0
+  layer: integration
+  requirement: exact-room reservation
+  sprint: 5
+  fixture: shared-room-base
+  command: make test-id TEST=HOLD-001
+  owner: backend
+  status: Ready
+  provisional: false</code></pre><p id="966db048-bd4f-4f65-8ae9-d38971f645ad" class="" dir="auto">Rules:</p><ul id="19eaeba7-b4ee-408f-8116-b7dadf4d35b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IDs are never reused.</li></ul><ul id="aa0d3bcd-3ff4-4d2c-9553-8060dcfb81c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Retired tests remain in the manifest with a reason.</li></ul><ul id="f229e8a4-88cc-48b6-8ad9-0431cf72d217" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A provisional policy test has <code>provisional: true</code> and references the open decision.</li></ul><ul id="e3c3ed5c-4911-467b-85b5-fbf898b41446" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every P0/P1 requirement has at least one manifest entry.</li></ul><ul id="d244dd07-ae1c-4513-ad12-6cb65a345ca3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The manifest is validated by <code>make test-manifest</code>.</li></ul><h2 id="089ed9df-0d4a-4069-987e-8f6558f3695d" class="" dir="auto">Recommended test stack</h2><h3 id="3fd7c040-ddc9-42ff-bec2-4a9bfa78d5f2" class="" dir="auto">Go backend</h3><ul id="f4e2a99c-b0f4-4173-ab29-79ca5cb5fbf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Standard <code>testing</code> package with table-driven tests.</li></ul><ul id="fc360888-9a26-424b-8bdb-ac9e018c01e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>testify/require</code> or an equivalent small assertion helper.</li></ul><ul id="5883deb1-2db0-4067-b619-b2e7793d942d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>go-cmp</code> for structured comparisons where useful.</li></ul><ul id="2b7e3948-fcd8-4d49-a1b3-014fa3f584fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>httptest</code> for HTTP handlers.</li></ul><ul id="dea7bfb2-249e-472d-bc11-f7fbb3c0ce3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Real PostgreSQL through a dedicated Docker test service or <code>testcontainers-go</code> for integration/concurrency tests.</li></ul><ul id="ce0d90c4-c6eb-4155-9eab-069e0433946e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Migration tests run against an empty database and a database upgraded from the previous schema.</li></ul><ul id="8d4bf083-88cb-4e11-ada3-a4938e0cf1ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fakes only for deterministic boundaries such as clock, ID generator, email/notification, object storage adapter, PDF text extractor, and external file reader.</li></ul><h3 id="399ac03c-c52d-42ca-81bf-5b8dff012a5f" class="" dir="auto">Nuxt frontend</h3><ul id="ead6e498-7bd3-46cf-9097-15f31d8507bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Vitest for composables, stores, validators and utilities.</li></ul><ul id="72ced772-a0cd-4409-a894-d897509231e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Vue Test Utils for components.</li></ul><ul id="a37fa69e-962b-4f37-a1d2-1643bb1a9d90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Mock Service Worker or a typed API stub for frontend integration tests.</li></ul><ul id="d45e9fdd-3418-4277-bb32-c05cc8eed191" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Playwright for applicant and staff end-to-end journeys.</li></ul><ul id="18702e16-f209-4a05-9f52-4a3d968eaee5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Accessibility assertions for labels, keyboard navigation, countdown announcements and status meaning.</li></ul><h3 id="4dcf2426-83a2-43aa-a302-6000281c5e73" class="" dir="auto">Document contracts</h3><ul id="0f195356-65a3-4798-82ea-4d13be6a4d88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Golden fixture files for XLSX, returned PDFs, result reports, contracts and university exports.</li></ul><ul id="5d6fe05e-81c9-40f2-bd37-ef4cc1b8e798" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Structural XLSX comparison rather than raw binary comparison when workbook metadata can vary.</li></ul><ul id="d4f15436-6937-4677-8c94-ce19e0518a54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Original PDF checksum plus page-level extracted-text snapshots.</li></ul><ul id="60d50004-f450-4be0-9299-cc3de1e5a866" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OCR fixtures only for an explicitly image-only PDF fallback.</li></ul><h2 id="15bd6235-698f-4373-8c11-df06a09b6549" class="" dir="auto">Repository test layout</h2><pre id="f5a707f7-9f41-49f0-9f04-baf8118d5891" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">tests/
+  manifest.yaml
+  helpers/
+    clock/
+    ids/
+    database/
+    http/
+    storage/
+    fixtures/
+  contracts/
+    api/
+    xlsx/
+    pdf/
+    payment-result/
+    university/
+  e2e/
+  concurrency/
+  security/
+  performance/
+
+apps/api/
+  internal/domain/&lt;module&gt;/*_test.go
+  internal/service/&lt;module&gt;/*_test.go
+  internal/http/handlers/*_test.go
+  internal/repository/integration/*_test.go
+
+apps/frontend/
+  tests/unit/
+  tests/component/
+  tests/e2e/
+
+fixtures/
+  applicants/
+  rooms/
+  roommate-groups/
+  scb/
+  contracts/
+  university/</code></pre><h2 id="72ebe211-f5f7-45ae-9ae2-6d5b65b2e058" class="" dir="auto">Deterministic test boundaries</h2><p id="e5a1c571-1a1d-4d22-b9ed-60b1ae5f41ec" class="" dir="auto">Production code should define small interfaces for:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js" integrity="sha512-w200Nz1i9KgDNi+IpPMgpZBVRIvfVK/V5vskyHjkz7XJkVnRJcb1uNmpiHhDv0/Ln+GG2VqScKKz/1izBfg64Q==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="2a4dbd11-8b99-4be8-8cae-9bbabcb5456d" class="code code-wrap" data-notion-code-syntax="go"><code class="language-go" style="white-space:pre-wrap;word-break:break-all">Clock.Now()
+Clock.After(duration)
+IDGenerator.New()
+ObjectStore.Put/Get/DeleteMetadata()
+PDFTextExtractor.Pages()
+WorkbookReader/Writer
+PaymentResultParser.Parse()
+Notifier.Send()</code></pre><p id="958c0d80-02ec-4512-be21-3e4f804e710c" class="" dir="auto">Tests must control:</p><ul id="61d6b055-fb56-44f7-a1f1-a5446323b96e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">current time;</li></ul><ul id="c9d23881-f1e4-4b31-9fd2-5bd82f7d20c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">48-hour invitation expiry;</li></ul><ul id="99616694-67a2-47d8-a9b3-2967e80b2ec0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute room-confirmation expiry;</li></ul><ul id="0e9b4ab4-dd22-4e81-b814-01de04b64341" class="bulleted-list" dir="auto"><li style="list-style-type:disc">72-hour payment-hold expiry;</li></ul><ul id="0d67ef6b-9c8b-44e2-ac16-ed6be39dd68c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">generated IDs;</li></ul><ul id="5d6d9d86-0532-4e37-ac43-e041013f71e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">background-job execution;</li></ul><ul id="6b18bd10-c0d0-4e6d-b767-4cef9b876f47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">file checksums and page ordering;</li></ul><ul id="4fc027a3-47cb-4729-b2ac-4c7d4fed3b88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">transaction retry and idempotency keys.</li></ul><h2 id="306f3d6b-4b35-43cd-a9a9-d89944cef02f" class="" dir="auto">Base fixture catalogue</h2><h3 id="5727ecfa-ca59-4e8c-89a1-aec66bcbb948" class="" dir="auto">Applicants</h3><ul id="6e47ec4a-d565-41d8-8057-b98f1768ce24" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>applicant-a</code> — verified, complete profile, eligible.</li></ul><ul id="20ca8197-3db2-4d72-a372-ba9836d5e2d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>applicant-b</code> — verified, complete profile, eligible.</li></ul><ul id="48dc2bf8-f6c0-4b4e-8684-8974855f73b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>applicant-c</code> — verified but incomplete profile.</li></ul><ul id="2279ae11-8716-480c-a2d3-7aa661e927da" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>applicant-d</code> — already in active group.</li></ul><ul id="52d509b0-02eb-4310-b393-761167809838" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>staff-dorm</code> — manual reservation permission.</li></ul><ul id="fdaa9443-7670-40a3-b50e-25da20eeb301" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>staff-finance</code> — export/result/manual-payment permission.</li></ul><ul id="5e23dc25-43ad-4d6f-bba2-9a12864dbda1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>staff-contract</code> — contract and handover permission.</li></ul><ul id="05236c7e-574e-417c-b672-5dad6c3511ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>staff-unauthorized</code> — no sensitive permissions.</li></ul><h3 id="6676d383-686c-43af-9787-a8ef8572d571" class="" dir="auto">Rooms</h3><ul id="03ef185d-2253-4cba-aeb8-010eabd1acb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>A101</code> — วรอินเตอร์, shared normal room.</li></ul><ul id="443fcff1-e36f-41ff-abc8-722274a1d79b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>A102</code> — วรอินเตอร์, shared HL room.</li></ul><ul id="77587f3f-154b-416f-8c3c-d30e7360a4dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>A103</code> — whole-room-capable room.</li></ul><ul id="6bd2151e-f6b9-4a67-bc99-4b38ee235d6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">numeric หอ 8 หลัง room with unique building/floor encoding.</li></ul><ul id="f1e76302-c96e-4f6a-8aaa-18330fc32bfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">blocked room.</li></ul><ul id="91c6f685-3015-418a-a897-4c82f98edf1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">active 15-minute hold room.</li></ul><ul id="45653b15-bf48-4ab8-9dda-a50790921171" class="bulleted-list" dir="auto"><li style="list-style-type:disc">active 72-hour hold room.</li></ul><ul id="bf42f125-79df-4062-bd02-d7cfc3149ef1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">confirmed room.</li></ul><h3 id="a1e24a50-15e5-46f6-a396-761ccf01f24c" class="" dir="auto">Payment fixtures</h3><ul id="0f70eae0-64f7-4ebe-988b-a3833727fab8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared normal ROOM obligations for two residents.</li></ul><ul id="1f1f68de-7436-4fa6-99ab-3d1346f6647a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared HL ROOM + HL obligations for two residents.</li></ul><ul id="519218b2-4d67-49b3-a3f9-39b6291844a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">whole-room full amount.</li></ul><ul id="825803df-5a41-4383-8834-d246c39925d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">finance override with reason.</li></ul><ul id="c20e8c0d-83cb-4601-a5cd-0d2949e2e54f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">returned PDF with reordered pages and repeated references.</li></ul><ul id="8a9848f0-213f-482c-a8be-6c982d335ffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">payment result with paid, unpaid, under, over, duplicate, late and unmatched rows.</li></ul><h3 id="9fa36a28-04c6-4904-bfe8-c0a5eeb6d1e6" class="" dir="auto">Contract/handoff fixtures</h3><ul id="faa86b3c-e315-4edf-8065-9f365bf3c7d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">two grouped resident contracts.</li></ul><ul id="73341a27-b22d-48dc-a281-b731dd659356" class="bulleted-list" dir="auto"><li style="list-style-type:disc">whole-room contract.</li></ul><ul id="bac87884-6f25-4e70-8436-7d3705e71904" class="bulleted-list" dir="auto"><li style="list-style-type:disc">signed scan and corrected/reprinted version.</li></ul><ul id="50823a87-f326-49ba-b1e3-afb07290ebcc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">key-handover form.</li></ul><ul id="0596d1dc-dd7d-4c2c-a8a7-084c3bfa2a6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">original university batch and correction batch.</li></ul><h2 id="25e6d26c-9052-4ec8-8560-95d72fe8c18b" class="" dir="auto">Test layers and merge gates</h2><table id="459abc4f-46e0-4252-a0ed-f5bbe647784b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d1d8ec3a-f97d-42ae-85b7-f6b1e678e701" dir="ltr"><th id="`K[B" class="simple-table-header-color simple-table-header">Layer</th><th id="xU]V" class="simple-table-header-color simple-table-header">Purpose</th><th id="PBdQ" class="simple-table-header-color simple-table-header">Runs when</th><th id="VEE:" class="simple-table-header-color simple-table-header">Merge gate</th></tr></thead><tbody><tr id="8a3eda75-cb1f-4bc7-82fc-2c01c8da59bd" dir="ltr"><td id="`K[B" class="">Unit</td><td id="xU]V" class="">Pure rules, validation, state transition and calculation</td><td id="PBdQ" class="">Every task</td><td id="VEE:" class="">All targeted and module tests pass</td></tr><tr id="0bf35e33-036b-4cd8-bd7c-8fb558f95856" dir="ltr"><td id="`K[B" class="">Database integration</td><td id="xU]V" class="">Constraints, transactions, migrations, locks, idempotency</td><td id="PBdQ" class="">Any persistence/state change</td><td id="VEE:" class="">Required for P0/P1 backend behavior</td></tr><tr id="063eb6a3-0908-463a-a9c8-f2f82af90dce" dir="ltr"><td id="`K[B" class="">HTTP/API contract</td><td id="xU]V" class="">Status codes, request/response schema, permissions</td><td id="PBdQ" class="">Any endpoint change</td><td id="VEE:" class="">No unreviewed contract drift</td></tr><tr id="5e962d41-b296-42d2-8c65-d34df1e516f7" dir="ltr"><td id="`K[B" class="">Document contract</td><td id="xU]V" class="">XLSX/PDF/result/university format compatibility</td><td id="PBdQ" class="">Any file-boundary change</td><td id="VEE:" class="">Golden fixtures pass</td></tr><tr id="97992b08-2bf7-4bc9-8040-73e45df2d841" dir="ltr"><td id="`K[B" class="">Frontend component</td><td id="xU]V" class="">States, validation, countdown and permission-aware UI</td><td id="PBdQ" class="">Any UI change</td><td id="VEE:" class="">Critical states covered</td></tr><tr id="a5e5ddb1-9782-4fc9-a6b6-fef78a50fb47" dir="ltr"><td id="`K[B" class="">E2E</td><td id="xU]V" class="">Complete applicant/staff journeys</td><td id="PBdQ" class="">Vertical slice completion</td><td id="VEE:" class="">Required journey passes</td></tr><tr id="fe43e57d-08c2-4faf-96c0-429495771f5e" dir="ltr"><td id="`K[B" class="">Concurrency</td><td id="xU]V" class="">Double booking, duplicate import and repeat confirmation safety</td><td id="PBdQ" class="">Critical state changes</td><td id="VEE:" class="">All P0 concurrency tests pass</td></tr><tr id="88446972-4ee7-4fc2-ada8-468f06d4a5e8" dir="ltr"><td id="`K[B" class="">Security/privacy</td><td id="xU]V" class="">RBAC, dorm scope, object access and sensitive-file protection</td><td id="PBdQ" class="">Every milestone</td><td id="VEE:" class="">No P0/P1 finding</td></tr><tr id="2fe0b154-f854-4f5c-b8ad-ab5072d5375f" dir="ltr"><td id="`K[B" class="">Backup/restore</td><td id="xU]V" class="">Recover relational state and private files together</td><td id="PBdQ" class="">Before UAT/release</td><td id="VEE:" class="">Evidence required</td></tr></tbody></table><h2 id="132fc948-dc97-420d-8e09-ad10278c4346" class="" dir="auto">Core test catalogue</h2><p id="653f7791-fc87-4e52-b767-9a42adaa27a3" class="" dir="auto">The catalogue below is the minimum test base. Add smaller validation tests as needed, but do not remove or weaken these scenarios without updating the product decision and traceability record.</p><h3 id="15bc6d39-7005-4fa5-b849-7cd4e1856be0" class="" dir="auto">Authentication, applicant profile and permissions</h3><table id="7b1267a2-cb52-4753-975a-a98210751c4a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="ee4295a2-9681-49b0-b219-407a626aeb4f" dir="ltr"><th id="?eLr" class="simple-table-header-color simple-table-header">ID</th><th id="VAt?" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="er;V" class="simple-table-header-color simple-table-header">Behavior</th><th id="A}XC" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="13fe54a3-8204-48f0-8342-ab376aeb70cf" dir="ltr"><td id="?eLr" class=""><code>AUTH-001</code></td><td id="VAt?" class="">P1 / integration</td><td id="er;V" class="">Verified-email registration</td><td id="A}XC" class="">Creates one user, credential and applicant profile; password is hashed; verification state is recorded.</td></tr><tr id="411cda87-317e-41bc-850b-50581d5e33e1" dir="ltr"><td id="?eLr" class=""><code>AUTH-002</code></td><td id="VAt?" class="">P1 / API</td><td id="er;V" class="">Unverified applicant attempts protected workflow</td><td id="A}XC" class="">Application, roommate invitation and reservation endpoints reject with stable <code>EMAIL_NOT_VERIFIED</code> error.</td></tr><tr id="80f232bc-dc3d-43f9-a582-87ada24bf79b" dir="ltr"><td id="?eLr" class=""><code>AUTH-003</code></td><td id="VAt?" class="">P1 / integration</td><td id="er;V" class="">Optional KKU SSO linking</td><td id="A}XC" class="">Links to existing internal user without creating a duplicate profile, application or reservation.</td></tr><tr id="86e588c8-82cc-4759-b73a-a4e00d4efcff" dir="ltr"><td id="?eLr" class=""><code>AUTH-004</code></td><td id="VAt?" class="">P0 / integration</td><td id="er;V" class="">Optional KKU SSO is not a workflow gate</td><td id="A}XC" class="">Verified local account can reserve, pay, receive contracts and complete key handover without linked SSO.</td></tr><tr id="0936d1e0-3649-4c50-a0e2-b3d7c0d56d0b" dir="ltr"><td id="?eLr" class=""><code>AUTH-005</code></td><td id="VAt?" class="">P0 / API</td><td id="er;V" class="">Dorm-scoped staff access</td><td id="A}XC" class="">Staff cannot read or mutate rooms, residents, payments or files outside assigned scope.</td></tr><tr id="4754e832-6436-49b3-85fe-f8643b3fc296" dir="ltr"><td id="?eLr" class=""><code>AUTH-006</code></td><td id="VAt?" class="">P0 / API</td><td id="er;V" class="">Permission separation</td><td id="A}XC" class="">Finance permission does not grant room, contract or handover actions; each denied request is audited where required.</td></tr><tr id="d7e0f6a6-a8bf-44c6-9858-d7e1a9bb5daa" dir="ltr"><td id="?eLr" class=""><code>AUTH-007</code></td><td id="VAt?" class="">P1 / unit</td><td id="er;V" class="">Profile completeness</td><td id="A}XC" class="">Missing required campaign fields prevents group/invitation/reservation while preserving draft data.</td></tr><tr id="950630fd-3dfe-4aae-b92d-a7c5369bd836" dir="ltr"><td id="?eLr" class=""><code>AUTH-008</code></td><td id="VAt?" class="">P1 / security</td><td id="er;V" class="">Session and credential protection</td><td id="A}XC" class="">Secure cookie settings, expiry, logout invalidation, reset-token expiry and rate-limit behavior pass.</td></tr></tbody></table><h3 id="24adc757-8bad-46c6-8404-6aefe2306454" class="" dir="auto">Exact-room master and public availability</h3><table id="91fb732d-5131-458e-9e2c-74ae5af0d74d" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="20360c34-a206-4640-b639-b55bf8530a28" dir="ltr"><th id="lFfc" class="simple-table-header-color simple-table-header">ID</th><th id="=onC" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="`SaH" class="simple-table-header-color simple-table-header">Behavior</th><th id="oT`u" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="653689e7-5c3e-4be9-868d-6c8a51c3319b" dir="ltr"><td id="lFfc" class=""><code>ROOM-001</code></td><td id="=onC" class="">P1 / contract</td><td id="`SaH" class="">Import valid room master</td><td id="oT`u" class="">Both pilot dorm groups, buildings, floors, unique rooms, dimensions and configurations import with preview and summary.</td></tr><tr id="0193e219-8589-4d2d-9098-ab9aa9f092cf" dir="ltr"><td id="lFfc" class=""><code>ROOM-002</code></td><td id="=onC" class="">P0 / DB integration</td><td id="`SaH" class="">Globally unique room number</td><td id="oT`u" class="">Duplicate number is rejected by database constraint even under concurrent import.</td></tr><tr id="c4f40c24-460d-428c-976f-d587f722f5d2" dir="ltr"><td id="lFfc" class=""><code>ROOM-003</code></td><td id="=onC" class="">P1 / integration</td><td id="`SaH" class="">Idempotent room-master re-import</td><td id="oT`u" class="">Same file/checksum creates no duplicate rooms or configuration versions.</td></tr><tr id="f226b9a0-3e25-48c8-b1df-f4ba95804763" dir="ltr"><td id="lFfc" class=""><code>ROOM-004</code></td><td id="=onC" class="">P1 / integration</td><td id="`SaH" class="">Corrected room-master import</td><td id="oT`u" class="">Preview reports changes; approved update creates version history rather than destructive overwrite.</td></tr><tr id="894136c4-1b17-4e9b-9a0d-418454a5d6db" dir="ltr"><td id="lFfc" class=""><code>ROOM-005</code></td><td id="=onC" class="">P1 / unit</td><td id="`SaH" class="">Room configuration effective period</td><td id="oT`u" class="">Pricing/contracts resolve the configuration active at the relevant date; old snapshots remain unchanged.</td></tr><tr id="077d2968-661b-496d-9442-53b60af24acd" dir="ltr"><td id="lFfc" class=""><code>ROOM-006</code></td><td id="=onC" class="">P1 / API</td><td id="`SaH" class="">Building → floor → exact-room browser</td><td id="oT`u" class="">Filtering and pagination return only campaign-eligible rooms with public statuses.</td></tr><tr id="beab0875-efd9-49ec-b91f-aafb842aef63" dir="ltr"><td id="lFfc" class=""><code>ROOM-007</code></td><td id="=onC" class="">P0 / security</td><td id="`SaH" class="">Public room data minimization</td><td id="oT`u" class="">Public response never exposes resident identity, private notes, payment or contract data.</td></tr><tr id="fdabd097-d5a8-4b92-9513-6fd638bac106" dir="ltr"><td id="lFfc" class=""><code>ROOM-008</code></td><td id="=onC" class="">P1 / integration</td><td id="`SaH" class="">Block/unblock room</td><td id="oT`u" class="">Authorized staff records reason/effective period; blocked room cannot be held; history is audited.</td></tr><tr id="2b6ca3f4-d25d-42f6-88c1-196fb2f556d6" dir="ltr"><td id="lFfc" class=""><code>ROOM-009</code></td><td id="=onC" class="">P1 / unit</td><td id="`SaH" class="">Whole-room capability</td><td id="oT`u" class="">Only rooms configured for whole-room occupancy allow that selection.</td></tr><tr id="559507d8-64a3-4c6f-8c6c-d0f5c0a47615" dir="ltr"><td id="lFfc" class=""><code>ROOM-010</code></td><td id="=onC" class="">P1 / API</td><td id="`SaH" class="">Availability projection</td><td id="oT`u" class="">Available, held, confirmed and unavailable states derive from authoritative room/hold/assignment records.</td></tr><tr id="4805f74d-dbec-4b11-9f2a-8c79bdfc4b7e" dir="ltr"><td id="lFfc" class=""><code>ROOM-011</code></td><td id="=onC" class="">P2 / frontend</td><td id="`SaH" class="">Room size and plan display</td><td id="oT`u" class="">Missing dimensions/plan use an honest unavailable state; no fabricated measurements are shown.</td></tr><tr id="bebe73bb-512e-4491-91b8-b00b7621e827" dir="ltr"><td id="lFfc" class=""><code>ROOM-012</code></td><td id="=onC" class="">P1 / performance</td><td id="`SaH" class="">Pilot inventory browse</td><td id="oT`u" class="">Seeded full pilot inventory remains usable and paginated; baseline response target is recorded before UAT.</td></tr></tbody></table><h3 id="4e4cec09-52e9-43c1-9a15-68462ee9b2e9" class="" dir="auto">Roommate invitations and reservation groups</h3><table id="d585692d-ec86-489a-8773-a73a7a58dc65" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="62ed97b2-cad8-4e55-b91a-ebac54568b1b" dir="ltr"><th id="`|rN" class="simple-table-header-color simple-table-header">ID</th><th id="@&lt;Cd" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="mcgK" class="simple-table-header-color simple-table-header">Behavior</th><th id="rEQg" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="83f281f1-75fa-4920-8ccc-ce198c49e950" dir="ltr"><td id="`|rN" class=""><code>GROUP-001</code></td><td id="@&lt;Cd" class="">P1 / service</td><td id="mcgK" class="">Create invitation</td><td id="rEQg" class="">Leader and invited applicant are complete, eligible and not in another active group.</td></tr><tr id="1ab1412b-5a77-47a5-970f-6ace2b163dc7" dir="ltr"><td id="`|rN" class=""><code>GROUP-002</code></td><td id="@&lt;Cd" class="">P0 / DB integration</td><td id="mcgK" class="">One active invitation/group per resident</td><td id="rEQg" class="">Database/service prevents a second active relation under concurrent requests.</td></tr><tr id="383e7e3f-7729-473a-b8a6-b17d26a1056d" dir="ltr"><td id="`|rN" class=""><code>GROUP-003</code></td><td id="@&lt;Cd" class="">P0 / DB integration</td><td id="mcgK" class="">Maximum group size two</td><td id="rEQg" class="">Third member cannot be inserted through API, staff action or direct repository path.</td></tr><tr id="4e45ab56-135d-4186-8103-f31a3e26bc2b" dir="ltr"><td id="`|rN" class=""><code>GROUP-004</code></td><td id="@&lt;Cd" class="">P1 / deterministic time</td><td id="mcgK" class="">Invitation expires after 48 hours</td><td id="rEQg" class="">Expiry job changes status once; acceptance after expiry returns <code>INVITATION_EXPIRED</code>.</td></tr><tr id="366ba162-fa32-440b-8f29-89d3c07b5a48" dir="ltr"><td id="`|rN" class=""><code>GROUP-005</code></td><td id="@&lt;Cd" class="">P1 / API</td><td id="mcgK" class="">Accept invitation</td><td id="rEQg" class="">Creates accepted roommate group, records leader/member roles and audit/event history.</td></tr><tr id="06563953-323f-441f-a71c-513141b348b2" dir="ltr"><td id="`|rN" class=""><code>GROUP-006</code></td><td id="@&lt;Cd" class="">P1 / API</td><td id="mcgK" class="">Decline invitation</td><td id="rEQg" class="">Invitation closes, both residents may form new groups and no room is affected.</td></tr><tr id="12b5c929-600a-4283-89b0-9a4a630a0744" dir="ltr"><td id="`|rN" class=""><code>GROUP-007</code></td><td id="@&lt;Cd" class="">P0 / service</td><td id="mcgK" class="">Accepted relationship required before room selection</td><td id="rEQg" class="">Leader cannot reserve a shared room while invitation is pending.</td></tr><tr id="3fc65809-25cb-4574-9a5d-1ec868a6a5e8" dir="ltr"><td id="`|rN" class=""><code>GROUP-008</code></td><td id="@&lt;Cd" class="">P1 / service</td><td id="mcgK" class="">Reservation leader authority</td><td id="rEQg" class="">Only leader initiates applicant reservation; configured roommate confirmation remains separate.</td></tr><tr id="91f11aa6-8cfb-4a2e-a778-73620fdf6ba6" dir="ltr"><td id="`|rN" class=""><code>GROUP-009</code></td><td id="@&lt;Cd" class="">P1 / integration</td><td id="mcgK" class="">Leader change during renewal</td><td id="rEQg" class="">Requires both residents’ confirmation and preserves group history.</td></tr><tr id="a7e4d83c-307b-4e51-8d5f-5a9ccf51c257" dir="ltr"><td id="`|rN" class=""><code>GROUP-010</code></td><td id="@&lt;Cd" class="">P0 / integration</td><td id="mcgK" class="">Staff manual group/reservation</td><td id="rEQg" class="">Authorized staff may create final group with reason/audit; residents do not need confirmation.</td></tr><tr id="d51f57d0-03f6-4ea2-88ed-06b492c78b14" dir="ltr"><td id="`|rN" class=""><code>GROUP-011</code></td><td id="@&lt;Cd" class="">P1 / security</td><td id="mcgK" class="">Invitation privacy</td><td id="rEQg" class="">Invitation link/token cannot expose another applicant’s full profile and cannot be reused by another account.</td></tr><tr id="e10559a3-40b4-4f91-a9cf-f6dee9c90e52" dir="ltr"><td id="`|rN" class=""><code>GROUP-012</code></td><td id="@&lt;Cd" class="">P1 / frontend</td><td id="mcgK" class="">Invitation and group states</td><td id="rEQg" class="">Pending, accepted, declined, expired and ready-for-room states render correctly on mobile.</td></tr></tbody></table><h3 id="0d76b8d6-f4d5-442d-8fa6-8e0958e50cbd" class="" dir="auto">Exact-room holds, expiry and concurrency</h3><table id="335e0767-e595-486f-a48e-ed198d349482" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="f848f7ad-340b-4aae-b953-2a195d62a698" dir="ltr"><th id="y|;{" class="simple-table-header-color simple-table-header">ID</th><th id="Vq&gt;N" class="simple-table-header-color simple-table-header">Priority / layer</th><th id=";e&lt;w" class="simple-table-header-color simple-table-header">Behavior</th><th id=";?Hn" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="3d3b08dd-ff17-48fb-8340-41c446c68fba" dir="ltr"><td id="y|;{" class=""><code>HOLD-001</code></td><td id="Vq&gt;N" class="">P0 / concurrency</td><td id=";e&lt;w" class="">Atomic room acquisition</td><td id=";?Hn" class="">Two simultaneous eligible leaders target one room; exactly one hold succeeds.</td></tr><tr id="27f1eb16-8898-4dcd-921e-5023c396b5f7" dir="ltr"><td id="y|;{" class=""><code>HOLD-002</code></td><td id="Vq&gt;N" class="">P0 / idempotency</td><td id=";e&lt;w" class="">Repeated reserve request</td><td id=";?Hn" class="">Same idempotency key returns the original hold and creates no duplicate event.</td></tr><tr id="d1cdf02c-e81b-4db6-bffb-8d1b2115747e" dir="ltr"><td id="y|;{" class=""><code>HOLD-003</code></td><td id="Vq&gt;N" class="">P0 / deterministic time</td><td id=";e&lt;w" class="">Required 15-minute roommate confirmation</td><td id=";?Hn" class="">Confirmation before deadline moves to payment hold; exact boundary behavior is defined and tested.</td></tr><tr id="b167ca44-12eb-4d5c-81cc-3128e76cfe69" dir="ltr"><td id="y|;{" class=""><code>HOLD-004</code></td><td id="Vq&gt;N" class="">P0 / deterministic time</td><td id=";e&lt;w" class="">Confirmation expiry</td><td id=";?Hn" class="">At expiry the room releases exactly once and becomes available to another eligible applicant.</td></tr><tr id="5685e81e-b4a8-47a3-bbfd-c92c94228d06" dir="ltr"><td id="y|;{" class=""><code>HOLD-005</code></td><td id="Vq&gt;N" class="">P0 / service</td><td id=";e&lt;w" class="">Roommate declines selected room</td><td id=";?Hn" class="">Room releases immediately; group returns to accepted/no-room state.</td></tr><tr id="afdf6880-9db9-4446-a4f8-b51eed09c991" dir="ltr"><td id="y|;{" class=""><code>HOLD-006</code></td><td id="Vq&gt;N" class="">P1 / service</td><td id=";e&lt;w" class="">Campaign disables second confirmation</td><td id=";?Hn" class="">Leader reserve moves directly from atomic hold to 72-hour payment hold.</td></tr><tr id="8eee669e-35fc-48c9-b608-00495a62e6fa" dir="ltr"><td id="y|;{" class=""><code>HOLD-007</code></td><td id="Vq&gt;N" class="">P0 / deterministic time</td><td id=";e&lt;w" class="">72-hour payment hold</td><td id=";?Hn" class="">Shared group has one deadline; unpaid expiry releases exact room exactly once.</td></tr><tr id="b65dea06-cb38-47a5-a029-b9ec1515017b" dir="ltr"><td id="y|;{" class=""><code>HOLD-008</code></td><td id="Vq&gt;N" class="">P0 / concurrency</td><td id=";e&lt;w" class="">Expiry versus payment/confirmation race</td><td id=";?Hn" class="">Transaction ordering produces one valid final state; room cannot be both released and confirmed.</td></tr><tr id="a81cbb7f-decd-469d-8307-2f41aad14ff1" dir="ltr"><td id="y|;{" class=""><code>HOLD-009</code></td><td id="Vq&gt;N" class="">P0 / integration</td><td id=";e&lt;w" class="">Whole-room blocks second slot</td><td id=";?Hn" class="">No second resident/group can be assigned while whole-room assignment is active.</td></tr><tr id="2237f18f-5a01-492a-8af9-b3fb4a63e4a3" dir="ltr"><td id="y|;{" class=""><code>HOLD-010</code></td><td id="Vq&gt;N" class="">P1 / API</td><td id=";e&lt;w" class="">Public held-room visibility</td><td id=";?Hn" class="">Other applicants see <code>Temporarily Held</code> and expiry, but no resident identity and no reserve action.</td></tr><tr id="cec7ac33-e0d5-458e-b969-94c3a5547a30" dir="ltr"><td id="y|;{" class=""><code>HOLD-011</code></td><td id="Vq&gt;N" class="">P0 / integration</td><td id=";e&lt;w" class="">Manual and applicant paths share domain service</td><td id=";?Hn" class="">Both paths enforce one-room/one-hold constraints and produce consistent events.</td></tr><tr id="afeb37ee-1855-43c1-9b2e-9c620601a8fa" dir="ltr"><td id="y|;{" class=""><code>HOLD-012</code></td><td id="Vq&gt;N" class="">P0 / recovery</td><td id=";e&lt;w" class="">Worker restart</td><td id=";?Hn" class="">Expired holds are recovered from database state; no in-memory timer is required for correctness.</td></tr></tbody></table><h3 id="3cecd2c4-9c96-4752-a13d-75fb46b9c238" class="" dir="auto">Pricing, overrides and resident obligations</h3><table id="d5433db9-e910-49b9-b894-7b834559fd5c" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="4f19208d-c90b-4da2-9f8f-bcaade57700d" dir="ltr"><th id="O^n&gt;" class="simple-table-header-color simple-table-header">ID</th><th id=";CuY" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="~_L]" class="simple-table-header-color simple-table-header">Behavior</th><th id="m^&gt;[" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="bfbc00c3-064d-4acb-ad33-c49903c8bf46" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-001</code></td><td id=";CuY" class="">P0 / unit</td><td id="~_L]" class="">Shared normal room calculation</td><td id="m^&gt;[" class="">Each resident receives the correct separate <code>ROOM</code> obligation from the active rule version.</td></tr><tr id="abd3f218-a703-4ebb-a0a5-b0fc52ed7061" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-002</code></td><td id=";CuY" class="">P0 / unit</td><td id="~_L]" class="">Whole-room calculation</td><td id="m^&gt;[" class="">One resident receives full-room amount per required action; no second-resident obligation is created.</td></tr><tr id="519ec352-fbb5-4edd-bbb9-bc2cb7495c2b" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-003</code></td><td id=";CuY" class="">P0 / unit</td><td id="~_L]" class="">HL dual obligations</td><td id="m^&gt;[" class="">Each HL resident receives separate <code>ROOM</code> and <code>HL</code> obligations with independent recipients/actions.</td></tr><tr id="7f368233-c2fe-4683-9b78-5f0dc0ceac2d" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-004</code></td><td id=";CuY" class="">P1 / unit</td><td id="~_L]" class="">Applicant/year/payment-cycle dimensions</td><td id="m^&gt;[" class="">First-year full-year and current-resident installment rules select the intended version; unresolved Ref.2 remains configured, not hard-coded.</td></tr><tr id="1edec212-f604-4950-8a6b-facee2c8881e" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-005</code></td><td id=";CuY" class="">P0 / API</td><td id="~_L]" class="">One-off amount override permission</td><td id="m^&gt;[" class="">Only finance role succeeds; reason is mandatory; original calculated amount and source remain stored.</td></tr><tr id="84cf1703-e34d-4085-a2b9-9530f80312df" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-006</code></td><td id=";CuY" class="">P0 / audit</td><td id="~_L]" class="">Override scope</td><td id="m^&gt;[" class="">One-off override changes only current obligation; permanent rule update is a separate permission/action.</td></tr><tr id="5ad2985c-446e-4b4f-ac55-e3769a23d4a6" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-007</code></td><td id=";CuY" class="">P1 / integration</td><td id="~_L]" class="">Versioned permanent pricing update</td><td id="m^&gt;[" class="">New obligations use new version; old obligations/contracts retain original price snapshot.</td></tr><tr id="1b88f02d-a7bd-4f23-9721-fb3fbedb3e22" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-008</code></td><td id=";CuY" class="">P0 / integration</td><td id="~_L]" class="">Shared-to-whole conversion after payment</td><td id="m^&gt;[" class="">Old obligations are superseded, not edited; replacement obligations and refund/manual statuses are traceable.</td></tr><tr id="7ce14626-94f2-4cea-971b-5d633f5cc3b8" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-009</code></td><td id=";CuY" class="">P1 / integration</td><td id="~_L]" class="">Obligation generation idempotency</td><td id="m^&gt;[" class="">Repeated event/request creates no duplicate active obligation for resident × group × action × cycle.</td></tr><tr id="0f576355-b57d-4ae2-a743-0a7d0c8f0fbe" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-010</code></td><td id=";CuY" class="">P1 / provisional</td><td id="~_L]" class="">Fee-exempt occupant policy</td><td id="m^&gt;[" class="">Test remains feature-flagged/provisional until policy is confirmed; no incorrect SCB row is generated.</td></tr><tr id="881efcb9-4c80-4d6d-9c6d-c465c7ba7ecb" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-011</code></td><td id=";CuY" class="">P0 / integrity</td><td id="~_L]" class="">Immutable exported amount</td><td id="m^&gt;[" class="">Once included in an exported batch, change requires cancel/supersede and replacement rather than direct mutation.</td></tr><tr id="b6da63e6-e597-4d27-9025-3776b853fd61" dir="ltr"><td id="O^n&gt;" class=""><code>PRICE-012</code></td><td id=";CuY" class="">P1 / API</td><td id="~_L]" class="">Applicant payment explanation</td><td id="m^&gt;[" class="">UI/API clearly show separate ROOM/HL amounts, source and deadline without exposing internal-only recipient details improperly.</td></tr></tbody></table><h3 id="b06abdae-5fd2-445e-af0f-3cd26d1a2572" class="" dir="auto">SCB <code>SLIPS</code> XLSX contract tests</h3><table id="bbe4b710-7017-4386-8d05-1508725e08aa" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="cf911524-a083-452c-acc7-42459ed8086c" dir="ltr"><th id="GbcQ" class="simple-table-header-color simple-table-header">ID</th><th id="jgi[" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="d;=b" class="simple-table-header-color simple-table-header">Behavior</th><th id="gzCJ" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="92d7ed3b-7f88-40cb-8c55-b0303a928b39" dir="ltr"><td id="GbcQ" class=""><code>XLSX-001</code></td><td id="jgi[" class="">P0 / document contract</td><td id="d;=b" class="">Workbook and sheet contract</td><td id="gzCJ" class="">Output is valid <code>.xlsx</code>; worksheet is exactly <code>SLIPS</code>; no unexpected required sheet replaces it.</td></tr><tr id="bcd3f99f-4244-46f7-bc13-904613ac7e7b" dir="ltr"><td id="GbcQ" class=""><code>XLSX-002</code></td><td id="jgi[" class="">P0 / document contract</td><td id="d;=b" class="">Exact column order</td><td id="gzCJ" class=""><code>ID</code>, <code>Payer Name *</code>, <code>Ref.1 *</code>, <code>Ref.2</code>, <code>Amount *</code>, <code>Payment Date *</code>, <code>Email Address</code>, <code>Alert Message</code>, <code>Remark</code> appear in order.</td></tr><tr id="aaeead1a-b26c-4275-9468-207d315c4f94" dir="ltr"><td id="GbcQ" class=""><code>XLSX-003</code></td><td id="jgi[" class="">P0 / document contract</td><td id="d;=b" class="">Blank <code>ID</code></td><td id="gzCJ" class="">Every exported data row leaves the ID cell blank, not zero, empty-string text or generated ID.</td></tr><tr id="46551b3e-e75f-452e-8232-f808d2de264a" dir="ltr"><td id="GbcQ" class=""><code>XLSX-004</code></td><td id="jgi[" class="">P0 / document contract</td><td id="d;=b" class="">One resident × one action</td><td id="gzCJ" class="">Two roommates in one HL room generate four rows: A-ROOM, A-HL, B-ROOM, B-HL.</td></tr><tr id="196a10bc-1085-4853-9daf-b6d983c98cd5" dir="ltr"><td id="GbcQ" class=""><code>XLSX-005</code></td><td id="jgi[" class="">P0 / contract</td><td id="d;=b" class="">Reference mapping</td><td id="gzCJ" class=""><code>Ref.1</code> equals exact room number; <code>Ref.2</code> equals configured action/cycle; duplicate roommate references are allowed.</td></tr><tr id="76536c4d-4313-47cc-81e2-c559c3b5465d" dir="ltr"><td id="GbcQ" class=""><code>XLSX-006</code></td><td id="jgi[" class="">P0 / contract</td><td id="d;=b" class="">Cell types</td><td id="gzCJ" class="">Amount is numeric; bill issue date uses accepted date representation; description/email/default message are text.</td></tr><tr id="32221a8e-0e84-4f89-8d37-f10bc6591a9b" dir="ltr"><td id="GbcQ" class=""><code>XLSX-007</code></td><td id="jgi[" class="">P1 / validation</td><td id="d;=b" class="">Field-length and required-value validation</td><td id="gzCJ" class="">Invalid rows are rejected before batch finalization with row/field-specific errors; valid rows remain previewable.</td></tr><tr id="6a49ed79-7caf-4cf1-8a20-e672d7cbf3b9" dir="ltr"><td id="GbcQ" class=""><code>XLSX-008</code></td><td id="jgi[" class="">P0 / idempotency</td><td id="d;=b" class="">Repeated batch generation/download</td><td id="gzCJ" class="">Same finalized batch returns the same row set and stored artifact/checksum; no new references or obligations are created.</td></tr><tr id="14d53f2e-b2fb-4d1e-be08-83b0ce65784a" dir="ltr"><td id="GbcQ" class=""><code>XLSX-009</code></td><td id="jgi[" class="">P0 / integrity</td><td id="d;=b" class="">Batch snapshot</td><td id="gzCJ" class="">Export row stores obligation ID, resident, room/action, amount, source version, row number and file checksum.</td></tr><tr id="dc95a2ea-78d0-4cb1-9618-7afc648da368" dir="ltr"><td id="GbcQ" class=""><code>XLSX-010</code></td><td id="jgi[" class="">P1 / configuration</td><td id="d;=b" class="">Configurable grouping</td><td id="gzCJ" class="">Combined baseline works; grouping by account/action/dorm can be enabled without changing obligation identity.</td></tr><tr id="3e8254e8-0651-4f8e-8774-916ca032c23f" dir="ltr"><td id="GbcQ" class=""><code>XLSX-011</code></td><td id="jgi[" class="">P1 / contract</td><td id="d;=b" class="">Thai/Unicode content</td><td id="gzCJ" class="">Thai payment descriptions and names round-trip without corruption.</td></tr><tr id="6e473453-aa9c-41c5-ae2e-e446225406ab" dir="ltr"><td id="GbcQ" class=""><code>XLSX-012</code></td><td id="jgi[" class="">P1 / golden</td><td id="d;=b" class="">Structural golden comparison</td><td id="gzCJ" class="">Normalized workbook structure equals approved golden fixture while ignoring harmless package metadata.</td></tr><tr id="4d4612c2-0545-4f88-bfd6-b72024c3d4f6" dir="ltr"><td id="GbcQ" class=""><code>XLSX-013</code></td><td id="jgi[" class="">P0 / authorization</td><td id="d;=b" class="">Finance export permission</td><td id="gzCJ" class="">Unauthorized role cannot preview/finalize/download; access attempt is recorded.</td></tr><tr id="7d28a288-6da8-4ec7-8b96-ed9418a719a0" dir="ltr"><td id="GbcQ" class=""><code>XLSX-014</code></td><td id="jgi[" class="">P0 / replacement</td><td id="d;=b" class="">Changed exported bill</td><td id="gzCJ" class="">Old row/obligation is cancelled or superseded; replacement appears in a new version/batch and history remains immutable.</td></tr></tbody></table><h3 id="187060d1-6f85-4b09-a22c-be449774256e" class="" dir="auto">Returned multipage PDF import and matching</h3><table id="946ae688-64b5-4101-b146-30b958fed592" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="c767ec30-0b7c-4ea5-9587-1bde69aa8d94" dir="ltr"><th id="dSlT" class="simple-table-header-color simple-table-header">ID</th><th id="CTX[" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="OiMo" class="simple-table-header-color simple-table-header">Behavior</th><th id="mnID" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="4ca5f9b5-e4fa-4401-a4e1-e2cfe681c597" dir="ltr"><td id="dSlT" class=""><code>PDF-001</code></td><td id="CTX[" class="">P0 / storage contract</td><td id="OiMo" class="">Import original combined PDF</td><td id="mnID" class="">Original bytes, checksum, page count, actor, batch and timestamp are stored privately.</td></tr><tr id="d8aa89b5-cb05-4a33-b978-1588ea676acc" dir="ltr"><td id="dSlT" class=""><code>PDF-002</code></td><td id="CTX[" class="">P0 / document contract</td><td id="OiMo" class="">Text-layer extraction per page</td><td id="mnID" class="">Each page produces stable extracted text and page number; extraction failure is explicit.</td></tr><tr id="3af80986-d10f-4aee-9eda-b5e9c22ab957" dir="ltr"><td id="dSlT" class=""><code>PDF-003</code></td><td id="CTX[" class="">P0 / matching</td><td id="OiMo" class="">Repeated <code>Ref.1</code>/<code>Ref.2</code></td><td id="mnID" class="">Two roommates with identical room/action references map to distinct resident obligations using resident-specific text/context.</td></tr><tr id="42d0fc74-f9cc-4cf0-8ac9-622a02e5b138" dir="ltr"><td id="dSlT" class=""><code>PDF-004</code></td><td id="CTX[" class="">P0 / matching</td><td id="OiMo" class="">Reordered pages</td><td id="mnID" class="">Pages match correctly when PDF order differs from Excel order and room order is descending or arbitrary.</td></tr><tr id="57b212dd-707c-4f4b-8536-a704d80d7e19" dir="ltr"><td id="dSlT" class=""><code>PDF-005</code></td><td id="CTX[" class="">P0 / negative</td><td id="OiMo" class="">Room/action-only match forbidden</td><td id="mnID" class="">Matcher returns ambiguous/unmatched rather than selecting one of multiple obligations.</td></tr><tr id="c8157d8a-8e48-45e2-be49-1c1674cc392d" dir="ltr"><td id="dSlT" class=""><code>PDF-006</code></td><td id="CTX[" class="">P1 / matching</td><td id="OiMo" class="">Unmatched page</td><td id="mnID" class="">Page enters review queue without attaching to a resident; original file remains usable.</td></tr><tr id="31a3b186-72d9-4d42-b5e5-849abbf895e4" dir="ltr"><td id="dSlT" class=""><code>PDF-007</code></td><td id="CTX[" class="">P0 / matching</td><td id="OiMo" class="">Duplicate candidate</td><td id="mnID" class="">Potential duplicate is flagged; no obligation receives two active official pages.</td></tr><tr id="61d61003-3566-42d5-9e56-bedf67e0a74b" dir="ltr"><td id="dSlT" class=""><code>PDF-008</code></td><td id="CTX[" class="">P0 / authorization</td><td id="OiMo" class="">Manual rematch</td><td id="mnID" class="">Only authorized finance reviewer may rematch; reason and before/after mapping are audited.</td></tr><tr id="1f8ce594-2771-476e-8c7b-e574bb8b2e39" dir="ltr"><td id="dSlT" class=""><code>PDF-009</code></td><td id="CTX[" class="">P0 / idempotency</td><td id="OiMo" class="">Repeated same-PDF upload</td><td id="mnID" class="">Same checksum is recognized; pages/matches are not duplicated.</td></tr><tr id="fa644cbc-c2dd-4cac-be8e-f5b3e3ab84a3" dir="ltr"><td id="dSlT" class=""><code>PDF-010</code></td><td id="CTX[" class="">P0 / replacement</td><td id="OiMo" class="">Replacement PDF/bill</td><td id="mnID" class="">New document version supersedes old mapping without deleting prior page history.</td></tr><tr id="558471c4-e56c-423c-8bb1-93ede167bb54" dir="ltr"><td id="dSlT" class=""><code>PDF-011</code></td><td id="CTX[" class="">P1 / fallback</td><td id="OiMo" class="">Image-only PDF</td><td id="mnID" class="">OCR path activates only when no usable text layer exists; low-confidence result requires review.</td></tr><tr id="400ef5d2-efe1-4d7f-a187-7ec7ab06f6a1" dir="ltr"><td id="dSlT" class=""><code>PDF-012</code></td><td id="CTX[" class="">P0 / security</td><td id="OiMo" class="">Private page access</td><td id="mnID" class="">Resident sees only their payment page; roommates cannot access each other’s page unless policy explicitly permits it.</td></tr><tr id="3a853b12-650b-4a08-81dd-5cca9d225974" dir="ltr"><td id="dSlT" class=""><code>PDF-013</code></td><td id="CTX[" class="">P1 / robustness</td><td id="OiMo" class="">Malformed/encrypted/oversized PDF</td><td id="mnID" class="">Import fails safely with actionable error and no partial active mappings.</td></tr><tr id="3d052d0b-a7e7-470c-873f-888bb1a457fe" dir="ltr"><td id="dSlT" class=""><code>PDF-014</code></td><td id="CTX[" class="">P1 / observability</td><td id="OiMo" class="">Matching report</td><td id="mnID" class="">Import summary reports matched, ambiguous, unmatched, duplicate and failed pages with stable IDs.</td></tr></tbody></table><h3 id="be622e79-6fcd-4b75-9958-c52417e8ad3f" class="" dir="auto">SCB payment-result import and reconciliation</h3><table id="6ae0a12b-635d-4080-b1fd-b51a73363478" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6aa0a12d-ddea-4c5a-b1b1-06c413618ecf" dir="ltr"><th id=";s:_" class="simple-table-header-color simple-table-header">ID</th><th id="~afo" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="Bahm" class="simple-table-header-color simple-table-header">Behavior</th><th id="\&gt;jv" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="dbf633fa-540e-422e-b66f-6133b2255efe" dir="ltr"><td id=";s:_" class=""><code>RESULT-001</code></td><td id="~afo" class="">P0 / document contract</td><td id="Bahm" class="">Parse approved result-report fixture</td><td id="\&gt;jv" class="">Rows normalize into typed transaction/result records with source file/checksum and row number.</td></tr><tr id="3a0e7c69-666a-478e-8958-ca7f3ea1b0cc" dir="ltr"><td id=";s:_" class=""><code>RESULT-002</code></td><td id="~afo" class="">P0 / matching</td><td id="Bahm" class="">Successful payment</td><td id="\&gt;jv" class="">Correct resident obligation becomes paid with amount/time/reference/source retained.</td></tr><tr id="3aa68583-4f0d-45db-a2bf-5f940487500f" dir="ltr"><td id=";s:_" class=""><code>RESULT-003</code></td><td id="~afo" class="">P0 / idempotency</td><td id="Bahm" class="">Re-import same report</td><td id="\&gt;jv" class="">No duplicate transaction, event or payment application is created.</td></tr><tr id="c16557fc-f83f-4239-8f71-4a0263873009" dir="ltr"><td id=";s:_" class=""><code>RESULT-004</code></td><td id="~afo" class="">P0 / integrity</td><td id="Bahm" class="">One transaction not reused</td><td id="\&gt;jv" class="">Same SCB transaction/reference cannot satisfy multiple obligations without explicit approved allocation rule.</td></tr><tr id="ee105bfb-4b5e-43af-a242-4a6b09f06ba5" dir="ltr"><td id=";s:_" class=""><code>RESULT-005</code></td><td id="~afo" class="">P0 / exception</td><td id="Bahm" class="">Underpayment</td><td id="\&gt;jv" class="">Obligation remains incomplete and case enters review with expected/received amount.</td></tr><tr id="8ff1132c-6792-449e-99d6-0375b1d72d2a" dir="ltr"><td id=";s:_" class=""><code>RESULT-006</code></td><td id="~afo" class="">P0 / exception</td><td id="Bahm" class="">Overpayment</td><td id="\&gt;jv" class="">Payment is not silently accepted as ordinary; case enters review and preserves full received amount.</td></tr><tr id="8e59cde2-1927-4c15-8fb6-c010fdf064f9" dir="ltr"><td id=";s:_" class=""><code>RESULT-007</code></td><td id="~afo" class="">P0 / exception</td><td id="Bahm" class="">Duplicate payment</td><td id="\&gt;jv" class="">Duplicate result is flagged and does not double-increment completion.</td></tr><tr id="987ab311-0e10-42d4-8ebb-da404e1fb64c" dir="ltr"><td id=";s:_" class=""><code>RESULT-008</code></td><td id="~afo" class="">P0 / exception</td><td id="Bahm" class="">Late/post-expiry payment</td><td id="\&gt;jv" class="">Case enters review; expired/released room is not automatically reconfirmed.</td></tr><tr id="11796024-1624-4c48-917b-2e9a4002eb35" dir="ltr"><td id=";s:_" class=""><code>RESULT-009</code></td><td id="~afo" class="">P0 / group</td><td id="Bahm" class=""><code>ROOM</code> paid, <code>HL</code> unpaid</td><td id="\&gt;jv" class="">Resident and group remain incomplete; UI shows exact missing action.</td></tr><tr id="9a9448e9-8655-42c7-8385-0cb1b7c10022" dir="ltr"><td id=";s:_" class=""><code>RESULT-010</code></td><td id="~afo" class="">P0 / group</td><td id="Bahm" class="">One roommate paid, one unpaid</td><td id="\&gt;jv" class="">Group remains pending until shared deadline under provisional rule; paid record remains immutable.</td></tr><tr id="027567e2-d76a-42f6-b1f8-9d7b6dad8e68" dir="ltr"><td id=";s:_" class=""><code>RESULT-011</code></td><td id="~afo" class="">P1 / matching</td><td id="Bahm" class="">Unmatched result row</td><td id="\&gt;jv" class="">Review case is created; no arbitrary obligation is selected.</td></tr><tr id="3c873243-4597-4d26-bd68-739ce2131d4f" dir="ltr"><td id=";s:_" class=""><code>RESULT-012</code></td><td id="~afo" class="">P0 / authorization</td><td id="Bahm" class="">Manual payment record</td><td id="\&gt;jv" class="">Finance permission, bank reference and staff note are mandatory; audit event records source as manual.</td></tr><tr id="f647ed28-874c-4a4e-9df6-db186f2563e4" dir="ltr"><td id=";s:_" class=""><code>RESULT-013</code></td><td id="~afo" class="">P0 / concurrency</td><td id="Bahm" class="">Concurrent result/manual record</td><td id="\&gt;jv" class="">At most one active payment application is accepted; duplicate source becomes review/history.</td></tr><tr id="37f22863-c671-4a27-b3f6-f945d36b2357" dir="ltr"><td id=";s:_" class=""><code>RESULT-014</code></td><td id="~afo" class="">P1 / refund status</td><td id="Bahm" class="">Refund tracked, execution external</td><td id="\&gt;jv" class="">Status/events can be recorded separately for ROOM and HL without claiming money was refunded by this app.</td></tr><tr id="5bab12bd-f4c8-43d5-9b2e-d80e3d21bb8e" dir="ltr"><td id=";s:_" class=""><code>RESULT-015</code></td><td id="~afo" class="">P0 / authorization</td><td id="Bahm" class="">Import/result visibility</td><td id="\&gt;jv" class="">Only scoped finance users can import or view sensitive transaction details.</td></tr><tr id="ba1432a9-0984-4f93-874d-1ade8ce83fbb" dir="ltr"><td id=";s:_" class=""><code>RESULT-016</code></td><td id="~afo" class="">P1 / observability</td><td id="Bahm" class="">Import summary and reconciliation totals</td><td id="\&gt;jv" class="">Counts and amounts reconcile to parsed rows; exceptions and unmatched rows are explicit.</td></tr></tbody></table><h3 id="f6ad928c-4a06-4466-a8f6-d0e45f113877" class="" dir="auto">Reservation completion and exact-room confirmation</h3><table id="ae3a002e-4a70-4e7f-b2b8-204421354d51" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="21f34b73-27f3-43c9-a2f9-412ee755613d" dir="ltr"><th id="{A\Y" class="simple-table-header-color simple-table-header">ID</th><th id="qzWA" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="_Yi=" class="simple-table-header-color simple-table-header">Behavior</th><th id="fZR_" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="b0f008f4-e747-4225-88d8-5f0414193fd5" dir="ltr"><td id="{A\Y" class=""><code>RESV-001</code></td><td id="qzWA" class="">P0 / service</td><td id="_Yi=" class="">Shared group complete</td><td id="fZR_" class="">Every required action for both residents is paid before group can be confirmed.</td></tr><tr id="575f9182-6edd-4b60-ada1-e000447ce691" dir="ltr"><td id="{A\Y" class=""><code>RESV-002</code></td><td id="qzWA" class="">P0 / service</td><td id="_Yi=" class="">Whole-room complete</td><td id="fZR_" class="">All one-resident full-room actions are paid before confirmation.</td></tr><tr id="7b822e8e-4c77-4f8d-a9bc-42f52d78f278" dir="ltr"><td id="{A\Y" class=""><code>RESV-003</code></td><td id="qzWA" class="">P0 / authorization</td><td id="_Yi=" class="">Staff confirmation</td><td id="fZR_" class="">Only <code>reservation.confirm</code>/payment-confirm authorized role succeeds; actor and decision are audited.</td></tr><tr id="d62d3854-b229-4ddd-8173-3c8da57f0eb2" dir="ltr"><td id="{A\Y" class=""><code>RESV-004</code></td><td id="qzWA" class="">P0 / negative</td><td id="_Yi=" class="">Incomplete obligations</td><td id="fZR_" class="">Confirmation returns stable missing-obligation error and makes no room/assignment mutation.</td></tr><tr id="a5a04819-7c5b-4cc2-8cd8-8de0f77e010e" dir="ltr"><td id="{A\Y" class=""><code>RESV-005</code></td><td id="qzWA" class="">P0 / idempotency</td><td id="_Yi=" class="">Repeated final confirmation</td><td id="fZR_" class="">Returns same confirmed reservation; one assignment, one quota effect and one confirmation event exist.</td></tr><tr id="cb42c8f1-a5fe-4423-8b6f-0e27c90d57a2" dir="ltr"><td id="{A\Y" class=""><code>RESV-006</code></td><td id="qzWA" class="">P0 / concurrency</td><td id="_Yi=" class="">Confirm versus release/expiry</td><td id="fZR_" class="">Exactly one transaction wins; database cannot contain contradictory room and group states.</td></tr><tr id="d008702c-6c28-4e43-a783-0e741ea89124" dir="ltr"><td id="{A\Y" class=""><code>RESV-007</code></td><td id="qzWA" class="">P0 / integrity</td><td id="_Yi=" class="">Permanent exact-room lock</td><td id="fZR_" class="">Confirmed assignment blocks every new hold until authorized cancellation/release workflow completes.</td></tr><tr id="e7a00696-a2c9-4114-b52a-ed2ec1b129df" dir="ltr"><td id="{A\Y" class=""><code>RESV-008</code></td><td id="qzWA" class="">P0 / provisional</td><td id="_Yi=" class="">One-paid/one-unpaid expiry</td><td id="fZR_" class="">Current baseline releases/cancels once and creates manual/refund review; test is marked provisional.</td></tr><tr id="688db058-202c-432d-bfb9-1b822669ca95" dir="ltr"><td id="{A\Y" class=""><code>RESV-009</code></td><td id="qzWA" class="">P1 / cancellation</td><td id="_Yi=" class="">Confirmed reservation cancellation</td><td id="fZR_" class="">Requires permission/reason; room release and financial follow-up are explicit and idempotent.</td></tr><tr id="47a3664b-3381-4096-9814-e22bb4af4e42" dir="ltr"><td id="{A\Y" class=""><code>RESV-010</code></td><td id="qzWA" class="">P1 / API/frontend</td><td id="_Yi=" class="">Independent status display</td><td id="fZR_" class="">Room hold, roommate, each obligation, reservation, contracts and key handover never collapse into one misleading status.</td></tr></tbody></table><h3 id="db8875fa-58fc-45ba-86e1-7c41f775984e" class="" dir="auto">Annual renewal and resident replacement</h3><table id="29d56ae6-2b95-4ec8-a2a0-bda0097a4704" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="91128d5b-909b-49fe-8997-28644d21c089" dir="ltr"><th id="rhA?" class="simple-table-header-color simple-table-header">ID</th><th id="F@XA" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="wIJR" class="simple-table-header-color simple-table-header">Behavior</th><th id="CiAe" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="ca1e8019-8f78-4f36-9b74-47af9d9e3ed5" dir="ltr"><td id="rhA?" class=""><code>RENEW-001</code></td><td id="F@XA" class="">P1 / integration</td><td id="wIJR" class="">Open configurable renewal campaign</td><td id="CiAe" class="">Only eligible current residents and rooms enter the campaign during configured dates.</td></tr><tr id="b8cd04dd-1a86-4740-88e8-9d7499cc680f" dir="ltr"><td id="rhA?" class=""><code>RENEW-002</code></td><td id="F@XA" class="">P1 / API/frontend</td><td id="wIJR" class="">Prefill reusable data</td><td id="CiAe" class="">Previous profile/room data is copied for review; resident explicitly confirms or edits changed fields.</td></tr><tr id="a9d5ebe1-12b6-468a-b343-1c0bb13acd1b" dir="ltr"><td id="rhA?" class=""><code>RENEW-003</code></td><td id="F@XA" class="">P0 / integrity</td><td id="wIJR" class="">New annual snapshot</td><td id="CiAe" class="">Renewal creates new application/reservation/payment/contract cycle without mutating the prior year.</td></tr><tr id="5988fde2-f06d-4d79-83c6-da245c6b5423" dir="ltr"><td id="rhA?" class=""><code>RENEW-004</code></td><td id="F@XA" class="">P1 / service</td><td id="wIJR" class="">Both roommates renew</td><td id="CiAe" class="">Existing room/group can continue when policy allows and both confirm.</td></tr><tr id="4ac2e171-3ace-47d9-a284-46530512ec40" dir="ltr"><td id="rhA?" class=""><code>RENEW-005</code></td><td id="F@XA" class="">P1 / provisional</td><td id="wIJR" class="">Only one roommate renews</td><td id="CiAe" class="">Resident receives configured deadline and explicit replacement, whole-room, move or release choices.</td></tr><tr id="2b057435-afef-4f09-a819-faac9423e23c" dir="ltr"><td id="rhA?" class=""><code>RENEW-006</code></td><td id="F@XA" class="">P1 / service</td><td id="wIJR" class="">Replacement invitation</td><td id="CiAe" class="">New resident must be eligible/complete; old member remains in history and new member receives new obligations.</td></tr><tr id="1d73026e-1c07-4d3b-aeb4-640311a67e21" dir="ltr"><td id="rhA?" class=""><code>RENEW-007</code></td><td id="F@XA" class="">P0 / integrity</td><td id="wIJR" class="">Replacement after payment/export</td><td id="CiAe" class="">Old obligations/documents/contracts are superseded; no direct owner reassignment occurs.</td></tr><tr id="8e86d063-5588-4bb8-82ea-cc58f7d7eb0d" dir="ltr"><td id="rhA?" class=""><code>RENEW-008</code></td><td id="F@XA" class="">P1 / service</td><td id="wIJR" class="">Shared to whole-room during renewal</td><td id="CiAe" class="">Second slot blocks, pricing recalculates and new obligation snapshot is generated.</td></tr><tr id="ba72ad1d-73e8-40eb-9a15-990b59735f75" dir="ltr"><td id="rhA?" class=""><code>RENEW-009</code></td><td id="F@XA" class="">P1 / service</td><td id="wIJR" class="">Move to another exact room</td><td id="CiAe" class="">New room is atomically acquired; old room releases only after successful transition.</td></tr><tr id="f7b72fb4-2aed-4594-8b7c-1dafb290d628" dir="ltr"><td id="rhA?" class=""><code>RENEW-010</code></td><td id="F@XA" class="">P0 / handoff</td><td id="wIJR" class="">Change after university submission</td><td id="CiAe" class="">Creates correction queue/export and preserves original submitted record.</td></tr></tbody></table><h3 id="8e2cc7fd-b757-4065-a31d-5a2a22a0f748" class="" dir="auto">Printed contracts and signed scans</h3><table id="1e98586e-8326-40ca-819c-283f0decb923" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="5799c571-152d-4a31-809a-d6c2c2c4523c" dir="ltr"><th id="r|Ye" class="simple-table-header-color simple-table-header">ID</th><th id="_X@t" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="AduF" class="simple-table-header-color simple-table-header">Behavior</th><th id="BC]J" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="1e546fe7-8bd9-4776-921d-6e90070f811f" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-001</code></td><td id="_X@t" class="">P0 / service</td><td id="AduF" class="">Shared-room contract generation</td><td id="BC]J" class="">Creates two resident contracts under one reservation group with same room/period/group reference.</td></tr><tr id="05e04da4-8ef7-4620-93f3-026092e5d7ed" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-002</code></td><td id="_X@t" class="">P0 / service</td><td id="AduF" class="">Whole-room contract generation</td><td id="BC]J" class="">Creates one contract using whole-room occupancy and price snapshot.</td></tr><tr id="30297312-3b5a-40f7-a5ba-b053a983feb3" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-003</code></td><td id="_X@t" class="">P0 / precondition</td><td id="AduF" class="">Contract availability</td><td id="BC]J" class="">Contract cannot be generated before reservation/payment completion rule is satisfied.</td></tr><tr id="d043ad12-1ebc-4a30-955c-4e262833d3a6" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-004</code></td><td id="_X@t" class="">P0 / integrity</td><td id="AduF" class="">Immutable generated snapshot</td><td id="BC]J" class="">Template version, applicant, room, occupancy, amount and period remain unchanged after later profile/config edits.</td></tr><tr id="c9f6c334-7e27-46b4-b100-74b91397b0a1" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-005</code></td><td id="_X@t" class="">P1 / authorization</td><td id="AduF" class="">Applicant/staff printing</td><td id="BC]J" class="">Permitted actor can download/print; every print event and artifact version is recorded as required.</td></tr><tr id="7936388e-0ad8-4353-bf6e-b27b031c0108" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-006</code></td><td id="_X@t" class="">P0 / audit</td><td id="AduF" class="">Reprint</td><td id="BC]J" class="">Reason is mandatory; prior print artifact/event remains in history.</td></tr><tr id="5105d89d-154c-4122-acd3-3d16bdd45695" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-007</code></td><td id="_X@t" class="">P0 / service</td><td id="AduF" class="">Roommates sign separately</td><td id="BC]J" class="">First contract can be received while group remains incomplete until second is received.</td></tr><tr id="ac74fce3-4ed0-4da6-97f1-5cafa238febf" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-008</code></td><td id="_X@t" class="">P0 / storage</td><td id="AduF" class="">Signed scan/photo</td><td id="BC]J" class="">File is private, content type/size validated, checksum stored and access scoped to resident/authorized staff.</td></tr><tr id="03f33d58-e665-4e27-a271-97c193076c3f" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-009</code></td><td id="_X@t" class="">P0 / integrity</td><td id="AduF" class="">Correction/replacement</td><td id="BC]J" class="">Corrected contract supersedes prior version; no silent overwrite.</td></tr><tr id="b294fb46-1077-42da-93be-2583202c0ad7" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-010</code></td><td id="_X@t" class="">P1 / cancellation</td><td id="AduF" class="">Contract cancelled after reservation change</td><td id="BC]J" class="">Contract status changes with reason; reservation/payment history remains independently accurate.</td></tr><tr id="d8ca9e46-e315-4e27-a970-ce62aaaec628" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-011</code></td><td id="_X@t" class="">P1 / document contract</td><td id="AduF" class="">Thai text and print layout</td><td id="BC]J" class="">Approved template renders Thai content, line breaks, page count and required photos/fields correctly.</td></tr><tr id="1a995fe9-3ae2-4378-aedf-748e5dd9311c" dir="ltr"><td id="r|Ye" class=""><code>CONTRACT-012</code></td><td id="_X@t" class="">P0 / security</td><td id="AduF" class="">Cross-resident contract access</td><td id="BC]J" class="">Resident cannot retrieve roommate or another room’s contract/scan without explicit authorization.</td></tr></tbody></table><h3 id="c3c7d152-4b68-4359-b9f3-9f37347f1afe" class="" dir="auto">Key handover</h3><table id="df6b8dd5-474c-466b-b478-f539d61ac49d" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="81085577-e607-432d-898a-2beb7343e8df" dir="ltr"><th id="~N&gt;P" class="simple-table-header-color simple-table-header">ID</th><th id="WCe;" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="SATK" class="simple-table-header-color simple-table-header">Behavior</th><th id="_DEV" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="8b43a776-0f54-4fc2-9a4f-092e2f6ffca2" dir="ltr"><td id="~N&gt;P" class=""><code>KEY-001</code></td><td id="WCe;" class="">P0 / precondition</td><td id="SATK" class="">Handover readiness</td><td id="_DEV" class="">Only confirmed reservation with required signed contract(s) and configured documents becomes ready.</td></tr><tr id="b1f9251d-f112-48e0-8a1a-caa3cc8a9576" dir="ltr"><td id="~N&gt;P" class=""><code>KEY-002</code></td><td id="WCe;" class="">P0 / authorization</td><td id="SATK" class="">Record handover</td><td id="_DEV" class="">Authorized staff records resident, room, key details, date and signed handover evidence.</td></tr><tr id="e221fe9b-83cf-4f39-951d-a820c95e7e70" dir="ltr"><td id="~N&gt;P" class=""><code>KEY-003</code></td><td id="WCe;" class="">P0 / idempotency</td><td id="SATK" class="">Repeated handover request</td><td id="_DEV" class="">No duplicate active handover is created for same resident/assignment/key cycle.</td></tr><tr id="50794d12-40b6-4594-8583-5c73dd1e11ed" dir="ltr"><td id="~N&gt;P" class=""><code>KEY-004</code></td><td id="WCe;" class="">P1 / audit</td><td id="SATK" class="">Correction/cancellation</td><td id="_DEV" class="">Requires reason and preserves original record and file.</td></tr><tr id="03ca9944-a490-4385-8cad-9ed2afdf5750" dir="ltr"><td id="~N&gt;P" class=""><code>KEY-005</code></td><td id="WCe;" class="">P0 / security</td><td id="SATK" class="">Private handover document</td><td id="_DEV" class="">Only resident and scoped staff can access the signed record.</td></tr></tbody></table><h3 id="e04dcad6-2f6f-45da-a61a-2ea6f7599d59" class="" dir="auto">University handoff and correction exports</h3><table id="56d9f5ad-d239-4299-b819-b1c92a1e687e" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="9cc1d06e-ff1c-4905-81a8-063368cb577d" dir="ltr"><th id="DWCl" class="simple-table-header-color simple-table-header">ID</th><th id="eyj^" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="^~HZ" class="simple-table-header-color simple-table-header">Behavior</th><th id="VS&gt;O" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="301c0b1a-5279-46cd-a30b-6e038a2d6f78" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-001</code></td><td id="eyj^" class="">P1 / service</td><td id="^~HZ" class="">Queue confirmed residents</td><td id="VS&gt;O" class="">Only eligible confirmed records enter waiting queue; payment/contract prerequisites follow configured policy.</td></tr><tr id="10ec511f-c0d6-482e-84f6-8833876c8519" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-002</code></td><td id="eyj^" class="">P0 / document contract</td><td id="^~HZ" class="">Create original export batch</td><td id="VS&gt;O" class="">Uses approved columns/identifiers, stores row snapshot/checksum and marks submission state.</td></tr><tr id="bd54d335-6980-489e-93d1-e5b9e963b1bc" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-003</code></td><td id="eyj^" class="">P0 / idempotency</td><td id="^~HZ" class="">Repeat original export</td><td id="VS&gt;O" class="">Does not create a second official original submission for same cycle unless explicitly versioned.</td></tr><tr id="c7f754a5-fc06-42a7-94ad-4ffba59b0609" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-004</code></td><td id="eyj^" class="">P0 / correction</td><td id="^~HZ" class="">Room/roommate/amount change after submission</td><td id="VS&gt;O" class="">Creates separate correction row/batch referring to original; original is immutable.</td></tr><tr id="6950ad16-1ec6-4c08-acfc-14a55907fd77" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-005</code></td><td id="eyj^" class="">P1 / validation</td><td id="^~HZ" class="">Blocked/incomplete row</td><td id="VS&gt;O" class="">Invalid data is excluded with field-level reason and remains in actionable queue.</td></tr><tr id="96ef802e-c7dc-427d-9b95-0bb1f1ba501a" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-006</code></td><td id="eyj^" class="">P0 / authorization</td><td id="^~HZ" class="">Export and correction permissions</td><td id="VS&gt;O" class="">Only assigned scoped roles can create/download/mark submitted batches.</td></tr><tr id="d8cc1482-e738-4cdd-a340-143bda83a885" dir="ltr"><td id="DWCl" class=""><code>HANDOFF-007</code></td><td id="eyj^" class="">P1 / reconciliation</td><td id="^~HZ" class="">Original/correction report</td><td id="VS&gt;O" class="">Staff can trace current state to every submitted and corrected row.</td></tr></tbody></table><h3 id="a145a27e-c6af-4c44-ab63-760fef232751" class="" dir="auto">Security, privacy and authorization</h3><table id="1be8585d-8e2c-4775-9291-dc2168ce2af7" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="824674d1-ebf9-42e6-ba58-147f4dd77444" dir="ltr"><th id="N&lt;JJ" class="simple-table-header-color simple-table-header">ID</th><th id="vwew" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="T=Ww" class="simple-table-header-color simple-table-header">Behavior</th><th id="ZxCJ" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="b1caeccf-62f2-42e8-90f2-bf1888a7360e" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-001</code></td><td id="vwew" class="">P0 / API</td><td id="T=Ww" class="">Object-level authorization</td><td id="ZxCJ" class="">Changing path/body IDs cannot access another applicant, room scope, payment page, contract or handover file.</td></tr><tr id="b0b9c097-5351-408a-9752-d40bbc754c4d" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-002</code></td><td id="vwew" class="">P0 / storage</td><td id="T=Ww" class="">No public raw object URLs</td><td id="ZxCJ" class="">SeaweedFS/S3 endpoints are private; all reads pass backend authorization or approved limited mechanism.</td></tr><tr id="3d44d3c1-644e-4b00-b3eb-3553d67ec199" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-003</code></td><td id="vwew" class="">P0 / upload</td><td id="T=Ww" class="">File validation</td><td id="ZxCJ" class="">Unsupported MIME, oversized files, polyglots, path traversal and unsafe filenames are rejected safely.</td></tr><tr id="b725c7f0-1810-4222-8c09-91dcf685c5a5" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-004</code></td><td id="vwew" class="">P0 / RBAC</td><td id="T=Ww" class="">Permission matrix</td><td id="ZxCJ" class="">Every sensitive endpoint has allow/deny tests for applicant, dorm staff, finance, contract staff, admin and unauthorized user.</td></tr><tr id="ea857c28-2ca9-4330-a35a-0fb3933996e7" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-005</code></td><td id="vwew" class="">P0 / scope</td><td id="T=Ww" class="">Dorm/campaign scope</td><td id="ZxCJ" class="">Staff permission without matching scope cannot view or mutate target data.</td></tr><tr id="9060b276-4a69-43fa-9d62-525fccc9d96a" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-006</code></td><td id="vwew" class="">P1 / privacy</td><td id="T=Ww" class="">Logs and errors</td><td id="ZxCJ" class="">No password, token, full bank data, signed-file content or unnecessary personal data appears in logs/errors.</td></tr><tr id="afb420e0-81d8-4fd1-a606-452012145f89" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-007</code></td><td id="vwew" class="">P1 / web</td><td id="T=Ww" class="">CSRF/session/cookie controls</td><td id="ZxCJ" class="">State-changing authenticated requests and cookies follow selected secure session model.</td></tr><tr id="5fa5535e-7620-4473-a0a5-9fb3dfd81b3a" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-008</code></td><td id="vwew" class="">P1 / rate limit</td><td id="T=Ww" class="">Abuse-sensitive actions</td><td id="ZxCJ" class="">Login, reset, invitation and high-impact endpoints enforce configured limits without blocking normal tests.</td></tr><tr id="f64ee665-d738-4b29-8673-425bc90d533e" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-009</code></td><td id="vwew" class="">P0 / audit</td><td id="T=Ww" class="">Sensitive action coverage</td><td id="ZxCJ" class="">Manual reservation/payment, override, rematch, confirmation, cancellation, replacement, reprint and correction produce complete audit entries.</td></tr><tr id="8f699ef8-0436-41a6-a356-f443238dc4d6" dir="ltr"><td id="N&lt;JJ" class=""><code>SEC-010</code></td><td id="vwew" class="">P1 / retention</td><td id="T=Ww" class="">Retention-ready metadata</td><td id="ZxCJ" class="">Files/records carry category, owner/scope and retention status without executing unapproved deletion policy.</td></tr></tbody></table><h3 id="5e165d28-b7c3-4d2f-8473-7891b57f9a91" class="" dir="auto">Operations, migrations and recovery</h3><table id="bba31b6c-757c-4f29-a099-3636c09651f3" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="4676eb9a-4978-41c1-9f99-bb500db39b40" dir="ltr"><th id="ZdUn" class="simple-table-header-color simple-table-header">ID</th><th id="f=b[" class="simple-table-header-color simple-table-header">Priority / layer</th><th id="hJLw" class="simple-table-header-color simple-table-header">Behavior</th><th id="LBH|" class="simple-table-header-color simple-table-header">Pass condition</th></tr></thead><tbody><tr id="4c98f996-671d-4d86-8464-ebc19aafc638" dir="ltr"><td id="ZdUn" class=""><code>OPS-001</code></td><td id="f=b[" class="">P0 / migration</td><td id="hJLw" class="">Fresh database migration</td><td id="LBH|" class="">All migrations apply from empty database and expected constraints/indexes exist.</td></tr><tr id="0fc4ec45-b645-42cc-8e40-d3c08350e1f9" dir="ltr"><td id="ZdUn" class=""><code>OPS-002</code></td><td id="f=b[" class="">P0 / migration</td><td id="hJLw" class="">Upgrade previous schema</td><td id="LBH|" class="">Upgrade preserves fixture data and produces valid current model.</td></tr><tr id="18745225-2b86-49ec-a157-c705a98c5577" dir="ltr"><td id="ZdUn" class=""><code>OPS-003</code></td><td id="f=b[" class="">P1 / migration</td><td id="hJLw" class="">Rollback where practical</td><td id="LBH|" class="">Migration-down or documented irreversible migration behavior is tested.</td></tr><tr id="23b55efe-e623-458b-a9df-34e41a0d83d7" dir="ltr"><td id="ZdUn" class=""><code>OPS-004</code></td><td id="f=b[" class="">P0 / backup</td><td id="hJLw" class="">Coordinated database/file backup</td><td id="LBH|" class="">Backup records database and required SeaweedFS content/version metadata.</td></tr><tr id="d6ac5a57-435b-4718-8148-70e77d5715db" dir="ltr"><td id="ZdUn" class=""><code>OPS-005</code></td><td id="f=b[" class="">P0 / restore</td><td id="hJLw" class="">Restore rehearsal</td><td id="LBH|" class="">Restored environment preserves room holds/assignments, file checksums, page mappings, contracts and audit links.</td></tr><tr id="41516213-d695-45ea-abaa-e8b03738768a" dir="ltr"><td id="ZdUn" class=""><code>OPS-006</code></td><td id="f=b[" class="">P1 / deployment</td><td id="hJLw" class="">Clean Docker startup</td><td id="LBH|" class="">Health/readiness checks pass and only Nginx is publicly exposed.</td></tr><tr id="2e6f9c28-0af4-4b1c-b6ee-8780782fec54" dir="ltr"><td id="ZdUn" class=""><code>OPS-007</code></td><td id="f=b[" class="">P1 / configuration</td><td id="hJLw" class="">Missing/invalid environment</td><td id="LBH|" class="">Application fails fast with safe actionable error.</td></tr><tr id="892bd3e2-8e54-4fc3-b368-7570786fd6cc" dir="ltr"><td id="ZdUn" class=""><code>OPS-008</code></td><td id="f=b[" class="">P1 / jobs</td><td id="hJLw" class="">Background-job restart/idempotency</td><td id="LBH|" class="">Invitation/hold expiry and import jobs recover from database state without duplicate effects.</td></tr><tr id="3d8c1e5d-f5fe-4234-a805-13443a6c8d11" dir="ltr"><td id="ZdUn" class=""><code>OPS-009</code></td><td id="f=b[" class="">P1 / observability</td><td id="hJLw" class="">Request/import correlation</td><td id="LBH|" class="">Request ID, batch ID, file checksum and job ID allow diagnosis without leaking sensitive content.</td></tr><tr id="0db8e7f1-11f2-411d-88b2-3979aea037c4" dir="ltr"><td id="ZdUn" class=""><code>OPS-010</code></td><td id="f=b[" class="">P1 / release</td><td id="hJLw" class="">Version and migration compatibility</td><td id="LBH|" class="">Release package declares app/schema/fixture versions and rejects incompatible startup.</td></tr></tbody></table><h2 id="02a02b07-80e6-4bbc-ab00-c287561a9603" class="" dir="auto">Required end-to-end journeys</h2><p id="e3c9bc67-2a9a-45fa-a6a4-445ca6c64dfc" class="" dir="auto">Use Playwright against the full Docker test stack with seeded fictional data. Each journey verifies visible UX, API/domain state, database state, file relationships and audit events.</p><h3 id="c3ef76ae-7c6f-4f34-9a1d-b16fb0f880c2" class="" dir="auto"><code>E2E-001</code> — Shared normal room happy path</h3><pre id="80940f4d-2eb6-4316-86ed-168032f9ae97" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Applicant A and B complete profiles
+→ A invites B
+→ B accepts
+→ A selects exact normal room
+→ B confirms within 15 minutes
+→ separate ROOM obligations created
+→ finance exports SLIPS
+→ returned PDF imported and matched
+→ both residents pay through result-report fixture
+→ staff confirms reservation
+→ two contracts generated
+→ both signed scans received
+→ separate key handover recorded</code></pre><p id="6a103e6a-5c33-4462-a4be-3de8b8bcb4e3" class="" dir="auto">Pass conditions:</p><ul id="d7f22af0-b03c-469e-9b11-bc478b696c62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one room assignment and two resident members;</li></ul><ul id="89b891cc-4ed4-4d81-97bf-44a62590ee80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">no HL obligation;</li></ul><ul id="bab3826f-3ae8-455b-a6b6-1ad5da568c47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one shared deadline;</li></ul><ul id="38068a32-fc2a-49e9-8b95-279ff339e21e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">correct private payment pages;</li></ul><ul id="c00a136a-3175-43f8-8048-2cb831451de4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact room remains confirmed throughout contract/handover completion.</li></ul><h3 id="aac43f65-abfb-4454-a8e9-24584f4cbc12" class="" dir="auto"><code>E2E-002</code> — Shared HL room</h3><p id="138319b8-916c-42c7-bd58-2be76d9874c8" class="" dir="auto">Same journey as <code>E2E-001</code>, but each resident has <code>ROOM</code> and <code>HL</code>. Reservation cannot confirm when only ROOM is paid.</p><h3 id="a6d068be-a96c-4ffc-a7c4-2f5bf4f854bc" class="" dir="auto"><code>E2E-003</code> — Whole-room rental</h3><p id="7919cec5-e2f1-45e2-a840-5f3ddd0cf96d" class="" dir="auto">One applicant selects whole-room occupancy, receives full-room obligation(s), permanently blocks second slot, completes one contract and one handover.</p><h3 id="33aa4822-4512-4a23-940f-f4238df9a746" class="" dir="auto"><code>E2E-004</code> — Roommate confirmation timeout</h3><p id="829ef384-7177-4105-ae49-bfe81a9b32b0" class="" dir="auto">Leader reserves room, roommate does not confirm, deterministic clock advances 15 minutes, room releases and another group can reserve it.</p><h3 id="f1d596b2-d537-4ea4-be40-28b1bf427a0f" class="" dir="auto"><code>E2E-005</code> — Payment-hold timeout with one paid roommate</h3><p id="3a634c56-780b-4cb5-b23f-493685169a08" class="" dir="auto">One resident pays, second remains unpaid, deterministic clock advances to 72-hour expiry, group follows provisional release/manual-refund path without losing paid transaction history.</p><h3 id="97153d33-c427-4454-bdba-604577748100" class="" dir="auto"><code>E2E-006</code> — Manual staff reservation and payment</h3><p id="f9409ac7-5b99-4875-9aee-7d62685577bf" class="" dir="auto">Authorized staff creates exact-room reservation and records manual payment with reference/note. No resident confirmation is required; permission and audit checks are verified.</p><h3 id="2b0de77e-6697-4bd3-be72-db07b87b3d7d" class="" dir="auto"><code>E2E-007</code> — SCB PDF ambiguity and manual rematch</h3><p id="5daee32e-4d50-44a3-8a3c-9e124fb8e007" class="" dir="auto">Returned PDF contains repeated references and one ambiguous page. System refuses unsafe auto-match; finance reviewer rematches with reason; resident receives correct page.</p><h3 id="f196816d-1a7a-4b13-a56c-272403e276f2" class="" dir="auto"><code>E2E-008</code> — Payment exception</h3><p id="ab02452e-b52a-4fce-bb24-5b070aaf7ca7" class="" dir="auto">Result report contains underpayment or post-expiry payment. Room is not confirmed automatically; finance resolves or records next action with audit history.</p><h3 id="1766d35d-962d-4be2-811c-65de2932cafb" class="" dir="auto"><code>E2E-009</code> — Annual renewal with one roommate replaced</h3><p id="daaa2c5a-7fd6-4a68-b5b9-6d708b0a9248" class="" dir="auto">Previous data is prefilled, one resident renews, replacement joins, old obligations/contracts are superseded, new annual records are created, and room history stays intact.</p><h3 id="28732136-8e81-44a7-83ab-9df95525ce4d" class="" dir="auto"><code>E2E-010</code> — Shared to whole-room conversion after payment</h3><p id="ee73ae9c-76d6-455b-b68e-4156bde484da" class="" dir="auto">One roommate has paid. Conversion creates new full-room obligations, preserves old paid/superseded records and requires correct financial review before final confirmation.</p><h3 id="b4aa369e-3b1b-424c-b925-c462bca908b9" class="" dir="auto"><code>E2E-011</code> — University correction after handoff</h3><p id="ba35448b-cfe5-4921-88c3-f0f9339eb2cf" class="" dir="auto">Original confirmed resident export is marked submitted; roommate/amount changes later create a correction batch linked to original without overwrite.</p><h3 id="15807ac2-5c61-415f-8835-8c36e77aa202" class="" dir="auto"><code>E2E-012</code> — Cross-scope security journey</h3><p id="01c8657c-2494-45a6-ac7d-1efe30d3b9b9" class="" dir="auto">A staff user from the wrong dorm scope attempts room, payment PDF, result, contract and handover actions. Every action is denied and no sensitive data is returned.</p><h2 id="9c807686-0b37-4bd5-a682-e645ddc31c58" class="" dir="auto">Concurrency test harness</h2><p id="2eda3946-6ce3-4036-bf51-dbb61a5a8044" class="" dir="auto">Critical concurrency tests must use real PostgreSQL and synchronization barriers, not timing sleeps.</p><p id="f9440a32-30b9-4b1b-8746-2fb831ffa478" class="" dir="auto">Required harness pattern:</p><pre id="91439030-9bc8-43ad-9764-bc9f7593cff5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Seed exact known state.
+2. Open independent database connections/transactions.
+3. Block workers at a barrier immediately before critical statement.
+4. Release all workers together.
+5. Collect results.
+6. Assert exact winner count, final rows, events and idempotency records.
+7. Repeat enough times to detect race regressions without relying on randomness.</code></pre><p id="7e7f07b2-2cf1-446d-a7f6-1241166274f4" class="" dir="auto">Required concurrency cases:</p><ul id="2619fbb7-f702-4c39-bba1-0017d4ca0e82" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>HOLD-001</code> — two groups acquire one room.</li></ul><ul id="318ce4f2-71d3-4343-942d-227d60bf233f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>HOLD-008</code> — expiry versus final confirmation.</li></ul><ul id="3e670fca-81ed-4b33-9750-b37124cdb128" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ROOM-002</code> — duplicate room import.</li></ul><ul id="e4ef7e36-3538-4813-aaf4-dae30e565eb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>GROUP-002</code> — two invitations/groups for one resident.</li></ul><ul id="f8c2eec4-c8c6-4a02-b16c-4f760e639b93" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>RESULT-004</code> — one transaction applied to two obligations.</li></ul><ul id="44da465c-7d5b-4d04-9d96-f36ea92c412c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>RESULT-013</code> — result import versus manual payment.</li></ul><ul id="e6c485d3-e55d-4bbf-ad9b-e2b7edb16edf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>RESV-005</code> — repeated final confirmation.</li></ul><ul id="b8f14e09-517c-45e4-8fea-553c6b18362f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">renewal move from old room to new room while another applicant reserves the target.</li></ul><ul id="f2d2efa8-a3a1-4869-893a-3ee2cf1e0e3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">correction export created twice for one change event.</li></ul><h2 id="858071ec-7893-4d60-a961-b7d79af4eb13" class="" dir="auto">Frontend state matrix</h2><p id="7f23a66a-af49-48c4-a11b-0c3e11d92918" class="" dir="auto">Every critical applicant/staff screen must have component tests for:</p><ul id="b9d57fcb-38d7-40ea-b685-c4e1a16fc8ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">initial loading;</li></ul><ul id="14c13d23-ef3b-42a6-aaf8-aae1ba2f9f62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">empty state;</li></ul><ul id="595dfcbe-42b6-41e6-ad86-a48431072bfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">loaded state;</li></ul><ul id="ae5f124b-6901-4908-a953-70249b39930a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">validation error;</li></ul><ul id="4629b55e-adb1-4944-b0cd-2196d1684262" class="bulleted-list" dir="auto"><li style="list-style-type:disc">server conflict;</li></ul><ul id="bab09cb0-bb5e-4421-82ba-983a007b51d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">expired state;</li></ul><ul id="468a70d1-0945-4fc7-983e-4ee6ce51d295" class="bulleted-list" dir="auto"><li style="list-style-type:disc">permission denied;</li></ul><ul id="42fe29d8-f058-4e3f-91a6-22fc1b616682" class="bulleted-list" dir="auto"><li style="list-style-type:disc">retryable failure;</li></ul><ul id="70ad503d-462c-4d50-b670-0f1e21e44145" class="bulleted-list" dir="auto"><li style="list-style-type:disc">non-retryable failure;</li></ul><ul id="3f0f8749-9bc3-4e34-9aee-5115195bb98a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">stale countdown refreshed from server;</li></ul><ul id="a7a7e96c-7c35-4d64-98a2-08bda9318cb9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">mobile and desktop layout where behavior differs.</li></ul><p id="a02be573-8fbf-41a9-865d-aba702f15397" class="" dir="auto">Critical frontend test IDs:</p><pre id="1955fc7d-2108-4814-8d14-a1dd45692ca4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">UI-ROOM-001      room list/status/filter
+UI-GROUP-001     invitation states
+UI-HOLD-001      15-minute confirmation countdown
+UI-HOLD-002      72-hour payment deadline
+UI-PAY-001       separate ROOM/HL obligations
+UI-PDF-001       official payment-form page access
+UI-RESULT-001    paid/exception/missing-action states
+UI-CONTRACT-001  grouped contract completion
+UI-RENEW-001     replacement/whole-room/move/release choices
+UI-STAFF-001     permission-aware actions and queues</code></pre><p id="35b97507-3b92-4305-b54a-a6b5ec2b9ffe" class="" dir="auto">Add <code>UI-</code> entries to the manifest even though the domain IDs remain canonical for backend behavior.</p><h2 id="466edb17-dfe4-445a-b5c0-d937137d64a8" class="" dir="auto">Accessibility test baseline</h2><ul id="4d8e99bb-abf2-42ed-a2f9-39f7bb06850c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every form control has an accessible label and error association.</li></ul><ul id="5e8570be-b4ad-4a6c-8569-c9cd7d4200b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Room status never depends only on color.</li></ul><ul id="4ed5210a-9320-4c32-b75b-c0f401ea56ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Countdown changes are announced without excessive screen-reader noise.</li></ul><ul id="fcd92c25-6045-4616-b168-9b6db4d465fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Keyboard users can select/filter rooms, accept invitations and complete staff review dialogs.</li></ul><ul id="3b531799-c13b-4156-8494-39bd68bf468f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Modal focus is trapped/restored.</li></ul><ul id="87084977-22ae-4f51-b310-dc1f4e224626" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Payment and reservation statuses use explicit text.</li></ul><ul id="83c15881-4cb5-44e0-b2cf-38d604a29337" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Thai and English text layouts do not truncate critical amounts, deadlines or references.</li></ul><ul id="239b7b8d-1bf6-4727-8c08-518aa169acc3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Automated checks are supplemented by manual keyboard and screen-reader smoke tests before UAT.</li></ul><h2 id="4f69c658-6b6c-44bc-83b4-fb9216ee670a" class="" dir="auto">Development performance baselines</h2><p id="5123f64d-8168-42e0-8841-23293b0c50f7" class="" dir="auto">These are engineering targets, not official stakeholder policy. Measure with production-like fixture volume and revise after staging evidence.</p><table id="cc197683-c240-447a-ac78-f91583d226ca" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="4374b2b4-b51a-4ff2-990f-fc39ac108d23" dir="ltr"><th id="hUW:" class="simple-table-header-color simple-table-header">ID</th><th id="JW:p" class="simple-table-header-color simple-table-header">Scenario</th><th id="z?Ta" class="simple-table-header-color simple-table-header">Initial baseline</th></tr></thead><tbody><tr id="d42e4e18-ed6b-439f-9c56-702a2889a178" dir="ltr"><td id="hUW:" class=""><code>PERF-001</code></td><td id="JW:p" class="">Browse/filter approximately 2,000 rooms</td><td id="z?Ta" class="">Paginated API p95 under 500 ms in staging baseline.</td></tr><tr id="339e0553-fbeb-4985-b3b3-c7541dc3e49e" dir="ltr"><td id="hUW:" class=""><code>PERF-002</code></td><td id="JW:p" class="">Atomic room-hold endpoint</td><td id="z?Ta" class="">p95 under 300 ms excluding network, while correctness remains primary.</td></tr><tr id="c1d6f438-62a8-43cc-b472-01ef9e18f7e2" dir="ltr"><td id="hUW:" class=""><code>PERF-003</code></td><td id="JW:p" class="">Generate 2,000-row SCB workbook</td><td id="z?Ta" class="">Background/worker task completes under 30 seconds and reports progress/failure.</td></tr><tr id="55836b0c-d63a-4ac0-86e6-0204db0136a0" dir="ltr"><td id="hUW:" class=""><code>PERF-004</code></td><td id="JW:p" class="">Index/match large returned PDF fixture</td><td id="z?Ta" class="">Asynchronous job; no request timeout; memory and duration recorded for chosen page volume.</td></tr><tr id="e438e943-01df-4ebe-9ac2-7e2a669e3292" dir="ltr"><td id="hUW:" class=""><code>PERF-005</code></td><td id="JW:p" class="">Import 2,000-row payment result</td><td id="z?Ta" class="">Idempotent background task completes under 60 seconds in staging baseline.</td></tr><tr id="88d77a11-3eb0-4ca2-8160-3dc46326c78a" dir="ltr"><td id="hUW:" class=""><code>PERF-006</code></td><td id="JW:p" class="">Dashboard summary</td><td id="z?Ta" class="">p95 under 1 second for pilot fixture volume.</td></tr></tbody></table><p id="18d3f30f-cd83-49b5-9987-facec56f6cbb" class="" dir="auto">If a baseline is missed, capture profile/query evidence before optimization. Never weaken transactional correctness to meet a timing target.</p><h2 id="e41e893d-9a0d-47c8-8e33-bd4ecb7698bb" class="" dir="auto">Coverage and quality gates</h2><p id="20bc0fbd-4701-4021-b0b7-bb088365ede6" class="" dir="auto">Line coverage is secondary to state/contract coverage, but use it as a regression signal.</p><p id="cac81757-4d1a-4c13-af82-3cbced2e2162" class="" dir="auto">Minimum gates:</p><ul id="362d3682-8a44-49d9-8069-8111a53b3f78" class="bulleted-list" dir="auto"><li style="list-style-type:disc">100% of documented P0 state transitions have at least one positive and one negative test.</li></ul><ul id="639a10b4-f2ba-4488-b3a8-b19e876b3536" class="bulleted-list" dir="auto"><li style="list-style-type:disc">100% of permissions in Page 04 have allow and deny tests.</li></ul><ul id="07058a2f-4078-451e-8534-1fb92cfd302b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">100% of SCB required columns have contract tests.</li></ul><ul id="9a37411e-8b9a-4ce1-8ffc-de69fa55f390" class="bulleted-list" dir="auto"><li style="list-style-type:disc">100% of payment exception categories in fixture page have tests.</li></ul><ul id="4073a34a-c2ae-416b-82a6-4cd04cedc9be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Critical domain/service packages target at least 90% statement coverage.</li></ul><ul id="dc36ffc8-cbbc-49f8-9bc0-e24a149c2848" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Overall backend target at least 80% statement coverage.</li></ul><ul id="6b9efd15-6701-4340-8c31-7e2491135cd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Frontend stores/composables/validators target at least 80%.</li></ul><ul id="e9f6d3d2-373b-4add-a806-c2bad3e986e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No flaky P0 test is accepted; fix determinism rather than adding retries.</li></ul><ul id="04f27d4d-3346-4fc7-8a35-efb6a7717da0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No skipped P0/P1 test without a blocker record.</li></ul><ul id="2ea9f8ca-b667-48b3-9237-59e7c2de5eb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every bug discovered after merge receives a regression test ID before the fix is accepted.</li></ul><h2 id="d7e4e38c-c04f-4fde-a0cf-875e31be3233" class="" dir="auto">Required local commands</h2><p id="6387a157-9da2-4d41-8695-9657d1218349" class="" dir="auto">Add these Make targets during Sprint 0–2:</p><pre id="3a165e1e-bf96-4ec9-935c-e0c3fdd78c1a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">make test-unit
+make test-integration
+make test-api-contract
+make test-documents
+make test-frontend
+make test-e2e
+make test-concurrency
+make test-security
+make test-performance
+make test-migrations
+make test-backup-restore
+make test-manifest
+make test-id TEST=HOLD-001
+make test-module MODULE=payment
+make test-p0
+make test-all</code></pre><p id="9e3409b1-ec35-4f50-bbde-927dae65b915" class="" dir="auto">Recommended command behavior:</p><ul id="84d0bf62-978d-4710-bcc2-867a94ae1b4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exits non-zero on failure;</li></ul><ul id="55c67117-839e-4606-9d41-f90710221a25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prints test IDs;</li></ul><ul id="120f56fc-8fd9-439b-a80f-30c22dd39599" class="bulleted-list" dir="auto"><li style="list-style-type:disc">writes machine-readable JUnit/JSON reports under <code>artifacts/test-results/</code>;</li></ul><ul id="3e85ce64-6f61-49bd-8a48-eff0cb06ec6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">never changes golden fixtures unless an explicit <code>UPDATE_GOLDEN=1</code> command is used;</li></ul><ul id="628cf02f-ad17-44fb-a1cf-fce9a51e02a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">records database/service logs for failed integration/E2E tests;</li></ul><ul id="533c9a7e-1f10-45f5-bf7f-64fc3477cfd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">cleans isolated test resources reliably.</li></ul><h2 id="5ba1f16b-1913-4501-bb81-377b5e5b6692" class="" dir="auto">Test environment isolation</h2><ul id="f4d662e8-c5a3-46d6-8b77-7b1aba66e4e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unit tests run without network/database.</li></ul><ul id="8dc9fa30-d92d-4e54-a283-930b1df60565" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Integration tests use a dedicated PostgreSQL database or isolated schema per suite.</li></ul><ul id="5fa36d43-e83a-45b0-98b2-440fe7c86117" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Parallel tests must not share mutable fixture rows unless concurrency is the behavior under test.</li></ul><ul id="4c5eccd8-954c-4064-9325-a72dff5e364b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">E2E runs use a uniquely named environment and seeded clock/config.</li></ul><ul id="afab86bc-88d1-48e7-b14f-f1bcf5461d0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Object storage keys include test-run ID.</li></ul><ul id="794e4daf-3a41-4735-a6ad-2cf2586ab83b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Background jobs are disabled or manually triggered unless the test specifically covers scheduling/recovery.</li></ul><ul id="595a7496-4e29-48ab-a2dd-19766dc4d265" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Test cleanup failure is a test failure, not ignored output.</li></ul><h2 id="94480e26-f1f5-4714-bdbf-0c0f0a8838fc" class="" dir="auto">Fixture and golden-file governance</h2><ol type="1" id="36d925b4-fc94-4efa-824f-4b9380cae94c" class="numbered-list" start="1" dir="auto"><li>Fixture files are versioned and fictional.</li></ol><ol type="1" id="4a3176d3-6f6f-4c68-8dde-2803a81705a0" class="numbered-list" start="2" dir="auto"><li>Every external sample has a README describing provenance and whether it is synthetic, anonymized or stakeholder-approved.</li></ol><ol type="1" id="e835c10f-fe27-4082-84c9-5893734a7e73" class="numbered-list" start="3" dir="auto"><li>Golden updates require a visible diff/summary and human review.</li></ol><ol type="1" id="6fcbc8ad-360a-4161-9b7f-5ebfc3c418db" class="numbered-list" start="4" dir="auto"><li>Store fixture checksums in the test manifest where compatibility is critical.</li></ol><ol type="1" id="b5e41873-2c1e-4cdc-a202-bc2c78271324" class="numbered-list" start="5" dir="auto"><li>Never overwrite the only previous golden when changing a contract; retain versioned fixture directories.</li></ol><ol type="1" id="e820a990-b268-4a65-a7ac-6dcabd1a0a7e" class="numbered-list" start="6" dir="auto"><li>SCB/university unknowns use clearly named provisional fixtures.</li></ol><ol type="1" id="e8ba12b5-8f22-48da-af81-d517f66177fa" class="numbered-list" start="7" dir="auto"><li>Real sample files must be sanitized before entering the repository.</li></ol><p id="83f6cbfd-f796-4ce1-8499-3b716f4638be" class="" dir="auto">Recommended versioning:</p><pre id="fa4bb16c-531b-4123-a841-6f80032c44c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fixtures/scb/v1/slips-template.xlsx
+fixtures/scb/v1/returned-payment-forms.pdf
+fixtures/scb/v1/payment-result.xlsx
+fixtures/university/v1/original-export.xlsx
+fixtures/university/v1/correction-export.xlsx
+fixtures/contracts/v1/shared-room-template.*</code></pre><h2 id="15650ea5-cc22-4ca5-9648-3b28c96c4a87" class="" dir="auto">Failure-report format for AI</h2><p id="bf82a0ac-75e9-4b88-b080-63ad51abeedc" class="" dir="auto">When a test fails, the AI completion report must include:</p><pre id="733b4467-e19e-4148-8de7-dd554d7e8149" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Test ID:
+Command:
+Expected:
+Actual:
+Relevant log/error:
+Likely layer: domain / DB / API / frontend / document / fixture / environment
+Files inspected:
+Change attempted:
+Remaining blocker:</code></pre><p id="097c0472-8d1f-486a-be22-b26dfdc53c9a" class="" dir="auto">The agent must not hide failure by loosening assertions, deleting fixtures, increasing timeouts without evidence or disabling concurrency.</p><h2 id="a88ff4b6-5b96-4360-919c-a7453daa46f1" class="" dir="auto">AI implementation sequence</h2><p id="6425b64f-95d1-4ad5-b352-02748ebc4ff4" class="" dir="auto">The coding agent should implement these packets in order. A later packet must not begin until the earlier packet’s exit gate passes.</p><table id="4df37ad2-8ac4-44cd-97f8-b07fd21e7661" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="fce0f12f-8978-4a9e-b60b-7af56ee6c305" dir="ltr"><th id=";Kjb" class="simple-table-header-color simple-table-header">Packet</th><th id="w`WK" class="simple-table-header-color simple-table-header">Primary test IDs</th><th id="hhyM" class="simple-table-header-color simple-table-header">Production slice</th><th id="]^gs" class="simple-table-header-color simple-table-header">Exit gate</th></tr></thead><tbody><tr id="1dd830af-1b66-4566-ad5b-b1bc6e021707" dir="ltr"><td id=";Kjb" class="">1 — Test harness</td><td id="w`WK" class=""><code>OPS-001</code>, manifest validation</td><td id="hhyM" class="">Test commands, PostgreSQL test environment, fake clock/ID, reports</td><td id="]^gs" class=""><code>make test-manifest</code>, unit and DB smoke tests pass.</td></tr><tr id="646ac2fa-ca14-4a31-9798-51169008bf8a" dir="ltr"><td id=";Kjb" class="">2 — Authentication/profile</td><td id="w`WK" class=""><code>AUTH-001</code>–<code>AUTH-008</code></td><td id="hhyM" class="">Verified local account, profile completeness, RBAC/scope base</td><td id="]^gs" class="">Applicant/staff test identities work with allow/deny coverage.</td></tr><tr id="9a0a6acd-202a-4d64-81f8-3449d4869044" dir="ltr"><td id=";Kjb" class="">3 — Exact-room master</td><td id="w`WK" class=""><code>ROOM-001</code>–<code>ROOM-012</code></td><td id="hhyM" class="">Room migrations, import, configuration versions, public projection</td><td id="]^gs" class="">Both pilot dorm fixture inventories import idempotently.</td></tr><tr id="bd5cd926-2c1b-4ac5-b786-a0c0de780f09" dir="ltr"><td id=";Kjb" class="">4 — Roommate groups</td><td id="w`WK" class=""><code>GROUP-001</code>–<code>GROUP-012</code></td><td id="hhyM" class="">Invitation, acceptance, leader and group constraints</td><td id="]^gs" class="">48-hour deterministic flow and one-active-group DB constraint pass.</td></tr><tr id="d724d580-ca04-4404-9d81-f4843b2efdf8" dir="ltr"><td id=";Kjb" class="">5 — Atomic holds</td><td id="w`WK" class=""><code>HOLD-001</code>–<code>HOLD-012</code></td><td id="hhyM" class="">Reserve/confirm/release, 15-minute and 72-hour jobs, whole-room slot</td><td id="]^gs" class="">Concurrency and restart/recovery tests pass repeatedly.</td></tr><tr id="e76d8f34-0969-49c4-8cde-8ab6e661503d" dir="ltr"><td id=";Kjb" class="">6 — Pricing/obligations</td><td id="w`WK" class=""><code>PRICE-001</code>–<code>PRICE-012</code></td><td id="hhyM" class="">Versioned rules, ROOM/HL, overrides, supersession</td><td id="]^gs" class="">Shared, HL and whole-room golden calculations pass.</td></tr><tr id="825008fe-a21c-470c-9d92-a812fa9af293" dir="ltr"><td id=";Kjb" class="">7 — SCB XLSX</td><td id="w`WK" class=""><code>XLSX-001</code>–<code>XLSX-014</code></td><td id="hhyM" class="">Preview, validation, finalization and download</td><td id="]^gs" class="">Approved structural golden workbook passes.</td></tr><tr id="f1ebffb7-4309-4e5b-9270-04adcdc986b8" dir="ltr"><td id=";Kjb" class="">8 — Returned PDF</td><td id="w`WK" class=""><code>PDF-001</code>–<code>PDF-014</code></td><td id="hhyM" class="">Private import, extraction, matching, review, replacement</td><td id="]^gs" class="">Reordered roommate fixture matches without page-order dependence.</td></tr><tr id="30d17358-a967-4e90-ba86-98db3c093561" dir="ltr"><td id=";Kjb" class="">9 — Payment results</td><td id="w`WK" class=""><code>RESULT-001</code>–<code>RESULT-016</code></td><td id="hhyM" class="">Parser, reconciliation, manual payment, exceptions</td><td id="]^gs" class="">All result fixture categories import idempotently.</td></tr><tr id="6ff9e0c2-a804-4312-8b43-af4ac35602aa" dir="ltr"><td id=";Kjb" class="">10 — Final reservation</td><td id="w`WK" class=""><code>RESV-001</code>–<code>RESV-010</code></td><td id="hhyM" class="">Group completion and permanent exact-room assignment</td><td id="]^gs" class="">Confirm/release race and repeat confirmation pass.</td></tr><tr id="c6fbc8ad-8731-436c-8e88-572311f5d14e" dir="ltr"><td id=";Kjb" class="">11 — Renewal</td><td id="w`WK" class=""><code>RENEW-001</code>–<code>RENEW-010</code></td><td id="hhyM" class="">Annual snapshot, replacement, whole-room/move/release</td><td id="]^gs" class="">Prior-year records remain immutable.</td></tr><tr id="558e237d-5077-4f1b-965a-82f3bb788394" dir="ltr"><td id=";Kjb" class="">12 — Contracts/handover</td><td id="w`WK" class=""><code>CONTRACT-*</code>, <code>KEY-*</code></td><td id="hhyM" class="">Generated snapshots, print/reprint, signed scan, key record</td><td id="]^gs" class="">Shared/whole-room E2E and private-file tests pass.</td></tr><tr id="3ed1d3fd-63f0-474f-8e81-4fcc8d94f5d4" dir="ltr"><td id=";Kjb" class="">13 — University handoff</td><td id="w`WK" class=""><code>HANDOFF-001</code>–<code>HANDOFF-007</code></td><td id="hhyM" class="">Queue, original export and correction export</td><td id="]^gs" class="">Original/correction traceability passes.</td></tr><tr id="79b245c0-c9ad-412f-9ba4-2ccb9d8265ca" dir="ltr"><td id=";Kjb" class="">14 — Full hardening</td><td id="w`WK" class=""><code>SEC-*</code>, <code>OPS-*</code>, <code>E2E-*</code>, <code>PERF-*</code></td><td id="hhyM" class="">Security, restore, accessibility, capacity and release evidence</td><td id="]^gs" class="">No P0/P1 failure and UAT gate ready.</td></tr></tbody></table><h2 id="74d8a3d1-ac72-4298-be4d-51d3a3891cce" class="" dir="auto">Sprint traceability</h2><table id="7ee48897-451f-41d3-96d5-d5c5b930d9fa" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="398ea298-def1-4d08-b00c-40981940331a" dir="ltr"><th id="lkMG" class="simple-table-header-color simple-table-header">Page 16 sprint</th><th id="}LI`" class="simple-table-header-color simple-table-header">Test-first deliverables</th></tr></thead><tbody><tr id="f13e0503-dd08-42d1-a9dd-46b51b1f663e" dir="ltr"><td id="lkMG" class="">Sprint 0</td><td id="}LI`" class="">Manifest, fixture governance, test commands, external-format discovery tests.</td></tr><tr id="56f2610f-3cce-4867-8a0c-1ff91136ade3" dir="ltr"><td id="lkMG" class="">Sprint 1</td><td id="}LI`" class="">State-transition test tables, API contracts, permission allow/deny catalogue, E2E outlines.</td></tr><tr id="070bf8e8-7907-4bac-8fa2-af7fe576f1e3" dir="ltr"><td id="lkMG" class="">Sprint 2</td><td id="}LI`" class=""><code>AUTH-*</code>, <code>SEC-001</code>–<code>SEC-008</code>, <code>OPS-001</code>, <code>OPS-006</code>–<code>OPS-010</code> foundations.</td></tr><tr id="02d86627-0c5c-43b8-8a54-f11e28ddbf92" dir="ltr"><td id="lkMG" class="">Sprint 3</td><td id="}LI`" class=""><code>ROOM-*</code>, room-master contract and import performance baseline.</td></tr><tr id="094744ca-69c1-4f47-bc06-884d3a2524a2" dir="ltr"><td id="lkMG" class="">Sprint 4</td><td id="}LI`" class="">Room-browser API/component/accessibility tests and public privacy assertions.</td></tr><tr id="a283b8d2-c216-42e8-8b8b-afd4f7f18ba8" dir="ltr"><td id="lkMG" class="">Sprint 5</td><td id="}LI`" class=""><code>GROUP-*</code>, <code>HOLD-001</code>–<code>HOLD-012</code>, shared/whole-room E2E start.</td></tr><tr id="bd47a281-6360-430d-bd34-564d57a5913f" dir="ltr"><td id="lkMG" class="">Sprint 6</td><td id="}LI`" class="">72-hour payment hold, renewal foundations, manual reservation and recovery jobs.</td></tr><tr id="1a8f89e0-0222-4c02-a86a-ea3cd6287053" dir="ltr"><td id="lkMG" class="">Sprint 7</td><td id="}LI`" class=""><code>PRICE-*</code> and payment-obligation API/UI tests.</td></tr><tr id="d81605bc-df1c-40a8-945c-6791e8f65030" dir="ltr"><td id="lkMG" class="">Sprint 8</td><td id="}LI`" class=""><code>XLSX-*</code> golden contract suite.</td></tr><tr id="940d95d1-0534-4458-b4ea-a85f85563da4" dir="ltr"><td id="lkMG" class="">Sprint 9</td><td id="}LI`" class=""><code>PDF-*</code> import/matching/review suite.</td></tr><tr id="c2edcba6-1fc0-452a-b273-1761b0f23b4a" dir="ltr"><td id="lkMG" class="">Sprint 10</td><td id="}LI`" class=""><code>RESULT-*</code>, <code>RESV-*</code>, payment exception/concurrency suite.</td></tr><tr id="44f5c3ce-70b9-432d-a425-ddcc477d7965" dir="ltr"><td id="lkMG" class="">Sprint 11</td><td id="}LI`" class=""><code>CONTRACT-*</code>, <code>KEY-*</code>, private file and document-layout suite.</td></tr><tr id="dfe83593-6170-4b75-bedb-7bdb5bec7ac5" dir="ltr"><td id="lkMG" class="">Sprint 12</td><td id="}LI`" class=""><code>HANDOFF-*</code>, correction and audit-report tests.</td></tr><tr id="39d20ad2-cda8-4890-a8b9-a34cb62b4dd2" dir="ltr"><td id="lkMG" class="">Sprint 13–14</td><td id="}LI`" class="">Full <code>E2E-*</code>, <code>SEC-*</code>, performance, migration and restore evidence.</td></tr><tr id="072ff41e-1763-4df0-9d9b-4f2bf0d4e646" dir="ltr"><td id="lkMG" class="">Sprint 15</td><td id="}LI`" class="">Regression closure, release-candidate test report and reproducibility check.</td></tr></tbody></table><h2 id="1d02cdc2-ec81-42c1-aea7-be1ac9dbc4f3" class="" dir="auto">First AI coding tasks</h2><p id="f72bfc1e-5fce-479c-a68e-ae8cc654b77c" class="" dir="auto">Start with these narrowly scoped tasks after repository creation:</p><h3 id="cafd6ef9-ebf7-4f2c-a872-1e7c05ccbdcd" class="" dir="auto">Task A — <code>OPS-TEST-001</code>: deterministic test foundation</h3><p id="cf10b07e-b011-4dba-986c-e73ce907e746" class="" dir="auto">Deliver:</p><ul id="082b218c-06f6-404a-be09-2d816cf1f2d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fake clock and ID generator;</li></ul><ul id="b74bcf0b-9de2-4382-a8d9-046890d2c6bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PostgreSQL test bootstrap;</li></ul><ul id="4451d891-fbcd-49d4-bb0a-70292363649c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fixture loader;</li></ul><ul id="fe0c38bf-7628-4823-836d-a11d4cffad6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tests/manifest.yaml</code> validator;</li></ul><ul id="f8cdc92e-612f-4aaa-b4c7-b7981e32774e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>make test-unit</code>, <code>make test-integration</code>, <code>make test-id</code>;</li></ul><ul id="f4801df1-463f-4758-91ab-fda91975b5ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one demonstration test proving deterministic time advance.</li></ul><p id="5bb22e94-dd0b-41a2-a3fa-cc476537ce51" class="" dir="auto">Do not implement room business logic in this task.</p><h3 id="c4e94a2f-02b4-4abb-b298-5f01d9252c6d" class="" dir="auto">Task B — <code>ROOM-001</code>: minimum room master</h3><p id="959d44e9-18e9-4eb8-b89d-5e2a9f34f529" class="" dir="auto">Deliver:</p><ul id="ca065606-2a18-47d3-b1cf-c82d9bb7572a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">initial dorm/building/floor/room migrations;</li></ul><ul id="4cabb792-0196-4e08-a346-bd458c9ea467" class="bulleted-list" dir="auto"><li style="list-style-type:disc">globally unique room-number constraint;</li></ul><ul id="bd7df2dc-338f-4c36-967f-e25900195d8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fixture import for A101 and one numeric หอ 8 หลัง room;</li></ul><ul id="d5ce2e32-8d4e-4738-9efa-632aa51061f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">positive import test and duplicate constraint test.</li></ul><p id="da5535c6-aea9-4d68-a6e4-167462a5fb92" class="" dir="auto">Do not add holds or reservations yet.</p><h3 id="ce649b91-40c0-4931-92cd-f29e388e7bb2" class="" dir="auto">Task C — <code>GROUP-001</code>: roommate invitation domain</h3><p id="f5315981-2a9e-499e-abed-e793f8ee3544" class="" dir="auto">Deliver:</p><ul id="1ad303db-c7c8-4199-8dff-54462ed816dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">group/invitation schema;</li></ul><ul id="1e39c377-23e5-4c2b-a108-8f66e8881c03" class="bulleted-list" dir="auto"><li style="list-style-type:disc">complete-profile validation;</li></ul><ul id="f4fe8489-3fb2-42df-bf77-e7fb034cd95c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">create/accept/decline service;</li></ul><ul id="3361b55a-132b-43d5-99ec-f41bdb1648e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">deterministic 48-hour expiry;</li></ul><ul id="f7a472bd-cb17-47f5-86d9-9a7507464b33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one-active-group and max-two constraints.</li></ul><p id="15ca6c55-1c74-4a11-bf62-bba58a73fc4e" class="" dir="auto">Do not select or hold a room yet.</p><h3 id="fb7bc2a8-b619-4f73-9e77-359c1cadbba0" class="" dir="auto">Task D — <code>HOLD-001</code>: atomic exact-room hold</h3><p id="9697fcc7-2caf-42ca-a36b-734ee969a516" class="" dir="auto">Deliver:</p><ul id="5e994506-46e9-4358-9f1e-95bd247da0b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">hold/assignment schema;</li></ul><ul id="851c6a8e-f822-4606-ac56-480232cca559" class="bulleted-list" dir="auto"><li style="list-style-type:disc">conditional SQL or row-lock strategy;</li></ul><ul id="11517696-4d7b-492a-aa04-9ef7cdbdb9c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">idempotency record;</li></ul><ul id="9e0831aa-2935-47a1-8032-0cd860b131b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrency harness proving one winner;</li></ul><ul id="d3d4545b-f965-495f-a037-2edfce1fef57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">stable <code>ROOM_NOT_AVAILABLE</code> API error.</li></ul><h3 id="34d61e65-6e09-40e2-98d6-943f7bdcd996" class="" dir="auto">Task E — <code>HOLD-003</code>: roommate confirmation timer</h3><p id="1f7dfe2e-cc19-43fe-a14a-4e4a2afa84df" class="" dir="auto">Deliver:</p><ul id="15253104-fc0a-41ac-a500-a615a9bfd63b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">campaign setting;</li></ul><ul id="e13b238a-c925-4d18-af78-763f3c6b47c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute deadline stored in database;</li></ul><ul id="8126a019-379c-4dbb-a51c-55c744ef31de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">confirm/decline/expire transitions;</li></ul><ul id="f021bc3c-3a25-4551-ba5e-6e134d7ff4f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">database-backed expiry job;</li></ul><ul id="c12324ce-f049-4138-88f9-65c72fbc0ffc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">countdown API state.</li></ul><p id="d1faae12-1d4c-432d-ac6c-10aea5fae2a2" class="" dir="auto">Each task must stop after its listed tests and gates pass.</p><h2 id="ee8486d9-8e1e-4aee-99e3-10c58b7a4ceb" class="" dir="auto">Provisional policy test handling</h2><p id="469515db-06f7-4946-bd57-d55d78a573be" class="" dir="auto">The following tests are intentionally provisional until stakeholder confirmation:</p><ul id="3401a579-be11-4321-b396-bfd501b3741d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>PRICE-010</code> — fee-exempt occupants.</li></ul><ul id="ab1bdf05-9959-45f0-91e5-bc1ea952a5f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">semester-installment <code>Ref.2</code> cases under <code>PRICE-004</code>/<code>XLSX-005</code>.</li></ul><ul id="341d1b88-cdd6-42a6-b257-f4840e3434fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">mixed <code>ROOM</code>/<code>HL</code> export grouping under <code>XLSX-010</code>.</li></ul><ul id="c2ccf2ea-ff83-413b-95ed-768ee741593e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">resident-specific returned-PDF matching field details under <code>PDF-003</code>.</li></ul><ul id="3a3916e2-20bd-4f6d-a414-1c64c26af284" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact SCB result columns under <code>RESULT-001</code>.</li></ul><ul id="e08d055c-c474-4dd1-b8ba-e4c69470624e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>RESV-008</code> — one-paid/one-unpaid expiry.</li></ul><ul id="57212843-844d-48b7-89b8-455f319b7a98" class="bulleted-list" dir="auto"><li style="list-style-type:disc">final permanent-confirmation wording under <code>RESV-003</code>.</li></ul><ul id="b2656bd3-5f18-479c-a295-f7b837e6aef5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact renewal dates under <code>RENEW-001</code>.</li></ul><ul id="f662dcbc-93d4-468e-9d22-11a6f6e56672" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract attachments/copy/retention details under <code>CONTRACT-011</code> and <code>SEC-010</code>.</li></ul><ul id="bec967b4-9b44-4ec6-a5e6-debd2219d825" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university column contract under <code>HANDOFF-002</code>.</li></ul><p id="e04869c7-a13e-44e1-9adb-b0d799c2a228" class="" dir="auto">Rules:</p><ul id="df12746a-9f30-4c50-b791-73bde6e3f5a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Provisional tests run against fictional fixtures and configuration.</li></ul><ul id="fae13e5b-79a6-47bd-a294-10996e7b9c75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">They are not deleted when policy changes; update fixture/version and retain prior decision history.</li></ul><ul id="c2485d6a-55db-4508-94a4-9acfe7730e3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Production launch requires confirmed policy or an explicitly approved configuration with owner.</li></ul><h2 id="161a0a27-5782-49aa-aaaa-b53290fe0a09" class="" dir="auto">Bug regression protocol</h2><p id="dc9f8935-636a-474a-87c7-a24e08c97a7c" class="" dir="auto">For every defect:</p><ol type="1" id="cfbd7aa0-bf8f-4ec2-9082-7a5713259024" class="numbered-list" start="1" dir="auto"><li>Assign or extend a test ID.</li></ol><ol type="1" id="54b93ce4-d2ee-40ac-94f8-d6ed478ddf52" class="numbered-list" start="2" dir="auto"><li>Reproduce with the smallest deterministic fixture.</li></ol><ol type="1" id="5a014202-d0d7-4418-baf9-c62099aa638c" class="numbered-list" start="3" dir="auto"><li>Commit/add the failing regression test first.</li></ol><ol type="1" id="56d46e2d-0d6b-403e-bb57-9bb3c48dd715" class="numbered-list" start="4" dir="auto"><li>Fix the narrowest production layer.</li></ol><ol type="1" id="179d046a-3241-474b-92d1-3a1a178f40e8" class="numbered-list" start="5" dir="auto"><li>Run targeted, module and relevant E2E/security gates.</li></ol><ol type="1" id="0058d56e-5885-4f8b-b522-6abf663a8528" class="numbered-list" start="6" dir="auto"><li>Add root cause and prevention note.</li></ol><ol type="1" id="d3c21cdc-71e6-40f1-b6ee-b809c55b2aa7" class="numbered-list" start="7" dir="auto"><li>Never close a money, room-lock or privacy defect without a regression test.</li></ol><h2 id="35475e48-31fc-4c8c-9930-f5e3a7252964" class="" dir="auto">AI completion checklist</h2><p id="cc2d3b3a-efb2-46ef-bdc5-c119d400a908" class="" dir="auto">Before an AI task is considered complete:</p><ul id="c4994ade-07db-41b7-aa7d-cfc3d57c72e1" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Test ID exists in manifest.</span><div class="indented"></div></li></ul><ul id="da81ade6-4ecb-41f0-84bb-866cc7ab65d5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">First failing test output is recorded.</span><div class="indented"></div></li></ul><ul id="b1117bba-7d1b-42c2-98b8-a5b97d0712e2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Production change is limited to allowed files.</span><div class="indented"></div></li></ul><ul id="f7965477-37e0-454c-9b9c-603818d6176c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Migration/API/document changes are documented.</span><div class="indented"></div></li></ul><ul id="14e398e2-861d-44b3-a6da-bfb3d7a60f7c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Targeted test passes.</span><div class="indented"></div></li></ul><ul id="9d7db8b1-82bc-4319-bd7c-eccbad095361" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Module suite passes.</span><div class="indented"></div></li></ul><ul id="650d90d5-22fc-4ba1-91e9-43ee5acb0701" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Required integration/document/concurrency/E2E gate passes.</span><div class="indented"></div></li></ul><ul id="870799f0-593e-4700-accb-877b0ddb63fb" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">No golden fixture changed implicitly.</span><div class="indented"></div></li></ul><ul id="9bbdd9d9-c74c-464e-bc2c-00ad486c9df8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Permission and audit assertions are present where needed.</span><div class="indented"></div></li></ul><ul id="00f0bcf9-ae6a-4c6f-b86c-ed58d3fb13c2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked"><code>git diff</code> contains no real personal or financial data.</span><div class="indented"></div></li></ul><ul id="87db39c9-ba3e-4858-8d50-f9ed7b66dbbc" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Completion report lists assumptions/blockers.</span><div class="indented"></div></li></ul><ul id="5b07f9d2-f075-4e22-b7b7-31394ce38683" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Notion implementation/test traceability is updated when contract or policy changes.</span><div class="indented"></div></li></ul><h2 id="db2f657e-29ae-443c-8691-3f3a2e105637" class="" dir="auto">Milestone test exit reports</h2><p id="e994ea28-d69e-4416-9fa4-7b8ba633e6f0" class="" dir="auto">At each milestone, generate a report with:</p><ul id="e74480eb-bcf5-4469-a3e5-bbc9928082d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">manifest counts by priority/status/layer;</li></ul><ul id="1b379f24-6cd1-417e-9dbe-2fede21d7cad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">failing/skipped/flaky tests;</li></ul><ul id="990e811f-fb1f-4cce-a3fb-373a4f4b386c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">P0/P1 coverage by requirement;</li></ul><ul id="bd16d2d9-301d-4da5-9a02-e658e267767a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">migration version and fixture version;</li></ul><ul id="7698c7e2-2f87-49d6-82b0-71f0ab4f3a14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">document-contract fixture checksums;</li></ul><ul id="c70a302f-70e2-4820-914b-9cc127ca9856" class="bulleted-list" dir="auto"><li style="list-style-type:disc">security findings;</li></ul><ul id="fc1ffce2-6f9b-465a-9176-502d5c777dd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrency run evidence;</li></ul><ul id="aa7a3c43-61e0-4c08-ab44-614c3f277a1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">E2E journey results;</li></ul><ul id="2549841c-f3ab-4347-8420-bdfa058e79d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backup/restore evidence when required;</li></ul><ul id="eea05ce4-0977-4b0b-bdf5-4f16f7d9d0f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">open provisional decisions and owners;</li></ul><ul id="53c15db5-12f8-4dd6-bb44-86c345d37c48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">release recommendation: Pass / Conditional / Fail.</li></ul><h2 id="b3ef6fd3-a7d1-468b-94a9-118fa7b2e033" class="" dir="auto">Canonical references</h2><ul id="e683eb32-9e16-46b1-bb5c-ccfd96d7a4e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="02%20%E2%80%94%20Exact-Room%20Reservation,%20Roommates%20&amp;%20Holds%2038e9192afd11814784aaf757075f4a65.html">02 — Exact-Room Reservation, Roommates &amp; Holds</a></li></ul><ul id="71f4818d-2730-43f2-ab86-efc547a724fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="03%20%E2%80%94%20Exact-Room%20Applicant%20UX%20&amp;%20Staff%20Dashboard%2038e9192afd1181efb0cff4548f584f30.html">03 — Exact-Room Applicant UX &amp; Staff Dashboard</a></li></ul><ul id="5c2f5128-685d-4a37-9055-916344b7e5c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="04%20%E2%80%94%20Technical%20Architecture%20Exact%20Rooms,%20Roommates%2038e9192afd1181329d23ceef5a8c2356.html">04 — Technical Architecture: Exact Rooms, Roommates &amp; SCB File Exchange</a></li></ul><ul id="b203113a-797e-4279-a9f1-d04573fdf552" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="09%20%E2%80%94%20Product%20Build%20Plan%20&amp;%20Roadmap%2038f9192afd11810592a9eb0e97d7d86d.html">09 — Product Build Plan &amp; Roadmap</a></li></ul><ul id="483c6f3e-dff9-4635-a257-4848095c2296" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></li></ul><ul id="bd2eb663-1806-4ede-b535-c382e9877987" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html">15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a></li></ul><ul id="c1e234cd-f5a5-4bbe-8a69-dfe3f21accc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="16%20%E2%80%94%20Detailed%20Implementation%20Plan%20&amp;%20Sprint%20Executi%203999192afd1181569367f493d00dd1f8.html">16 — Detailed Implementation Plan &amp; Sprint Execution</a></li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,841 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>09 — Product Build Plan &amp; Roadmap</title><meta name="data-notion-page-icon" content="🚧"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%9A%A7%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="38f9192a-fd11-8105-92a9-eb0e97d7d86d" class="page sans" data-notion-page-icon="🚧"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🚧"></span></div><h1 class="page-title" dir="auto">09 — Product Build Plan &amp; Roadmap</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="17db82b5-5718-414d-95eb-1c0ce275140f" class="" dir="auto">Detailed sprint execution</h2><p id="eedbb0ec-55e4-4f76-951d-97ec999ead9d" class="" dir="auto">The task-level implementation sequence, 16 two-week sprints, migration order, critical SQL, API order, background jobs, release gates, and first-ten-working-day checklist are maintained in <a href="16%20%E2%80%94%20Detailed%20Implementation%20Plan%20&amp;%20Sprint%20Executi%203999192afd1181569367f493d00dd1f8.html">16 — Detailed Implementation Plan &amp; Sprint Execution</a>.</p><p id="05e3a5ba-ca03-47d1-a994-461477d01f99" class="" dir="auto">The canonical test IDs, fixtures, AI task packets, contract/concurrency/E2E suites, merge gates, and test-first implementation order are maintained in <a href="17%20%E2%80%94%20AI-Ready%20Test-First%20Implementation%20Plan%2039a9192afd118138a1cee6dacd4022b6.html">17 — AI-Ready Test-First Implementation Plan</a>.</p><h2 id="14598d96-90a1-405e-a943-9685204738a6" class="" dir="auto">Canonical delivery plan</h2><p id="7d78756f-cafe-47bc-a8a6-07671b0e680b" class="" dir="auto"><strong>Last revised:</strong> 2026-07-10</p><p id="679df198-67c5-4e6c-94a1-34b6aa504f35" class="" dir="auto">This page is the authoritative eight-month delivery plan for the combined <strong>หอ 8 หลัง + วรอินเตอร์</strong> pilot.</p><p id="21e91aa4-b0af-448c-8fd0-24bb9915df7b" class="" dir="auto">The accepted MVP now includes exact-room inventory, roommate groups, whole-room rental, SCB Excel export, returned multipage PDF matching, SCB result import, annual renewal, printed contracts, key handover, and university-system handoff.</p><p id="4b5e3ad5-1194-4733-8ff8-c9657a7fb823" class="" dir="auto">The following prior assumptions are superseded:</p><ul id="366e1781-b964-4255-95c7-d3f69f5ab08f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one pilot dorm only;</li></ul><ul id="8bad3b64-37e5-4049-812e-a343a1259ffc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room-type quota without exact-room data;</li></ul><ul id="d0d8d517-8d13-4f05-957c-d3086d3660a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room and roommate booking as future-only;</li></ul><ul id="0bc3dc81-7f91-46ff-a29b-51d919d13ee9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one shared static QR and applicant slip upload as the normal payment flow.</li></ul><h2 id="ab50db50-1c7d-44b8-9d71-f35fad0a9c12" class="" dir="auto">Delivery outcome</h2><p id="f6cc927e-c2d8-4d85-9a23-4dbe1fc98861" class="" dir="auto">By the end of Month 8, the team must deliver a reproducible pilot-ready web system proving this complete workflow:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="e959aa5a-d5bd-4cff-9dd8-80847663601c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">configure exact-room inventory and campaign
+→ verified applicant accounts
+→ renewal or new application
+→ roommate invitation or whole-room choice
+→ exact-room selection
+→ short confirmation hold
+→ 72-hour payment hold
+→ resident payment obligations
+→ SCB XLSX export
+→ returned QR PDF import and page matching
+→ SCB result import / manual payment
+→ staff confirms exact room
+→ printed contracts and signed scans
+→ key handover
+→ university handoff and correction export</code></pre><h2 id="29c2b5a6-6330-4c5e-8ddf-8ecd95ec9118" class="" dir="auto">Accepted MVP boundary</h2><h3 id="9131c0f6-a158-41b4-8628-5cc017acd71f" class="" dir="auto">Included</h3><ul id="6cdcd95a-1707-4a49-ade0-08ac86a0ea65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Combined pilot: วรเรสซิเดนซ์ / หอ 8 หลัง and หอพักวรอินเตอร์</li></ul><ul id="8b169961-612d-4fff-bfbc-81749f964a81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Verified personal-email applicant accounts</li></ul><ul id="851a90bf-77c9-4a71-b079-571360d5f774" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Optional KKU SSO</li></ul><ul id="9cae5447-7f50-4706-8ebc-de99e2040b56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Building/floor/exact-room inventory</li></ul><ul id="57941fb6-8f8e-4a80-bb78-64c6739472b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Room dimensions/plan references where available</li></ul><ul id="3f8497b5-1a1a-4468-a7c9-a5384e77b8f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared and whole-room occupancy</li></ul><ul id="b2ad43ce-82d2-4e29-8307-32a7d0cb8d57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Roommate invitation valid 48 hours</li></ul><ul id="1604bcd3-9e16-4c37-9de7-c9a8ac6dbe1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maximum two residents</li></ul><ul id="a206b029-52cd-4f78-aa04-ee46294a14d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One active roommate group/invitation per resident</li></ul><ul id="d057cf58-3ba7-4859-859d-8a10024d3110" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Leader-initiated exact-room reservation</li></ul><ul id="1f57343d-d417-4223-835d-8ee7ae1e01ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Configurable second room confirmation</li></ul><ul id="fe29a1bc-6771-4876-adb7-6c4f255491ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute room-confirmation hold</li></ul><ul id="9e025de6-91e4-4007-b770-4f0c642020f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">72-hour group payment hold</li></ul><ul id="626420eb-cd79-42c4-9adf-90878e354b76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff manual reservation</li></ul><ul id="3a40161d-1e2a-4fcf-9656-5bbd014a9885" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Annual renewal with prefilled data</li></ul><ul id="95fe9ae8-6feb-43c4-9899-b231551d7783" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pricing by room/configuration/occupancy/action/year</li></ul><ul id="4634ec48-b1f9-4150-938d-cdcef92d01df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Separate resident obligations</li></ul><ul id="29558b27-7043-4abc-b447-094ebdc7269a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Separate <code>ROOM</code> and <code>HL</code> obligations</li></ul><ul id="832a641d-6f8a-4ae8-85d3-fc8764c9cd44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Finance-only amount override with reason/audit</li></ul><ul id="487b56f9-99dd-4891-81f8-1d1a74725740" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB <code>.xlsx</code>/<code>SLIPS</code> export</li></ul><ul id="6ca062fb-c141-4ce2-bc3f-c6f8ebbe8022" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Combined multipage PDF import and page matching</li></ul><ul id="e90768ec-6d7d-40b4-9d55-0c2732088786" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB payment-result report import</li></ul><ul id="0722630c-2207-439e-b835-1f31e792ab80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Manual payment with bank reference and staff note</li></ul><ul id="c329790c-b796-4f3f-bd8f-64a20a1f9e81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Payment exception review</li></ul><ul id="c1f2d8c0-1444-4a25-bf03-b5b73c589282" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff-confirmed exact-room reservation</li></ul><ul id="e65e1ecf-52b3-4238-bde4-4ed1f9fb2d4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Grouped paper contracts and private signed scans</li></ul><ul id="03a08449-5667-44f2-9511-33af982250c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Separate signed key handover</li></ul><ul id="8cfe9773-1c5e-4233-b380-4a3a9bd0fcda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">University handoff queue and correction export</li></ul><ul id="b5743075-ff02-4f3f-a719-1b0be9bf495b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reports, RBAC, audit, file privacy, concurrency, backup/restore</li></ul><h3 id="aa065335-05db-4632-a941-c17e280daa3d" class="" dir="auto">Outside accepted MVP</h3><ul id="290ed7f1-3d8f-4be1-900a-246d0db985ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Digital/electronic contract signature</li></ul><ul id="01b1c6ed-6196-428e-8224-beb7684c92a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Direct real-time SCB/bank API</li></ul><ul id="58e3577d-6d00-4e7a-a8f7-de92d1c225e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Automated refund execution</li></ul><ul id="dc0734e0-040f-421e-a144-e86f8ae7357a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Central-dorm fairness/lottery allocation</li></ul><ul id="e0652fcf-f54d-46a8-9d67-82b33eb468d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Parcel notification</li></ul><ul id="9acda6d0-522c-48f3-9740-20a295709093" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maintenance workflow</li></ul><ul id="39cb123f-4d35-4dfd-b582-d66fbed09a9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Monthly water/electricity implementation</li></ul><ul id="049d44f5-bc04-4ff2-89d7-6b10e6be034f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Native mobile application</li></ul><ul id="4e9589cd-db8a-4713-9a9c-1b1cdc1f5230" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Multi-dorm expansion beyond the two pilot groups</li></ul><p id="fc7ace63-5758-4ab1-88ee-c197ab2aa0a4" class="" dir="auto">The architecture should leave extension points for utilities and richer floor-plan UI later.</p><h2 id="39e50b68-207d-4497-b49b-72ba6fba8597" class="" dir="auto">Month 1 decision gate</h2><p id="f3becad0-f0b4-4c3d-8917-7d937a78ebce" class="" dir="auto">Confirm or obtain:</p><ul id="5c890741-ce37-41eb-9812-ed340bfb3e06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">official building/floor/room inventory source;</li></ul><ul id="29dd63eb-e59a-48d3-9f72-32f4e0f74d84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">official room dimensions/plans;</li></ul><ul id="9e86663f-6a0a-4dd1-9d7b-d57884300f54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room configuration and equipment list;</li></ul><ul id="14e028e7-7b1e-4133-83d4-132a11b95643" class="bulleted-list" dir="auto"><li style="list-style-type:disc">pricing for shared/whole-room and HL;</li></ul><ul id="e6c8b685-4deb-4bc4-af4e-1ff55035c5e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fee-exempt occupant policy;</li></ul><ul id="75b98fec-85db-4a34-9cd1-b36215d576a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">semester-installment <code>Ref.2</code> format;</li></ul><ul id="5018a975-f1f3-428b-94d6-1fa795b141b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">original SCB blank Excel template;</li></ul><ul id="45dde01f-0df0-43f5-b658-6871f236385e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">returned PDF sample for roommates;</li></ul><ul id="a65bbc00-9ac0-4f43-958d-5bcaa940ac89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB payment-result report sample;</li></ul><ul id="bab89be3-e254-46a4-b666-a8f786002042" class="bulleted-list" dir="auto"><li style="list-style-type:disc">final reservation-confirmation wording;</li></ul><ul id="96062ac3-a1db-4a44-a69a-3123f0ef56f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">renewal dates and one-paid/one-unpaid policy;</li></ul><ul id="245e2f70-79f3-4b29-97fc-9635c287aae0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract template, copies, attachments, retention, and key-handover checklist;</li></ul><ul id="154ab800-1743-45c2-b2a1-4c3f3b350af9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university handoff columns/correction format;</li></ul><ul id="b9316d45-0ba6-4e64-82c0-774ba9fa6177" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact staff role names and scopes.</li></ul><p id="4e7cfa20-d1e7-4bca-b3e0-7c8d1995059c" class="" dir="auto">Unconfirmed values remain clearly labelled <code>Provisional</code>.</p><h2 id="4d655671-2cb5-4822-971d-6c801f46e140" class="" dir="auto">Provisional development rules</h2><ol type="1" id="32668cb5-c002-405e-b949-b0d9c8dddfd6" class="numbered-list" start="1" dir="auto"><li>Exact room is the inventory source of truth.</li></ol><ol type="1" id="832d0a92-b0d0-4a7c-90d1-5ae6c625e470" class="numbered-list" start="2" dir="auto"><li>Roommate invitation is accepted before room selection.</li></ol><ol type="1" id="34ea9770-58fa-4fde-97a6-6809b2dc7eb4" class="numbered-list" start="3" dir="auto"><li>Leader reservation creates an immediate room hold.</li></ol><ol type="1" id="47b7d1e9-e466-4ffb-8de6-0f44f465dca5" class="numbered-list" start="4" dir="auto"><li>Required roommate room confirmation expires after 15 minutes.</li></ol><ol type="1" id="b3972c90-42d0-4b82-9b5b-835a1a811c36" class="numbered-list" start="5" dir="auto"><li>Group payment hold lasts 72 hours.</li></ol><ol type="1" id="6f78563b-0502-4ab0-807d-173e89847b60" class="numbered-list" start="6" dir="auto"><li>Shared residents have separate obligations and one group deadline.</li></ol><ol type="1" id="a6ef3bd8-9e3f-4fee-9959-f28e39bf8113" class="numbered-list" start="7" dir="auto"><li>HL creates separate <code>ROOM</code> and <code>HL</code> obligations.</li></ol><ol type="1" id="d1d4cc06-66bc-4a14-8c41-c1bb9202684b" class="numbered-list" start="8" dir="auto"><li>All required obligations plus authorized staff confirmation permanently confirms the room.</li></ol><ol type="1" id="1bc567f9-3145-4a63-9e05-6a9c870b535a" class="numbered-list" start="9" dir="auto"><li>One paid / one unpaid group remains pending until deadline, then releases under provisional rule.</li></ol><ol type="1" id="bf36bb9a-72e4-4ed3-a513-1067cf7df996" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Manual reservation/payment, override, cancellation, replacement, rematch, reprint, and correction require reason and audit.</li></ol><ol type="1" id="1f90ce7c-f33a-42fc-aaed-54dae98e11fa" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>Repeated holds, releases, imports, and confirmations are idempotent.</li></ol><h2 id="27c8f6d0-b45f-44dd-aaf5-46f9f3a4aa27" class="" dir="auto">Lifecycle models</h2><h3 id="95871b69-0722-4d50-be3e-2b7b8d1ab86b" class="" dir="auto">Room/hold lifecycle</h3><pre id="192b9b1e-058c-4238-9b44-0d914f2bb7d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Available
+→ Held for Roommate Confirmation
+→ Held for Payment
+→ Confirmed / Released / Expired / Cancelled</code></pre><h3 id="4abdfd42-809f-4c45-a940-37d65cb2e04d" class="" dir="auto">Roommate-group lifecycle</h3><pre id="e5c88579-d7ae-4dcd-b4c5-5ae0b8e8c27a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Invitation Pending
+→ Accepted
+→ Room Confirmation Pending when required
+→ Ready for Payment
+→ Confirmed / Cancelled / Replaced</code></pre><h3 id="5e7671fe-75a4-4fcf-a482-68191c240c5b" class="" dir="auto">Payment-document lifecycle</h3><pre id="49a50491-726b-4a27-9fd4-72d7081b5083" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Not Generated
+→ Ready for Export
+→ Exported
+→ Awaiting Returned PDF
+→ Payment Form Ready
+→ Superseded / Cancelled</code></pre><h3 id="fcf2bf6b-7d61-4d41-b28e-485c69b0ebc2" class="" dir="auto">Payment-result lifecycle</h3><pre id="70e30958-4a89-4603-a8ff-32d2ab5598b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Awaiting Payment
+→ Result Imported / Manual Recorded
+→ Paid / Unpaid / Exception
+→ Confirmed / Refund Status / Cancelled</code></pre><h3 id="0b2f93c6-bc11-4647-8091-c66074f0f2ae" class="" dir="auto">Contract lifecycle</h3><pre id="99349a24-2b3e-42b6-8266-054452b47972" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Not Generated
+→ Ready to Generate
+→ Ready to Print
+→ Printed
+→ Signed and Received / Correction Required / Reprinted / Cancelled</code></pre><h3 id="38f49e9c-a7d4-428b-a56e-a596db72fd60" class="" dir="auto">Key-handover lifecycle</h3><pre id="209b19f6-3c90-4da7-8cef-3e97bb6a669a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Not Ready
+→ Ready
+→ Signed and Handed Over
+→ Corrected / Cancelled</code></pre><h2 id="9b8eb77d-4e73-4bdb-a270-288e10efd3d1" class="" dir="auto">Technical delivery baseline</h2><p id="96c90eff-9b74-43db-b22e-39af7a9c6d34" class="" dir="auto">Docker Compose services:</p><ul id="1a997936-a37c-4d30-856f-83afc72327fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>nginx</code></li></ul><ul id="b7c8ee2f-aad6-47cc-a098-4bba86580734" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>frontend</code></li></ul><ul id="06175867-4d71-4fb3-b0fd-444636358ffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>api</code></li></ul><ul id="803df0c5-3110-4c5c-b4af-f8c148090236" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>postgres</code></li></ul><ul id="403a0421-c3a8-4a62-84e2-41714baff61a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-master</code></li></ul><ul id="338fb71c-6b27-42e4-ba7f-be62e37b576b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-volume</code></li></ul><ul id="f22dec79-95cf-4af3-b974-238619c69e08" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-filer</code></li></ul><ul id="54e09ada-7872-42d1-92ac-eb2faa58fc41" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-s3</code></li></ul><ul id="830a6759-7c14-48b0-9057-9ad660f6402e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>mock-kku-sso</code> for optional development/testing</li></ul><p id="965f5972-ae90-4202-906d-ef763a93765f" class="" dir="auto">External SCB and university applications are file-exchange boundaries, not Docker services owned by this project.</p><h2 id="21f7c49a-5481-439a-b8a8-b8d6ab0510af" class="" dir="auto">Eight-month execution plan</h2><p id="9fe54d25-baba-413a-b231-288d2dd607b6" class="" dir="auto">Planning assumption:</p><ul id="9abb2709-7215-4ff8-8363-b5c8018d30ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Month 1 = July 2026</li></ul><ul id="395e44c8-26e3-4f44-9267-0e5ad4f04571" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Month 8 = February 2027</li></ul><p id="5dff010e-7734-40cc-8602-0d1130ef2ece" class="" dir="auto">If the official start changes, preserve phase order and milestone criteria.</p><h3 id="28d05fdd-4b5d-476b-bea7-713d9af62601" class="" dir="auto">Phase 1 — Requirement Baseline, M1</h3><p id="7088aff1-6e77-48fb-b50d-5e47bc4e3ad5" class="" dir="auto">Work:</p><ul id="c06e64cd-24ae-47e1-8c39-20463c6696f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">confirm pilot inventory and policies;</li></ul><ul id="5c1a474d-d548-4aa1-93f5-d273cd7340d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">obtain SCB/contract/university sample files;</li></ul><ul id="706fad16-1491-49d1-a604-58c6ca23e372" class="bulleted-list" dir="auto"><li style="list-style-type:disc">confirm room, pricing, renewal, role, and handoff rules.</li></ul><p id="8a60a034-154e-4fe9-8f5c-d99c622043e7" class="" dir="auto">Outputs:</p><ul id="9f004ad8-0dd0-4b93-8f6a-f32ba61affd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">approved scope;</li></ul><ul id="8a8b748b-49b2-4b8e-aa55-8bcb17699a71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">decision log;</li></ul><ul id="6976964d-45e7-4baa-b884-2a2b4d996bd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room data inventory;</li></ul><ul id="03bb2186-eae5-4096-a14a-18884f37f98f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">sample XLSX/PDF/result report;</li></ul><ul id="fffedd9e-13d8-42de-a95c-699403a1f61f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract and handoff samples.</li></ul><p id="42ac9f09-1a71-4a0f-ab14-393c4a36b45f" class="" dir="auto">Exit: <strong>MS1 — Requirements Approved</strong></p><h3 id="60f41e31-66da-4ac3-b371-70eec40aa6b3" class="" dir="auto">Phase 2 — Domain, UX, Security &amp; Test Design, M1–M2</h3><p id="3406ab27-34c8-4882-a5e7-dbf4cadd10dc" class="" dir="auto">Work:</p><ul id="5f1c084b-206b-4094-bfd6-a6e7e3ed5432" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room/roommate/hold state machines;</li></ul><ul id="e8b1367a-ac0b-492e-8bae-99f201d8ca68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ERD and transactional rules;</li></ul><ul id="b0e4c81d-9a3e-49dc-b689-995dd0c02250" class="bulleted-list" dir="auto"><li style="list-style-type:disc">applicant/staff wireframes;</li></ul><ul id="5ab9371b-1f59-49ed-abf3-cabd8a6faa9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">permission matrix;</li></ul><ul id="368878a2-26f0-40d0-8c5e-777a9bb1174f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PDPA/file controls;</li></ul><ul id="15feaee1-2059-4a1b-abb1-7601af201625" class="bulleted-list" dir="auto"><li style="list-style-type:disc">acceptance-test catalogue.</li></ul><p id="3f33475e-f9d9-44f8-9bb7-785664f20198" class="" dir="auto">Exit: <strong>MS2 — Design Freeze</strong></p><h3 id="f4a58569-20a1-433b-a970-1c009fd069b7" class="" dir="auto">Phase 3 — Platform Foundation, M2–M3</h3><p id="7129bd23-bbdf-4a38-b01e-53bb7f67f951" class="" dir="auto">Work:</p><ul id="2cd9d709-9ce1-43c4-bee8-d266d5dd018a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Compose, Nginx, Nuxt, Go, PostgreSQL, SeaweedFS;</li></ul><ul id="acb0d8e9-0b55-44c9-be6a-319b468a7901" class="bulleted-list" dir="auto"><li style="list-style-type:disc">authentication;</li></ul><ul id="429a5aba-9f93-47bc-bf62-f90437257ddc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room inventory import;</li></ul><ul id="5ff69df8-5081-474b-b530-79f16e81d76a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fixture tooling for SCB XLSX/PDF/result and contracts;</li></ul><ul id="ed7bf7ab-0fc0-4337-98bf-b93ca45f0611" class="bulleted-list" dir="auto"><li style="list-style-type:disc">migrations, health checks, backup/restore baseline.</li></ul><p id="af381c7f-f4cb-4bbf-8646-f37084eb8987" class="" dir="auto">Exit: <strong>MS3 — Platform Vertical Slice</strong></p><h3 id="20e76dc3-5b3e-4bed-8dd2-b8f5c3d22bf4" class="" dir="auto">Phase 4 — Exact-Room Reservation &amp; Renewal, M3–M4</h3><p id="3973fb2f-5a67-439a-8503-0c61f36ba2cd" class="" dir="auto">Work:</p><ul id="099868be-8119-4780-acca-fb748e901a6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room browser;</li></ul><ul id="76dadaed-579d-4135-bc71-5a61b3c9fdf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared/whole-room selection;</li></ul><ul id="06ee4f36-ab5a-4e2a-affb-c2d8195a2754" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate invitation/group;</li></ul><ul id="f1f8f9e0-4c49-493a-ad0b-44a4f65a84a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute confirmation hold;</li></ul><ul id="cc05f1ab-b6bc-4482-b620-856b47050749" class="bulleted-list" dir="auto"><li style="list-style-type:disc">72-hour payment hold;</li></ul><ul id="877c5f4e-e400-4328-a0d5-c8af2e6676a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">manual reservation;</li></ul><ul id="e3c31f6a-7304-4e92-a47a-3a4bb82cc5c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">renewal and roommate-change paths.</li></ul><p id="c8908759-3480-431b-9605-63be052b22b8" class="" dir="auto">Exit: <strong>MS4 — Exact-Room Flow Complete</strong></p><h3 id="84045b70-4fb7-4580-84f4-664cb03562f9" class="" dir="auto">Phase 5 — SCB Payment Workflow, M4–M5</h3><p id="6abe55df-a6f5-4ab2-bd60-a2ce8d51b180" class="" dir="auto">Work:</p><ul id="5f258618-edfa-4574-bf40-e90a402c82f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">pricing and obligation generation;</li></ul><ul id="823224dd-9042-4919-92bf-4e1943a42eb2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HL dual obligations;</li></ul><ul id="20bea2f9-6f5e-4584-a770-451539107122" class="bulleted-list" dir="auto"><li style="list-style-type:disc">amount override;</li></ul><ul id="0369cc23-2f3d-4fd1-a069-0677ff72445b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">XLSX export;</li></ul><ul id="e21d6b61-ab67-4076-97be-489235cb5071" class="bulleted-list" dir="auto"><li style="list-style-type:disc">returned PDF import/matching;</li></ul><ul id="a7833b8a-0f51-426d-ae3b-53433d9a9b11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">result-report import;</li></ul><ul id="d726659a-4b34-4c6f-a036-3423f46821c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">manual payment;</li></ul><ul id="6d4db18a-2235-4cea-a161-0e894344e070" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exception review;</li></ul><ul id="47192f11-dd57-4bf1-b92f-fb04633ececd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">permanent confirmation.</li></ul><p id="6b5c9f13-f1f9-4b57-a899-62180f63a9b5" class="" dir="auto">Exit: <strong>MS5 — Payment Flow Complete</strong></p><h3 id="e7a3adcf-d913-4274-af65-96ae582c2a17" class="" dir="auto">Phase 6 — Staff Operations, Contracts &amp; Handoff, M5–M6</h3><p id="81d6fee6-dac4-4b91-8a37-9bb9039ecdc0" class="" dir="auto">Work:</p><ul id="49c74b86-5494-4a5b-b3f3-412a1ca4bda6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dashboards and queues;</li></ul><ul id="22dae030-9db0-43e6-8bf0-bb940081e08a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">grouped contracts;</li></ul><ul id="cd3e7619-f38a-4b61-8bdd-4946842b46f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">signed scans;</li></ul><ul id="228bd7bf-8a86-43d4-867d-7085c9d1f60b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">key handover;</li></ul><ul id="1931f92b-c7f9-4f48-9916-2f9032edf6a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university handoff/corrections;</li></ul><ul id="839a2900-4279-4109-a17f-2492d9baebb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">reports and audit.</li></ul><p id="db8fb227-b0a6-44e8-8d14-fb7ed1ffecb5" class="" dir="auto">Exit: <strong>MS6 — Feature-Complete MVP</strong></p><h3 id="2a177a9c-fdcc-42e1-8ff8-0a19fff835b1" class="" dir="auto">Phase 7 — Hardening, Compliance &amp; UAT, M6–M7</h3><p id="3927bc64-f908-4ac3-8534-d916c9f0f6e2" class="" dir="auto">Work:</p><ul id="b6715fef-5cf4-4fb7-9e6e-83c0c3ca2d46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrency/idempotency;</li></ul><ul id="4d9151a3-fe79-4f08-a3a7-14b0b74fc22f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">file and permission tests;</li></ul><ul id="34151494-9e6c-49c2-84b2-5949e5971509" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PDF/result matching edge cases;</li></ul><ul id="e98361f4-ad1e-4b5f-b85b-609f2c69f3c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">hold expiry;</li></ul><ul id="d1aefc45-2940-468a-a244-924eea6e2083" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract privacy;</li></ul><ul id="e98fba0b-4855-4eed-94d8-d0075935f6fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">restore evidence;</li></ul><ul id="e7d252be-e959-4714-a83e-d4d7d11df313" class="bulleted-list" dir="auto"><li style="list-style-type:disc">pilot staff UAT.</li></ul><p id="aa58d861-6e30-45ea-92d8-5cb9b4b6bf04" class="" dir="auto">Exit: <strong>MS7 — Pilot UAT Accepted</strong></p><h3 id="a73685b1-0ad6-4134-aeca-f8d332083b6a" class="" dir="auto">Phase 8 — Stabilization &amp; Handover, M7–M8</h3><p id="7a69f67c-27db-4d94-9eed-ca315694d4e0" class="" dir="auto">Work:</p><ul id="664d13fa-cc14-45df-b6a0-17eec0d9d106" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fix UAT findings;</li></ul><ul id="a7853a7f-059c-4f95-8ac9-9bd508be65c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">release candidate;</li></ul><ul id="72ca1930-2ec7-439e-ab33-3ee222e50996" class="bulleted-list" dir="auto"><li style="list-style-type:disc">performance checks;</li></ul><ul id="d1870e08-2873-417a-8fc6-2ae3cf9a7dd6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">user/admin guides;</li></ul><ul id="e0739bdb-f573-46ef-83f9-639c95500430" class="bulleted-list" dir="auto"><li style="list-style-type:disc">architecture/API/test/deployment docs;</li></ul><ul id="9d286092-dc55-45e7-a859-3ff79a9671b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">final demo and expansion backlog.</li></ul><p id="ee1a06d2-21c5-4669-85e0-dc2440523a6a" class="" dir="auto">Exit: <strong>MS8 — Final Handover</strong></p><h2 id="0dce0564-3467-4dce-b399-adf4cb643832" class="" dir="auto">Validated Mermaid Gantt</h2><pre id="a450aafc-9d74-4e28-b81b-7ec007ab1bfd" class="code code-wrap" data-notion-code-syntax="mermaid"><code class="language-mermaid" style="white-space:pre-wrap;word-break:break-all">gantt
+    title KKU Dorm Exact-Room and SCB Pilot Roadmap
+    dateFormat YYYY-MM-DD
+    axisFormat %b %Y
+
+    section 1. Requirements
+    Pilot rules, files, room inventory and contracts :crit, p1, 2026-07-01, 2026-07-31
+    MS1 Requirements approved                         :milestone, m1, 2026-07-31, 0d
+
+    section 2. Design
+    UX, domain states, RBAC, ERD and tests            :crit, p2, 2026-07-15, 2026-08-31
+    MS2 Design freeze                                 :milestone, m2, 2026-08-31, 0d
+
+    section 3. Foundation
+    Docker, Nuxt, Go, PostgreSQL and SeaweedFS        :p3, 2026-08-01, 2026-09-30
+    Auth, exact-room inventory and fixture tooling    :p3b, 2026-08-15, 2026-09-30
+    MS3 Platform vertical slice                       :milestone, m3, 2026-09-30, 0d
+
+    section 4. Reservation
+    Room browser, roommate groups, holds and renewal  :crit, p4, 2026-09-01, 2026-10-31
+    MS4 Exact-room flow complete                      :milestone, m4, 2026-10-31, 0d
+
+    section 5. SCB Payment
+    Pricing, obligations and XLSX export              :crit, p5a, 2026-10-01, 2026-11-15
+    Returned PDF and payment-result import            :crit, p5b, 2026-10-15, 2026-11-30
+    MS5 Payment flow complete                         :milestone, m5, 2026-11-30, 0d
+
+    section 6. Operations
+    Contracts, key handover and university handoff   :crit, p6, 2026-11-01, 2026-12-31
+    Dashboards, reports and audit                     :p6b, 2026-11-15, 2026-12-31
+    MS6 Feature-complete MVP                          :milestone, m6, 2026-12-31, 0d
+
+    section 7. UAT
+    Concurrency, files, PDPA, restore and pilot UAT   :crit, p7, 2026-12-01, 2027-01-31
+    MS7 Pilot UAT accepted                            :milestone, m7, 2027-01-31, 0d
+
+    section 8. Handover
+    Stabilization, docs, release and presentation     :p8, 2027-01-01, 2027-02-28
+    MS8 Final handover                                :milestone, m8, 2027-02-28, 0d</code></pre><h2 id="19e34a7a-ac8a-40a1-9ffa-3fc3777bcf20" class="" dir="auto">Milestone acceptance criteria</h2><h3 id="aad2c804-7264-4bf8-8740-883de37f437c" class="" dir="auto">MS1</h3><ul id="07c14702-9bd0-44f5-8cb0-ec1365cc9932" class="bulleted-list" dir="auto"><li style="list-style-type:disc">two pilot groups confirmed;</li></ul><ul id="801368c3-3d69-41c4-afc7-93a312264f62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room source identified;</li></ul><ul id="e8077454-ea2f-4415-b158-3b0d672ed8c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB template/PDF/result samples obtained or explicitly tracked;</li></ul><ul id="9ec00cf0-1add-4868-80f9-f3ef1bfa68d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract and handoff unknowns assigned owners.</li></ul><h3 id="0eb3949c-f9c5-46d6-940c-3eb1c6f53a34" class="" dir="auto">MS2</h3><ul id="38e92707-3915-490e-910b-5ca65cf221ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room, group, hold, payment, contract, and handoff states approved;</li></ul><ul id="347f9e19-95c0-4598-9a69-cbe543d7fc4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">wireframes cover shared and whole-room flows;</li></ul><ul id="6480a1b1-bd7f-49f6-b8ea-8f34e4f73673" class="bulleted-list" dir="auto"><li style="list-style-type:disc">permissions and audit rules approved;</li></ul><ul id="27bf0520-f729-4398-b635-c77b9a5c076e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">traceability matrix complete.</li></ul><h3 id="cb4e4b3f-adad-4995-bcf6-51f57292c3df" class="" dir="auto">MS3</h3><ul id="1da6d478-2ed5-4a54-9f22-658134992eac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">clean environment starts via Docker Compose;</li></ul><ul id="510aa4c6-fb8d-4bea-a742-1765ec2978aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">auth and private file storage work;</li></ul><ul id="e35ec0b2-0086-44cc-8919-981099133526" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room fixture imports;</li></ul><ul id="e0be42dd-18c6-44ec-8916-96cd0c1609fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">sample XLSX/PDF/result artifacts process end-to-end.</li></ul><h3 id="ed8ae855-591c-41f6-91e7-acfed629b123" class="" dir="auto">MS4</h3><ul id="d6ffe4e2-224c-431f-b2ca-cfc419b7f352" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate and whole-room applicants can reserve exact rooms safely;</li></ul><ul id="f7bea161-7d5b-41ae-a89f-d50993869dc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute and 72-hour holds work;</li></ul><ul id="28c40b62-4f64-4c34-aed5-4df90e0b6d83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrent reservation cannot double-book;</li></ul><ul id="15db9af9-791a-4e6e-9dc8-8bc1771a7a5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">renewal and manual reservation work.</li></ul><h3 id="8f1fbc2b-0c2e-4c30-a780-7eb3f493390b" class="" dir="auto">MS5</h3><ul id="d8c58060-31c6-487b-b2be-af7ee438ac52" class="bulleted-list" dir="auto"><li style="list-style-type:disc">correct obligations generated;</li></ul><ul id="7a1690d8-a862-41ea-81e1-eb6512c2b5c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB workbook matches template;</li></ul><ul id="35bf94e0-e7fd-4249-9d57-db46dc9415da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PDF pages map without room/action uniqueness assumption;</li></ul><ul id="9b54609e-1fe4-4fbc-8de6-07019f3ddeb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">result import/manual payment works;</li></ul><ul id="46ad07e7-3773-4935-ab30-10047ff0a8cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exceptions and final confirmation work.</li></ul><h3 id="0dc45f7b-10d1-447d-8d44-0d1bd2237132" class="" dir="auto">MS6</h3><ul id="08afb81f-2f3d-4e82-993d-35ffc8f36afb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contracts, scans, key handover, reports, audit, and university correction workflow complete.</li></ul><h3 id="3419c808-5b4a-47de-b20a-ccab7a7585e9" class="" dir="auto">MS7</h3><ul id="e039dee6-755e-488b-a5bc-0f8fe952da93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">UAT accepted;</li></ul><ul id="28abd67d-7844-448d-a068-c45cd7d12f7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrency, authorization, files, import idempotency, privacy, backup/restore tests pass.</li></ul><h3 id="7b39bb4b-78d2-4177-9b31-e056e8493f88" class="" dir="auto">MS8</h3><ul id="a303135b-9313-4b19-9472-558ac6b513f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tagged release;</li></ul><ul id="478dead0-528c-48f2-bd4f-9d709f9abec0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">deployment package;</li></ul><ul id="8d1a598f-5dfe-4431-b2e8-4bc8fe2f2954" class="bulleted-list" dir="auto"><li style="list-style-type:disc">handover docs;</li></ul><ul id="e7ce34c7-8dfe-4dc0-85da-a0df7e668888" class="bulleted-list" dir="auto"><li style="list-style-type:disc">final demo;</li></ul><ul id="5838a3f6-d0a5-400f-aabb-7dcd56318c32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">expansion backlog.</li></ul><h2 id="3124b8bc-6aaa-4b49-9b5c-24dd4aae292f" class="" dir="auto">Required high-risk tests</h2><ul id="8c80c66a-3d7d-431d-bb67-0f0adf5d85f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">two leaders reserve same exact room concurrently;</li></ul><ul id="f660b1ee-2748-4cee-9fe0-b4097313d67e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate confirmation expires at 15 minutes;</li></ul><ul id="438328d2-0be5-434f-8cc9-ccd282daf5ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">payment hold expires at 72 hours;</li></ul><ul id="9215a713-3379-4eec-969d-139a28e9574b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one roommate paid / one unpaid;</li></ul><ul id="0e85cba3-401a-435f-acf8-385eadc3ab9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared to whole-room conversion after payment;</li></ul><ul id="5b4bd068-906a-4485-9a28-cb75a2ffe110" class="bulleted-list" dir="auto"><li style="list-style-type:disc">repeated XLSX generation/download;</li></ul><ul id="776e7643-f6dc-4275-b826-057f0fc99855" class="bulleted-list" dir="auto"><li style="list-style-type:disc">combined PDF reordered with duplicate room/action references;</li></ul><ul id="5dbc39be-954a-4f93-b047-72ecfbf92e2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ambiguous PDF page manual rematch;</li></ul><ul id="80ded817-e661-4a8c-a9e5-6f221054987d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">repeated SCB result import;</li></ul><ul id="18466d27-bb84-457a-a108-d602b3f15fda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">duplicate/under/over/late payment;</li></ul><ul id="62920555-0ca2-4c49-9941-f348f239f18b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">repeated final confirmation;</li></ul><ul id="0585463d-161e-453b-9e96-ed469fe3d470" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate replacement after university handoff;</li></ul><ul id="b8a856f8-ef3a-41b1-8108-b7de640d3c0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract reprint/correction and private scan access;</li></ul><ul id="2b6839ae-db04-4cd4-9803-eb204661ae89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">restore database and files together.</li></ul><h2 id="c3641912-dc86-4957-823c-71584fd17b7b" class="" dir="auto">Related decisions</h2><ul id="3dd638f3-4562-472e-a746-3c0077a1ba4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="02%20%E2%80%94%20Exact-Room%20Reservation,%20Roommates%20&amp;%20Holds%2038e9192afd11814784aaf757075f4a65.html">02 — Exact-Room Reservation, Roommates &amp; Holds</a></li></ul><ul id="0416d403-8577-4682-b222-2768f1ff2ed9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="04%20%E2%80%94%20Technical%20Architecture%20Exact%20Rooms,%20Roommates%2038e9192afd1181329d23ceef5a8c2356.html">04 — Technical Architecture: Exact Rooms, Roommates &amp; SCB File Exchange</a></li></ul><ul id="607ad324-00c2-4b88-ba68-2a9604185bc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></li></ul><ul id="b9daa503-329d-4aa6-8114-18fa1a6122e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html">15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a></li></ul><ul id="a4d690f4-537d-4dfa-9078-1db6e630f994" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="16%20%E2%80%94%20Detailed%20Implementation%20Plan%20&amp;%20Sprint%20Executi%203999192afd1181569367f493d00dd1f8.html">16 — Detailed Implementation Plan &amp; Sprint Execution</a></li></ul><ul id="71384f83-5806-451e-b24c-f912945cda3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="17%20%E2%80%94%20AI-Ready%20Test-First%20Implementation%20Plan%2039a9192afd118138a1cee6dacd4022b6.html">17 — AI-Ready Test-First Implementation Plan</a></li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

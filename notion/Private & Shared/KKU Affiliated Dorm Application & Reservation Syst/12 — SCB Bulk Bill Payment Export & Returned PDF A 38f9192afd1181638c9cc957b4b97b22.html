@@ -1,0 +1,795 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</title><meta name="data-notion-page-icon" content="🏦"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8F%A6%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="38f9192a-fd11-8163-8c9c-c957b4b97b22" class="page sans" data-notion-page-icon="🏦"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🏦"></span></div><h1 class="page-title" dir="auto">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e40691bf-35c5-4388-85b7-a141b0fa658a" class="" dir="auto">Decision record</h2><p id="f5b83f83-8730-4f93-87a3-aed023fa91e9" class="" dir="auto"><strong>Decision date:</strong> 2026-07-10</p><p id="e4c9cdb3-bfdd-4cdb-9bd7-c23b788171d3" class="" dir="auto"><strong>Status:</strong> Accepted current MVP direction</p><p id="98ffb979-409d-4925-abb6-d1bbbb20f3ff" class="" dir="auto"><strong>Supersedes:</strong> one shared static QR, applicant slip upload as the normal path, and direct bank/payment-provider API assumptions</p><p id="cb3edaac-e3d1-4d3d-88a9-2c84b8d33ace" class="" dir="auto">The pilot payment flow uses the existing <strong>SCB Bill Payment bulk process</strong>. Our application prepares exact-room and resident payment obligations, exports the bank-required Excel workbook, staff uploads it to the existing internal SCB application, and that application returns official QR payment-form PDFs. Payment results are then imported from the SCB downloadable result/transaction report or confirmed manually by authorized finance staff.</p><h2 id="c9017b93-e356-47b4-82b2-58c014b3fc43" class="" dir="auto">Pilot scope</h2><ul id="ddc0db01-16e6-4ee3-843d-0b4c57f7b184" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pilot dorm groups: <strong>วรเรสซิเดนซ์ / หอ 8 หลัง</strong> and <strong>หอพักวรอินเตอร์</strong> together.</li></ul><ul id="9ad66948-1fd7-44b2-b8ce-43e72df101bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact room inventory is authoritative; room numbers are globally unique and encode the building/floor context.</li></ul><ul id="16e69ff6-db98-494e-b1c3-29bf30f4e2a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maximum normal occupancy is two residents per room.</li></ul><ul id="30e691a8-56a6-4ad4-9529-b2cc2f968170" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Occupancy modes: shared room or whole-room rental (<code>เหมาห้อง</code>).</li></ul><ul id="b16970b4-b723-4845-a2d3-f962b08d5e10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A normal shared room creates separate resident payment obligations.</li></ul><ul id="f8478d35-351f-42c5-a16d-1f08859cbc65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A whole-room rental creates one resident obligation for the full-room amount per payment action.</li></ul><ul id="53c62da9-2911-4d3f-8de0-68b5ef349f3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HL rooms create separate <code>ROOM</code> and <code>HL</code> payment obligations.</li></ul><ul id="3e2b9d8e-823d-487d-baf9-d3896d97eab9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The five-baht SCB Bill Payment fee is absorbed by the dorm/company under the current design assumption.</li></ul><h2 id="5face662-f349-4be3-8758-c45009d755d9" class="" dir="auto">Canonical end-to-end payment flow</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="071a6eaf-74c2-4aa4-84ff-be45ee355ca1" class="code code-wrap" data-notion-code-syntax="mermaid"><code class="language-mermaid" style="white-space:pre-wrap;word-break:break-all">flowchart LR
+    A[Exact room reservation group ready] --&gt; B[Create resident payment obligations]
+    B --&gt; C[Finance reviews overrides and exceptions]
+    C --&gt; D[Export XLSX sheet SLIPS]
+    D --&gt; E[Staff uploads batch to SCB internal software]
+    E --&gt; F[SCB returns combined multipage QR payment PDF]
+    F --&gt; G[Staff imports PDF into dorm app]
+    G --&gt; H[App matches each page to a resident obligation]
+    H --&gt; I[Resident downloads and pays QR bill]
+    I --&gt; J[SCB downloadable payment result report]
+    J --&gt; K[Staff imports or confirms payment result]
+    K --&gt; L{All required ROOM and HL obligations paid?}
+    L --&gt;|No| M[Keep group pending until shared deadline]
+    L --&gt;|Yes| N[Staff confirms reservation]
+    N --&gt; O[Exact room permanently confirmed]
+    O --&gt; P[Generate printed contracts and key-handover record]</code></pre><h2 id="1e1fbef4-61dd-4ca0-9602-87768f68eb48" class="" dir="auto">Reservation and payment holds</h2><h3 id="7bd474d0-cff3-47b6-8151-fb89df554832" class="" dir="auto">Roommate confirmation hold</h3><ul id="6c0603ed-19f1-4367-bec2-44781ef93282" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The leader selects the exact room and clicks <strong>Reserve</strong>.</li></ul><ul id="859d6bd5-963a-4fab-9391-2359d90a11f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The room is held immediately.</li></ul><ul id="1e4c3c39-fc8a-4ad8-8824-129abc74735e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">When campaign setting <code>roommate_room_confirmation_required</code> is enabled, the roommate has <strong>15 minutes</strong> to confirm the selected room.</li></ul><ul id="5f5d82d0-a46b-4084-8b37-58920214cc01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">If confirmation does not occur in time, the room is released immediately.</li></ul><ul id="9c40ddb0-a8f5-40f9-b9b7-885558814edf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff-created manual reservations are final and do not require resident confirmation.</li></ul><h3 id="dc6cb827-d1c6-46f7-ac69-6b95a95fad88" class="" dir="auto">Payment hold</h3><ul id="4cc792ff-f238-4cd4-af32-71755e945e86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">After the reservation group is ready, the exact room is held for <strong>72 hours</strong> under the current design baseline.</li></ul><ul id="25f68cac-d453-42b1-ad45-47760b645e28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared-room residents use one room-group deadline.</li></ul><ul id="31a6d6d2-b03c-4c23-b408-94fad8a76852" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Other applicants may see that the room is temporarily held and when the hold expires, but they cannot reserve it.</li></ul><ul id="0f835a53-3274-47fa-8c7d-b98e7eb84109" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Permanent confirmation currently requires all required payment actions to be received and an authorized staff confirmation.</li></ul><ul id="5f2c351e-2650-4931-8a78-2cadd63909fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">If one roommate pays and the other does not, the room remains held until the shared deadline, then the group is released/cancelled under the provisional rule.</li></ul><h2 id="72a1bdd8-ba2c-4519-ac9f-58684bc678b6" class="" dir="auto">Payment actions</h2><h3 id="ec2bbd01-3fdd-465b-a96c-67d5bb8edfc5" class="" dir="auto"><code>ROOM</code></h3><p id="b0da5a50-5821-4f3b-b16f-4891b3b53df6" class="" dir="auto">Official room-fee obligation. <code>Ref.2</code> is currently expected to combine payment-action code and Buddhist academic year, for example <code>ROOM2569</code>.</p><h3 id="cbb40965-f237-4508-8ba0-54106503348f" class="" dir="auto"><code>HL</code></h3><p id="ce9b5fa1-1c1f-47e7-b444-e968a24142ed" class="" dir="auto">Happy Living / converted-air-room service obligation. HL rooms always create a separate <code>HL</code> obligation in addition to <code>ROOM</code>. Equipment/services included in HL remain configurable.</p><h3 id="c38a8322-d904-4f66-a7c2-f71e1735ac8e" class="" dir="auto">Future actions</h3><p id="bc3b35a9-bafc-43ba-b5de-9bbc5b5b2cff" class="" dir="auto">Additional codes and semester-installment encoding remain configuration/stakeholder data. Do not hard-code only <code>ROOM</code> and <code>HL</code> into the domain model.</p><h2 id="f77ebed8-48aa-425a-8eb6-eece53aa91c6" class="" dir="auto">SCB Excel export contract</h2><p id="8e78ecfc-46e3-4c9d-a48a-f2ee5b55c580" class="" dir="auto">The workbook must use <code>.xlsx</code>, preserve the required worksheet name <code>SLIPS</code>, and keep the bank-required column order.</p><p id="ff0e86b3-0b32-4daf-8c09-8a7866db69e2" class="" dir="auto">Current field mapping:</p><ul id="cb19a44f-79fc-4a5c-b16d-8735674590e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ID</code> — must be left blank.</li></ul><ul id="80f85f77-1cc1-47e3-8bab-81cedc6962cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Payer Name *</code> — payment description/title, not assumed to be the resident name.</li></ul><ul id="99db1f4b-9cb5-431d-b864-eea6750015b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Ref.1 *</code> — exact room number; repeated for roommates in the same room.</li></ul><ul id="d2e2c34e-ab78-4bb4-947f-55a2024ae8a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Ref.2</code> — payment action code plus academic year, such as <code>ROOM2569</code> or <code>HL2569</code>.</li></ul><ul id="911e6e44-7392-445c-b98f-c9a786bf6837" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Amount *</code> — numeric resident obligation amount.</li></ul><ul id="564727fa-8801-49ae-bc7e-c73cb040aaab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Payment Date *</code> — bill issue date under the current interpretation.</li></ul><ul id="bb5a4f4d-e91a-4aa4-991f-7a6943341dd8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Email Address</code> — required by the internal application; precise operational use remains unconfirmed.</li></ul><ul id="5561aa22-022f-4857-9232-4faaf4f79d89" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Alert Message</code> — <code>DEFAULT</code>.</li></ul><ul id="72fa45de-8a83-491f-b992-22eb9ddc84ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Remark</code> — optional/configurable note subject to the template limit.</li></ul><p id="c3d17c21-b95e-4bba-9790-d85d919c32d5" class="" dir="auto">One export row represents:</p><pre id="8cf594e2-2aa2-427e-acb1-65ab92453e8e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">one resident × one payment action</code></pre><p id="5805e0b7-fecc-4888-98f3-eaaef0b8fff2" class="" dir="auto">Example for two roommates in an HL room:</p><pre id="6c63e69c-63b6-4c27-aa04-0e4b919624fb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Resident A | A101 | ROOM2569 | amount A-room
+Resident A | A101 | HL2569   | amount A-HL
+Resident B | A101 | ROOM2569 | amount B-room
+Resident B | A101 | HL2569   | amount B-HL</code></pre><p id="672165f5-88b1-4c90-b457-3a26e493ed02" class="" dir="auto">Batch grouping is configurable. The current baseline allows all rows in one batch when the internal application accepts them.</p><h2 id="d4f2f37f-78d9-48a7-bb6b-c2c60b0decc6" class="" dir="auto">Amount calculation and override</h2><ul id="6688b3ea-1cca-4a8c-af8a-20bc3b48dd58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The system calculates ordinary amounts from room, occupancy mode, applicant type, academic year, payment action, and configured pricing rules.</li></ul><ul id="43cfd372-3357-44e4-9aef-e669b184d253" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Finance/payment administrators review only exceptions and overrides rather than every normal row.</li></ul><ul id="ee017e73-9120-45f4-99f1-65462bfe8b67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A payment-obligation override affects only the current obligation/export row.</li></ul><ul id="bef210b8-6733-4799-ade4-715e821db2a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every override requires a reason and audit event.</li></ul><ul id="e1782025-f11b-4edb-bb34-ea2241063c4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Permanent pricing changes are a separate configuration action and must not occur silently through a one-off override.</li></ul><h2 id="f2c8e9c5-806e-49ac-a356-ec2c63124223" class="" dir="auto">Returned PDF handling</h2><p id="1621e0bc-b641-46d9-bf9d-b66a0f4334c0" class="" dir="auto">The current SCB output is one combined multipage PDF.</p><p id="dbfe7294-5b19-4794-b3d8-0759ba969ebd" class="" dir="auto">Required behavior:</p><ul id="5d7d3753-3818-411c-8509-07a341817e39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Upload the returned PDF to private storage.</li></ul><ul id="06570ed5-0c5d-4750-a5a0-ddee274369dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Preserve the original batch file and checksum.</li></ul><ul id="ae341d5b-11e1-4086-b31e-b69d559d3cda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Split or index pages without losing the original combined file.</li></ul><ul id="5844df36-e6ab-40bf-a631-20a45c736fd6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Match each page to the correct resident payment obligation using resident-specific text printed on the page.</li></ul><ul id="e84406ba-919d-485e-88f2-ea8fd4f18780" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Do not rely on page order or assumed descending <code>Ref.1</code>, because roommates can share identical <code>Ref.1</code> and <code>Ref.2</code>.</li></ul><ul id="2bc66291-a78c-44d0-9e6b-7592315786db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Record export row number, PDF page number, matching result, reviewer, and confidence/manual correction.</li></ul><ul id="96ae5936-274c-4d6a-96ab-2646b0f6091b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A changed bill is cancelled/superseded and replaced with a new version; old versions remain in history.</li></ul><h2 id="d96042a7-1b82-4b88-b521-c0f68ccc16f0" class="" dir="auto">Payment-result import and confirmation</h2><p id="7547fe38-aa69-424d-8f57-b7a064c45db1" class="" dir="auto">Normal source:</p><ul id="4c56e2ee-d7d7-402e-8e81-32c74beb59e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB downloadable transaction/result report.</li></ul><p id="1c6123c3-8f07-45a3-a9dd-12154642eae0" class="" dir="auto">Fallback/manual source:</p><ul id="b102a79e-5fbb-4d18-b7a1-bf43930b4f9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Authorized finance staff records bank transaction/reference plus staff note.</li></ul><p id="6be73e42-ffde-4de6-802e-4c683e8cde1a" class="" dir="auto">Payment exceptions such as underpayment, overpayment, duplicate payment, late payment, and payment after hold expiry enter staff review. Refund status is tracked in our application, but refund execution remains outside the MVP and may differ between <code>ROOM</code> and <code>HL</code> recipients.</p><h2 id="9fa94c8b-a35a-4e8a-a05c-d12292cd62ed" class="" dir="auto">Core data model</h2><p id="9ff23605-ea33-4dcc-aa78-87b7d1bf049a" class="" dir="auto">Recommended entities:</p><ul id="a60d6a29-ae4d-4c9b-b276-076518c658a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_actions</code></li></ul><ul id="a143a20b-41e3-4c45-8eef-8b582866013e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pricing_rules</code></li></ul><ul id="1fa0010d-0e8f-42bc-a7f9-96ad98900f9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_obligations</code></li></ul><ul id="feffd1a7-e11e-4747-8c05-38a1a0a1b796" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export_batches</code></li></ul><ul id="3f886f66-ad0e-4707-8e6a-30cadfcda9f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export_rows</code></li></ul><ul id="bff547a4-ad99-4f9c-bf23-ccc71c6f9c4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>returned_payment_documents</code></li></ul><ul id="f1896ee7-6cec-42dd-8533-4a2a5560cf0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>returned_payment_document_pages</code></li></ul><ul id="db2fa536-1a81-4b75-834e-22156515658e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_result_imports</code></li></ul><ul id="dd3742d4-d304-4683-99b6-e2fb90cec3b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_transactions</code></li></ul><ul id="e72836fa-86dc-476a-b45e-0a9717fda741" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_adjustments</code></li></ul><ul id="8706097e-31e6-4196-9836-0e904bda335c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_status_events</code></li></ul><p id="69c1bd62-e9fc-490c-b68e-e34fa72a2838" class="" dir="auto">Key constraints:</p><ul id="c828dff2-c896-4b46-8f6f-dd3410783ce0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every obligation belongs to one resident, reservation group, exact room, academic year/payment cycle, and payment action.</li></ul><ul id="28778882-9188-4eca-9a48-866075c019ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Ref.1 + Ref.2</code> is not unique across residents.</li></ul><ul id="e5490839-b8af-4475-9b47-0988c9f63eae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internal obligation ID is the source of truth.</li></ul><ul id="92621a3a-0148-4194-8487-9edeeffedb62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Export row order is metadata, not identity.</li></ul><ul id="f68556ec-9735-4727-8d1c-be44232190ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One transaction/result row must not satisfy multiple obligations unless an explicitly approved allocation rule exists.</li></ul><ul id="aa78d32d-e1f5-46e7-ba9c-386f68a0ab4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Confirmation and room-lock updates must be transaction-safe and idempotent.</li></ul><h2 id="b6385ae1-3dba-4b43-a14c-40aeb5ce2ffc" class="" dir="auto">API boundary</h2><pre id="aba2b11b-d458-432c-9718-08f3ebda8e37" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">POST /admin/payment-export-batches
+GET  /admin/payment-export-batches/{batchId}/xlsx
+POST /admin/payment-export-batches/{batchId}/returned-pdf
+POST /admin/payment-export-batches/{batchId}/payment-result
+GET  /applications/{applicationId}/payment-obligations
+GET  /payment-obligations/{obligationId}/document
+POST /admin/payment-obligations/{obligationId}/manual-payment
+POST /admin/payment-obligations/{obligationId}/override-amount
+POST /admin/payment-obligations/{obligationId}/cancel
+POST /admin/payment-obligations/{obligationId}/supersede
+POST /admin/reservation-groups/{groupId}/confirm-payment-complete</code></pre><h2 id="63bcedaf-f213-4dd6-9810-7f094697f077" class="" dir="auto">Permissions</h2><ul id="48cbfa77-478e-4c3b-bbd6-e188e445e88a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_obligation.override</code></li></ul><ul id="03899bcc-07ec-4e6b-aacf-5c2d005100e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export.create</code></li></ul><ul id="3a4303c9-d478-4dbe-b554-f4205f44b0e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export.download</code></li></ul><ul id="7d32019c-694e-4815-a35e-66dd8e5fab5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_document.import</code></li></ul><ul id="cd4afa57-666a-4fb5-ac8c-72648ef9c3bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_document.match_review</code></li></ul><ul id="6c648338-fc94-4fb5-a645-1ad7e7bd3388" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_result.import</code></li></ul><ul id="37e74250-47ae-4650-9735-426afe0c3672" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.manual_record</code></li></ul><ul id="d9e2b1ec-215a-4d3b-bd6e-12f75ffcb86f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.confirm</code></li></ul><ul id="b17a85f0-7755-43a0-8457-da68305f399c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.cancel</code></li></ul><ul id="f0fade99-6d39-4b53-85b3-989a8470ca76" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.refund_status.manage</code></li></ul><p id="38a6f074-a92e-4d81-abcb-f772a48cd6cc" class="" dir="auto">Manual reservation/payment, amount override, cancellation, roommate replacement, payment-document replacement, contract reprint, and correction require a reason and audit event.</p><h2 id="cc656185-76b4-4e96-bb28-94e935d2e325" class="" dir="auto">Remaining decisions</h2><ul id="051be762-c562-4ab6-a85d-69404ed663df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact semester-installment <code>Ref.2</code> format.</li></ul><ul id="d774f2ab-7be1-4bd6-a07d-c4d56ae86cce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Whether <code>ROOM</code> and <code>HL</code> can always coexist in one SCB upload across receiving accounts.</li></ul><ul id="bf9c4faa-e219-432f-a4c1-0603a114a38c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resident-specific field printed on returned PDF pages.</li></ul><ul id="aeae98cc-856f-4bc4-a853-2ed7898c5064" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Actual PDF sort order and whether SCB returns a manifest.</li></ul><ul id="52a6bcd0-c163-440d-a043-37ff582601dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact columns and identifiers in the SCB payment-result report.</li></ul><ul id="6356c642-6469-4401-b90e-1e864f894025" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Final stakeholder confirmation that all required payments plus staff confirmation means “ได้ห้องแล้ว”.</li></ul><ul id="12d84370-5c81-4428-b7c3-e4c9009c6d75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fee-exempt occupant handling.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,48 @@
+import type { Campaign } from '@/types'
+
+export const campaigns: Campaign[] = [
+  {
+    id: 'camp-2569',
+    kind: 'new_application',
+    name: 'เปิดจองหอพักปีการศึกษา 2569 (หอ 8 หลัง + วรอินเตอร์)',
+    dormGroupIds: ['dorm-8-lang', 'dorm-wor-inter'],
+    status: 'open',
+    openDate: '2026-06-01',
+    closeDate: '2026-08-15',
+    roommateRoomConfirmationRequired: true,
+    roomConfirmationMinutes: 15,
+    paymentHoldHours: 72,
+    invitationHours: 48,
+    contractPeriod: 'ปีการศึกษา 2569 (ส.ค. 2569 – พ.ค. 2570)',
+    policyNotes: [
+      'เลือกห้องจริงรายห้อง (อาคาร → ชั้น → ห้อง) ทั้งแบบพักคู่และเหมาห้อง',
+      'คำเชิญรูมเมทมีอายุ 48 ชั่วโมง และต้องตอบรับก่อนเลือกห้อง',
+      'เมื่อหัวหน้ากลุ่มกดจอง ห้องถูกล็อกทันที และรูมเมทต้องยืนยันห้องภายใน 15 นาที',
+      'กลุ่มที่พร้อมแล้วมีเวลาชำระเงิน 72 ชั่วโมง (deadline เดียวร่วมกันทั้งกลุ่ม)',
+      'ชำระผ่านแบบฟอร์ม QR อย่างเป็นทางการจากธนาคาร (SCB Bill Payment) — ไม่ใช้การอัปโหลดสลิปเป็นช่องทางหลัก',
+      'การจองยืนยันถาวรเมื่อชำระครบทุกรายการและเจ้าหน้าที่ยืนยัน',
+      'ลงนามสัญญากระดาษประจำปีหลังการจองได้รับการยืนยัน',
+    ],
+    contact: 'กองบริการหอพักนักศึกษา มหาวิทยาลัยขอนแก่น โทร 043-xxx-xxx',
+  },
+  {
+    id: 'camp-renewal-2569',
+    kind: 'renewal',
+    name: 'ต่อสัญญาหอพักประจำปี 2569 (ผู้พักปัจจุบัน)',
+    dormGroupIds: ['dorm-8-lang', 'dorm-wor-inter'],
+    status: 'upcoming',
+    openDate: '2026-08-01',
+    closeDate: '2026-08-31',
+    roommateRoomConfirmationRequired: false,
+    roomConfirmationMinutes: 15,
+    paymentHoldHours: 72,
+    invitationHours: 48,
+    contractPeriod: 'ปีการศึกษา 2570 (ส.ค. 2570 – พ.ค. 2571)',
+    policyNotes: [
+      'ระบบเติมข้อมูลเดิมให้อัตโนมัติ ผู้พักยืนยัน/แก้ไขเฉพาะที่เปลี่ยน',
+      'หากรูมเมทไม่ต่อสัญญา: เชิญคนใหม่ / เหมาห้อง / ย้ายห้อง / คืนห้อง ภายใน deadline ที่กำหนด',
+      'วันเปิด-ปิดรอบต่อสัญญาเป็นค่า Provisional — รอ stakeholder ยืนยัน',
+    ],
+    contact: 'กองบริการหอพักนักศึกษา มหาวิทยาลัยขอนแก่น โทร 043-xxx-xxx',
+  },
+]

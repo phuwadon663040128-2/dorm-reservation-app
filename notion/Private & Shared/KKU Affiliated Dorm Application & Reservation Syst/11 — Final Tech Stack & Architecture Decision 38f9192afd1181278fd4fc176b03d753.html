@@ -1,0 +1,823 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>11 — Final Tech Stack &amp; Architecture Decision</title><meta name="data-notion-page-icon" content="🧰"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%B0%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="38f9192a-fd11-8127-8fd4-fc176b03d753" class="page sans" data-notion-page-icon="🧰"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🧰"></span></div><h1 class="page-title" dir="auto">11 — Final Tech Stack &amp; Architecture Decision</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="7b5b3567-20fb-4408-b284-d42286b007b3" class="" dir="auto">Decision summary</h2><p id="786e1660-e657-4611-a07e-906edae7d185" class="" dir="auto"><strong>Last revised:</strong> 2026-07-10</p><p id="2ebbb260-3757-4f86-94f2-f9f33c8eafe6" class="" dir="auto">This page records the selected implementation stack and architectural constraints for the combined exact-room pilot of <strong>หอ 8 หลัง + วรอินเตอร์</strong>.</p><h2 id="91228688-a5ae-4611-b6e8-93ee8efc0a76" class="" dir="auto">Final selected stack</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="e7974406-02ea-40d0-9477-28e6c1754e01" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Frontend: Nuxt + shadcn-vue + Tailwind CSS
+Backend: Go + chi
+Database access: GORM + sqlc
+Database: PostgreSQL
+File/object storage: SeaweedFS via S3-compatible gateway
+Reverse proxy: Nginx
+Runtime/deployment: Docker / Docker Compose
+Applicant authentication: verified internal email/password account
+Optional identity: Mock/production KKU SSO adapter
+External payment workflow: SCB XLSX export, returned multipage PDF, payment-result import
+CI/CD: no GitHub Actions in current delivery plan</code></pre><h2 id="4b39fa94-16b7-4b21-bca6-27fde43df8fe" class="" dir="auto">Core architecture decisions</h2><h3 id="aafb8ccf-be02-4f24-88b5-ebd4191b05c3" class="" dir="auto">Exact rooms, not only room-type quota</h3><p id="c8fb5f39-e041-4488-80d2-2469b4ca5064" class="" dir="auto">The MVP stores and reserves exact rooms. Room numbers are globally unique and map to building/floor context.</p><h3 id="18df80c7-bc1e-42fe-afe4-b3e8d73a93a1" class="" dir="auto">Roommate group is a first-class domain</h3><p id="5d4b97d7-aab6-4e41-b815-04908d0f707f" class="" dir="auto">The system stores:</p><ul id="3402e73f-8941-4804-a64e-dd6baddcd6a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">reservation leader;</li></ul><ul id="cfc73ecd-5814-4a46-97d7-6df3cedd0f59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">invitation/acceptance;</li></ul><ul id="38f626c5-fdea-462a-95b5-3cbcd1e327a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one active group per resident;</li></ul><ul id="69e8d607-ce17-4c93-af84-8c04a132121d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">maximum two residents;</li></ul><ul id="03ad9975-8ad4-408c-8595-3627bdeb1a7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">optional second room confirmation;</li></ul><ul id="791dcbab-a173-48b0-b624-c756c69fa465" class="bulleted-list" dir="auto"><li style="list-style-type:disc">group payment deadline;</li></ul><ul id="0e3dbcca-8df9-4f2e-b645-acf2f02b6e64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">grouped contract completion.</li></ul><h3 id="10989eea-cf56-4418-ab3e-87303961040e" class="" dir="auto">Whole-room rental is a first-class occupancy mode</h3><p id="63321ed4-a00a-4dcf-b161-00316adf6ab1" class="" dir="auto">It is not implemented as a fake second roommate. One resident blocks both occupancy slots and receives full-room obligations.</p><h3 id="84ac7f87-145a-49b0-8b7d-9e0bed084564" class="" dir="auto">SCB workflow is file exchange</h3><p id="4cf767e3-efdf-4985-bd96-acae4f5e51fb" class="" dir="auto">Our app does not generate official QR bills and does not use a direct bank API in the MVP.</p><p id="b8ac1476-7ac8-43c4-929f-7e5a2ed6e3e2" class="" dir="auto">It generates the required Excel batch, imports the returned combined PDF, and imports the result report.</p><h3 id="84494a86-51b3-4ea5-bcd7-1071fc531ac9" class="" dir="auto">Paper contracts remain official operational output</h3><p id="e3fcd8ce-30e7-4105-a6d0-cad3fde6fcd8" class="" dir="auto">Our app generates printable contracts, stores immutable snapshots, records physical signatures and private scans, and tracks separate key handover.</p><h2 id="292ffbfb-525d-4dc6-99ae-c7756910975d" class="" dir="auto">Stack decision table</h2><h3 id="52de0a5b-2e7e-4fb2-b2f9-e02865ee17b9" class="" dir="auto">Nuxt + shadcn-vue + Tailwind CSS</h3><p id="1f811f49-132d-43eb-9832-0d3a8bd86f80" class="" dir="auto">Used for responsive applicant and staff UX, including exact-room browser, countdown holds, batch previews, PDF page matching, and contract workflow.</p><h3 id="5bb145b1-999a-4f19-8f26-e0553f105a83" class="" dir="auto">Go + chi</h3><p id="0fd66e3c-08c2-421b-856d-df0b188a1daa" class="" dir="auto">Used for API, authorization, transactional domain services, file processing, and import/export orchestration.</p><h3 id="537ba1e7-1af9-4e81-bbbc-3f8dc474413f" class="" dir="auto">PostgreSQL</h3><p id="23404f19-c0cb-4ac4-846c-604ee31e8e25" class="" dir="auto">Used for relational integrity, exact-room locks, roommate/group constraints, versioned pricing, obligation history, imports, audit, and idempotency.</p><h3 id="e2e49299-b576-412e-865d-ec105519cb1f" class="" dir="auto">GORM</h3><p id="95f0f223-aa1a-493a-bad7-0c5f605f1db4" class="" dir="auto">Used for ordinary CRUD:</p><ul id="1dcd6116-8452-450d-8fea-728f705e3f18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dorm/building/floor/room administration;</li></ul><ul id="96cc862c-0e16-4dd7-9076-6d0dbce5436e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">applicant/profile CRUD;</li></ul><ul id="8f8051a2-391e-4f6e-bc12-c65af328ef54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room configuration;</li></ul><ul id="83484797-e8b4-4d7c-a97f-36814f953f5c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">campaigns/settings;</li></ul><ul id="8de5ae26-f3ab-4519-8802-d753b55a2bb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract templates;</li></ul><ul id="42bf407f-cdb2-4ae2-b64c-fb45e59424f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">normal dashboard queries.</li></ul><h3 id="efafd346-30c0-44ee-ba09-4942e6974260" class="" dir="auto">sqlc / explicit SQL</h3><p id="a334a7ac-fe32-4929-affa-2c9b9334c0cd" class="" dir="auto">Used where correctness must be reviewable:</p><ul id="dce11c93-a589-4707-a8c6-8ceef1a740d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact-room hold acquisition;</li></ul><ul id="ade8c177-a835-4093-9eb9-3c9b39ab5e20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">hold expiry/release;</li></ul><ul id="f9a146ce-484c-4529-86bc-5e18cf5b346d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">group/payment confirmation;</li></ul><ul id="66b12740-7b50-4ee5-83a2-eeea2bb11885" class="bulleted-list" dir="auto"><li style="list-style-type:disc">obligation supersession;</li></ul><ul id="22e3835a-b361-4a5b-9cb4-7e1df1c46f0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">result-report idempotency;</li></ul><ul id="2d155034-1760-4dc7-8f2c-c800df7c7583" class="bulleted-list" dir="auto"><li style="list-style-type:disc">final room confirmation;</li></ul><ul id="0e389a86-87e7-4b8b-bf0f-ad4efc31ec67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">correction exports;</li></ul><ul id="62c5d052-1cad-41ce-b2c4-7a5f6e43e7eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrency-sensitive reporting.</li></ul><h3 id="6ebbdca2-0869-47d1-b1dc-5d3f58399a34" class="" dir="auto">SeaweedFS through S3 gateway</h3><p id="d1ce2c4a-fa5a-455a-ae54-19d8f97013dc" class="" dir="auto">Stores private:</p><ul id="924ed497-0b98-44cd-aeb0-e9c07bb9c87f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room plans/assets;</li></ul><ul id="6b50f40d-b17b-4347-be02-8ec597a743c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB export workbooks;</li></ul><ul id="b288eff4-b43b-4ea9-80b0-823505924ed3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">returned combined PDFs;</li></ul><ul id="bfd36be8-d635-442d-bfbe-b85aecb8ec2d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">result reports;</li></ul><ul id="955c1015-4441-4af9-87fa-270b79624f13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contracts;</li></ul><ul id="aa55e95f-0fe9-4ea0-bc11-0ff1c59afe83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">signed scans/photos;</li></ul><ul id="057fe503-c567-4143-b59e-6096b8cbf0f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">key-handover files;</li></ul><ul id="ca454889-af6a-4621-bfe7-055e374d1209" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university export/correction files.</li></ul><p id="561e3651-1730-48a9-941e-8292c08a32a0" class="" dir="auto">PostgreSQL stores metadata, relationships, checksums, page mappings, and access control.</p><h3 id="e1072fcf-fc0b-486e-b3c8-20a9c29d648d" class="" dir="auto">Nginx</h3><p id="57be383e-caa6-42aa-8bc0-1372c76a9db0" class="" dir="auto">Handles:</p><ul id="a9d82744-fe0e-4f7f-8eb1-662698dca778" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS termination;</li></ul><ul id="67e2ab40-96c3-4ee4-9bfa-1140530a7347" class="bulleted-list" dir="auto"><li style="list-style-type:disc">routes to Nuxt/API;</li></ul><ul id="e15d61b7-8182-4740-be1b-b6a9ed2a9432" class="bulleted-list" dir="auto"><li style="list-style-type:disc">upload limits for XLSX/PDF/scans;</li></ul><ul id="f440edf1-7182-4037-aaac-3b416c9a1778" class="bulleted-list" dir="auto"><li style="list-style-type:disc">security headers;</li></ul><ul id="8126d8da-96bb-4274-b979-f02c0b069bb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">protected file access through API authorization.</li></ul><h3 id="d64212d6-fce5-4748-96a5-73d21989ded0" class="" dir="auto">Docker Compose</h3><p id="38739fb2-70ac-44fa-a91d-503748d5f8bb" class="" dir="auto">Represents:</p><ul id="6a2660a3-9475-4693-bf8e-61add500669d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>nginx</code></li></ul><ul id="4d7cd9ca-1b8b-48dc-acf0-2de4a1cbd52f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>frontend</code></li></ul><ul id="f2c52bdf-2414-4cd3-ac14-86b7bb4e5448" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>api</code></li></ul><ul id="18b37339-1472-475f-a2be-715ab8e29546" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>postgres</code></li></ul><ul id="14d8dd64-f648-462a-af60-cb89887818a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-master</code></li></ul><ul id="c8e23ef5-f459-4efe-bb82-5686aa7bdd73" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-volume</code></li></ul><ul id="54ddf082-0605-4951-9579-bbbf0284a419" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-filer</code></li></ul><ul id="e7e05bf6-b807-432c-a9c5-f9d8372cb124" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>seaweed-s3</code></li></ul><ul id="fde2863f-8ffe-4749-8a04-8480e2b99aba" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>mock-kku-sso</code></li></ul><p id="237d0150-f8db-43c0-a369-441ab7a5efdd" class="" dir="auto">SCB/internal and university systems remain external operational dependencies, not local services.</p><h2 id="c2a95f47-9785-4076-a04c-8189b22d283a" class="" dir="auto">Backend package direction</h2><pre id="1967670d-b11b-4003-994a-1617684aa8e4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cmd/
+  api/
+internal/
+  config/
+  http/
+    handlers/
+    middleware/
+    routes/
+  domain/
+    room/
+    roommate/
+    reservation/
+    pricing/
+    payment/
+    contract/
+    handoff/
+  service/
+    room_hold_service.go
+    roommate_service.go
+    reservation_service.go
+    pricing_service.go
+    scb_export_service.go
+    returned_pdf_service.go
+    payment_result_service.go
+    contract_service.go
+    key_handover_service.go
+    university_handoff_service.go
+  repository/
+    gorm/
+    sqlc/
+  storage/
+    s3/
+  document/
+    xlsx/
+    pdf/
+  auth/
+  audit/
+  notification/
+  export/
+migrations/
+fixtures/</code></pre><h2 id="07c0e2e7-e823-4349-979b-09c6285fc879" class="" dir="auto">Document-processing decisions</h2><h3 id="d0c25140-7e26-4cd2-bdfc-04f5fcc84bdd" class="" dir="auto">XLSX</h3><p id="7d5d086c-432b-4f18-a089-c437612db50e" class="" dir="auto">Use a library that preserves:</p><ul id="0e9a6f86-9764-4a7d-af15-7c737584259e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact worksheet name;</li></ul><ul id="6e9871df-97f9-4bf7-b670-e078ca7d2c73" class="bulleted-list" dir="auto"><li style="list-style-type:disc">column order;</li></ul><ul id="ee74bf0d-de3e-4f6b-80f9-34feb66214af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">numeric amount types;</li></ul><ul id="216f2dc6-6b4d-4f65-bc6c-0ddfa323b94c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">date values/format accepted by the internal application;</li></ul><ul id="6c37299b-8558-406c-b40a-7a894350bf20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">blank <code>ID</code> cells;</li></ul><ul id="fd659238-a7dd-4078-ba9b-bc3a17f59018" class="bulleted-list" dir="auto"><li style="list-style-type:disc">field length validation.</li></ul><h3 id="9093560f-3b0c-4512-8427-e80a54df3dfe" class="" dir="auto">Returned PDF</h3><ul id="252f669e-fe8d-407a-8abe-a27249755b9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Store original combined PDF.</li></ul><ul id="67f4dd23-d432-4919-9abc-eb75a7ebe3c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Extract text layer page by page.</li></ul><ul id="f587c195-9166-4259-8bdd-4b8951dc31be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Match by resident-specific text and obligation context.</li></ul><ul id="712c2688-510a-4fee-89ed-064f19d20256" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Do not use OCR unless PDF is image-only.</li></ul><ul id="d21b432d-6f46-4bae-a49d-a31e619285e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Never depend only on page order or <code>Ref.1 + Ref.2</code>.</li></ul><ul id="236f3862-853f-46c5-b831-30bee6b2bb14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Preserve manual mapping decisions and reasons.</li></ul><h3 id="93d064d0-d356-405f-9633-ef083243a36d" class="" dir="auto">Contract rendering</h3><p id="b80c51de-426e-4f70-a687-5414e099bfc5" class="" dir="auto">Use a versioned template and immutable generated snapshot. A rendered PDF is a printable artifact, not an electronic signature.</p><h2 id="aa69dd37-e1f3-4b83-835a-b9e440dc584e" class="" dir="auto">Critical database constraints</h2><ul id="11020c2f-be11-4b54-bd41-6f198bf460f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unique room number.</li></ul><ul id="0c929eb7-585b-4988-ace0-bb2b5fce939b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maximum two active reservation members.</li></ul><ul id="f0f54ca2-baca-4313-9629-803977dd4206" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One active roommate group/invitation per resident.</li></ul><ul id="42493dde-ba13-429a-a787-656b714ea474" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Whole-room assignment prevents second occupant.</li></ul><ul id="8ee0e70d-2665-41c0-9d26-63c5acada0ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One active hold per room.</li></ul><ul id="18281e7f-143c-4a51-aaf3-f33b214ed1e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One active room per reservation group.</li></ul><ul id="2f3d9fb1-52ea-4d45-98c7-ed27c6d87046" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every obligation references one resident, room, group, action, cycle, and price source.</li></ul><ul id="cd8c458f-b529-400f-9342-1d8a0ca7b48c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Ref.1 + Ref.2</code> is not unique.</li></ul><ul id="2bd410bc-e46a-4da3-a8f6-c69e534b31f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Re-imported SCB batch/result is idempotent.</li></ul><ul id="f55bb1f0-0a45-4d18-b005-19002eb8d326" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Superseded obligations/contracts remain immutable history.</li></ul><h2 id="1d27863e-8d33-46f9-b06f-88582d3e40af" class="" dir="auto">Critical concurrency rule</h2><p id="fe8cf23a-746f-4c1a-904f-26b2b8f548b6" class="" dir="auto">The system must avoid:</p><pre id="f3e07988-faf9-4cca-84fa-9d34b4d29ab1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Room A101 is available
+Leader A reserves it
+Leader B reserves it at the same time
+Both receive a successful hold</code></pre><p id="d7a28a84-8f14-4d8b-9fa2-fce1082b2ef6" class="" dir="auto">Use a single transaction/conditional update or row lock. Only one hold succeeds.</p><p id="54e76ce3-b619-4b05-a5f0-5efadc6d39a7" class="" dir="auto">The same rule applies to:</p><ul id="e29692d2-5a43-438f-9328-7b7b8e4335df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">hold expiry/release;</li></ul><ul id="3bb5d80c-7453-441a-a97c-04ce97130182" class="bulleted-list" dir="auto"><li style="list-style-type:disc">permanent confirmation;</li></ul><ul id="bc12ad5a-a34a-4ce1-9888-adb59e33b393" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate replacement;</li></ul><ul id="e84e3158-07d0-4620-aa63-afc401f72f39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">result-report application;</li></ul><ul id="af927e33-21f9-421d-aa7a-6ee081a4758c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">correction export.</li></ul><h2 id="bc5a3648-a2e6-4e11-9e38-f37ad3cdf966" class="" dir="auto">Authentication and roles</h2><p id="518a1b66-ef7a-4551-9fde-de298bc7a15f" class="" dir="auto">Applicants use verified personal-email accounts. Optional KKU SSO may attach to the same user.</p><p id="1108bffb-88ab-402c-9e1b-e870eedc5447" class="" dir="auto">Role categories:</p><ul id="6278db99-4e27-4283-8da4-5ab68800e442" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Applicant / Resident</li></ul><ul id="4863bc3b-b305-47c3-a44c-950c88522248" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dorm Staff</li></ul><ul id="e447e2f6-26bc-4660-860a-02a0a5c8f097" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dorm Manager</li></ul><ul id="03111110-fbb9-4112-b80e-2461ebd0afc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Finance / Payment Staff</li></ul><ul id="f9207750-39ae-46cf-9303-568deb76a2c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Contract Staff</li></ul><ul id="742e2823-a4d0-4924-94aa-657fda023271" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dorm Service Division Admin</li></ul><ul id="25384bf5-8d37-495a-8df6-91cbff87188b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Super Admin</li></ul><p id="061f125c-1f80-46de-b34b-dce44096571f" class="" dir="auto">Important permissions:</p><ul id="f0996d68-bef6-477e-b32e-2b7b42e74671" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room.manage</code></li></ul><ul id="30b8a5b4-18bf-43f2-b53d-de7b76aaadfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room.block</code></li></ul><ul id="26be2228-c414-4be2-94bb-b6b1887bb282" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation.manual_create</code></li></ul><ul id="2eaf42e2-19ac-4ab8-a191-593afd7588f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation.assign_room</code></li></ul><ul id="c88f94d3-c803-462c-a27c-19a737eb0b10" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation.confirm</code></li></ul><ul id="7e9eb4ab-73d6-4bbf-88ac-49ce4a4dcbd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_obligation.override</code></li></ul><ul id="26012b21-3c27-4f55-b0c5-6b513f89b578" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pricing_rule.manage</code></li></ul><ul id="f16f123f-46fa-466b-ba3f-d28683893cb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export.create</code></li></ul><ul id="d81904d0-0609-44fb-8955-3375dc40beb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_document.import</code></li></ul><ul id="580931bd-0229-44f0-9143-8bdda83edb96" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_document.match_review</code></li></ul><ul id="f96eded7-5424-4776-8ff8-cb041e89a355" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_result.import</code></li></ul><ul id="94534a86-d29c-4e3e-b831-6ef4ec1b2629" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.manual_record</code></li></ul><ul id="ee992f23-e115-4808-88c1-01c2e06f72d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.exception.resolve</code></li></ul><ul id="6650c98e-bef4-4795-9af5-80ae1778fc26" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.confirm</code></li></ul><ul id="ad1d0288-abd2-4b2c-b4e4-9a42355d29ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract_template.manage</code></li></ul><ul id="d5048f40-404b-49cb-a5e8-c198759b613b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract.generate</code></li></ul><ul id="b5d3142c-69e2-4351-9d75-c5c53003d61c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract.print</code></li></ul><ul id="767db190-f933-4ffa-bee5-07ed05f618af" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract.receive</code></li></ul><ul id="71788672-5fc7-4f8d-9e7e-88ae7288ce42" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>key_handover.record</code></li></ul><ul id="31940725-323a-4089-b74b-3c6e6d611478" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>university_export.create</code></li></ul><ul id="232bcab0-d048-4b8d-80a1-4209ba16ecc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>correction_export.create</code></li></ul><p id="9972dcca-1d76-48f1-ae15-8ec779a5a2b1" class="" dir="auto">Permissions are independent. Finance access does not automatically grant room or contract authority.</p><h2 id="d3147b9f-f1dd-4d52-9a47-67c6a9e2ef02" class="" dir="auto">Audit decisions</h2><p id="7fc30905-4012-4d43-ac8a-6ff9ed4a5017" class="" dir="auto">Always log actor, scope, reason, before/after, related IDs, timestamp, and request/idempotency key for:</p><ul id="58d54156-9bbf-42b9-a11f-b388e7eb5a31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">manual reservation/payment;</li></ul><ul id="2fe6f71e-f125-4ef2-bb4f-6bfee6fce95d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">amount override/pricing update;</li></ul><ul id="c99c48b7-a1a4-4131-87b1-73d7c7d43a45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room block/release override;</li></ul><ul id="f38c8ef6-8606-440e-9cfa-a00164bdcc49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">cancellation;</li></ul><ul id="ef0ee1e2-683c-434d-a928-3e1acc120390" class="bulleted-list" dir="auto"><li style="list-style-type:disc">roommate replacement;</li></ul><ul id="be1756a4-1fdb-480b-b70d-4442de9e290f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PDF page rematch/replacement;</li></ul><ul id="977668ec-e63a-40bb-bcd2-319bd10097f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">payment exception decision;</li></ul><ul id="1f725319-7969-47f0-b6c3-9ead04eb614b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">final confirmation;</li></ul><ul id="15ac468a-98b4-4680-8546-33811b063dd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract reprint/correction/cancellation;</li></ul><ul id="851afe88-5861-4a93-9413-ad07fc3ddb6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">key handover correction;</li></ul><ul id="122558ed-b8fe-4da0-8164-d6a0cb51ccb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university correction export.</li></ul><h2 id="031521f6-0cdc-414f-9861-efdf197e34a3" class="" dir="auto">Migration decision</h2><p id="80362cd6-d328-4834-b6cc-c59e70d56426" class="" dir="auto">Use versioned migration files as source of truth. GORM AutoMigrate is not the production migration process.</p><p id="0a484745-d1c5-4a4b-b931-71b58016555d" class="" dir="auto">Recommended tools:</p><ul id="ef429828-e89c-498a-8991-04945ca1e074" class="bulleted-list" dir="auto"><li style="list-style-type:disc">goose; or</li></ul><ul id="4e20a0ce-2de5-48b1-94c7-36134f8e3d01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">golang-migrate.</li></ul><h2 id="de8391aa-0880-41ec-a7cc-ae6d1fea8dd6" class="" dir="auto">Testing baseline</h2><ul id="74794340-ce33-4936-b707-16125f98187b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">room hold concurrency;</li></ul><ul id="8d0b0fe7-2474-4893-9f58-c9e95b4bb26d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">invitation/group constraints;</li></ul><ul id="81c2794e-b51f-4f13-84a0-39a41f4c0373" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute and 72-hour expiry;</li></ul><ul id="041386e9-8570-4599-8afa-13ab4da6c5a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">one paid/one unpaid group;</li></ul><ul id="9c978517-fd69-4e81-9f9a-67cc916970f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared-to-whole conversion;</li></ul><ul id="a8cf14d2-bc97-441b-bfa6-d1b8ae6ca4d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">XLSX contract validation;</li></ul><ul id="d03d602c-003a-440b-9dc2-ea3db59070cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">reordered PDF with duplicate room/action references;</li></ul><ul id="44dac857-ec6b-4c31-a010-0341042f653b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ambiguous page mapping;</li></ul><ul id="e3307b62-ba77-4f0f-b6cc-6646a32f2bf3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">repeated result import;</li></ul><ul id="0cd663b0-7cf2-4569-a7d6-db37ec264b76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">manual payment permission;</li></ul><ul id="164d2dbf-5973-4cf3-afa4-64eb0e386ffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">obligation/contract supersession;</li></ul><ul id="eadf45cc-4f50-4aba-8ee9-84b5cf40dd68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university correction history;</li></ul><ul id="22ee3beb-3310-4cbc-b8be-0884bdf70916" class="bulleted-list" dir="auto"><li style="list-style-type:disc">private file authorization;</li></ul><ul id="c21a5eff-b0fe-4dee-aa76-87ec80e9625f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backup/restore across database and files.</li></ul><h2 id="757140c0-ced3-4ec8-9210-a9c5481c363c" class="" dir="auto">No GitHub Actions decision</h2><p id="176648b4-7176-4901-b1dd-693b91a7e25a" class="" dir="auto">Manual/local scripts remain acceptable for current delivery:</p><pre id="4062695a-e4ed-434e-b06d-43eb17ca9358" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">make test
+make build
+make fixtures
+make deploy</code></pre><p id="1b532a6d-1727-4ff1-b22e-21d5ec1be03e" class="" dir="auto">CI may be added later after repository and deployment target stabilize.</p><h2 id="6830006f-b98b-4f12-acf5-cf89587e2df9" class="" dir="auto">Deferred technical scope</h2><ul id="5636fabf-d984-43f9-b5dc-dbe7c0092345" class="bulleted-list" dir="auto"><li style="list-style-type:disc">real-time bank API/webhook;</li></ul><ul id="6f727b2e-1e79-4b4d-ba56-9c946bb82da3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">digital signature infrastructure;</li></ul><ul id="fcbbbce7-f7fa-4493-b2c1-3881a5d89229" class="bulleted-list" dir="auto"><li style="list-style-type:disc">monthly utility implementation;</li></ul><ul id="8640e6e8-4d9c-463b-af25-73ca508039b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">parcel/maintenance modules;</li></ul><ul id="4add3061-4a9f-4227-98ab-e667574da9c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes/microservices/event bus;</li></ul><ul id="62c35187-c760-4003-91d5-ac772ad61ffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Redis unless a proven need appears.</li></ul><h2 id="f1454443-1260-4ee1-a84e-52741ef361fb" class="" dir="auto">Final stack statement</h2><blockquote id="d5227068-e1b9-4ab7-8010-4a3d818dd65b" class="" dir="auto">The system uses Nuxt with shadcn-vue for the applicant and staff interfaces, Go with chi for the API and domain services, PostgreSQL for exact-room and payment integrity, GORM for normal CRUD, sqlc for concurrency-critical operations, SeaweedFS through an S3-compatible gateway for private documents, Nginx as the public reverse proxy, and Docker Compose for reproducible deployment. Official QR forms and payment results are exchanged with the existing SCB workflow through XLSX, multipage PDF, and result-report files.</blockquote><h2 id="16d88ab9-6a5f-4f45-a36d-2c92e3e3c081" class="" dir="auto">Related pages</h2><ul id="b2755e47-d42f-4e30-ae0e-25ef575426cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="04%20%E2%80%94%20Technical%20Architecture%20Exact%20Rooms,%20Roommates%2038e9192afd1181329d23ceef5a8c2356.html">04 — Technical Architecture: Exact Rooms, Roommates &amp; SCB File Exchange</a></li></ul><ul id="ff89c950-dc84-4a99-885d-4b5cd1eb596c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></li></ul><ul id="35988990-6c17-44f1-8536-67e4866c2822" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html">15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a></li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

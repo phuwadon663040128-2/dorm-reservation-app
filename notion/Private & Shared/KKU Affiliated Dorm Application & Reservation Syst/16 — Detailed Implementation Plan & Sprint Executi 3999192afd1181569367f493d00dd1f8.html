@@ -1,0 +1,845 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>16 — Detailed Implementation Plan &amp; Sprint Execution</title><meta name="data-notion-page-icon" content="🧭"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%A7%AD%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="3999192a-fd11-8156-9367-f493d00dd1f8" class="page sans" data-notion-page-icon="🧭"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="🧭"></span></div><h1 class="page-title" dir="auto">16 — Detailed Implementation Plan &amp; Sprint Execution</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="c6e2613c-25ce-4a66-a234-f212efb4cf3a" class="" dir="auto">Purpose and status</h2><p id="b55f0abb-b447-495b-afd5-88ff2232af2b" class="" dir="auto"><strong>Last revised:</strong> 2026-07-10  </p><p id="ec1bb0aa-4186-4dfa-99de-8dbecb4bc01a" class="" dir="auto"><strong>Status:</strong> Detailed execution baseline for implementation  </p><p id="d0c46cfe-e42e-4c68-bb47-71325ad5cf9a" class="" dir="auto"><strong>Parent roadmap:</strong> <a href="09%20%E2%80%94%20Product%20Build%20Plan%20&amp;%20Roadmap%2038f9192afd11810592a9eb0e97d7d86d.html">09 — Product Build Plan &amp; Roadmap</a></p><p id="f65495af-fe50-421f-b710-b9b3bdab6f63" class="" dir="auto"><strong>Test-first execution:</strong> <a href="17%20%E2%80%94%20AI-Ready%20Test-First%20Implementation%20Plan%2039a9192afd118138a1cee6dacd4022b6.html">17 — AI-Ready Test-First Implementation Plan</a></p><p id="05956c8c-12c5-4a8e-b8c1-edc2567adfee" class="" dir="auto">This page converts the accepted eight-month roadmap into an implementation sequence for the combined <strong>วรเรสซิเดนซ์ / หอ 8 หลัง + หอพักวรอินเตอร์</strong> pilot.</p><p id="83457b11-c624-4b5b-976d-23d5057f994a" class="" dir="auto">It does not change the approved scope. It breaks the current direction into repository work, database migrations, APIs, frontend screens, file-processing jobs, tests, acceptance gates, deployment work, and stakeholder checkpoints.</p><h2 id="9b3b8bdf-a8b0-41be-8587-90a9e67e45a2" class="" dir="auto">Delivery assumptions</h2><ul id="d04be028-defd-4e9c-a2b2-d2b23347f40a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Two-week implementation sprints, Monday–Friday.</li></ul><ul id="bfd64997-e43e-4ca1-a2e8-afc690acaccc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Planned execution window: <strong>2026-07-13 through 2027-02-28</strong>.</li></ul><ul id="bc644f9a-8dbf-4903-9e9d-1d2f80be2612" class="bulleted-list" dir="auto"><li style="list-style-type:disc">If the official start moves, preserve the dependency order and exit criteria rather than the exact dates.</li></ul><ul id="b6a3cb76-e16e-4b05-a315-3e5bec874b71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A small team may combine roles; ownership below describes responsibility, not required headcount.</li></ul><ul id="93d268a8-b10f-4bf4-b6d7-50851bacfed5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The team uses manual/local build and release scripts. GitHub Actions remains outside the current plan.</li></ul><ul id="d62827c5-b142-498d-9936-bbbedc764619" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External SCB and university systems remain file-exchange boundaries. They are not services owned or deployed by this project.</li></ul><ul id="b5ec35ab-ff9b-4550-b5dd-bb09ef7fd38b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unknown operational rules remain configurable and marked <code>Provisional</code>; they must not be hard-coded as official policy.</li></ul><h2 id="2e3b5643-35ea-4ebe-90bc-eca6812b5b7b" class="" dir="auto">Non-negotiable implementation rules</h2><ol type="1" id="523dd566-c21e-4072-b22e-aa720865c959" class="numbered-list" start="1" dir="auto"><li>Exact room is the reservation inventory source of truth.</li></ol><ol type="1" id="bf5790e0-5fa3-4ecf-9d84-99500cae5fa5" class="numbered-list" start="2" dir="auto"><li>A room number is globally unique.</li></ol><ol type="1" id="eebb52bc-5415-4024-bc71-9c4c1325d68a" class="numbered-list" start="3" dir="auto"><li>A room can have only one active hold.</li></ol><ol type="1" id="b3add2c5-1079-4a46-b507-4ac8d515fa0a" class="numbered-list" start="4" dir="auto"><li>A resident can have only one active roommate invitation/group.</li></ol><ol type="1" id="aaef916b-49cf-4c3b-8c73-438fb45772b6" class="numbered-list" start="5" dir="auto"><li>Maximum normal group size is two residents.</li></ol><ol type="1" id="3da91b43-bf20-4279-b494-f3f4ea932d4b" class="numbered-list" start="6" dir="auto"><li>Whole-room rental is a real occupancy mode, not a fake second resident.</li></ol><ol type="1" id="8021b43a-8768-4cc4-bdd4-579ae2f9596c" class="numbered-list" start="7" dir="auto"><li>Leader reserve action atomically holds the exact room.</li></ol><ol type="1" id="42a79d25-d768-4243-8ddb-be6df82c291b" class="numbered-list" start="8" dir="auto"><li>Required roommate room confirmation expires after 15 minutes.</li></ol><ol type="1" id="49db2a12-43c9-46d6-88b4-de44887b0d04" class="numbered-list" start="9" dir="auto"><li>Successful group confirmation creates a 72-hour payment hold.</li></ol><ol type="1" id="1a5069f6-dc9b-4e0e-b6a6-818d6e8c5540" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Shared residents receive separate obligations and share one room-group deadline.</li></ol><ol type="1" id="77f63143-0933-4d51-80db-5c46155e7362" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>HL creates separate <code>ROOM</code> and <code>HL</code> obligations.</li></ol><ol type="1" id="36973a69-2337-4b9e-8f5d-4d651fefc99f" class="numbered-list numbered-list-digits-2" start="12" dir="auto"><li><code>Ref.1 + Ref.2</code> is not a unique resident/payment key.</li></ol><ol type="1" id="6089c88b-475b-4d87-ae15-fd43c6e0ccfe" class="numbered-list numbered-list-digits-2" start="13" dir="auto"><li>Official QR forms come from the existing SCB/internal application.</li></ol><ol type="1" id="39659784-74a8-4c35-b577-10de6b7256ce" class="numbered-list numbered-list-digits-2" start="14" dir="auto"><li>Returned PDF matching must not depend on page order.</li></ol><ol type="1" id="d8df6cb9-a863-4d6a-b226-5ef08db8bd46" class="numbered-list numbered-list-digits-2" start="15" dir="auto"><li>Final room confirmation is transaction-safe and succeeds at most once.</li></ol><ol type="1" id="f1d85b4d-72a6-45e3-8439-3edae0655250" class="numbered-list numbered-list-digits-2" start="16" dir="auto"><li>Superseded payments, contracts, exports, and corrections remain immutable history.</li></ol><ol type="1" id="6dac7048-4a92-4813-a51b-7dd1a3e3b9c1" class="numbered-list numbered-list-digits-2" start="17" dir="auto"><li>Manual reservation/payment, amount override, cancellation, replacement, rematch, reprint, and correction require a reason and audit event.</li></ol><ol type="1" id="0665267c-2fcd-4f5d-ab7d-488fd2919e28" class="numbered-list numbered-list-digits-2" start="18" dir="auto"><li>All uploaded and generated files are private and served only through backend authorization.</li></ol><h2 id="9cd2dee5-7817-43b9-9195-1c9cfba346c4" class="" dir="auto">Definition of done for every implementation item</h2><p id="b42f4a74-8a73-43ba-9cf5-c2db7e9e68d6" class="" dir="auto">A feature is complete only when:</p><ul id="7ce059b3-3e09-4fbc-994f-cbf614c37e25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">database migration is versioned and reversible where practical;</li></ul><ul id="65681255-2dce-4ccd-845f-e89ced2fffa6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">domain rule and authorization are enforced server-side;</li></ul><ul id="cf71a454-abc9-45bc-b4a3-692d40f98d7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API request/response contract is documented;</li></ul><ul id="134c03f4-d031-4be6-84f5-6805fa809c95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">frontend handles loading, empty, success, permission-denied, validation, conflict, and retry states;</li></ul><ul id="dd533f0b-6d12-4662-814b-2797398daec1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">audit behavior is implemented when applicable;</li></ul><ul id="e0b3d682-13df-4726-8d21-6a765ceda21a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">unit and integration tests pass;</li></ul><ul id="9b6fbb04-a0d7-4937-a532-c94ed6979374" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrency/idempotency tests exist for state-changing critical actions;</li></ul><ul id="b6b73c07-e2ce-42a7-8f41-3668d3e91e51" class="bulleted-list" dir="auto"><li style="list-style-type:disc">private-file access is tested;</li></ul><ul id="2be6e848-95da-430b-bcae-df73375528ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">fixture or demo data exists;</li></ul><ul id="48c9afee-efd5-4565-8a3e-b32eabe545a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">acceptance criteria are demonstrated in a reproducible environment;</li></ul><ul id="12e4684a-5ea8-4ccf-80fa-4539e46508de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">operational documentation is updated.</li></ul><h2 id="a9d293e3-04da-4071-8b5a-bc7854e971e2" class="" dir="auto">Critical implementation path</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="844c1cc4-792e-4aed-a2b4-327a20542d40" class="code code-wrap" data-notion-code-syntax="mermaid"><code class="language-mermaid" style="white-space:pre-wrap;word-break:break-all">flowchart LR
+    A[Requirements and sample files] --&gt; B[Domain states, ERD, RBAC and UX]
+    B --&gt; C[Platform foundation and authentication]
+    C --&gt; D[Exact-room inventory and public room browser]
+    D --&gt; E[Roommate groups, whole-room mode and atomic holds]
+    E --&gt; F[Pricing rules and resident payment obligations]
+    F --&gt; G[SCB SLIPS XLSX export]
+    G --&gt; H[Returned multipage PDF import and page matching]
+    H --&gt; I[SCB payment-result import and exception review]
+    I --&gt; J[Final exact-room confirmation]
+    J --&gt; K[Annual contracts, signed scans and key handover]
+    J --&gt; L[University handoff queue and correction exports]
+    K --&gt; M[Staff UAT, security, backup and release]
+    L --&gt; M
+
+    C --&gt; N[Audit, notification and background jobs]
+    N --&gt; E
+    N --&gt; I
+    N --&gt; K</code></pre><h2 id="0076a35e-ed71-4c16-8f22-1d2e5ac192bd" class="" dir="auto">Workstreams and ownership</h2><table id="eaa4330d-c036-4b24-896f-9c4c74954f30" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="339e26ce-0302-4122-8628-d94e267c3c03" dir="ltr"><th id="YTl^" class="simple-table-header-color simple-table-header">Workstream</th><th id="rA&lt;Y" class="simple-table-header-color simple-table-header">Primary responsibility</th><th id="Iquj" class="simple-table-header-color simple-table-header">Main outputs</th></tr></thead><tbody><tr id="fae8771b-a8d6-4669-851e-5a1b52ecf8e6" dir="ltr"><td id="YTl^" class="">Product / business analysis</td><td id="rA&lt;Y" class="">Resolve stakeholder rules, maintain traceability, approve provisional versus confirmed behavior</td><td id="Iquj" class="">Decision log, field catalogue, acceptance criteria, sample-file ownership</td></tr><tr id="2cb1731f-801b-4c88-987e-4c9ab2aae7f5" dir="ltr"><td id="YTl^" class="">UX / frontend</td><td id="rA&lt;Y" class="">Applicant and staff workflows, responsive screens, accessibility, error/hold/payment status clarity</td><td id="Iquj" class="">Figma, Nuxt routes, components, validation, permission-aware UI</td></tr><tr id="22d9f131-0fde-4bc7-9c77-71df74389172" dir="ltr"><td id="YTl^" class="">Backend / domain</td><td id="rA&lt;Y" class="">Transactional business rules, APIs, file orchestration, background jobs</td><td id="Iquj" class="">Go services, chi handlers, GORM/sqlc repositories, idempotency</td></tr><tr id="1d0b2b28-3f49-4d91-9f62-93166c12f980" dir="ltr"><td id="YTl^" class="">Database</td><td id="rA&lt;Y" class="">Schema, constraints, migrations, critical SQL, reporting queries</td><td id="Iquj" class="">PostgreSQL migrations, indexes, locks, seeds, restore tests</td></tr><tr id="00e27a04-97eb-49b7-badd-3b0537330250" dir="ltr"><td id="YTl^" class="">QA / test</td><td id="rA&lt;Y" class="">Test catalogue, fixtures, E2E, concurrency, regression, UAT evidence</td><td id="Iquj" class="">Automated suites, manual scripts, defect records, acceptance report</td></tr><tr id="8d507f7b-f466-4d9d-a3df-95acf9dcb3a0" dir="ltr"><td id="YTl^" class="">Deployment / operations</td><td id="rA&lt;Y" class="">Docker Compose, Nginx, environment config, backups, release process</td><td id="Iquj" class="">Deployment package, runbooks, backup/restore evidence, monitoring baseline</td></tr></tbody></table><h2 id="6566f8dc-1e80-4067-bd0c-e38102f58623" class="" dir="auto">Repository baseline</h2><pre id="09310272-9850-483c-bdc7-f1b7a7cabe3c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">apps/
+  frontend/                 Nuxt + shadcn-vue
+  api/                      Go + chi
+deploy/
+  docker-compose.yml
+  docker-compose.dev.yml
+  nginx/
+  env/
+db/
+  migrations/
+  queries/                  sqlc
+  seeds/
+fixtures/
+  room-master/
+  scb/
+    slips-template.xlsx
+    returned-payment-forms.pdf
+    payment-result.*
+  contracts/
+docs/
+  api/
+  operations/
+  uat/
+Makefile</code></pre><p id="0df210b6-d735-4b4c-86fd-1b1906860a3a" class="" dir="auto">Recommended Go package boundaries:</p><pre id="df8a1ddb-d9d8-42fd-879e-2d3f177e8511" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cmd/api/
+internal/
+  auth/
+  config/
+  http/
+  domain/
+    applicant/
+    room/
+    roommate/
+    reservation/
+    pricing/
+    payment/
+    contract/
+    handoff/
+  service/
+  repository/
+    gorm/
+    sqlc/
+  storage/s3/
+  document/
+    xlsx/
+    pdf/
+  jobs/
+  audit/
+  notification/</code></pre><h2 id="b0b8ef74-c325-42e9-aac0-060cbfbf6de5" class="" dir="auto">Local commands to implement</h2><pre id="fdbde190-4839-46ac-b8d5-584ef3045572" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">make dev
+make stop
+make migrate
+make migrate-down
+make seed
+make test
+make test-integration
+make test-e2e
+make lint
+make fixtures
+make build
+make backup
+make restore
+make release</code></pre><h2 id="d9b5f19d-d127-43c4-a112-2809ca87f46c" class="" dir="auto">Environment plan</h2><h3 id="ecd68d4c-b3df-405a-b3ff-cfecae87cecb" class="" dir="auto">Development</h3><ul id="9aba8448-ad54-45fc-aeaa-b8d67fc71db3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fictional applicants, rooms, SCB files, contracts, and payment results.</li></ul><ul id="6b4b7230-27b6-469a-acd3-3e39f796c40f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Local <code>mock-kku-sso</code>.</li></ul><ul id="2f21cbe4-d514-41db-9c3a-c15a8b5a5441" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Developer-friendly logs and seeded accounts.</li></ul><ul id="af212b81-57da-420d-8b56-5d3af227dceb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No production personal or financial data.</li></ul><h3 id="c182a207-6ee1-47ab-b1b1-93884c4fcf78" class="" dir="auto">Staging / pilot UAT</h3><ul id="33b634a2-4bcf-4102-b844-3f091a62b5a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Production-like Docker Compose topology.</li></ul><ul id="2f5fc864-20cd-47ce-859d-128769eb585a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Anonymized or stakeholder-approved pilot fixtures.</li></ul><ul id="f464d617-ea62-4c80-a3d8-fd883d7c87d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact permission matrix and private storage behavior.</li></ul><ul id="b49ebd2b-4d2a-42ee-a36b-4383122e3645" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Real sample formats for SCB and university file exchange where permitted.</li></ul><h3 id="e38ccd69-ff8a-4b10-a88c-5cdf7e8ca57e" class="" dir="auto">Production candidate</h3><ul id="5241e9a3-cce5-4b0c-b779-9c76bc52de44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">University-approved hosting.</li></ul><ul id="e56335b5-7ca6-4740-8456-df034f89201d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS, secure cookies, production secrets, restricted network exposure.</li></ul><ul id="b2628b9e-3202-477a-b776-fcaf13339c5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Scheduled database and SeaweedFS backups.</li></ul><ul id="b30fc803-bd72-4101-8865-3f9ea6d62b8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Restore rehearsal completed before pilot data is accepted.</li></ul><h1 id="6c4d6f43-1749-42f7-b8e7-c2e80dcc4800" class="" dir="auto">Sprint implementation plan</h1><h2 id="1fc61eca-53cd-4b9f-9ab1-dd27a4fcf837" class="" dir="auto">Sprint 0 — Requirement and fixture closure</h2><p id="24160fa9-2b13-4dba-a759-2ddc56e445cd" class="" dir="auto"><strong>Dates:</strong> 2026-07-13 to 2026-07-24  </p><p id="e683e6f2-dc0b-4a6e-ae08-03516924c3d4" class="" dir="auto"><strong>Goal:</strong> Remove format uncertainty before the team commits document-processing code.</p><h3 id="8dd73daa-fb24-4f9b-98c8-1ce8b3e6b44f" class="" dir="auto">Product and stakeholder tasks</h3><ul id="1b901df8-8a7e-46eb-b285-c9c65746dca5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain official building/floor/room master source for both pilot dorm groups.</span><div class="indented"></div></li></ul><ul id="b652a275-9aab-4bf0-ba00-1932d520c173" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain room dimensions, room-plan images/PDFs, room configuration, and equipment data.</span><div class="indented"></div></li></ul><ul id="35bea429-a522-4b38-93df-547d8a6058e0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain original blank SCB <code>.xlsx</code> template.</span><div class="indented"></div></li></ul><ul id="45bfb3be-a323-40d3-8f4e-5d245a41dfb0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain returned multipage PDF containing at least one roommate pair with the same <code>Ref.1</code> and <code>Ref.2</code>.</span><div class="indented"></div></li></ul><ul id="8d8d17b9-3a8f-4974-bbbf-cee968fe71a3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain SCB payment-result report sample.</span><div class="indented"></div></li></ul><ul id="16fec49e-dff6-4d25-b393-c894765236f2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain paper contract template, attached-document checklist, copy count, retention rule, and key-handover form.</span><div class="indented"></div></li></ul><ul id="e50e4ca9-2ec3-4b56-bb6b-5700dcab8dad" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obtain university handoff/export and correction examples.</span><div class="indented"></div></li></ul><ul id="5c18dc9e-c47a-4665-9ba3-6abe3e9181c6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Confirm owners for unresolved decisions: fee exemptions, installment <code>Ref.2</code>, mixed <code>ROOM</code>/<code>HL</code> batch, one-paid/one-unpaid policy, renewal dates, exact staff roles.</span><div class="indented"></div></li></ul><h3 id="2910c17b-bd32-4337-9d18-ebbcc810986c" class="" dir="auto">Engineering tasks</h3><ul id="f67feddb-9713-44fa-8a36-47754207c87c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Create repository and branch conventions.</span><div class="indented"></div></li></ul><ul id="a04ab7be-7dc2-462a-b875-95dea07fd720" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Add architecture decision record folder.</span><div class="indented"></div></li></ul><ul id="271f67e2-8cbd-4644-b645-830202a51556" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Create fixture folders and naming conventions.</span><div class="indented"></div></li></ul><ul id="08553547-56ae-4435-a652-634949ec91df" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Write import-format discovery tests that inspect sheet names, columns, PDF text layer, and result-report columns.</span><div class="indented"></div></li></ul><ul id="96bfc45c-3efb-4996-b4c6-ca50eb171eac" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Produce a traceability matrix from PRD requirement to planned sprint/test.</span><div class="indented"></div></li></ul><h3 id="99fc33ba-357c-4525-b499-64a9f2c09bd1" class="" dir="auto">Exit criteria</h3><ul id="9c1f8cd6-36f0-4f8e-9c26-c7258c508526" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Real or formally tracked substitute samples exist for every external file boundary.</li></ul><ul id="b21978df-a8e0-421d-a4a9-0e7b109083d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unknowns have an owner and deadline.</li></ul><ul id="a87f8c58-f166-4bd8-9ee3-d4d12d7ed948" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No SCB field meaning is silently guessed in production code.</li></ul><h2 id="d6a949b7-ef3d-49a3-827e-26fdf97ef5f6" class="" dir="auto">Sprint 1 — Domain design, ERD, RBAC and UX freeze</h2><p id="8b2607e7-294e-4c1f-ae6f-c9dbfb72f318" class="" dir="auto"><strong>Dates:</strong> 2026-07-27 to 2026-08-07  </p><p id="363409cc-fcbf-4f70-bc88-a260029c4415" class="" dir="auto"><strong>Goal:</strong> Freeze the domain language and state transitions before building features.</p><h3 id="8f9b99c6-267d-4ed2-99de-15841fb0911e" class="" dir="auto">Domain tasks</h3><ul id="618b9bae-d947-4272-b71c-500ebb2428e2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Finalize room, room configuration, occupancy, group, hold, reservation, obligation, document, payment, contract, and handoff state machines.</span><div class="indented"></div></li></ul><ul id="014ace39-c68b-4899-a388-e0db94929faa" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define actor/precondition/result/audit/idempotency for every transition.</span><div class="indented"></div></li></ul><ul id="11500665-cc91-47ae-b5e4-fa8705deb1c8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define shared versus whole-room conversion rules.</span><div class="indented"></div></li></ul><ul id="51f7e9fc-417a-48f6-8b01-fe533f6ed065" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define supersession rules for payment obligations and contracts.</span><div class="indented"></div></li></ul><ul id="eccaf2d7-8f52-416d-9e8a-0b8aad16a17a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define exact-room availability projection.</span><div class="indented"></div></li></ul><h3 id="c71e74b5-4384-419b-9e67-9b170745f306" class="" dir="auto">Data and API tasks</h3><ul id="4bd14f2d-37e0-4ea3-b2ab-8d143d4132d3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Produce ERD and migration sequence.</span><div class="indented"></div></li></ul><ul id="9b0387c2-82e2-43b2-ad38-dbb50a889c5b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define unique constraints and partial indexes.</span><div class="indented"></div></li></ul><ul id="fcfddd6c-e179-4a90-a741-54a0d18b7c50" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define idempotency-key strategy.</span><div class="indented"></div></li></ul><ul id="7a48fae9-d691-42f5-8de4-4aec56f555d9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define API error codes for conflict, expired hold, duplicate import, ambiguous PDF page, payment exception, and permission denial.</span><div class="indented"></div></li></ul><ul id="4378cd01-6601-4588-ad33-722d6282a717" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Define permission matrix by role and dorm scope.</span><div class="indented"></div></li></ul><h3 id="cd87b613-d75f-4f86-9c0c-d35d21184108" class="" dir="auto">UX tasks</h3><ul id="1570a843-c295-4bf5-a64a-19ce684e6002" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Complete first-pass Figma for the twelve priority flows from Page 03.</span><div class="indented"></div></li></ul><ul id="c96324a1-e5af-42bb-b5ab-e0c420d23e93" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Validate mobile applicant and desktop staff information hierarchy.</span><div class="indented"></div></li></ul><ul id="263a67e8-a27b-4716-840f-799548d86d96" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Run stakeholder walkthrough of hold countdown, split <code>ROOM</code>/<code>HL</code>, payment form, and grouped contracts.</span><div class="indented"></div></li></ul><h3 id="b1f52ca6-5413-497f-a28b-8f7e066308f7" class="" dir="auto">Exit criteria</h3><ul id="5e7af248-b24b-4f7e-9198-027fa57df5bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ERD, transition table, permission matrix, API outline, and priority wireframes approved.</li></ul><ul id="0dc3fea5-7123-4f9b-9f4f-7639fb5c8da1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No team member implements a different meaning for “Held”, “Paid”, “Confirmed”, or “Signed”.</li></ul><h2 id="e36128d6-05ab-4373-807e-ed086e7e1231" class="" dir="auto">Sprint 2 — Platform, database, storage and authentication foundation</h2><p id="4c622a99-c578-4efb-9da1-8030dda6c1a3" class="" dir="auto"><strong>Dates:</strong> 2026-08-10 to 2026-08-21  </p><p id="5022345b-b278-49dc-a934-5295cec5b8fc" class="" dir="auto"><strong>Goal:</strong> Start the complete stack and prove authenticated private file access.</p><h3 id="92ae9cc6-f8ca-45a3-9285-254425d00c04" class="" dir="auto">Infrastructure</h3><ul id="54f5449d-3ca8-44b1-8ade-8aac6ec1770c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Docker Compose for Nginx, frontend, API, PostgreSQL, SeaweedFS master/volume/filer/S3, and mock SSO.</span><div class="indented"></div></li></ul><ul id="18f9b121-0095-4823-9f14-51942768141f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Health/readiness endpoints.</span><div class="indented"></div></li></ul><ul id="bde625b8-a17b-43ce-83ae-7e731329187b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Environment validation on startup.</span><div class="indented"></div></li></ul><ul id="e529dbe2-457d-4044-8ce1-47c72b3b065a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Nginx routes, TLS-ready configuration, upload limits, and security headers.</span><div class="indented"></div></li></ul><ul id="0bb038cd-5faf-4860-b209-22e4b9f5ae5a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Makefile commands and developer bootstrap documentation.</span><div class="indented"></div></li></ul><h3 id="9fd31e1a-9ee8-4e42-9791-138765eef243" class="" dir="auto">Backend</h3><ul id="8bddfd5b-551b-4050-97cd-e37a0c67b9a8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Go application skeleton, chi routing, structured error model, request IDs.</span><div class="indented"></div></li></ul><ul id="821186b0-b8bb-4907-b9aa-9dbef485f6a3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">GORM and sqlc configuration.</span><div class="indented"></div></li></ul><ul id="15c48f09-3e70-496f-931c-321dbb3986e5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Migration runner.</span><div class="indented"></div></li></ul><ul id="7e4106ec-6c3f-419b-b2cf-d708cca9f6f5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Internal verified-email registration, login, logout, recovery, and session middleware.</span><div class="indented"></div></li></ul><ul id="08745242-8ed4-4295-95f6-d057b302cd50" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Role/permission middleware and dorm-scope enforcement.</span><div class="indented"></div></li></ul><ul id="0bf1f755-e15c-41bb-9fea-26833cd5435e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Private file upload/download through SeaweedFS S3 gateway.</span><div class="indented"></div></li></ul><h3 id="94ef868a-e0e6-4dd1-8f23-0848114147f5" class="" dir="auto">Frontend</h3><ul id="198acb95-cbac-45cf-9594-1b8ea6920764" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Nuxt application shell.</span><div class="indented"></div></li></ul><ul id="45385895-de5e-4582-9954-1921cb345d09" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Applicant and staff layouts.</span><div class="indented"></div></li></ul><ul id="8ab7f49c-542d-4bc3-9c28-bba4abd2a977" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Authentication routes and session handling.</span><div class="indented"></div></li></ul><ul id="06e29364-fc7d-4709-b6b6-7dbe9a1ae616" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Base design tokens and reusable loading/error/empty/permission states.</span><div class="indented"></div></li></ul><h3 id="b3f1fdd3-295f-4fb7-8d98-daba361f3d71" class="" dir="auto">Quality</h3><ul id="2caf4af0-6a18-47f0-a8c2-ac41ea0c8cd4" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Database integration test harness.</span><div class="indented"></div></li></ul><ul id="a3513e94-66a9-4817-9ad1-04c2573597fa" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Storage authorization tests.</span><div class="indented"></div></li></ul><ul id="7c49e94e-2737-4527-bb19-e68badbb855b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Backup and restore smoke test.</span><div class="indented"></div></li></ul><h3 id="ed89b96b-ded8-4b2b-bf74-3a4ffb6d1a42" class="" dir="auto">Exit criteria</h3><ul id="50b99805-fd60-4c27-b6b8-18d4312605cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A clean machine can start the stack.</li></ul><ul id="c68d97b6-4ff5-445d-8ed2-9e9a6669b2f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">An applicant can register and sign in.</li></ul><ul id="5ae908ec-1f9a-47e8-8887-d0190555dbd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Authorized and unauthorized users receive correct private-file behavior.</li></ul><ul id="7b047ac1-5dd8-45fe-a438-f37760a274ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Migration and restore commands are reproducible.</li></ul><h2 id="fa25de17-ea15-4d02-9d64-0bb4e21cd4ba" class="" dir="auto">Sprint 3 — Exact-room master, configuration and administration</h2><p id="8c70ceac-604e-40ab-b710-1a1e21a46613" class="" dir="auto"><strong>Dates:</strong> 2026-08-24 to 2026-09-04  </p><p id="7712f61d-98de-4b16-b690-0d37914c4538" class="" dir="auto"><strong>Goal:</strong> Establish exact rooms as the authoritative inventory.</p><h3 id="7e81c545-41b6-4963-97af-b57569fa7907" class="" dir="auto">Database</h3><ul id="596e4d2f-e7c8-401c-98ec-15c4f01da516" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Create dorm groups, buildings, floors, rooms, room config versions, room assets, and occupancy slot tables.</span><div class="indented"></div></li></ul><ul id="9479d43e-7f8c-49f7-8cad-7dd80afd3fec" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Enforce globally unique room number.</span><div class="indented"></div></li></ul><ul id="e0487ca0-0dc6-46dc-8e25-a0e77f6a7308" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Add configuration effective periods and immutable history.</span><div class="indented"></div></li></ul><ul id="41dfea30-f4b6-44a5-b48e-4ab66aad2763" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Add indexes for dorm/building/floor/status filtering.</span><div class="indented"></div></li></ul><h3 id="af799132-91be-4051-a3aa-d58873a38724" class="" dir="auto">Backend</h3><ul id="b9863c1f-7000-469f-974b-c71e7c898934" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Room-master import with preview, validation, duplicate report, and idempotent re-import.</span><div class="indented"></div></li></ul><ul id="5ddfb0a7-f5ea-44ac-b10f-beb0c6e4087e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Room CRUD and block/unblock operations.</span><div class="indented"></div></li></ul><ul id="e84fee95-7a5d-4423-86dd-215a29571a8e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Room asset upload.</span><div class="indented"></div></li></ul><ul id="5c068385-e851-465b-85ee-85c0f9aaee66" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Availability projection service.</span><div class="indented"></div></li></ul><h3 id="b19d20a8-ea6b-4352-80e2-6585b2508bca" class="" dir="auto">Frontend</h3><ul id="925eafd5-c46e-4496-ae42-aee795e634ab" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Staff room-master import screen.</span><div class="indented"></div></li></ul><ul id="88276f26-bd4a-48c8-a6aa-a21b0ba59d99" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Building/floor/room administration.</span><div class="indented"></div></li></ul><ul id="ad30f582-ea3d-4e07-a8d9-366275c74afd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Room configuration/equipment/version history.</span><div class="indented"></div></li></ul><ul id="c503af95-0471-4340-a973-f2098f6239e7" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Room blocked/unavailable reason.</span><div class="indented"></div></li></ul><h3 id="500e5ca8-96fe-4c02-ac2e-3c59d8456553" class="" dir="auto">Tests</h3><ul id="26cfdd5b-ae6d-4e33-9993-fafe6cde21a8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Duplicate room number.</span><div class="indented"></div></li></ul><ul id="c5153e49-092b-475a-8cb7-9c6c0612a84d" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Invalid building/floor relation.</span><div class="indented"></div></li></ul><ul id="d0592bab-01fc-44ac-ba8e-a77051d640fa" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Re-import same master.</span><div class="indented"></div></li></ul><ul id="c669eaa1-7850-440a-a741-69cbaf8800d0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Historical configuration retained after update.</span><div class="indented"></div></li></ul><h3 id="8f240a0c-1776-4bdd-ade0-59f8a06ce955" class="" dir="auto">Exit criteria</h3><ul id="320f51d7-b633-4f6b-b7ce-6da790ee3912" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Both dorm groups can be represented with exact rooms.</li></ul><ul id="bc69bf09-f809-41a2-af6c-b475ca6e46e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff can import, inspect, correct, and block rooms.</li></ul><ul id="cef961a1-ecfb-4d9c-a170-5ec2dedf2be7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public availability is derived from exact-room state.</li></ul><h2 id="bf17a91c-7f42-429a-be8a-5766bececcc8" class="" dir="auto">Sprint 4 — Applicant room browser and campaign eligibility</h2><p id="92e74d5a-e055-46f8-a17a-0eeeacb26cdf" class="" dir="auto"><strong>Dates:</strong> 2026-09-07 to 2026-09-18  </p><p id="91f6172f-883f-4782-8b81-a123fc3bd976" class="" dir="auto"><strong>Goal:</strong> Let applicants understand and browse real rooms without reserving yet.</p><h3 id="e6244c09-fdbc-4557-adbd-413f46579c21" class="" dir="auto">Backend</h3><ul id="8c6d3cf1-dcd3-4b40-8692-f910694b57f3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Campaign and campaign-room eligibility model.</span><div class="indented"></div></li></ul><ul id="ba582773-259c-474b-928c-96c7ab6b1afe" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Applicant type and eligibility rules.</span><div class="indented"></div></li></ul><ul id="13b46bf5-8b26-41ac-9458-042c3c11cc2f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Public room search/filter API.</span><div class="indented"></div></li></ul><ul id="ba3bb537-252f-4dbf-aac2-eb158931c78c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Price-estimate API that clearly separates provisional and final amount.</span><div class="indented"></div></li></ul><h3 id="b6e42e38-22e6-480b-bb91-83a8ac0f92bf" class="" dir="auto">Frontend</h3><ul id="f721beae-9483-49f6-a2f4-ac15ba3c3129" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Campaign landing page.</span><div class="indented"></div></li></ul><ul id="1dfa8c36-b22b-4862-be01-3c63222fbac1" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Building → floor → exact-room list.</span><div class="indented"></div></li></ul><ul id="b3131729-7e5f-46ad-8fef-419a53fb237b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Room detail page with dimensions/plan, facilities, shared/whole-room options, and <code>ROOM</code>/<code>HL</code> explanation.</span><div class="indented"></div></li></ul><ul id="0eb4dae2-179b-49e8-b91d-4e5354ece1dc" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Available / temporarily held / reserved / unavailable states.</span><div class="indented"></div></li></ul><ul id="588210e7-4cd2-4eb5-a837-4223cd0e5680" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Mobile responsive behavior.</span><div class="indented"></div></li></ul><h3 id="4be2496b-9456-4308-8dbb-c6871f1bc175" class="" dir="auto">Tests</h3><ul id="8fb70d41-bae7-412a-b663-6d075bb6c18e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Only eligible rooms appear.</span><div class="indented"></div></li></ul><ul id="f9d0da0a-3ebd-475d-9f39-ad252fc90db9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Temporarily held rooms display expiry but cannot be selected.</span><div class="indented"></div></li></ul><ul id="d89aba8c-da22-4c87-8e93-26622eea8077" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Applicant cannot see private resident information.</span><div class="indented"></div></li></ul><h3 id="186c6ea7-6bb6-4428-90e8-8b3f5d4ab498" class="" dir="auto">Exit criteria</h3><ul id="886133c2-f8a4-4065-acd8-600b164a2525" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Applicant can identify a specific room and understand occupancy/payment consequences.</li></ul><ul id="00c5eb0f-f44e-4a55-9020-819e2f35cfaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Room list remains usable with the full pilot room volume.</li></ul><h2 id="7a6f3082-6ad0-4409-bf34-14b693638f13" class="" dir="auto">Sprint 5 — Roommate invitations, groups and atomic room holds</h2><p id="4e415b34-5337-48fc-81b6-359988107f86" class="" dir="auto"><strong>Dates:</strong> 2026-09-21 to 2026-10-02  </p><p id="427856d9-1b67-4826-870d-5c19815cdbfe" class="" dir="auto"><strong>Goal:</strong> Complete safe shared-room and whole-room reservation initiation.</p><h3 id="a149f27e-e675-4789-b2e0-c0be4610ba97" class="" dir="auto">Database</h3><ul id="10b91a7d-e23f-4b60-bb44-7a66146d96e9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Roommate groups, invitations, reservation groups/members/events, room holds, assignments, and status events.</span><div class="indented"></div></li></ul><ul id="72198fa9-2b7d-4304-83c8-5075b81348b0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One-active-group constraint per resident.</span><div class="indented"></div></li></ul><ul id="69509edc-c2f4-4bae-9c14-d1aa738e0c03" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Maximum-two-member constraint.</span><div class="indented"></div></li></ul><ul id="3219901f-0604-437a-9b40-bfc49be334b3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One-active-hold constraint per room.</span><div class="indented"></div></li></ul><h3 id="db3ee119-2951-43fe-9fd5-e8f94302bb18" class="" dir="auto">Backend</h3><ul id="48343588-a418-494c-99d8-23609a4d9fd5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Send/accept/decline/expire 48-hour invitation.</span><div class="indented"></div></li></ul><ul id="a981a37a-5e2f-4526-ae01-d6091b659508" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Leader role and campaign <code>roommate_room_confirmation_required</code>.</span><div class="indented"></div></li></ul><ul id="a7a723fc-34a1-407c-b25e-b26eebcb3b32" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Atomic reserve-room service using sqlc/explicit SQL.</span><div class="indented"></div></li></ul><ul id="58298588-524c-4fc0-a199-6de32358f56b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Fifteen-minute roommate confirmation.</span><div class="indented"></div></li></ul><ul id="75337014-46c4-4823-a117-ec60fd031c59" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Immediate release on decline/expiry.</span><div class="indented"></div></li></ul><ul id="36af4222-64e6-448d-b19b-369438b4ed60" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Whole-room occupancy path.</span><div class="indented"></div></li></ul><ul id="a30d142a-cf40-4295-8a50-403ff4366dc5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Database-backed expiry worker.</span><div class="indented"></div></li></ul><ul id="6a1ed9ec-e552-4ce8-8e8a-09442b3b5b61" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Idempotent reserve/confirm/release endpoints.</span><div class="indented"></div></li></ul><h3 id="bff5ceab-d451-46da-9d15-0a47b0b7980f" class="" dir="auto">Frontend</h3><ul id="9eb07fc1-3666-41e8-9931-a83b67b4bf7b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Roommate invitation and acceptance screens.</span><div class="indented"></div></li></ul><ul id="4246888f-a762-4ea3-8211-cba6bad440c6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Reservation leader state.</span><div class="indented"></div></li></ul><ul id="0d472ece-921b-482e-aeea-e79d60b6c07a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Fifteen-minute countdown and roommate confirmation.</span><div class="indented"></div></li></ul><ul id="5024b2f3-de4e-4af1-8195-501d8bc458b2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Whole-room choice.</span><div class="indented"></div></li></ul><ul id="fa210be5-9b49-49b7-977b-e5108d5b6b53" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Conflict and expired-room recovery.</span><div class="indented"></div></li></ul><h3 id="29f41ae4-1477-45df-9cc3-6acb6a3fbd3c" class="" dir="auto">Tests</h3><ul id="3a694b80-fcb3-4bc9-8da5-3471851add31" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Two leaders reserve the same room simultaneously; only one succeeds.</span><div class="indented"></div></li></ul><ul id="d86d1d64-ac40-47a7-9d86-74808a3d4bea" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Repeated reserve request returns the same result.</span><div class="indented"></div></li></ul><ul id="919f556b-8a1f-443f-87af-929c35fe307e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Invitation/group limit is enforced.</span><div class="indented"></div></li></ul><ul id="f0281e60-e104-4f6c-bc82-f034768eebd6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Countdown expiry releases once.</span><div class="indented"></div></li></ul><ul id="234735a8-2a2a-4eaf-b124-9eed40152835" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Whole-room blocks second occupancy.</span><div class="indented"></div></li></ul><h3 id="f3d5b971-4ce0-4148-a814-09bbc113ecef" class="" dir="auto">Exit criteria</h3><ul id="97f56f71-0f5f-40ad-809e-d6042a8a70d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared and whole-room applicants can acquire exact-room holds without double booking.</li></ul><ul id="43631568-02f0-48fa-b10f-c57dfb99fd70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Holds expire and release safely.</li></ul><h2 id="ab1ad2f6-624a-4cc1-91ff-660e635d15bd" class="" dir="auto">Sprint 6 — Payment hold, renewal, manual reservation and resident change</h2><p id="762d2348-cf19-436a-9a4e-604cea938f0a" class="" dir="auto"><strong>Dates:</strong> 2026-10-05 to 2026-10-16  </p><p id="6c4f277f-eaeb-45c8-9fbb-29c96dc1e6e2" class="" dir="auto"><strong>Goal:</strong> Complete pre-payment reservation management.</p><h3 id="889ab1b7-541f-4ebf-a68b-aaacd8e0cb46" class="" dir="auto">Backend</h3><ul id="2ae36e13-7ee1-4aeb-9f84-05b8fa5b8aee" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Convert successful room confirmation into 72-hour payment hold.</span><div class="indented"></div></li></ul><ul id="3d2ee067-9590-4323-bc81-393f0a255bfd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Shared group deadline service.</span><div class="indented"></div></li></ul><ul id="3c8cbfaf-f2ba-4df0-b08e-b5556ce51bb7" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Manual reservation with mandatory reason/audit.</span><div class="indented"></div></li></ul><ul id="7a41b8e8-8c96-4fc7-bc4e-446677ad2357" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Renewal campaign and prefill.</span><div class="indented"></div></li></ul><ul id="8778214b-fcb4-4c10-8719-8499a2bced87" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Replacement roommate, whole-room conversion, move, and release workflows.</span><div class="indented"></div></li></ul><ul id="3e5a758a-2037-4f95-aadb-6645c51a485c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Leader change with both confirmations.</span><div class="indented"></div></li></ul><ul id="4b11ab81-ca64-49dc-8be2-26e4383e911a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Supersession framework for future obligations/contracts.</span><div class="indented"></div></li></ul><h3 id="3e12b7ad-3293-457f-ae8f-bc9bbb4d587d" class="" dir="auto">Frontend</h3><ul id="563f59ac-fb4b-4fdf-912b-bfb4d9c8afa0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Seventy-two-hour payment-hold status.</span><div class="indented"></div></li></ul><ul id="eda372eb-4c54-4a5d-9d34-239ab7c1abbf" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Other applicants see temporarily held room and expiry.</span><div class="indented"></div></li></ul><ul id="4bd11852-72b6-4caf-a8ce-57cdde7aea89" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Staff manual reservation.</span><div class="indented"></div></li></ul><ul id="ad71b154-57d8-4257-b7a7-4d0fa15ae133" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Renewal form with changed-field confirmation.</span><div class="indented"></div></li></ul><ul id="9703b32e-e936-4bda-80a6-b42ae675a783" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One-roommate-renews decision screen.</span><div class="indented"></div></li></ul><h3 id="00b1f4c0-3c09-4701-a93d-4089deef2437" class="" dir="auto">Tests</h3><ul id="b91a8256-31ff-40e1-9eec-b05708c39d09" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Payment hold expiry.</span><div class="indented"></div></li></ul><ul id="6c2ce6d6-0831-4337-9385-a71042561968" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Manual reservation permission.</span><div class="indented"></div></li></ul><ul id="bbaad048-a942-4410-a403-f767b891481a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Renewal preserves prior data but creates a new cycle record.</span><div class="indented"></div></li></ul><ul id="cd4243e3-26fb-4674-857b-5a8fda2191f9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Replacement never overwrites prior resident history.</span><div class="indented"></div></li></ul><h3 id="e4e0a75b-7502-4de8-a400-088c54c169ef" class="" dir="auto">Exit criteria</h3><ul id="e8e25653-1f75-4d06-8b17-3a8f959dcd0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reservation groups reach “ready for payment”.</li></ul><ul id="96e7621b-6323-466e-b7b4-9c057d97bf45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff can handle operational exceptions without editing database records manually.</li></ul><h2 id="d5142149-c8e0-400c-8364-dfec9019a852" class="" dir="auto">Sprint 7 — Versioned pricing and resident obligations</h2><p id="481e6893-fa30-400a-8364-7215d33ae679" class="" dir="auto"><strong>Dates:</strong> 2026-10-19 to 2026-10-30  </p><p id="d71432d2-9d74-41ad-adfb-e4440a56f242" class="" dir="auto"><strong>Goal:</strong> Generate correct resident-specific <code>ROOM</code> and <code>HL</code> obligations.</p><h3 id="aa1731d5-e7f3-44ea-9d54-9fe5113a1055" class="" dir="auto">Database</h3><ul id="531e343e-d16c-4f1d-a2af-5dc9d4ad8afd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Payment actions, pricing rule versions, obligations, obligation events, and adjustments.</span><div class="indented"></div></li></ul><ul id="0f6d6b3d-3aab-4206-be9e-19d2352dc247" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Price-source snapshot on every obligation.</span><div class="indented"></div></li></ul><ul id="ef8db3e7-29f5-4063-9c99-4ee328b58008" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Unique active obligation rule by resident/group/action/cycle/version.</span><div class="indented"></div></li></ul><h3 id="1e775cae-a34c-4151-98a5-2d2ee94a314e" class="" dir="auto">Backend</h3><ul id="29a05fea-035d-4131-8310-567e47af6fd6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Pricing resolution by dorm, exact room/configuration, occupancy mode, applicant type, academic year/cycle, and action.</span><div class="indented"></div></li></ul><ul id="6b49579d-2954-4da2-9319-8eac9a93ef5e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Separate obligations per resident/action.</span><div class="indented"></div></li></ul><ul id="70deedb4-ad2e-40f0-ab23-ceb8d34d23da" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Whole-room full amount.</span><div class="indented"></div></li></ul><ul id="817aab29-4622-410b-9d75-b8dfb2190643" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">HL dual obligations.</span><div class="indented"></div></li></ul><ul id="b28433ca-719e-46b4-bb90-f773a4b6826c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Finance-only one-off override.</span><div class="indented"></div></li></ul><ul id="7b554839-c1f2-4079-aa1d-a4f0c5976ed8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Separate permanent pricing-rule update.</span><div class="indented"></div></li></ul><ul id="9d79bd04-0111-4cbe-ba66-501416b5bb9a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Obligation cancel/supersede.</span><div class="indented"></div></li></ul><h3 id="b79c5e21-5e9b-44af-afcd-1428b0709f2b" class="" dir="auto">Frontend</h3><ul id="518a8423-a8bb-4b14-ab5a-8723ff256a68" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Staff pricing-rule administration.</span><div class="indented"></div></li></ul><ul id="b5be0f2c-d166-44b2-a51b-b162c12e93f0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Calculation explanation and source.</span><div class="indented"></div></li></ul><ul id="b105cac9-d059-4a6b-aa19-aed64aba8864" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Override modal with reason.</span><div class="indented"></div></li></ul><ul id="9c92c687-df21-4d2b-8c51-1ac949d04397" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Applicant obligation summary with shared deadline.</span><div class="indented"></div></li></ul><h3 id="8a897b65-a1f6-4a25-b487-ab1a3edf175d" class="" dir="auto">Tests</h3><ul id="27c68d53-a90c-4d21-ae9b-d3a076570ce8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Shared and whole-room calculations.</span><div class="indented"></div></li></ul><ul id="8f606848-d78a-4585-afa7-f2acde2dd9f3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">HL produces <code>ROOM</code> and <code>HL</code>.</span><div class="indented"></div></li></ul><ul id="2bcf6198-c538-49bd-b21b-e4eeca1120be" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Override does not mutate permanent pricing.</span><div class="indented"></div></li></ul><ul id="5b8694ae-aeb3-441e-b297-0c5f8d735dd6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Historical obligation amount remains unchanged after new pricing version.</span><div class="indented"></div></li></ul><h3 id="1fae0a3d-4f2c-4d7c-947a-e731ee93182c" class="" dir="auto">Exit criteria</h3><ul id="c548726d-d251-49ba-afcb-4b49b7b5214c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every ready reservation group has deterministic, auditable obligations.</li></ul><ul id="119478e4-09f4-46f8-b435-14efcabb188e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Finance can review only exceptions.</li></ul><h2 id="1bd1cc9d-b544-4518-9644-29d6d443a6ad" class="" dir="auto">Sprint 8 — SCB <code>SLIPS</code> XLSX export</h2><p id="9346aff2-f95b-41bb-a8be-e0745ec8e3e9" class="" dir="auto"><strong>Dates:</strong> 2026-11-02 to 2026-11-13  </p><p id="2f41b233-ef23-4fc0-b0c0-be6c5aa0714f" class="" dir="auto"><strong>Goal:</strong> Produce a bank-accepted workbook with immutable batch history.</p><h3 id="1ad22286-0763-4e6f-9084-806d13a75a3f" class="" dir="auto">Backend/document processing</h3><ul id="095e780c-6153-43d1-b255-a8209efd7524" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Export-batch and export-row entities.</span><div class="indented"></div></li></ul><ul id="66fd45c2-4d83-4d8e-8fa6-ae54c25d4ef9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Select ready obligations without duplication.</span><div class="indented"></div></li></ul><ul id="090ccd42-4a26-4be8-97bf-15aca4ab7a56" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Validate exact sheet name, column order, required fields, length limits, numeric amount, date format, blank <code>ID</code>, and <code>DEFAULT</code>.</span><div class="indented"></div></li></ul><ul id="4ee89d0f-b73f-49ba-93b0-5d0b8b1851f7" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Generate <code>.xlsx</code>.</span><div class="indented"></div></li></ul><ul id="27e4d53b-e923-4855-9a90-c321bfa3c67f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Store workbook privately with checksum.</span><div class="indented"></div></li></ul><ul id="808d1d30-0197-479e-89aa-f7b752127591" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Re-download same batch without regenerating references.</span><div class="indented"></div></li></ul><ul id="954db521-cbc9-4b93-b315-faddae12f343" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Configurable batch grouping.</span><div class="indented"></div></li></ul><ul id="27c5befd-d8d6-4d12-8dde-46244471af54" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Golden-file test against official template.</span><div class="indented"></div></li></ul><h3 id="3201259e-8ebd-49ab-8c05-fad000e01a03" class="" dir="auto">Frontend</h3><ul id="a2a4a872-9c42-4c3f-b4a0-fefc24e551eb" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Batch candidate filters.</span><div class="indented"></div></li></ul><ul id="65227b00-f098-451c-9e2b-db0f5a82f679" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Validation/error preview.</span><div class="indented"></div></li></ul><ul id="20d1e2cf-8883-4e9a-a45a-6ea2354dbbe4" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Row preview.</span><div class="indented"></div></li></ul><ul id="07b16301-687a-41b2-aea3-9f098ebec658" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Generate/download and history screens.</span><div class="indented"></div></li></ul><h3 id="82090f80-620c-4798-a5ec-997afd0368d0" class="" dir="auto">Tests</h3><ul id="d56a6a60-715f-41bb-a059-0b5e72fbf152" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One row equals one resident × one action.</span><div class="indented"></div></li></ul><ul id="031cfa56-88d8-43ce-a0ef-be04e821a6f8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Roommates may repeat <code>Ref.1</code> and <code>Ref.2</code>.</span><div class="indented"></div></li></ul><ul id="d3258bcf-8adb-4d0a-a9e0-198fcd426992" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Invalid field is blocked before file generation.</span><div class="indented"></div></li></ul><ul id="a7ced883-5520-420b-b2ee-1414b5d60bf9" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Repeated download is byte-stable or version-stable according to approved rule.</span><div class="indented"></div></li></ul><h3 id="31f78248-6ed9-41ce-bcc1-edc9cf8e32e3" class="" dir="auto">Exit criteria</h3><ul id="3240e2b9-585a-4f0f-98d7-fd1647078c0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Finance can create and download a valid batch without manual spreadsheet reconstruction.</li></ul><h2 id="16cbb41e-2595-4617-baa8-ac480159bd1e" class="" dir="auto">Sprint 9 — Returned multipage PDF import and page matching</h2><p id="a3ffa76f-e8e7-4010-bdf9-0cdfd7cc2ab0" class="" dir="auto"><strong>Dates:</strong> 2026-11-16 to 2026-11-27  </p><p id="97fbe598-e125-40d0-9f3f-45a6fed853ee" class="" dir="auto"><strong>Goal:</strong> Attach the correct official QR form to each resident obligation.</p><h3 id="45f434af-281f-48de-963f-038d925b69e1" class="" dir="auto">Backend/document processing</h3><ul id="ca538fc3-283f-4757-986e-51bd2c13cf31" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Store original combined PDF and checksum.</span><div class="indented"></div></li></ul><ul id="955d224a-4440-4bdb-be71-83f24ce7a477" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Index page count and page-level text.</span><div class="indented"></div></li></ul><ul id="e70079ed-c288-4237-b2db-003e77a75d14" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Match by resident-specific text plus obligation context.</span><div class="indented"></div></li></ul><ul id="094894ed-833a-4f68-8102-7a0bf9acdde3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Explicitly reject room/action-only uniqueness.</span><div class="indented"></div></li></ul><ul id="3fce6aef-97a2-40c3-8541-891edadb406c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Confidence/result states: matched, ambiguous, unmatched, superseded.</span><div class="indented"></div></li></ul><ul id="710e4064-15d9-456f-8374-95c82f579b7a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Manual rematch with reason.</span><div class="indented"></div></li></ul><ul id="11e9c808-5a86-4418-a602-9a16b6fcf308" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Replacement/supersession history.</span><div class="indented"></div></li></ul><ul id="38a16d92-e034-43d4-8f26-afa94f5e0f8a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Image-only fallback path isolated behind an interface.</span><div class="indented"></div></li></ul><h3 id="6956ac03-2ad0-4b8e-9066-0b9d47a1a093" class="" dir="auto">Frontend</h3><ul id="ba5ee237-55c1-4c97-bcc3-b8cbc29daab2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Combined PDF upload.</span><div class="indented"></div></li></ul><ul id="ca12c7d7-83fa-4253-8b72-77ef9730a451" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Page thumbnail/text/match review.</span><div class="indented"></div></li></ul><ul id="93e88bbb-854c-4af0-a411-2b66e9e38566" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Ambiguous/unmatched queue.</span><div class="indented"></div></li></ul><ul id="f7c022d9-be8b-4a7c-8a39-466038db99ee" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Manual mapping and reason.</span><div class="indented"></div></li></ul><ul id="18035a2c-7dfe-438f-ab41-a2177ea94646" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Applicant payment-form viewer/download.</span><div class="indented"></div></li></ul><h3 id="5bdba180-84fb-4569-acb5-7ef04834a807" class="" dir="auto">Tests</h3><ul id="e95b4d97-79c6-49f8-b64b-44472cfdfa9c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Reordered pages.</span><div class="indented"></div></li></ul><ul id="5431dbb0-8d13-464b-91ae-672f2f1cb792" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Two roommates with identical <code>Ref.1</code> and <code>Ref.2</code>.</span><div class="indented"></div></li></ul><ul id="1b8824b8-e876-4382-a8a0-d8365cbbbd8c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Duplicate resident text.</span><div class="indented"></div></li></ul><ul id="7556c6e3-baa1-4c11-b14d-2a977559a5f5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Missing page and extra page.</span><div class="indented"></div></li></ul><ul id="94ec3036-7bce-4ed6-a922-e1e31eb1e5ca" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Re-upload same PDF.</span><div class="indented"></div></li></ul><ul id="3126f468-4395-4b5f-baf8-f459b3347aae" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Replacement PDF preserves previous mapping history.</span><div class="indented"></div></li></ul><h3 id="5bd00c76-cb69-455d-b1e0-68cd0623c531" class="" dir="auto">Exit criteria</h3><ul id="0de564bd-8349-4349-807b-362adc86e84d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every matched resident sees only their own official payment form.</li></ul><ul id="ba823a2d-03fb-4b22-b470-a8a64375a28e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Page order is never used as identity.</li></ul><h2 id="7e6278c8-1888-464c-98a2-ad7356ffe670" class="" dir="auto">Sprint 10 — SCB result import, payment exceptions and final confirmation</h2><p id="f5959fb5-56fe-4191-90bb-6fa19dcbcb23" class="" dir="auto"><strong>Dates:</strong> 2026-11-30 to 2026-12-11  </p><p id="ae727d68-8d31-43f8-9593-fc4cac19dee1" class="" dir="auto"><strong>Goal:</strong> Reconcile official payment results and confirm rooms safely.</p><h3 id="df08f4ed-6a30-4d21-841b-645261a75fc4" class="" dir="auto">Database</h3><ul id="245c27b5-85ab-4977-af1e-b483a2121b80" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Result imports/rows, transactions, exception cases, refund-status events.</span><div class="indented"></div></li></ul><ul id="0d3cf434-38c5-4602-90ef-0314f097107d" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Idempotency key/checksum for imported report.</span><div class="indented"></div></li></ul><ul id="be960a26-7bbd-4727-bd2e-dd8b5aadcff8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Unique transaction application constraints.</span><div class="indented"></div></li></ul><h3 id="ec82148f-6dba-4ef8-b483-756ff42756ac" class="" dir="auto">Backend</h3><ul id="bd6a10ae-c006-4f76-8ae5-2b34a32636df" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Result-report parser adapter.</span><div class="indented"></div></li></ul><ul id="6242d7de-97eb-4a5f-9286-339c7c9abe91" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Matching to obligations.</span><div class="indented"></div></li></ul><ul id="54773a0b-eb76-4e8d-a11f-bb597b755887" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Paid/unpaid state application.</span><div class="indented"></div></li></ul><ul id="e98b05cb-ef59-4a5e-a309-c7dfdc33c6f7" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Underpayment, overpayment, duplicate, late, post-expiry, and unmatched exceptions.</span><div class="indented"></div></li></ul><ul id="24d6cf41-e576-48ed-bc3d-8fa959be4484" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Manual payment with bank reference and staff note.</span><div class="indented"></div></li></ul><ul id="82049b1a-3f4e-461d-a61d-83f28572ce6c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Shared-group completion calculation.</span><div class="indented"></div></li></ul><ul id="8933d32c-cb1f-49a6-933f-897234ba2eb1" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Staff-confirmed permanent exact-room assignment.</span><div class="indented"></div></li></ul><ul id="69a26e65-44bd-41d7-afbd-f0ac3c8d2c65" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Release/cancel incomplete group at deadline under provisional policy.</span><div class="indented"></div></li></ul><ul id="f40beaf6-9dc4-4bdf-9b51-b3fa44796b90" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Record-only refund status.</span><div class="indented"></div></li></ul><h3 id="8abbaf9c-c90c-4221-ad99-40bdf84bb550" class="" dir="auto">Frontend</h3><ul id="89dd2651-414b-418d-8336-eea07117ab74" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Result import and preview.</span><div class="indented"></div></li></ul><ul id="c047f39e-b495-4752-8b0a-19cb422f7966" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Payment exception queue.</span><div class="indented"></div></li></ul><ul id="81078229-2a89-4cf5-9835-d75dfe65cf3e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Group payment completion screen.</span><div class="indented"></div></li></ul><ul id="a57e8d30-a554-44d2-b6b8-a56e6de92cbb" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Final-confirmation action and conflict feedback.</span><div class="indented"></div></li></ul><h3 id="7c8b5c44-bb1d-42a4-96dc-82d8b1aca770" class="" dir="auto">Tests</h3><ul id="e62b2165-acfb-415a-a074-4bc0fb62240f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Re-import same report.</span><div class="indented"></div></li></ul><ul id="544338d1-0d0d-49b8-bda4-cb7049ef0f05" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Same transaction cannot satisfy multiple obligations.</span><div class="indented"></div></li></ul><ul id="eec07df2-3183-4e53-9b7e-f34de97ac304" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One roommate paid / one unpaid.</span><div class="indented"></div></li></ul><ul id="a74b657b-5428-4b93-b554-5978a05db78c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked"><code>ROOM</code> paid / <code>HL</code> unpaid.</span><div class="indented"></div></li></ul><ul id="db7e5cc4-49e9-4341-9c0f-0af5f6cfc056" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Final confirm repeated or raced by two staff.</span><div class="indented"></div></li></ul><ul id="e113f049-2d4a-47de-b98d-fafde7c1265f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Payment after hold expiry.</span><div class="indented"></div></li></ul><h3 id="78b2c20a-496e-47c9-a916-3462e144d9c2" class="" dir="auto">Exit criteria</h3><ul id="a6e510bc-0d99-4cb1-9a4a-400bf08df047" class="bulleted-list" dir="auto"><li style="list-style-type:disc">All obligations and exceptions are explainable.</li></ul><ul id="94a86187-a8c9-4f3c-8c6e-b93c800f2fdc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Final confirmation updates room/group/payment states exactly once.</li></ul><h2 id="1435ba0c-1e4c-4e31-b4ba-98580defedf7" class="" dir="auto">Sprint 11 — Contracts, signed scans and key handover</h2><p id="f51e00b5-cd03-477b-9fba-b4f85d12b475" class="" dir="auto"><strong>Dates:</strong> 2026-12-14 to 2026-12-25  </p><p id="75990f7e-3d3e-451e-8186-d6ffbde788fa" class="" dir="auto"><strong>Goal:</strong> Complete the official paper-document workflow after confirmation.</p><h3 id="f0639829-f532-4531-adf3-ba98ba327e7f" class="" dir="auto">Backend</h3><ul id="f5593669-86ec-4a34-85b9-baf70ee12d53" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Versioned contract templates.</span><div class="indented"></div></li></ul><ul id="0a095668-5ec4-473b-87e1-1f6d9c346ee6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Immutable populated snapshot.</span><div class="indented"></div></li></ul><ul id="2c26f3ca-366d-48ac-b5de-790115a13206" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Two separate contracts for shared group; one for whole-room.</span><div class="indented"></div></li></ul><ul id="74dd0a7e-9677-47b3-afab-e49200b330b8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Applicant/staff print event.</span><div class="indented"></div></li></ul><ul id="31be30c7-6efd-4498-b6ef-c50119037065" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Reprint/correction/cancellation with reason.</span><div class="indented"></div></li></ul><ul id="ab975693-f2a0-4c0b-88d6-8bd52a2cc484" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Private signed scan/photo.</span><div class="indented"></div></li></ul><ul id="69a90d29-dafc-4e0e-9efc-632cc4181634" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Group contract completion.</span><div class="indented"></div></li></ul><ul id="ebb8c01d-a15d-414c-bd5c-44324bc0b85a" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Separate key-handover record and file.</span><div class="indented"></div></li></ul><h3 id="d895b465-0ca2-40af-a60f-d91906e44ef7" class="" dir="auto">Frontend</h3><ul id="b0618489-2b51-4d4a-bcd0-79ffbdd587b6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Contract preview/download.</span><div class="indented"></div></li></ul><ul id="297d016b-2906-47ba-a104-7b506694263b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Staff generation and print queue.</span><div class="indented"></div></li></ul><ul id="d3723995-fa27-44bf-b505-ba3c67946cff" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Signed-document upload and receipt.</span><div class="indented"></div></li></ul><ul id="40145dc2-6a6a-4245-a1a1-93fdee8e3ac3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">“1 of 2 signed” group status.</span><div class="indented"></div></li></ul><ul id="203e1dd7-4b0b-41ec-bc5d-e1d3f286746f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Key-handover checklist and signed record.</span><div class="indented"></div></li></ul><h3 id="e5ef080c-4805-4acc-8313-28015e87d8fc" class="" dir="auto">Tests</h3><ul id="68f7b8b3-b5dd-40f3-adfd-b6ac60ba4a22" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Template version retained.</span><div class="indented"></div></li></ul><ul id="c5f3c4a4-1870-41ec-a35b-bb15f71a5724" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Correct room, occupancy, residents, price, and period snapshot.</span><div class="indented"></div></li></ul><ul id="8cd6eb35-86d6-4ea2-a1cc-3dfd09ae0ed3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Unauthorized scan access denied.</span><div class="indented"></div></li></ul><ul id="bbedb21a-8769-4cdb-8b10-8bfa9abb86d6" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Reprint/correction preserves original.</span><div class="indented"></div></li></ul><ul id="d1a2df06-2c4f-4674-a063-3a3dcd175308" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Shared group incomplete until both contracts received.</span><div class="indented"></div></li></ul><h3 id="9359b653-adf6-4a3b-b22b-c0651e6dddc9" class="" dir="auto">Exit criteria</h3><ul id="4e56e73c-f484-450c-9de7-5c6a78c95701" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff can trace a confirmed room through printed contracts and key handover.</li></ul><h2 id="bb85d9c3-01a1-4122-82c4-5b18556761eb" class="" dir="auto">Sprint 12 — University handoff, correction exports, reports and audit</h2><p id="aff5c6e8-de3a-4902-b3b3-2396ddab82cb" class="" dir="auto"><strong>Dates:</strong> 2026-12-28 to 2027-01-08  </p><p id="273fff07-bed4-439a-8865-7d639778236f" class="" dir="auto"><strong>Goal:</strong> Complete downstream operational handoff and accountability.</p><h3 id="0814d01e-3f6d-426b-91fd-d440708435c4" class="" dir="auto">Backend</h3><ul id="4522fa67-1992-40ae-86f1-268b4115a0b1" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Queue confirmed residents until official round opens.</span><div class="indented"></div></li></ul><ul id="d61a5a45-b2d8-43eb-95ae-1c8c4d51f46e" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Original handoff batch and row history.</span><div class="indented"></div></li></ul><ul id="a2abc48f-b7c8-4ec1-8677-57cc1fb43cca" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Correction batch for resident, room, roommate, or amount changes.</span><div class="indented"></div></li></ul><ul id="f38a07a5-5ffb-478c-b162-1b4ed31083bd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Operational reports.</span><div class="indented"></div></li></ul><ul id="8dc7135f-58c8-47d2-a2ae-79f5565ccea2" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Audit search/export.</span><div class="indented"></div></li></ul><ul id="5972a484-a545-4731-ab57-ed207b945f8f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Notification outbox and reminder jobs using PostgreSQL-backed queue.</span><div class="indented"></div></li></ul><h3 id="c7fa9159-4534-4381-81d4-fdfacea3750e" class="" dir="auto">Frontend</h3><ul id="b58a0f62-efac-41df-b733-5cfdb73a0a21" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Handoff queue and export.</span><div class="indented"></div></li></ul><ul id="3fb9c06f-4fb1-4b2a-87c9-cae71adc5d49" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Correction creation/approval.</span><div class="indented"></div></li></ul><ul id="4d6a143c-6cc1-41a1-97d8-5d5f50eb52d3" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Reports for rooms, groups, obligations, exceptions, contracts, and handover.</span><div class="indented"></div></li></ul><ul id="7ecb0aac-3838-41fb-a777-e6c8538a13ad" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Audit viewer.</span><div class="indented"></div></li></ul><ul id="c9ae90c6-0246-4cbc-8cb3-bd346a1dea5b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Notification status.</span><div class="indented"></div></li></ul><h3 id="4c936bdb-bbfd-40e0-9db3-3fed83ee9b0e" class="" dir="auto">Tests</h3><ul id="2d63f530-671d-434a-9066-07f32a5d8e18" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Correction never overwrites original.</span><div class="indented"></div></li></ul><ul id="406c786e-19c6-43d5-abd6-5ba2be3eefa8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Unauthorized export denied.</span><div class="indented"></div></li></ul><ul id="7ad40cca-d1ae-42a5-a0aa-cc27853a13f5" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Repeated export is idempotent.</span><div class="indented"></div></li></ul><ul id="3649974f-b68e-450e-809c-1e62bc7bfbc4" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Personal data is minimized by export type.</span><div class="indented"></div></li></ul><h3 id="a01041f8-04e7-41be-a66f-e2c2b9833992" class="" dir="auto">Exit criteria</h3><ul id="fe432bdc-83e9-4ceb-891e-3be358dd6354" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Staff can send and correct official records without retyping or losing history.</li></ul><h2 id="d67178d7-5428-4035-94a2-50f87b2bf672" class="" dir="auto">Sprint 13 — End-to-end hardening, security and performance</h2><p id="f845b6fd-22cb-4010-863e-bbe2e87dc6c3" class="" dir="auto"><strong>Dates:</strong> 2027-01-11 to 2027-01-22  </p><p id="a1f71567-b89f-4319-ae00-b1956c5f10a3" class="" dir="auto"><strong>Goal:</strong> Prove the whole system under realistic failure and concurrency conditions.</p><h3 id="fe5efa21-c2c8-46c6-9bc0-1fd3eb317ec1" class="" dir="auto">Hardening tasks</h3><ul id="365f9e22-d152-44d6-a0f6-5043c3a506db" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Complete full E2E shared-room and whole-room scenarios.</span><div class="indented"></div></li></ul><ul id="75ef4da9-6725-40e9-965f-ee4631710ce8" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Test 48-hour invitation, 15-minute confirmation, and 72-hour payment expiry.</span><div class="indented"></div></li></ul><ul id="4074e9d4-51d3-46a1-92aa-f3fd817fee32" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Load-test room browse and reserve conflict paths.</span><div class="indented"></div></li></ul><ul id="51de0f39-fc28-4885-be9f-1982f9b4d0bd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Validate all permission boundaries.</span><div class="indented"></div></li></ul><ul id="33586e77-305e-40e3-bf30-b9568608c339" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Test file size/type limits and private access.</span><div class="indented"></div></li></ul><ul id="df300a38-0919-43f1-959a-997cfd53f482" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Test database and storage backup/restore together.</span><div class="indented"></div></li></ul><ul id="536c4915-390c-47e7-89ed-88af01dcb46d" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Test restart during queued background job.</span><div class="indented"></div></li></ul><ul id="22e040d4-716e-4f24-868b-7ef9533feaee" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Add structured operational logs with request, actor, related IDs, and idempotency key.</span><div class="indented"></div></li></ul><ul id="551f02a2-4425-4646-9382-f6df8d2ed5e0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Resolve high/critical security findings.</span><div class="indented"></div></li></ul><ul id="68792033-7584-46ff-a4f2-085c2b6b5301" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Conduct PDPA readiness review against Page 14.</span><div class="indented"></div></li></ul><h3 id="a028453c-8ff1-4bd3-bfa9-00ee3ad683bc" class="" dir="auto">Exit criteria</h3><ul id="d306f520-77d7-4bd4-ba90-545f55470bd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No known high-severity authorization, data-loss, double-booking, or double-payment defect.</li></ul><ul id="399eb7a9-672d-44c8-b5de-500b864fa41e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Restore evidence is documented.</li></ul><h2 id="09e8460b-7931-4876-b79c-17410bc19e2c" class="" dir="auto">Sprint 14 — Pilot staff UAT and defect closure</h2><p id="dc9c3215-992e-48f4-9a15-2e7ffb984179" class="" dir="auto"><strong>Dates:</strong> 2027-01-25 to 2027-02-05  </p><p id="ff7cc9e1-5140-4db2-9eab-1853fd1bf40c" class="" dir="auto"><strong>Goal:</strong> Validate the actual dorm and finance workflow with representative users.</p><h3 id="bb2f54ca-3bf5-48f4-a36b-b3f9f9356584" class="" dir="auto">UAT scripts</h3><ul id="3e2a2378-8ed0-4a0b-813c-36d9fa363484" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Import room master and open campaign.</span><div class="indented"></div></li></ul><ul id="55b6ace9-8717-475f-bd6d-e5097a890714" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Shared roommate reservation.</span><div class="indented"></div></li></ul><ul id="6b976aa0-3da3-4155-b73e-3ba39ad272d0" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Whole-room reservation.</span><div class="indented"></div></li></ul><ul id="6b5c5d6c-e543-4f24-86e6-6e4154452832" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Manual reservation.</span><div class="indented"></div></li></ul><ul id="8b857af0-4d22-44e5-9991-8eb89c1dd40f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">HL split obligations.</span><div class="indented"></div></li></ul><ul id="5a9225a7-0d75-433a-8a39-4e29bda1859b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">SCB export, returned PDF, and payment-result import.</span><div class="indented"></div></li></ul><ul id="0b722107-8926-46af-a2a9-9549fcd71108" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">One-paid/one-unpaid exception.</span><div class="indented"></div></li></ul><ul id="ae4789b6-73c1-40fd-ba10-2270a7d26362" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Final room confirmation.</span><div class="indented"></div></li></ul><ul id="25cb8dcb-21b9-485f-840c-e1909455498b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Contract generation/signing and key handover.</span><div class="indented"></div></li></ul><ul id="86862b0e-f27b-476d-8139-2da7bc4ce23f" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Renewal and roommate replacement.</span><div class="indented"></div></li></ul><ul id="f7647171-f1a0-4729-8260-1689036d1473" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">University handoff and correction.</span><div class="indented"></div></li></ul><ul id="c2e7f1df-e487-4729-913c-19b896ce412d" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Role/permission checks.</span><div class="indented"></div></li></ul><h3 id="25af6f3a-fb31-4e95-a019-c1d5d8d7c746" class="" dir="auto">Outputs</h3><ul id="921b9b48-0831-4fc1-a418-d6b4f719f649" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Signed UAT results.</li></ul><ul id="499f0993-d7da-4916-8663-b30467ad2fb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Defect severity and owner.</li></ul><ul id="21ef32fb-6a86-45a9-aa8c-57bb4601013f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Policy gaps separated from software defects.</li></ul><ul id="a530d17f-163e-443c-a512-a2c893be4e3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Updated guides and screenshots.</li></ul><h3 id="ef9069b4-5ec0-4cf9-9a88-764606dc1de6" class="" dir="auto">Exit criteria</h3><ul id="3ae3e591-fb12-4481-a175-089803d3af86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Stakeholder accepts the pilot workflow or provides a bounded closure list.</li></ul><h2 id="18a710a5-3964-421e-9fe6-69214b3f683b" class="" dir="auto">Sprint 15 — Release candidate, training and handover package</h2><p id="29d74a27-9acf-4bd9-8521-ff35bfed788a" class="" dir="auto"><strong>Dates:</strong> 2027-02-08 to 2027-02-19  </p><p id="24a9061b-9cc1-4cb5-9d23-cc191dd5a442" class="" dir="auto"><strong>Goal:</strong> Produce a deployable, supportable release.</p><h3 id="a2775948-0125-42ce-937b-0a8629f1a021" class="" dir="auto">Release tasks</h3><ul id="79c40c36-fffb-42ae-bc7c-e3fcb41839bf" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Freeze schema and API for pilot.</span><div class="indented"></div></li></ul><ul id="d865a3b4-ad88-43cd-8e30-65ee54bfabb4" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Tag release candidate.</span><div class="indented"></div></li></ul><ul id="32859f73-3206-41c5-a9ed-3921a74d8080" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Rehearse clean deployment.</span><div class="indented"></div></li></ul><ul id="1587448a-6fc5-4853-898f-5de741561630" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Rehearse backup and restore.</span><div class="indented"></div></li></ul><ul id="79dae88c-a94f-484e-96c1-08e572f6e9cd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Prepare admin, finance, contract, and applicant guides.</span><div class="indented"></div></li></ul><ul id="cb17493c-2366-4196-b491-bcec7101cbfb" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Prepare incident, access-review, and file-recovery runbooks.</span><div class="indented"></div></li></ul><ul id="bca33878-1c05-4a20-984c-d4a557134cee" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Prepare architecture, ERD, API, test, migration, and operations documentation.</span><div class="indented"></div></li></ul><ul id="7d6e1d91-46a7-4298-88a1-7f8b92c242de" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Train pilot staff.</span><div class="indented"></div></li></ul><ul id="4091e37e-a4eb-4e65-a5b9-b2a88486a596" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Resolve release-blocking defects.</span><div class="indented"></div></li></ul><h3 id="d6bdcc97-52e3-444f-9899-7dc7a0467894" class="" dir="auto">Exit criteria</h3><ul id="7cb0083a-b479-4740-b89e-0df851782876" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Release candidate approved.</li></ul><ul id="707120f4-e0a3-4d23-874f-102a56661c94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment and rollback are repeatable.</li></ul><ul id="21d1b959-d48f-43b0-95a2-e532092651ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Named operational owners understand their workflows.</li></ul><h2 id="120ee372-e324-4b89-8d56-c861f2492676" class="" dir="auto">Final release and handover</h2><p id="f6036197-88bc-4887-a879-25aa3a412923" class="" dir="auto"><strong>Dates:</strong> 2027-02-22 to 2027-02-28</p><ul id="b928c7ff-06f7-4c14-b217-80e86b306acd" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Deploy approved release.</span><div class="indented"></div></li></ul><ul id="fa0351f0-e9c2-4e8c-b4dd-66f757d5ed8d" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Run production smoke tests.</span><div class="indented"></div></li></ul><ul id="0f0bbbe4-be1e-4142-8bdb-5a347424b4ca" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Confirm room inventory, accounts, roles, templates, and export settings.</span><div class="indented"></div></li></ul><ul id="33b421bb-c4a6-4215-aeda-959844f0ac7c" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Record final backup baseline.</span><div class="indented"></div></li></ul><ul id="15c80438-8ff3-49d4-a831-342bd528214b" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Deliver source, deployment package, documentation, test/UAT evidence, and expansion backlog.</span><div class="indented"></div></li></ul><ul id="19bbf70b-ac10-4cc4-8088-2f1699a6bf31" class="to-do-list" dir="auto"><li><input type="checkbox" class="checkbox checkbox-off" disabled=""/> <span class="to-do-children-unchecked">Conduct final demonstration.</span><div class="indented"></div></li></ul><h1 id="77361282-02c1-4dd1-b682-dcacc4f103ac" class="" dir="auto">Database migration sequence</h1><p id="d5667fc9-5a91-403f-8add-140040e1d1d2" class="" dir="auto">Use versioned migrations in this order so dependencies remain explicit:</p><ol type="1" id="ad499dd0-f212-40b5-a0de-5589837c9140" class="numbered-list" start="1" dir="auto"><li><code>0001_auth_users_roles_permissions</code></li></ol><ol type="1" id="662018fc-1f79-4184-ad2d-15dc6f589f49" class="numbered-list" start="2" dir="auto"><li><code>0002_dorm_building_floor_room</code></li></ol><ol type="1" id="04ed38e5-9ff8-4831-a0e2-31b568663cd4" class="numbered-list" start="3" dir="auto"><li><code>0003_room_config_assets_slots</code></li></ol><ol type="1" id="c56b420e-7642-4fd6-b0af-3d59c2cacfec" class="numbered-list" start="4" dir="auto"><li><code>0004_campaign_applicant_profile</code></li></ol><ol type="1" id="4cd45e3f-96c3-41b1-b892-f998e2a73bac" class="numbered-list" start="5" dir="auto"><li><code>0005_roommate_invitation_group</code></li></ol><ol type="1" id="d862679e-f20b-4d3d-bca8-d27859d21727" class="numbered-list" start="6" dir="auto"><li><code>0006_reservation_group_hold_assignment</code></li></ol><ol type="1" id="9268bde7-d2ed-468c-82cb-9ae1b30267be" class="numbered-list" start="7" dir="auto"><li><code>0007_payment_action_pricing_rule</code></li></ol><ol type="1" id="4ab12122-0635-441d-aef1-f06ed514da4a" class="numbered-list" start="8" dir="auto"><li><code>0008_payment_obligation_adjustment</code></li></ol><ol type="1" id="06b41fd2-f3da-4875-82f1-bec692db67ec" class="numbered-list" start="9" dir="auto"><li><code>0009_scb_export_batch_row_file</code></li></ol><ol type="1" id="b8a900ca-504a-445f-98ca-74a122939a3a" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li><code>0010_returned_pdf_page_match</code></li></ol><ol type="1" id="6301ada0-5d5d-4b8b-b117-2b0d755a3b2b" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li><code>0011_payment_result_transaction_exception</code></li></ol><ol type="1" id="3415062f-6052-4813-a6ca-e5f1eee8e5b2" class="numbered-list numbered-list-digits-2" start="12" dir="auto"><li><code>0012_contract_template_contract_scan</code></li></ol><ol type="1" id="7e1a4e80-856d-4b12-9ca2-4c70bfa17049" class="numbered-list numbered-list-digits-2" start="13" dir="auto"><li><code>0013_key_handover</code></li></ol><ol type="1" id="3aab8cc6-07f0-4ede-8aac-a38bc8d430fa" class="numbered-list numbered-list-digits-2" start="14" dir="auto"><li><code>0014_renewal_and_replacement</code></li></ol><ol type="1" id="3231e5bc-486e-41f7-b15f-4ab276db4f73" class="numbered-list numbered-list-digits-2" start="15" dir="auto"><li><code>0015_university_handoff_correction</code></li></ol><ol type="1" id="4b3ffda2-4abd-4531-b9cb-2446d98fb6c6" class="numbered-list numbered-list-digits-2" start="16" dir="auto"><li><code>0016_audit_notification_jobs</code></li></ol><p id="4a7d2f95-3479-4551-8553-7d905e011b08" class="" dir="auto">Every migration should include:</p><ul id="66e66dca-8aae-4e46-bca5-006966df4212" class="bulleted-list" dir="auto"><li style="list-style-type:disc">foreign keys and delete behavior;</li></ul><ul id="2606c9b4-2e44-4583-9eab-928dd3ff88d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">enum/check constraints or lookup tables;</li></ul><ul id="759cce66-805c-4eeb-964e-67435c8a77cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">timestamps and actor where relevant;</li></ul><ul id="16bb46bb-e994-408e-8ee4-6ba3db682fe1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">partial unique indexes for active states;</li></ul><ul id="dc82f96f-89a0-479a-8a57-d7fea11ceb2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">indexes for staff queues;</li></ul><ul id="845379e1-5a96-4116-b58b-f3fb589a99c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">data backfill/compatibility notes.</li></ul><h1 id="ebbb8ca9-1069-4578-83bb-4685b6b307f2" class="" dir="auto">Critical SQL implementation order</h1><p id="8926b904-8417-47fd-b559-d0f119e9a4a1" class="" dir="auto">Implement and review these through sqlc/explicit SQL before higher-level UI work depends on them:</p><ol type="1" id="8c6cf8e3-c3bb-4f90-bb3f-e889f464c70e" class="numbered-list" start="1" dir="auto"><li>Acquire exact-room hold.</li></ol><ol type="1" id="90ca529f-fc26-437e-bf4f-53b76f4f832c" class="numbered-list" start="2" dir="auto"><li>Confirm roommate room selection.</li></ol><ol type="1" id="34c49068-abf9-40df-b304-7a566408d179" class="numbered-list" start="3" dir="auto"><li>Expire/release room hold exactly once.</li></ol><ol type="1" id="e16f81cc-cca9-4d71-a5ee-5e128d590461" class="numbered-list" start="4" dir="auto"><li>Convert confirmation hold to payment hold.</li></ol><ol type="1" id="c2ca0fb6-8a00-45f5-bd62-168271ef060c" class="numbered-list" start="5" dir="auto"><li>Generate obligations idempotently.</li></ol><ol type="1" id="8f57a3fa-0100-4b23-81ee-a7e6014df60a" class="numbered-list" start="6" dir="auto"><li>Supersede obligations safely.</li></ol><ol type="1" id="f4f26515-718c-4f35-aff4-8d3e53337a5d" class="numbered-list" start="7" dir="auto"><li>Apply payment-result transaction once.</li></ol><ol type="1" id="f5ca1288-1625-4223-bdd0-26fc9365ca67" class="numbered-list" start="8" dir="auto"><li>Calculate group payment completion.</li></ol><ol type="1" id="00d61347-31b1-4014-b44d-73e759d80669" class="numbered-list" start="9" dir="auto"><li>Permanently confirm exact room once.</li></ol><ol type="1" id="08636887-ba52-48ed-a35c-42cd2d56a0c2" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Replace roommate and supersede dependent records.</li></ol><ol type="1" id="d9534c04-e244-4d9d-9ecf-57cd21367fb5" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>Create university correction batch without overwriting original.</li></ol><h1 id="d6636b70-e997-47a7-bfd7-f9e679c10d14" class="" dir="auto">Background jobs</h1><p id="1ff75ea5-d4b6-4555-8d2f-df508809d66b" class="" dir="auto">Use PostgreSQL-backed jobs/outbox for MVP; do not add Redis without a proven need.</p><p id="3386a253-1430-495c-b5d6-fbaf7ef7e44e" class="" dir="auto">Required jobs:</p><ul id="19e767a7-c4e0-4ea5-8f32-18577fdbbc97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">invitation expiry;</li></ul><ul id="67784a50-7b19-4a20-a999-be50ba985aec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">15-minute room-confirmation expiry;</li></ul><ul id="93e4c433-0de8-40fc-a3b6-2b6b48cb3acc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">72-hour payment-hold expiry;</li></ul><ul id="d6f34766-9e8c-4b07-aaa3-a199932a5e78" class="bulleted-list" dir="auto"><li style="list-style-type:disc">notification dispatch/retry;</li></ul><ul id="66d3d84c-ec17-4333-a5b5-a192ae75e45a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">returned-PDF page processing;</li></ul><ul id="f9cd7595-a24e-4685-90fa-9f2d80e2dbbd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">payment-result file processing;</li></ul><ul id="45a1e301-2572-4c5f-bec5-5adeef90b0a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">contract/reminder notifications;</li></ul><ul id="1ecf5cc4-da4a-4cf6-b9e6-537080a16e27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">university handoff readiness;</li></ul><ul id="b4834de3-85fb-4eab-a5ac-a7d9057a4252" class="bulleted-list" dir="auto"><li style="list-style-type:disc">expired-job recovery after restart.</li></ul><p id="5551b666-e38b-48ca-b8fb-859f2bd056ff" class="" dir="auto">Job requirements:</p><ul id="b8e2760d-f6f5-48e9-8a81-ec633b5b5e68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">lease/lock rows safely;</li></ul><ul id="6033b514-22c1-46ca-9634-a0d1c706295a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">retry with bounded backoff;</li></ul><ul id="c479a55f-97bd-4c23-b52a-3c5102791a21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">record attempt count and last error;</li></ul><ul id="8591fcd0-6e2c-4c80-a17e-446df59bb05d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">idempotent handler;</li></ul><ul id="c7e82fec-65d6-42ba-bc5c-eb968e52c55d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dead-letter/manual-review state after retry limit;</li></ul><ul id="7e03330e-9770-4126-822f-f213350f4329" class="bulleted-list" dir="auto"><li style="list-style-type:disc">operational dashboard for failures.</li></ul><h1 id="b0a6a182-8bba-4994-97d7-9820256c5541" class="" dir="auto">API delivery order</h1><h2 id="0da11baf-3a13-4f1c-b563-e5cee41d38ca" class="" dir="auto">Applicant APIs</h2><ol type="1" id="70379cb4-62cc-4eed-9668-1b6642fe1de3" class="numbered-list" start="1" dir="auto"><li>Authentication and profile.</li></ol><ol type="1" id="776ad907-a528-4688-99d8-4d05e983b452" class="numbered-list" start="2" dir="auto"><li>Campaign and room browsing.</li></ol><ol type="1" id="37e47527-ac50-4ae9-a341-cd1001b48ac3" class="numbered-list" start="3" dir="auto"><li>Roommate invitations/groups.</li></ol><ol type="1" id="bf2cfe08-2442-44a1-9817-c0bc567b77db" class="numbered-list" start="4" dir="auto"><li>Reserve/confirm/release room.</li></ol><ol type="1" id="a3e94da0-cc96-4674-9749-2c9c8f5aa958" class="numbered-list" start="5" dir="auto"><li>Reservation and hold status.</li></ol><ol type="1" id="9e7ffa72-c536-496b-97a0-0a8d4a67a9e0" class="numbered-list" start="6" dir="auto"><li>Payment obligations/documents.</li></ol><ol type="1" id="f59c2f19-f1ac-47e4-8e1f-223cdf5ef06d" class="numbered-list" start="7" dir="auto"><li>Contract and key-handover status.</li></ol><ol type="1" id="3df95729-f985-4225-9fda-d13324d07ff6" class="numbered-list" start="8" dir="auto"><li>Renewal/change requests.</li></ol><h2 id="fecc0c24-f898-4b0c-ae07-4dfcfb5690b2" class="" dir="auto">Staff APIs</h2><ol type="1" id="11ae76bb-fd49-4d45-9978-9c9be2a8bd2c" class="numbered-list" start="1" dir="auto"><li>Room master/import/configuration.</li></ol><ol type="1" id="3a403029-b2b3-4bd9-99f8-5a8a0ce6ea1d" class="numbered-list" start="2" dir="auto"><li>Campaign and eligibility.</li></ol><ol type="1" id="65176c2d-a849-4e54-995a-2b81e463b9ee" class="numbered-list" start="3" dir="auto"><li>Manual reservation.</li></ol><ol type="1" id="971dbc7d-a46d-40c3-b1b1-fd16ff6302cb" class="numbered-list" start="4" dir="auto"><li>Pricing and obligation override.</li></ol><ol type="1" id="e6c2ff73-da2c-4f25-a36b-200e12e76823" class="numbered-list" start="5" dir="auto"><li>SCB export batch.</li></ol><ol type="1" id="380213d5-5ef6-4378-9251-32354cac0a96" class="numbered-list" start="6" dir="auto"><li>Returned PDF import/match review.</li></ol><ol type="1" id="6170eaec-8254-4524-8aa1-0854a3ed55fd" class="numbered-list" start="7" dir="auto"><li>Payment-result import/exception review.</li></ol><ol type="1" id="3668bef9-04e1-42ba-8120-e8783d947731" class="numbered-list" start="8" dir="auto"><li>Final confirmation.</li></ol><ol type="1" id="81c144ef-3d4e-4024-b9c6-1c08fe108607" class="numbered-list" start="9" dir="auto"><li>Contract and key handover.</li></ol><ol type="1" id="c16196ef-5522-4660-9f91-82066fc3942c" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>University handoff/correction.</li></ol><ol type="1" id="4acf7b44-ea81-4167-89cf-a2de5e3372b7" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>Reports and audit.</li></ol><h1 id="38393df6-c03e-4c81-9b1b-d824b08910ba" class="" dir="auto">Permission implementation order</h1><p id="d493fec1-3aa1-4c58-8a2f-fce6f87e0fa2" class="" dir="auto">Start with deny-by-default. Add permissions only when the corresponding feature is implemented.</p><ul id="0277c644-2ace-40a8-a347-a25c08bcb14b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room.manage</code></li></ul><ul id="7b443a6b-1ca0-47d6-831e-256fe78e5df0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room.block</code></li></ul><ul id="926b0e1d-3411-4870-96ae-429218a16b85" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation.manual_create</code></li></ul><ul id="d5d71a6d-87f1-4232-a26d-f1a775bc14e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation.assign_room</code></li></ul><ul id="d592161d-52fb-4679-8d49-b84caa8dc1cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation.confirm</code></li></ul><ul id="1eea1b96-5b0b-491c-92f1-5cba73bec9ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pricing_rule.manage</code></li></ul><ul id="4b009b91-8538-4e75-8fb4-c11440ab0a01" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_obligation.override</code></li></ul><ul id="5c378bb9-b4bf-479a-8598-66c6c13a4876" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export.create</code></li></ul><ul id="81d1b136-83b8-4bf7-b33c-ec87665a016e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_export.download</code></li></ul><ul id="a6a940dc-8f3d-4ac8-a5ae-9144ce5c5844" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_document.import</code></li></ul><ul id="8302ba93-42e8-44b6-9c90-de8bc9e62a02" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_document.match_review</code></li></ul><ul id="dfb76978-4821-4469-adad-102f546a46ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment_result.import</code></li></ul><ul id="3d3801ba-4093-4843-ae20-c6ce0d9586c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.manual_record</code></li></ul><ul id="403f651c-aad3-477a-84e3-b0c74a40622d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.exception.resolve</code></li></ul><ul id="dc60d59a-2a14-4c88-945c-59164853afaf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.confirm</code></li></ul><ul id="4a2bae7e-d084-4645-928d-67d0c3141686" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.cancel</code></li></ul><ul id="5d32147b-09a9-4e3f-83b4-6847575b92d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>payment.refund_status.manage</code></li></ul><ul id="bf7ba5a4-3529-4588-b943-0c468592e185" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract_template.manage</code></li></ul><ul id="56ac6a37-b394-4ac3-aede-6e339e8d8ca2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract.generate</code></li></ul><ul id="8c6b552d-38d2-4481-a0a4-a466def86b0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract.print</code></li></ul><ul id="75cf631c-42bd-4bcc-a9a6-fb3ad6a85f1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>contract.receive</code></li></ul><ul id="b3ae7f44-2932-4fb1-9f3c-1ddba5ac0eec" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>key_handover.record</code></li></ul><ul id="6fa93069-8b7f-4330-b729-b785f817a17a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>university_export.create</code></li></ul><ul id="ebaa9733-8f5f-4074-b48c-cd3bd82f3dcc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>correction_export.create</code></li></ul><ul id="4b9c8e1e-07c5-4aae-8111-e2e149e130f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>audit.view</code></li></ul><h1 id="673c807e-581e-4882-be8b-2cb768b41fa9" class="" dir="auto">Test strategy</h1><h2 id="b40434f9-cab4-4594-a423-9018d406798d" class="" dir="auto">Unit tests</h2><ul id="869a389a-024d-4add-b341-1f76ed3f76db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">State transition guards.</li></ul><ul id="94d53277-6f76-497e-a1f8-08487fa97752" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pricing resolution and overrides.</li></ul><ul id="06602b52-3f01-4709-bb10-f3c4e38c1925" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ref. field generation and validation.</li></ul><ul id="093be950-39b1-4bf0-b172-d8dccec54132" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PDF matching score/rules.</li></ul><ul id="6a54fb80-d712-4d5d-9c17-6decb5615f70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Result normalization.</li></ul><ul id="321f3224-0390-446b-85bc-0526e157776f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Contract snapshot generation.</li></ul><h2 id="9bec4bac-86dd-462b-8c13-116adcd576e8" class="" dir="auto">Database integration tests</h2><ul id="df1f4de1-4193-45ce-adca-7f88ac08567e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unique and partial indexes.</li></ul><ul id="98d74879-65c6-4f87-bbac-72d0f66d2805" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Hold acquisition/release.</li></ul><ul id="cad5a018-69ce-45e9-b913-f5c5dca0affc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Group-size constraints.</li></ul><ul id="5ebeffad-7d3b-4a77-998a-58c56097699f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Whole-room slot blocking.</li></ul><ul id="08bdfc6c-9bcf-4289-8a71-708b39322321" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Result idempotency.</li></ul><ul id="33e26aad-d574-47ba-a803-3cb01a977da2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Final confirmation.</li></ul><ul id="5355a3b5-6f6f-4ac8-b4ee-fde434674667" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Supersession and correction history.</li></ul><h2 id="6a68add3-1f78-401c-94c6-42ed870837b9" class="" dir="auto">Golden-file tests</h2><ul id="9ffb9ac1-4cd7-44cc-b7b9-693df53f8272" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Official SCB XLSX workbook.</li></ul><ul id="925cd86b-a294-41d3-8a62-5f02e252a4c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Returned PDF page parsing.</li></ul><ul id="802c9e16-3292-43fe-8285-25a3ce5c0ac1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SCB result report parsing.</li></ul><ul id="bab0e416-d3b5-4caf-869c-f08eb0738c57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Contract rendering.</li></ul><ul id="b1ab34f9-292a-4e40-80ba-7c39abd72039" class="bulleted-list" dir="auto"><li style="list-style-type:disc">University handoff/correction file.</li></ul><h2 id="d597c6b6-65c1-4782-86ae-539eaf8606a5" class="" dir="auto">API tests</h2><ul id="7c890ed1-bd9b-43b1-af4e-baf141d5efa5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Validation and authorization.</li></ul><ul id="e435608c-65bf-4971-868e-81bd204faee5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Idempotency keys.</li></ul><ul id="402041d7-858a-4c2f-804a-45ae9eb221fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Conflict responses.</li></ul><ul id="81233af8-423e-4dbc-99e8-d4de076ec01e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private document access.</li></ul><ul id="44cde100-fcce-46ae-bac8-028845e404ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Audit records.</li></ul><h2 id="eac5730a-405f-4fa1-bb43-0621cfe907ed" class="" dir="auto">End-to-end tests</h2><ul id="06e7025d-33bb-4e6f-bfa2-9bba8dce0ad1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">New shared-room applicant.</li></ul><ul id="9cc8346d-c6b8-4e5f-97ea-f25dacebc27e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Whole-room renter.</li></ul><ul id="34a1139f-8c18-47f4-82a1-a9a25f19b7b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Current resident renewal.</li></ul><ul id="f868eecd-6868-49c9-b689-b8136ca6dde0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Manual reservation/payment.</li></ul><ul id="9cba1aa3-225b-4c62-90c7-7b8db9610e75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HL dual bill.</li></ul><ul id="551136e7-2a6f-4609-9b5d-725c6027cb0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One-paid/one-unpaid.</li></ul><ul id="b6c60153-a816-4b6a-9012-6a75199674fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Payment exception.</li></ul><ul id="23f42220-4c80-40ae-ba43-2977fb3d9a19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Contract/key handover.</li></ul><ul id="f3723d0d-b211-4ebb-9925-4466d586ca8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">University correction.</li></ul><h2 id="225d9a1d-22e2-45a2-92d8-c2b056ed39bb" class="" dir="auto">Performance and concurrency tests</h2><p id="9c638749-68e2-426b-9e65-bccf2d7113ff" class="" dir="auto">Provisional engineering baseline:</p><ul id="b49fbad3-5af0-4f49-ba0a-aa51c8a10b76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">full pilot room inventory loads and filters without timeout;</li></ul><ul id="a7d2431a-248a-403a-b156-33e8a639958c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">concurrent browse traffic does not block reservations;</li></ul><ul id="3e897a10-5eda-4d8b-a4dd-c3e49d0383d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">at least 100 simultaneous attempts for one room result in exactly one hold;</li></ul><ul id="6132ec95-6de9-4c42-9e5e-4b75623d99fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">batch generation/import handles the expected pilot batch plus safety margin;</li></ul><ul id="f0166ee3-b585-4d8f-af90-339ed2155daa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">large multipage PDF is processed asynchronously without request timeout.</li></ul><p id="92c39a5a-666d-43e5-8afc-fa7e0ea287e4" class="" dir="auto">Adjust numeric targets after deployment infrastructure is confirmed.</p><h1 id="326593b9-d6b7-4d89-83b5-e490efa6a1f7" class="" dir="auto">Security and PDPA implementation checklist</h1><ul id="30623bec-00c0-4e96-a3fe-dbf241221293" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Strong password hashing and expiring verification/reset tokens.</li></ul><ul id="6a32f555-4e9e-4b39-b66d-91b650a8b5a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secure, HTTP-only, same-site cookies when using cookie sessions.</li></ul><ul id="9bd7e672-69a1-4fbb-a494-81264f114e71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CSRF protection for state-changing browser requests.</li></ul><ul id="20ad686e-44d5-4213-b41a-ee35ba5aa16e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Rate limits for authentication, invitations, reservation attempts, and file imports.</li></ul><ul id="259106ec-d8fe-4b3f-83f7-b46373deb104" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Role + dorm + action authorization on every staff endpoint.</li></ul><ul id="ab053425-879f-445d-845e-15b426938fd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private buckets and backend-authorized downloads.</li></ul><ul id="9bf16272-9aee-4195-821b-30c729834e8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIME, extension, size, and checksum validation.</li></ul><ul id="50a90175-d933-46ae-8c44-86cb2734a392" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No production tokens or secrets in database logs.</li></ul><ul id="11be889d-2426-45e6-b186-537a27338dc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data minimization in exports and dashboards.</li></ul><ul id="ca78c513-a98b-4274-a57c-daf0d99e813c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Audit access to sensitive files and corrections.</li></ul><ul id="ea580a66-483f-487f-9828-3728e3a5a946" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Retention configuration for application files, SCB artifacts, contracts, and audit logs.</li></ul><ul id="d57529ee-5a3a-4691-80e1-32164a46d2ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Breach-response and access-review runbooks before pilot.</li></ul><ul id="e30ccdf2-b48d-4b98-833d-5dffe2676762" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Test accounts and fixtures contain no real personal or bank data.</li></ul><h1 id="564c6486-6799-4c44-8acf-5217b2e34f31" class="" dir="auto">Operational dashboards required</h1><ul id="13ad8063-ae4f-461f-a993-3d5010d73d74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job failures and retry queue.</li></ul><ul id="019558ed-8776-405e-a882-e4c4db8197e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Rooms held for confirmation/payment and expiring soon.</li></ul><ul id="a7a38a27-0384-4e44-8b80-e371629b86b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Export batches awaiting returned PDF.</li></ul><ul id="853cf459-04f2-43ff-b9a4-b4b88a20b232" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unmatched/ambiguous PDF pages.</li></ul><ul id="90f83361-2761-4bde-9cdf-9da82fecd1aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Payment-result imports and exceptions.</li></ul><ul id="5cb51e1b-409c-45e4-8aef-a51a60505911" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Groups with incomplete payment.</li></ul><ul id="02402486-d324-4d23-ba77-a554b17e02e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Contracts ready/printed/partially signed.</li></ul><ul id="cf84eaac-5255-48f3-a6b3-0677658f6749" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Key handover pending.</li></ul><ul id="a51cf212-d062-42ae-ad81-2574dec6dce3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">University handoff queued/corrected.</li></ul><ul id="62f54a4b-f0ee-48a6-b015-4d9a5c6244b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Recent sensitive audit actions.</li></ul><ul id="dd2a788b-2266-4b65-8e1c-05eef6d66a29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backup age and last restore-test result.</li></ul><h1 id="451bc9a2-5dbd-441a-812c-5391e261752e" class="" dir="auto">Release gates</h1><h2 id="6d751a6f-807d-47fa-bf6e-2ee92a9f24a4" class="" dir="auto">Design gate</h2><ul id="0f53fa30-d82a-456b-a685-faa8bc5f63c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ERD, state machines, permissions, and wireframes approved.</li></ul><h2 id="1c48a7df-a4e1-4a79-8880-ff87eb63e0f1" class="" dir="auto">Vertical-slice gate</h2><ul id="762b510f-2c12-43e9-8cd8-b0cdfd7c9494" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Authenticated applicant can browse a fixture room, reserve it, create fixture obligations, receive a fixture payment page, and view status.</li></ul><h2 id="e341845b-0e7d-4c02-9613-22bcec7b997c" class="" dir="auto">Payment gate</h2><ul id="ea910e83-e087-4224-b5c1-a5d110e89ba7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Official-format workbook, returned-PDF mapping, result import, manual fallback, and exception queue work end to end.</li></ul><h2 id="003f570b-c136-4f7e-9630-8395c8f63a12" class="" dir="auto">Operations gate</h2><ul id="26b4e701-4cbb-4329-8f42-0901c9e25994" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Contracts, scans, handover, university export/correction, reports, and audit work.</li></ul><h2 id="901c61a3-45f4-400b-aad7-e9fec81cfab9" class="" dir="auto">UAT gate</h2><ul id="ba0c780d-8e15-4d07-b724-f5a33b22931d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">No open blocker/critical defect.</li></ul><ul id="dcc0c27c-d28c-41cc-9eb0-62ddc0965258" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Stakeholder has accepted provisional rules or recorded required changes.</li></ul><ul id="91f62a8e-b24f-4a20-bf0b-27978b716c50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Restore test passes.</li></ul><ul id="aae26bcc-16bd-4dcb-9925-410a2e938125" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Named staff roles and access are configured.</li></ul><h2 id="94e629ae-2e44-4ad6-9819-a89de83b3e60" class="" dir="auto">Production gate</h2><ul id="0a6a666a-404b-4bab-bd9b-f82acc6b80bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment, rollback, backup, privacy notice, support owner, and incident contacts are ready.</li></ul><h1 id="cfd45702-e75b-4896-8fbd-d6608001d9a7" class="" dir="auto">Major risks and controls</h1><table id="5cdaf7a0-4ba2-4f0d-ae73-ccb724d9b5fb" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="ae35f81d-ccd8-439f-8061-99ef8471002c" dir="ltr"><th id="A\xw" class="simple-table-header-color simple-table-header">Risk</th><th id="TFm^" class="simple-table-header-color simple-table-header">Control</th></tr></thead><tbody><tr id="9eff0871-d145-4967-b211-1f3792367733" dir="ltr"><td id="A\xw" class="">SCB format differs from screenshot/assumption</td><td id="TFm^" class="">Complete Sprint 0 format spike, adapter interfaces, golden-file tests, no production guesswork</td></tr><tr id="630d9ee9-7cd7-4850-98c4-ea153d5ab7e9" dir="ltr"><td id="A\xw" class="">Returned PDF lacks reliable resident identifier</td><td id="TFm^" class="">Require real roommate sample; support manual match queue and immutable mapping audit</td></tr><tr id="2bb0f4a8-6354-4e1c-82f0-e8658694d60b" dir="ltr"><td id="A\xw" class="">Room is double-booked under concurrency</td><td id="TFm^" class="">Atomic conditional SQL, unique active hold, idempotency and race tests</td></tr><tr id="8af56437-9ace-4914-898b-906a3f7337eb" dir="ltr"><td id="A\xw" class="">One roommate pays and the other does not</td><td id="TFm^" class="">Shared deadline, explicit exception workflow, preserve paid record, provisional release rule until policy confirmed</td></tr><tr id="944a597e-8f9b-47df-9d5b-f8ba779d245f" dir="ltr"><td id="A\xw" class="">Pricing changes after export</td><td id="TFm^" class="">Versioned rules, obligation snapshot, cancellation/supersession rather than edit-in-place</td></tr><tr id="28105e9a-4694-4889-af4f-5bc815da0174" dir="ltr"><td id="A\xw" class="">Staff bypasses system with spreadsheet edits</td><td id="TFm^" class="">Export validation, immutable batch history, corrections through controlled workflow</td></tr><tr id="62b2fc6e-ced8-4cd9-bf46-bf3b46e2ad15" dir="ltr"><td id="A\xw" class="">Personal data leaks through files</td><td id="TFm^" class="">Private storage, scoped permissions, access audit, minimized exports, retention rules</td></tr><tr id="25a884d6-bd10-4dda-97eb-59ee253f2c5e" dir="ltr"><td id="A\xw" class="">External system round delays handoff</td><td id="TFm^" class="">Queue confirmed residents and preserve correction history</td></tr><tr id="d9e62c62-5879-4ba5-aa93-4bd4a140502f" dir="ltr"><td id="A\xw" class="">Small team cannot finish every parallel task</td><td id="TFm^" class="">Protect critical path: room → group/hold → obligation → SCB files → payment confirmation → contract; defer visual floor map and utility implementation</td></tr></tbody></table><h1 id="cb8358b2-d514-4e05-bf1b-633e1e311d51" class="" dir="auto">Immediate next ten working days</h1><ol type="1" id="0e068389-7ed0-4906-b544-510290fc00aa" class="numbered-list" start="1" dir="auto"><li>Collect the five external artifacts: room master, SCB template, roommate PDF, SCB result report, university handoff sample.</li></ol><ol type="1" id="4968b168-fff5-4f45-a143-0cd8f00ca2df" class="numbered-list" start="2" dir="auto"><li>Create repository, Docker Compose skeleton, and Makefile.</li></ol><ol type="1" id="8c56412a-0da9-4793-8425-8c26e2bb9136" class="numbered-list" start="3" dir="auto"><li>Write the canonical transition table.</li></ol><ol type="1" id="c99d4830-d42d-4cde-8056-b8160f5e4290" class="numbered-list" start="4" dir="auto"><li>Draft ERD and migration sequence.</li></ol><ol type="1" id="19daf047-8ace-4806-9111-63ec028cffd4" class="numbered-list" start="5" dir="auto"><li>Write permission matrix.</li></ol><ol type="1" id="1d98f96c-a969-4ea0-846a-aa46292405c0" class="numbered-list" start="6" dir="auto"><li>Build fixture inspection scripts for XLSX/PDF/result files.</li></ol><ol type="1" id="b6326f5a-23c5-446d-89f3-9027fe00c139" class="numbered-list" start="7" dir="auto"><li>Produce exact-room browser and roommate confirmation wireframes.</li></ol><ol type="1" id="3a285faa-5965-47e8-857a-d94632ef4d17" class="numbered-list" start="8" dir="auto"><li>Define the vertical-slice acceptance test.</li></ol><ol type="1" id="7ed233b7-4566-4408-84ee-a37b6bc06086" class="numbered-list" start="9" dir="auto"><li>Assign owners and due dates to all remaining open questions.</li></ol><ol type="1" id="bebfead6-ff68-43c2-b539-96e7db40644b" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Hold a design-freeze review before feature coding begins.</li></ol><h1 id="afbd65d9-729c-4fcf-9ca9-bf9b1ef98f33" class="" dir="auto">Related project pages</h1><ul id="81b022b0-d6bb-41fc-a3f3-de11af7c8260" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="01%20%E2%80%94%20PRD%20Affiliated%20Dorm%20Application%20&amp;%20Reservation%2038e9192afd1181299db4d97a455e8cf3.html">01 — PRD: Affiliated Dorm Application &amp; Reservation System</a></li></ul><ul id="f9082fdb-003c-4713-a3b2-82409ca8f82d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="02%20%E2%80%94%20Exact-Room%20Reservation,%20Roommates%20&amp;%20Holds%2038e9192afd11814784aaf757075f4a65.html">02 — Exact-Room Reservation, Roommates &amp; Holds</a></li></ul><ul id="583bc3df-193f-4dd9-90e5-f620a1cc6bf9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="03%20%E2%80%94%20Exact-Room%20Applicant%20UX%20&amp;%20Staff%20Dashboard%2038e9192afd1181efb0cff4548f584f30.html">03 — Exact-Room Applicant UX &amp; Staff Dashboard</a></li></ul><ul id="3e37ef7c-5b83-4949-9410-71732cd127e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="04%20%E2%80%94%20Technical%20Architecture%20Exact%20Rooms,%20Roommates%2038e9192afd1181329d23ceef5a8c2356.html">04 — Technical Architecture: Exact Rooms, Roommates &amp; SCB File Exchange</a></li></ul><ul id="62bb0ea4-b1a5-466c-87ba-8b8c01a83a33" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="05%20%E2%80%94%20Operations%20Exact%20Rooms,%20Renewals,%20Payments%20&amp;%20%2038e9192afd1181f694c3cc73f6e79e77.html">05 — Operations: Exact Rooms, Renewals, Payments &amp; Contracts</a></li></ul><ul id="2726c13f-a17a-4976-a5b4-4121389acfb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="08%20%E2%80%94%20Payment%20Rules,%20SCB%20Documents%20&amp;%20Reservation%20Li%2038f9192afd11811dbd68fd9d58063128.html">08 — Payment Rules, SCB Documents &amp; Reservation Lifecycle</a></li></ul><ul id="f15707e2-df51-43a0-ae18-556ff0329433" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="09%20%E2%80%94%20Product%20Build%20Plan%20&amp;%20Roadmap%2038f9192afd11810592a9eb0e97d7d86d.html">09 — Product Build Plan &amp; Roadmap</a></li></ul><ul id="81fb77fe-bcbc-4e7f-91ab-6c6617cf9f2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="11%20%E2%80%94%20Final%20Tech%20Stack%20&amp;%20Architecture%20Decision%2038f9192afd1181278fd4fc176b03d753.html">11 — Final Tech Stack &amp; Architecture Decision</a></li></ul><ul id="a36d8bde-5abe-47d8-945c-f9cb06323c82" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></li></ul><ul id="b94bc05d-606e-4549-ab1a-64d19860f6c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="14%20%E2%80%94%20Thai%20PDPA%20Legal%20Notes%20&amp;%20System%20Implications%203969192afd1181409181def1bb02a3ae.html">14 — Thai PDPA Legal Notes &amp; System Implications</a></li></ul><ul id="913f2992-e831-406c-94b4-b6aa7945f495" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="15%20%E2%80%94%20Mock%20SSO,%20Exact-Room,%20SCB%20Export%20PDF%20&amp;%20Paymen%203979192afd11816aa5d9e9d5ba1602f3.html">15 — Mock SSO, Exact-Room, SCB Export/PDF &amp; Payment Fixtures</a></li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

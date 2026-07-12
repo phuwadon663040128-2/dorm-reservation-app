@@ -1,0 +1,797 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>02 — Exact-Room Reservation, Roommates &amp; Holds</title><meta name="data-notion-page-icon" content="📋"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%8B%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="38e9192a-fd11-8147-84aa-f757075f4a65" class="page sans" data-notion-page-icon="📋"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="📋"></span></div><h1 class="page-title" dir="auto">02 — Exact-Room Reservation, Roommates &amp; Holds</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="1c569a87-b79e-4f03-a200-ffa0238cca76" class="" dir="auto">Purpose</h2><p id="1dd386c9-1d4c-4d05-a08e-297822bdb894" class="" dir="auto"><strong>Last revised:</strong> 2026-07-10</p><p id="2c227b7e-2336-4c57-949e-d98bbe78e2de" class="" dir="auto">This page defines the accepted exact-room reservation model for the pilot covering <strong>วรเรสซิเดนซ์ / หอ 8 หลัง and หอพักวรอินเตอร์ together</strong>.</p><p id="e5cbfb52-ffe8-4dc5-8d25-a3c84863b338" class="" dir="auto">The previous room-type-quota-first rule is superseded. Exact room, occupancy mode, roommate group, payment obligations, and annual contract are core MVP data.</p><h2 id="9ac2b188-b6a9-49bb-a864-3dba19447c26" class="" dir="auto">Core room model</h2><ul id="51732f10-3dbb-4bd6-a68d-84ad207797d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Every exact room has a globally unique room number.</li></ul><ul id="f1cf45c8-8ffa-435c-a3fa-492fc554ecef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">วรอินเตอร์ uses a building letter plus floor/room number, such as <code>A101</code>.</li></ul><ul id="035f855e-d6d3-4c61-81a6-e0f50f8d00fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">หอ 8 หลัง uses a numeric room format that identifies its building/floor/room.</li></ul><ul id="675b421a-7669-48cb-a53c-aa2cc81ee529" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The first-release room browser uses <strong>building → floor → exact-room list</strong> with availability status and room-size/plan information where available.</li></ul><ul id="eac3ec95-c806-4a39-ac8e-911a87a6c1e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maximum normal occupancy is two residents.</li></ul><ul id="8abb77e6-1d71-4442-a31a-3458b10b3fc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Supported occupancy modes:<ul id="103ccc32-510a-4a52-b3cc-c0b389a3ef12" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>Shared</code> — two separate residents;</li></ul><ul id="3c2e357e-2f0b-4cce-9836-bd259bc75619" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>Whole Room / เหมาห้อง</code> — one resident pays the whole-room amount and blocks the second occupant slot.</li></ul></li></ul><ul id="70d20e25-ef38-4f03-a5f6-c7bfd6ec8810" class="bulleted-list" dir="auto"><li style="list-style-type:disc">The system should support room configuration changes over time while preserving historical snapshots used by old payments and contracts.</li></ul><h2 id="d8b8c0af-ca5b-466d-aacb-70701f117d7d" class="" dir="auto">Room statuses</h2><p id="a417450f-e321-4f3d-9063-3da79e2a96e8" class="" dir="auto">Recommended room inventory statuses:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="5726f77f-b2c8-4538-aa52-49408523f462" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Unavailable
+Available
+Invitation Pending, no room held yet
+Held for Roommate Confirmation
+Held for Payment
+Confirmed
+Blocked by Staff
+Released</code></pre><p id="6b67b4c7-9b88-4f67-bb00-e4b004865e53" class="" dir="auto">A public status may simplify these to <code>Available</code>, <code>Temporarily Held</code>, <code>Reserved</code>, or <code>Unavailable</code>.</p><h2 id="7c6adc2d-c52f-46e2-8347-183801d2421d" class="" dir="auto">Applicant prerequisites</h2><p id="bbcff3ee-b604-45b4-ad13-fe31922cc13b" class="" dir="auto">Before joining a roommate group or reserving:</p><ul id="85ba4361-8c4a-4d44-b947-58518a32067f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">applicant account exists;</li></ul><ul id="16cdba4b-f188-4d93-a59b-ccb7c43f52c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">personal email is verified;</li></ul><ul id="af35cc09-ca20-4f1d-a1be-e3895f9b381e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">required profile information is complete;</li></ul><ul id="49e5df4e-e0f6-41f5-b989-20bb6f290020" class="bulleted-list" dir="auto"><li style="list-style-type:disc">applicant is not in another active roommate group/reservation;</li></ul><ul id="c10442e6-4c7c-4b67-b6bc-9f80a1ce26fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">applicant is eligible for the campaign.</li></ul><p id="1ae6cd0e-51bc-4058-b2b0-99f56661c607" class="" dir="auto">KKU SSO is optional and is not a reservation gate.</p><h2 id="58d52b40-8b4b-430b-bb19-f6fed8c5662c" class="" dir="auto">Roommate group model</h2><h3 id="c69b6e57-7366-4aee-9529-f7531b9dc66b" class="" dir="auto">Group size</h3><ul id="84cc7964-838c-42e4-b4f3-f5d7accdc0f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maximum two residents.</li></ul><ul id="2156319d-283f-4c91-a4e2-28db04389676" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One resident is the reservation leader.</li></ul><ul id="043b9856-562a-4a3f-b387-a27e553b222b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One resident may have only one active invitation/group at a time.</li></ul><h3 id="bddc326b-e5b6-422f-a207-070c76075dd2" class="" dir="auto">Invitation flow</h3><pre id="ed3ff97a-0eac-4793-9e5a-0cd205c03412" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Leader selects a person with a complete profile
+→ leader sends roommate invitation
+→ invitation valid for 48 hours
+→ invited resident accepts or declines
+→ accepted pair becomes a roommate group
+→ leader may proceed to exact-room selection</code></pre><p id="88d8e465-6048-4ddc-a9ec-9ca2af1374f7" class="" dir="auto">The roommate relationship must be accepted before room selection.</p><h3 id="1b5e39b2-4bfa-4c0c-b0f7-af301342de2f" class="" dir="auto">Reservation-control setting</h3><p id="dee5303f-683f-44db-a5c6-728e90076396" class="" dir="auto">Campaign setting:</p><pre id="706257ab-b621-4986-be34-91b5e0c7e2da" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">roommate_room_confirmation_required = true / false</code></pre><p id="730f3e26-0c25-4036-b269-ea0cd4addb8b" class="" dir="auto">When enabled:</p><pre id="1a44cc71-1561-4c2d-8fd0-6e26a7c823b8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">leader selects exact room and clicks Reserve
+→ room is held immediately
+→ roommate has 15 minutes to confirm the selected room
+→ confirmation succeeds: move to payment hold
+→ confirmation expires/declines: release room immediately</code></pre><p id="de63a629-15c8-450e-86b9-ee456b20de6c" class="" dir="auto">When disabled:</p><pre id="4389fc9f-c7b2-4e3b-8276-9b56a1ba61ae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">accepted roommate group
+→ leader selects exact room and clicks Reserve
+→ room is held immediately
+→ no second room confirmation
+→ move to payment hold</code></pre><p id="709be28f-4e84-4d1b-8699-9edf18066148" class="" dir="auto">The leader initiates reservation in both modes.</p><h2 id="32afb81f-1822-462b-801b-a1a060661356" class="" dir="auto">Payment hold</h2><p id="70729b22-1a40-481d-8fbc-ec024b3ae962" class="" dir="auto">After the reservation group is ready:</p><ul id="18c1699c-57b5-4771-bb95-056aff7b4273" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact room is held for <strong>72 hours</strong> under the current design baseline;</li></ul><ul id="4ed89073-3053-4746-8f0f-f26d7d3c7b6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared-room residents use one group deadline;</li></ul><ul id="7d6ed0fa-4923-479f-b9b0-fdbe2499be44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">other applicants can see that the room is temporarily held and when it expires;</li></ul><ul id="e6a6df75-86e1-4128-ab15-150431334f0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">they cannot reserve the held room;</li></ul><ul id="252fa829-0b0a-48a6-8456-aeabb31d3ce5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">unpaid expiry releases the room exactly once.</li></ul><p id="305145a0-52cc-4c39-b5d7-c6c82bca449a" class="" dir="auto">If one roommate pays and the other does not:</p><ul id="97decd98-0445-472c-b350-3de2512e76fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">keep the room/group pending until the shared deadline;</li></ul><ul id="343e50e2-9766-4b82-aeab-d1ae1404d026" class="bulleted-list" dir="auto"><li style="list-style-type:disc">after expiry, release/cancel the group under the provisional rule;</li></ul><ul id="924ef537-8a9e-49fc-ad17-2d33b79b0287" class="bulleted-list" dir="auto"><li style="list-style-type:disc">retain the paid obligation and refund/manual-resolution status for staff review.</li></ul><p id="5dbd22ea-9be5-415f-9851-c35f82b4b79e" class="" dir="auto">This policy is marked for later stakeholder review but is the implementation baseline for design.</p><h2 id="30c1f97e-53c0-4cb1-b770-fabe8965a87b" class="" dir="auto">Shared-room payment rule</h2><ul id="c54048be-400a-48e0-84cb-d8405e8a8638" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Each resident receives separate payment obligations.</li></ul><ul id="2a00efd0-d762-4bdb-91ad-6fdd12ca8671" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Each resident normally pays their own obligations.</li></ul><ul id="a5a0207a-42aa-43cc-9536-e418f8f13d57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Both residents can share <code>Ref.1</code> and <code>Ref.2</code> because these are room/action references, not unique identifiers.</li></ul><ul id="cc70a220-ddc8-4299-85e9-7a3f7ca66de8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Permanent confirmation currently requires every required payment action for both residents plus staff confirmation.</li></ul><h2 id="8117cf33-2b4c-4892-8d94-c4f48ef2d959" class="" dir="auto">Whole-room rental rule</h2><ul id="87b71080-1794-41d3-9a4f-a432ea78145a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One resident occupies the room.</li></ul><ul id="f84f43c2-db10-46c7-bac5-06ba82a96b13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Second occupant slot is blocked.</li></ul><ul id="1871e623-e19e-4b91-b0c9-f0f32c24a6ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One full-room payment obligation is created per payment action.</li></ul><ul id="2bd5280d-a762-4b4a-ba14-a552edd1d7d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">One resident contract is generated.</li></ul><ul id="558e35fc-e6a8-474e-ac19-be50e6cf5d0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A shared reservation may convert to whole-room rental after one resident has paid, but the system must recalculate and supersede old obligations rather than editing history in place.</li></ul><h2 id="909937d4-9dbb-497c-a1b9-52c4393761a7" class="" dir="auto">Manual staff reservation</h2><p id="12e32a88-2815-4e71-8c7d-18ec3632bda8" class="" dir="auto">Authorized dorm staff may:</p><ul id="bdcd191f-2e9a-42bf-9a1f-ba3aa9cba3d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">select exact room;</li></ul><ul id="b46d8cc0-e1f3-4635-b44d-c1274961eb4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">choose shared or whole-room occupancy;</li></ul><ul id="0c0585f8-bf48-4f58-a4f0-81b40c69f336" class="bulleted-list" dir="auto"><li style="list-style-type:disc">attach one or two residents;</li></ul><ul id="d348d839-e42a-44c2-9b9f-034523b5ed12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">create the reservation group;</li></ul><ul id="5ccd6b3f-2dcb-4300-a58f-2d8a989c2b70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">create/adjust obligations according to permission;</li></ul><ul id="7f78a093-fdb8-4b85-99ab-70e58e0a307b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">finalize the resident confirmation step.</li></ul><p id="60ea3ea1-920f-45f8-a151-a94a669eba3d" class="" dir="auto">A staff-created manual reservation is final and does not require resident confirmation. It requires actor, reason, scope, and audit event.</p><h2 id="74b42f41-ac41-4cea-896f-1670d6b1902d" class="" dir="auto">Reservation confirmation</h2><p id="e492b74e-95dd-4d9c-a9e6-453bed04cd46" class="" dir="auto">Current provisional rule:</p><pre id="0e5649be-5bce-4322-8db9-25bf2f9cd0b2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">all required payment obligations received
++ authorized staff confirmation
+→ reservation Confirmed
+→ exact room permanently locked</code></pre><p id="248d7a6b-90d3-46d1-b2e7-a9a8dd4c7a3e" class="" dir="auto">Physical contract signing occurs after reservation confirmation and does not itself create the reservation.</p><h2 id="5e626010-a206-43d0-b2c1-ca5542f1baf5" class="" dir="auto">Renewal flow</h2><p id="b4b1290b-5520-498f-8905-003f5f631301" class="" dir="auto">Annual renewal is a core workflow.</p><pre id="39f85164-76eb-450e-94b3-52ace2ed44b3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">renewal campaign opens with configurable dates
+→ existing profile and room data are prefilled
+→ resident confirms/updates changed information
+→ roommate pair renews or changes composition
+→ exact room is retained/changed according to policy
+→ new payment obligations are created
+→ payment confirmed
+→ new annual contracts generated</code></pre><p id="8469e68a-ceb0-4255-a333-cf17484000a4" class="" dir="auto">If only one roommate renews, give that resident a configured deadline to:</p><ul id="d8cecf05-8996-4b67-87ea-d734c050592d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">invite a replacement;</li></ul><ul id="9efdf3bc-9ed1-44d4-82d9-ce2e3d09bfde" class="bulleted-list" dir="auto"><li style="list-style-type:disc">change to whole-room rental;</li></ul><ul id="a1ff1035-9fe1-4889-bd2a-f3de743cfd94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">move to another room;</li></ul><ul id="16c37464-c402-4bbd-a692-787457fed5b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">release the room.</li></ul><p id="e2aab5ac-1e09-4b5c-83e7-bf5c2a535f15" class="" dir="auto">Reservation leader may change during renewal when both residents confirm.</p><h2 id="c32037b5-02ea-470a-af2f-939f8694e857" class="" dir="auto">Roommate replacement</h2><p id="cc80bd41-adee-41d9-ac23-cbff6d7c396b" class="" dir="auto">Replacement does not overwrite the old resident.</p><p id="2ddd2231-0840-4fb7-a538-f53bc91a7d6c" class="" dir="auto">Required behavior:</p><ul id="c5680de7-1833-4e8d-989b-328516283c47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">authorized staff or permitted workflow approves the replacement;</li></ul><ul id="dcab051c-8510-4752-9c3d-65705cffff1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">old obligations/contracts are superseded;</li></ul><ul id="4492d585-af9c-44cb-9e73-0709f4b208cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">new resident receives new obligations/contracts;</li></ul><ul id="da963cc0-989a-4dd9-85d3-c65d7d9d2b95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">deposits and refund status are recorded separately;</li></ul><ul id="cf53840a-61f0-4f59-a441-1ce896e516a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">exact room and group history remain traceable;</li></ul><ul id="e38ba2a1-976f-43d7-83b3-664179c9f97d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">changes after university handoff produce a correction export.</li></ul><h2 id="ec157303-de1a-44b5-80ae-d904fb552fed" class="" dir="auto">Concurrency and integrity</h2><ul id="7e633477-5d52-4f8a-b652-22d79fe3b04b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact-room hold creation must be atomic.</li></ul><ul id="2e0f9886-689e-4bd8-a325-87b21b3ea32f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Two leaders cannot hold the same room simultaneously.</li></ul><ul id="db37b7cb-9615-4b74-9be9-5277adbcffeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Expiry/release is idempotent.</li></ul><ul id="eddae27c-2324-4f1c-929e-d8ce073d0ac8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Group size cannot exceed two.</li></ul><ul id="a78589d6-62ee-4931-bbd6-48ba39ad5db4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">A resident cannot belong to two active groups.</li></ul><ul id="ea8d947e-c9db-4bcd-9a57-1746cb296b12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Whole-room occupancy blocks a second resident.</li></ul><ul id="31ed5c52-e290-4070-8ce2-12f975f60dab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Manual and applicant reservation paths use the same transactional domain service.</li></ul><h2 id="0bb29f62-5087-4c75-ae8b-a14b47a9d4e1" class="" dir="auto">Core entities</h2><p id="227050df-fa8b-490d-9ee2-dd8540d2d9cd" class="" dir="auto">Recommended entities:</p><ul id="5afa6bba-f64d-41ed-b6b6-f7109ad34526" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>buildings</code></li></ul><ul id="8e348aae-9991-47b2-9b1f-97076bd9ee1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>floors</code></li></ul><ul id="2956fb11-4cfe-44e2-bb73-d6c1549e84eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>rooms</code></li></ul><ul id="a4b39183-ecb0-45cc-9d58-e665502ebc46" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room_config_versions</code></li></ul><ul id="eb079a7b-7fdc-47b9-9e92-3802e5740954" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room_occupancy_slots</code></li></ul><ul id="67044825-7042-4167-a93a-a41e05cf5e25" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>roommate_groups</code></li></ul><ul id="2471f7a4-d9d4-425e-a006-093759d9c3ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>roommate_invitations</code></li></ul><ul id="6b86ac70-56e2-4f29-902c-54d7fddae8d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation_groups</code></li></ul><ul id="c9fbbda2-c124-476e-bbd1-00cf6e4f53dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation_members</code></li></ul><ul id="653082a5-2879-488b-ab1f-4333e31094ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room_holds</code></li></ul><ul id="c01805fe-a89c-4d8c-8177-ec4735ad89a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>room_assignments</code></li></ul><ul id="3f3c9893-bc78-412f-9f95-ffdd76dbabf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation_status_events</code></li></ul><h2 id="8cb334f7-efe2-44c0-9c88-ff945fba3871" class="" dir="auto">Remaining decisions</h2><ul id="a91ba175-7442-4454-8a71-1d0fd60d20a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact handling of fee-exempt dorm advisers/occupants.</li></ul><ul id="4a4d0f51-d0c3-4894-98e9-877240fff13c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Final policy when one roommate pays and the other does not.</li></ul><ul id="665af8b3-447c-4d48-a67b-7feb50d7a0d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Exact renewal opening/closing rules.</li></ul><ul id="5656a6ab-9574-4378-8b1a-174179cd2ca1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Official room dimensions/floor-plan source.</li></ul><ul id="974473ee-eb44-45ca-a39e-3a90050541ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Final stakeholder confirmation of the permanent-reservation event.</li></ul><h2 id="63a4e5eb-580d-4017-aba9-76682aca1d52" class="" dir="auto">Related pages</h2><ul id="ffb27820-8a6b-4717-bb6b-cffaa9e6bb43" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="03%20%E2%80%94%20Exact-Room%20Applicant%20UX%20&amp;%20Staff%20Dashboard%2038e9192afd1181efb0cff4548f584f30.html">03 — Exact-Room Applicant UX &amp; Staff Dashboard</a></li></ul><ul id="48cdd88f-9614-4f94-bbde-7055130a86dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="08%20%E2%80%94%20Payment%20Rules,%20SCB%20Documents%20&amp;%20Reservation%20Li%2038f9192afd11811dbd68fd9d58063128.html">08 — Payment Rules, SCB Documents &amp; Reservation Lifecycle</a></li></ul><ul id="bc660ce3-a427-46d9-a236-4ec4efea59d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><a href="12%20%E2%80%94%20SCB%20Bulk%20Bill%20Payment%20Export%20&amp;%20Returned%20PDF%20A%2038f9192afd1181638c9cc957b4b97b22.html">12 — SCB Bulk Bill Payment Export &amp; Returned PDF Architecture</a></li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
