@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/select'
 import FloorPlanGrid from './FloorPlanGrid.vue'
 import RealPlanDialog from './RealPlanDialog.vue'
+import RealPlanOverlay from './RealPlanOverlay.vue'
 import RoomTile from './RoomTile.vue'
 import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
+import { overlayFor } from '@/lib/planOverlays'
 import { useDormStore } from '@/stores/dorm'
 import type { Room, RoomPublicStatus } from '@/types'
 
@@ -99,6 +101,13 @@ watch(floorsWithRooms, (list) => {
 
 const currentFloor = computed(() =>
   floorsWithRooms.value.find(f => f.floor === selectedFloor.value) ?? null,
+)
+
+// ผังวางทับแบบแปลนจริง — ใช้เมื่อชั้นนั้นมีข้อมูลพิกัดห้อง (planOverlays) ไม่มีก็ใช้ผังโครงสร้าง
+const currentOverlay = computed(() =>
+  selectedBuilding.value && selectedFloor.value !== null
+    ? overlayFor(selectedDormGroupId.value, selectedBuilding.value.code, selectedFloor.value)
+    : null,
 )
 
 // มุมมองผังโครงสร้าง (ค่าเริ่มต้น) หรือรายการ + modal ผังจริงของชั้นที่เลือก
@@ -251,9 +260,16 @@ function statusCount(status: RoomPublicStatus) {
       <section v-if="currentFloor" :key="currentFloor.floor" class="space-y-3">
         <h3 class="sr-only">{{ selectedBuilding.name }} ชั้น {{ currentFloor.floor }}</h3>
 
-        <!-- มุมมองผัง: ยึดโครงสร้างจากผังจริง ห้องนอกตัวกรองแสดงจาง -->
+        <!-- มุมมองผัง: ชั้นที่มีพิกัดห้องใช้ผังวางทับแบบแปลนจริง — ชั้นอื่นใช้ผังโครงสร้าง -->
+        <RealPlanOverlay
+          v-if="viewMode === 'plan' && currentOverlay"
+          :overlay="currentOverlay"
+          :rooms="currentFloor.allRooms"
+          :matched-numbers="currentFloor.matchedNumbers"
+          @select="emit('select', $event)"
+        />
         <FloorPlanGrid
-          v-if="viewMode === 'plan'"
+          v-else-if="viewMode === 'plan'"
           :dorm-group-id="selectedDormGroupId"
           :rooms="currentFloor.allRooms"
           :matched-numbers="currentFloor.matchedNumbers"
