@@ -25,7 +25,7 @@ export const roomConfigLabel: Record<RoomConfig, string> = {
   normal: 'ห้องปกติ (พัดลม)',
   aircon: 'ห้องแอร์',
   hl: 'ห้องแอร์ (HL)',
-  special: 'ห้องพิเศษ/ห้องมุม',
+  special: 'ห้องแอร์พิเศษ',
 }
 
 export const occupancyModeLabel: Record<OccupancyMode, string> = {

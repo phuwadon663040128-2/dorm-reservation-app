@@ -14,7 +14,7 @@ const campaign = computed(() => dorm.campaignById(String(route.params.id)))
 </script>
 
 <template>
-  <div v-if="campaign" class="mx-auto max-w-3xl space-y-6">
+  <div v-if="campaign" class="mx-auto max-w-3xl space-y-6 px-4 py-8">
     <div class="space-y-2">
       <Badge :variant="campaign.status === 'open' ? 'default' : 'outline'">
         {{ campaign.status === 'open' ? 'เปิดรับสมัคร' : campaign.status === 'upcoming' ? 'ยังไม่เปิด' : 'ปิดรับแล้ว' }}
@@ -63,7 +63,7 @@ const campaign = computed(() => dorm.campaignById(String(route.params.id)))
       </Button>
     </div>
   </div>
-  <div v-else class="py-16 text-center text-muted-foreground">
+  <div v-else class="px-4 py-20 text-center text-muted-foreground">
     ไม่พบรอบรับสมัครนี้ — <RouterLink to="/" class="text-primary underline">กลับหน้าแรก</RouterLink>
   </div>
 </template>

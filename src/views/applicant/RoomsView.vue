@@ -1,26 +1,79 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { InfoIcon } from '@lucide/vue'
+import { InfoIcon, TimerIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
+import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
+import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
+import { priceLinesFor } from '@/fixtures'
+import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
-import type { Room } from '@/types'
+import type { OccupancyMode, Room } from '@/types'
 
 const session = useSessionStore()
 const reservation = useReservationStore()
+const dorm = useDormStore()
+const router = useRouter()
 
-// เลือกห้องได้เมื่อโปรไฟล์ครบ + (มีกลุ่มที่ตอบรับแล้ว หรือจะเหมาห้อง) และยังไม่มี hold ค้าง
 const canReserve = computed(
   () => session.currentUser?.profileComplete === true && !reservation.myReservation,
 )
 
+// dialog เลือกรูปแบบการพัก + ยืนยันจอง
+const selectedRoom = ref<Room | null>(null)
+const occupancy = ref<OccupancyMode>('shared')
+const dialogOpen = ref(false)
+
+const isLeaderOfAcceptedGroup = computed(
+  () =>
+    reservation.myRoommateGroup?.status === 'accepted'
+    && reservation.myRoommateGroup.leaderId === session.currentUser?.id,
+)
+const hasActiveGroup = computed(() => !!reservation.myRoommateGroup)
+
+function canChoose(mode: OccupancyMode) {
+  if (!selectedRoom.value?.occupancyCapability.includes(mode)) return false
+  if (mode === 'shared') return isLeaderOfAcceptedGroup.value
+  return !hasActiveGroup.value
+}
+
 function onSelect(room: Room) {
-  // เฟส P3: จะต่อ flow จองจริง — leader กด Reserve → hold ทันที → countdown 15 นาที
-  toast(
-    `ต้นแบบ: เลือกห้อง ${room.number} — ขั้นถัดไปคือเลือกพักคู่/เหมาห้อง แล้วกดจอง ระบบจะล็อกห้องทันที (เฟส P3)`,
-  )
+  selectedRoom.value = room
+  // ตั้งค่าเริ่มต้นเป็นโหมดที่เลือกได้จริง
+  occupancy.value = room.occupancyCapability.includes('shared') && isLeaderOfAcceptedGroup.value
+    ? 'shared'
+    : 'whole_room'
+  dialogOpen.value = true
+}
+
+const priceLines = computed(() =>
+  selectedRoom.value ? priceLinesFor(selectedRoom.value.config, occupancy.value) : [],
+)
+const totalPerResident = computed(() => priceLines.value.reduce((s, l) => s + l.amount, 0))
+
+const campaign = computed(() => dorm.openCampaigns[0])
+
+function reserve() {
+  if (!selectedRoom.value) return
+  const result = reservation.reserveRoom(selectedRoom.value.number, occupancy.value)
+  toast(result.message)
+  if (result.ok) {
+    dialogOpen.value = false
+    router.push('/app/reservation')
+  }
 }
 </script>
 
@@ -47,6 +100,94 @@ function onSelect(room: Room) {
       <AlertDescription>ไปที่เมนู “บัญชี” เพื่อกรอกข้อมูลที่จำเป็นให้ครบถ้วน</AlertDescription>
     </Alert>
 
-    <RoomBrowser :selectable="canReserve" @select="onSelect" />
+    <RoomBrowser @select="onSelect" />
+
+    <!-- Dialog ยืนยันการจอง -->
+    <Dialog v-model:open="dialogOpen">
+      <DialogContent v-if="selectedRoom" class="sm:max-w-lg">
+        <DialogHeader>
+          <div class="flex items-center justify-between gap-2 pr-6">
+            <DialogTitle>จองห้อง {{ selectedRoom.number }}</DialogTitle>
+            <RoomStatusBadge :status="selectedRoom.publicStatus" />
+          </div>
+          <DialogDescription>
+            {{ roomConfigLabel[selectedRoom.config] }}
+            <template v-if="selectedRoom.dimensions"> · ขนาด {{ selectedRoom.dimensions }}</template>
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-4">
+          <HoldCountdown
+            v-if="selectedRoom.publicStatus === 'temporarily_held' && selectedRoom.holdExpiresAt"
+            :expires-at="selectedRoom.holdExpiresAt"
+            label="ห้องนี้ถูกจองชั่วคราว เหลือ"
+          />
+          <!-- เลือกรูปแบบการพัก -->
+          <div class="space-y-2">
+            <p class="text-sm font-semibold">รูปแบบการพัก</p>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <Button
+                v-for="mode in selectedRoom.occupancyCapability"
+                :key="mode"
+                type="button"
+                :variant="occupancy === mode ? 'default' : 'outline'"
+                :disabled="!canChoose(mode)"
+                class="h-auto flex-col items-start gap-0.5 py-2.5"
+                @click="occupancy = mode"
+              >
+                <span class="font-semibold">{{ occupancyModeLabel[mode] }}</span>
+                <span class="text-xs font-normal opacity-80">
+                  {{ mode === 'shared' ? 'แยกบิล แยกสัญญา คนละฉบับ' : 'จ่ายเต็มห้อง บล็อกเตียงที่สอง สัญญาเดียว' }}
+                </span>
+              </Button>
+            </div>
+            <p v-if="!isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared')" class="text-xs text-muted-foreground">
+              พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม — จัดการได้ที่เมนู “รูมเมท”
+            </p>
+            <p v-if="hasActiveGroup && selectedRoom.occupancyCapability.includes('whole_room')" class="text-xs text-muted-foreground">
+              ต้องการเหมาห้อง? ต้องยกเลิกกลุ่มรูมเมทปัจจุบันก่อน
+            </p>
+          </div>
+
+          <!-- ประมาณการค่าใช้จ่าย (แยก ROOM/HL เสมอ) -->
+          <div class="space-y-1.5 rounded-lg border p-3">
+            <p class="text-sm font-semibold">ประมาณการค่าใช้จ่ายต่อคน (ปีการศึกษา 2569)</p>
+            <div v-for="line in priceLines" :key="line.action" class="flex items-center justify-between text-sm">
+              <span class="text-muted-foreground">{{ line.ref2 }} — {{ line.title }}</span>
+              <span class="tabular-nums">{{ formatBaht(line.amount) }}</span>
+            </div>
+            <div class="flex items-center justify-between border-t pt-1.5 text-sm font-semibold">
+              <span>รวมต่อคน</span>
+              <span class="tabular-nums">{{ formatBaht(totalPerResident) }}</span>
+            </div>
+            <p class="text-xs text-muted-foreground">
+              ยอดจริงยืนยันอีกครั้งในแบบฟอร์มชำระเงินของธนาคาร (ราคา Provisional)
+            </p>
+          </div>
+
+          <!-- กติกา hold -->
+          <p v-if="campaign" class="flex items-start gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+            <TimerIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>
+              เมื่อกดจอง ห้องถูกล็อกให้ทันที
+              <template v-if="occupancy === 'shared' && campaign.roommateRoomConfirmationRequired">
+                — รูมเมทต้องยืนยันห้องภายใน {{ campaign.roomConfirmationMinutes }} นาที มิฉะนั้นห้องถูกปล่อยคืน
+              </template>
+              จากนั้นกลุ่มมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง (deadline เดียวร่วมกัน)
+            </span>
+          </p>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
+          <Button
+            :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !canChoose(occupancy)"
+            @click="reserve"
+          >
+            {{ selectedRoom.publicStatus === 'available' ? 'จองห้องนี้ — ล็อกทันที' : 'ห้องนี้ไม่ว่าง' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

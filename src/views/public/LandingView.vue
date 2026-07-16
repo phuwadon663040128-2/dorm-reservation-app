@@ -1,92 +1,237 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { ArrowRightIcon, CalendarIcon, KeyRoundIcon, UsersIcon } from '@lucide/vue'
-import { Badge } from '@/components/ui/badge'
+import { computed, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import {
+  ArrowRightIcon,
+  CalendarDaysIcon,
+  CheckCircle2Icon,
+  FileSignatureIcon,
+  TimerIcon,
+  UsersIcon,
+} from '@lucide/vue'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { formatDate, roomConfigLabel } from '@/lib/labels'
+import { useTheme } from '@/composables/useTheme'
 import { useDormStore } from '@/stores/dorm'
-import heroImage from '@/assets/hero.png'
+import heroDay from '@/assets/hero-day.png'
+import heroNight from '@/assets/hero-night.png'
 
 const dorm = useDormStore()
+const router = useRouter()
+const { theme } = useTheme()
+
+// โหลดเฉพาะรูปของธีมที่ใช้อยู่ (กลางวัน/กลางคืน) — สลับทันทีเมื่อเปลี่ยนธีม
+const heroPhoto = computed(() => (theme.value === 'dark' ? heroNight : heroDay))
+
+const openCampaign = computed(() => dorm.openCampaigns[0])
+const summary = dorm.availabilitySummary
+
+// ตัวกรองใน search bar — ส่งต่อไปหน้า /rooms เป็น query
+const searchDorm = ref('all')
+const searchConfig = ref('all')
+const searchGender = ref('all')
+
+function search() {
+  const query: Record<string, string> = {}
+  if (searchDorm.value !== 'all') query.dorm = searchDorm.value
+  if (searchConfig.value !== 'all') query.config = searchConfig.value
+  if (searchGender.value !== 'all') query.gender = searchGender.value
+  router.push({ path: '/rooms', query })
+}
 
 const steps = [
-  { icon: UsersIcon, title: 'จับคู่รูมเมทหรือเลือกเหมาห้อง', detail: 'ส่งคำเชิญรูมเมท (มีอายุ 48 ชม.) หรือเลือกพักคนเดียวแบบเหมาห้อง' },
-  { icon: KeyRoundIcon, title: 'เลือกห้องจริงรายห้อง', detail: 'เลือกจากอาคาร → ชั้น → ห้องจริง เห็นสถานะว่าง/ถูกจองชั่วคราวแบบเรียลไทม์' },
-  { icon: CalendarIcon, title: 'ชำระเงินและลงนามสัญญา', detail: 'ชำระผ่านแบบฟอร์ม QR ทางการของธนาคารภายใน 72 ชม. แล้วลงนามสัญญาประจำปี' },
+  {
+    icon: UsersIcon,
+    title: 'จับคู่รูมเมทหรือเลือกเหมาห้อง',
+    detail: 'ส่งคำเชิญรูมเมท (มีอายุ 48 ชม.) หรือเลือกพักคนเดียวแบบเหมาห้อง',
+  },
+  {
+    icon: CalendarDaysIcon,
+    title: 'เลือกห้องจริงรายห้อง',
+    detail: 'เลือกหอพัก → ชั้น → ห้อง เห็นสถานะว่าง/ถูกจองชั่วคราวแบบเรียลไทม์',
+  },
+  {
+    icon: FileSignatureIcon,
+    title: 'ชำระเงินและลงนามสัญญา',
+    detail: 'ชำระผ่านแบบฟอร์ม QR ทางการของธนาคารภายใน 72 ชม. แล้วลงนามสัญญาประจำปี',
+  },
 ]
 </script>
 
 <template>
-  <div class="space-y-10">
+  <div>
     <!-- Hero -->
-    <section class="grid items-center gap-8 lg:grid-cols-2">
-      <div class="space-y-4">
-        <Badge variant="outline">ปีการศึกษา 2569 · วรเรสซิเดนซ์ หอ 8 หลัง + หอพักวรอินเตอร์</Badge>
-        <h1 class="text-3xl font-bold leading-tight sm:text-4xl">
-          จองห้องพักหอในกำกับ มข.<br />เลือกห้องจริง รู้สถานะจริง
-        </h1>
-        <p class="max-w-xl text-muted-foreground">
-          ระบบรับสมัครและจองหอพักในกำกับมหาวิทยาลัยขอนแก่น รองรับการเลือกห้องเป็นรายห้อง
-          จับคู่รูมเมท เหมาห้อง ชำระเงินผ่านแบบฟอร์มธนาคารอย่างเป็นทางการ และติดตามสัญญาจนถึงวันรับกุญแจ
-        </p>
-        <div class="flex flex-wrap gap-3">
-          <Button as-child size="lg">
-            <RouterLink to="/rooms">ดูห้องว่างตอนนี้ <ArrowRightIcon aria-hidden="true" /></RouterLink>
-          </Button>
-          <Button as-child size="lg" variant="outline">
-            <RouterLink to="/register">สมัครสมาชิกด้วยอีเมล</RouterLink>
-          </Button>
-        </div>
-        <p class="text-xs text-muted-foreground">
-          ไม่ต้องมีบัญชี KKU ก็เริ่มจองได้ — นักศึกษาใหม่ใช้อีเมลส่วนตัวที่ยืนยันแล้ว และผูกบัญชี KKU ภายหลังได้
-        </p>
-      </div>
+    <section class="relative overflow-hidden">
       <img
-        :src="heroImage"
-        alt="ภาพหอพักนักศึกษา"
-        class="hidden w-full rounded-xl object-cover shadow-md lg:block"
+        :src="heroPhoto"
+        alt="อาคารหอพัก KKU-WORA International Dormitory"
+        class="absolute inset-0 h-full w-full object-cover object-center"
       />
-    </section>
+      <!-- overlay ไล่เฉดตามธีมอัตโนมัติผ่านตัวแปร background -->
+      <div class="absolute inset-0 bg-linear-to-r from-background via-background/70 to-transparent" aria-hidden="true" />
+      <div class="absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-background to-transparent" aria-hidden="true" />
 
-    <!-- รอบรับสมัครที่เปิดอยู่ -->
-    <section class="space-y-4">
-      <h2 class="text-xl font-bold">รอบรับสมัครที่เปิดอยู่</h2>
-      <div class="grid gap-4 md:grid-cols-2">
-        <Card v-for="c in dorm.openCampaigns" :key="c.id">
-          <CardHeader>
-            <div class="flex items-center justify-between gap-2">
-              <CardTitle class="text-base">{{ c.name }}</CardTitle>
-              <Badge>เปิดรับสมัคร</Badge>
-            </div>
-            <CardDescription>
-              {{ c.openDate }} – {{ c.closeDate }} · สัญญา{{ c.contractPeriod }}
-            </CardDescription>
-          </CardHeader>
-          <CardContent class="flex items-center justify-between gap-3">
-            <p class="text-sm text-muted-foreground">
-              hold ยืนยันห้อง {{ c.roomConfirmationMinutes }} นาที · ชำระเงินภายใน {{ c.paymentHoldHours }} ชม.
-            </p>
-            <Button as-child variant="outline" size="sm">
-              <RouterLink :to="`/campaigns/${c.id}`">รายละเอียด</RouterLink>
-            </Button>
-          </CardContent>
-        </Card>
+      <div class="relative mx-auto flex min-h-135 w-full max-w-352 flex-col justify-center px-3 py-14 sm:px-5 lg:min-h-155 lg:py-20">
+        <div class="max-w-5xl space-y-5">
+          <p
+            v-if="openCampaign"
+            class="inline-flex items-center gap-2 rounded-full border bg-card/90 px-4 py-1.5 text-sm font-medium shadow-sm backdrop-blur"
+          >
+            <span class="relative flex size-2" aria-hidden="true">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span class="relative inline-flex size-2 rounded-full bg-emerald-500" />
+            </span>
+            เปิดให้จอง · {{ formatDate(openCampaign.openDate) }} – {{ formatDate(openCampaign.closeDate) }}
+          </p>
+
+          <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
+            บริการของหอพักออนไลน์<br />
+            <span class="text-primary">เลือกห้องพัก ชำระเงิน และทำสัญญา<br />ครบในระบบเดียว</span>
+          </h1>
+
+          <p class="max-w-xl text-pretty leading-relaxed text-muted-foreground">
+            ระบบรับสมัครและจองหอพักในกำกับมหาวิทยาลัยขอนแก่น รองรับการเลือกห้องเป็นรายห้อง จับคู่รูมเมท
+            เหมาห้อง ชำระเงินผ่านแบบฟอร์มธนาคารอย่างเป็นทางการ และติดตามสัญญาจนถึงวันรับกุญแจ
+          </p>
+        </div>
+
+        <!-- Search bar -->
+        <form
+          class="mt-8 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
+          @submit.prevent="search"
+        >
+          <div class="min-w-0 flex-1 px-4 py-1.5">
+            <span class="block text-xs text-muted-foreground" aria-hidden="true">หอพัก</span>
+            <Select v-model="searchDorm">
+              <SelectTrigger aria-label="เลือกหอพัก" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">หอพักทั้งหมด</SelectItem>
+                <SelectItem v-for="g in dorm.dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="hidden h-10 w-px bg-border md:block" aria-hidden="true" />
+          <div class="min-w-0 flex-1 px-4 py-1.5">
+            <span class="block text-xs text-muted-foreground" aria-hidden="true">ประเภทห้อง</span>
+            <Select v-model="searchConfig">
+              <SelectTrigger aria-label="เลือกประเภทห้อง" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทุกประเภท</SelectItem>
+                <SelectItem v-for="(label, key) in roomConfigLabel" :key="key" :value="key">{{ label }}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="hidden h-10 w-px bg-border md:block" aria-hidden="true" />
+          <div class="min-w-0 flex-1 px-4 py-1.5">
+            <span class="block text-xs text-muted-foreground" aria-hidden="true">เพศ</span>
+            <Select v-model="searchGender">
+              <SelectTrigger aria-label="เลือกเพศ" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                <SelectItem value="male">ชาย</SelectItem>
+                <SelectItem value="female">หญิง</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" size="lg" class="rounded-full md:h-14 md:px-8">
+            ค้นหาห้อง <ArrowRightIcon aria-hidden="true" />
+          </Button>
+        </form>
+
+        <!-- สถิติเรียลไทม์จากห้องจริง -->
+        <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <span class="inline-flex items-center gap-1.5 font-medium">
+            <CheckCircle2Icon class="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            ว่างตอนนี้ {{ summary.available }} ห้อง
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-muted-foreground">
+            <TimerIcon class="size-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            ถูกจองชั่วคราว {{ summary.temporarilyHeld }} ห้อง
+          </span>
+          <span class="text-muted-foreground">อัปเดตจากสถานะห้องจริงรายห้อง</span>
+        </div>
       </div>
     </section>
 
-    <!-- ขั้นตอน -->
-    <section class="space-y-4">
-      <h2 class="text-xl font-bold">ขั้นตอนการจอง</h2>
-      <div class="grid gap-4 md:grid-cols-3">
-        <Card v-for="(s, i) in steps" :key="s.title">
-          <CardContent class="space-y-2 p-5">
-            <div class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <component :is="s.icon" class="size-5" aria-hidden="true" />
-            </div>
-            <p class="font-semibold">{{ i + 1 }}. {{ s.title }}</p>
-            <p class="text-sm text-muted-foreground">{{ s.detail }}</p>
-          </CardContent>
-        </Card>
+    <!-- หอพักแนะนำ + ขั้นตอนการจอง -->
+    <section class="mx-auto w-full max-w-352 px-3 py-10 sm:px-5">
+      <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div class="space-y-5">
+          <div class="flex items-end justify-between gap-3">
+            <h2 class="text-2xl font-bold tracking-tight">หอพักแนะนำ</h2>
+            <RouterLink to="/rooms" class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              ดูตึกทั้งหมด →
+            </RouterLink>
+          </div>
+
+          <div class="grid gap-6 sm:grid-cols-2">
+            <RouterLink
+              v-for="g in dorm.dormGroups"
+              :key="g.id"
+              :to="{ path: '/rooms', query: { dorm: g.id } }"
+              class="group relative block overflow-hidden rounded-2xl border shadow-sm transition-shadow hover:shadow-lg"
+            >
+              <img
+                :src="g.photo"
+                :alt="`ภาพ${g.name}`"
+                class="aspect-4/5 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div class="absolute inset-x-0 bottom-0 h-3/4 bg-linear-to-t from-black/90 via-black/45 to-transparent" aria-hidden="true" />
+              <div class="absolute inset-x-0 bottom-0 space-y-3 p-5 text-white">
+                <div class="space-y-1">
+                  <p class="text-2xl font-bold tracking-tight">{{ g.shortName }}</p>
+                  <p class="text-sm text-white/85">{{ g.buildingCount }} ตึก · {{ g.contractLabel }}</p>
+                  <p class="line-clamp-2 text-xs leading-relaxed text-white/70">{{ g.description }}</p>
+                </div>
+                <div class="flex items-center justify-between gap-2 border-t border-white/25 pt-3">
+                  <p class="text-sm font-semibold">
+                    เริ่มต้นที่ ฿{{ g.priceFromPerTerm.toLocaleString('th-TH') }} / ภาคการศึกษา
+                  </p>
+                  <span
+                    class="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/40 transition-all group-hover:translate-x-0.5 group-hover:bg-white group-hover:text-black"
+                    aria-hidden="true"
+                  >
+                    <ArrowRightIcon class="size-4" />
+                  </span>
+                </div>
+              </div>
+            </RouterLink>
+          </div>
+        </div>
+
+        <!-- ขั้นตอนการจอง — การ์ดซ้อนแนวตั้งตามดีไซน์ Figma: ไอคอนวงกลม + หัวข้อมีเลขนำหน้า
+             การ์ดยืดเฉลี่ยเต็มความสูงคอลัมน์ (flex-1) ให้ขอบล่างเสมอกับการ์ดหอพักฝั่งซ้าย -->
+        <div class="flex flex-col gap-5">
+          <h2 class="text-2xl font-bold tracking-tight">ขั้นตอนการจอง</h2>
+          <ol class="flex flex-1 flex-col gap-2.5">
+            <li v-for="(s, i) in steps" :key="s.title" class="flex flex-1">
+              <!-- py-0 ตัด padding ในตัว Card ออก — ใช้ padding จาก CardContent ที่เดียว ให้สามใบรวมแล้วสูงไม่เกินคอลัมน์ซ้าย -->
+              <Card class="w-full rounded-3xl py-0 transition-colors hover:border-primary/40">
+                <CardContent class="flex h-full flex-col justify-center gap-2 p-5 sm:px-6">
+                  <div class="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <component :is="s.icon" class="size-5" aria-hidden="true" />
+                  </div>
+                  <p class="font-bold leading-relaxed">{{ i + 1 }}. {{ s.title }}</p>
+                  <p class="leading-relaxed text-muted-foreground">{{ s.detail }}</p>
+                </CardContent>
+              </Card>
+            </li>
+          </ol>
+        </div>
       </div>
     </section>
   </div>

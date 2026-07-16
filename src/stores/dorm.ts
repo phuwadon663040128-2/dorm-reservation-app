@@ -40,6 +40,14 @@ export const useDormStore = defineStore('dorm', () => {
     }
   })
 
+  /** อัปเดตสถานะห้องฝั่ง client (จำลองพฤติกรรม server ใน prototype) */
+  function setRoomStatus(number: string, status: Room['publicStatus'], holdExpiresAt?: string) {
+    const room = rooms.value.find(r => r.number === number)
+    if (!room) return
+    room.publicStatus = status
+    room.holdExpiresAt = holdExpiresAt
+  }
+
   return {
     dormGroups,
     buildings,
@@ -51,5 +59,6 @@ export const useDormStore = defineStore('dorm', () => {
     roomsOf,
     roomByNumber,
     availabilitySummary,
+    setRoomStatus,
   }
 })

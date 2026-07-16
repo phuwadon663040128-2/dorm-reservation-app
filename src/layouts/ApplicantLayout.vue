@@ -2,6 +2,7 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { BuildingIcon, LogOutIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from '@/components/domain/ThemeToggle.vue'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
@@ -30,7 +31,7 @@ function logout() {
 <template>
   <div class="flex min-h-screen flex-col bg-background text-foreground">
     <header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4">
+      <div class="mx-auto flex h-14 w-full max-w-352 items-center justify-between gap-3 px-3 sm:px-5">
         <RouterLink to="/app" class="flex min-w-0 items-center gap-2 font-bold">
           <BuildingIcon class="size-5 shrink-0 text-primary" aria-hidden="true" />
           <span class="truncate">หอพักในกำกับ มข.</span>
@@ -40,6 +41,7 @@ function logout() {
             <p class="font-medium leading-tight">{{ session.currentUser?.displayName }}</p>
             <p class="text-xs text-muted-foreground">ผู้สมัคร / ผู้พัก</p>
           </div>
+          <ThemeToggle />
           <Button size="sm" variant="ghost" aria-label="ออกจากระบบ" @click="logout">
             <LogOutIcon aria-hidden="true" />
             <span class="hidden sm:inline">ออกจากระบบ</span>
@@ -47,7 +49,7 @@ function logout() {
         </div>
       </div>
       <!-- mobile-first: เมนูเลื่อนแนวนอนได้ -->
-      <nav class="mx-auto w-full max-w-6xl overflow-x-auto px-4" aria-label="เมนูผู้สมัคร">
+      <nav class="mx-auto w-full max-w-352 overflow-x-auto px-3 sm:px-5" aria-label="เมนูผู้สมัคร">
         <div class="flex w-max gap-1 pb-2">
           <RouterLink
             v-for="item in navItems"
@@ -64,7 +66,7 @@ function logout() {
       </nav>
     </header>
 
-    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+    <main class="mx-auto w-full max-w-352 flex-1 px-3 py-5 sm:px-5">
       <RouterView />
     </main>
   </div>

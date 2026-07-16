@@ -5,14 +5,18 @@ import type {
   PaymentException,
   PaymentObligation,
   PaymentResultRow,
+  ReservationGroup,
   ReturnedPdfPage,
+  RoomConfig,
   ScbExportBatch,
 } from '@/types'
 import {
+  CURRENT_ACADEMIC_YEAR,
   manualPayments as manualFixtures,
   obligations as obligationFixtures,
   paymentExceptions as exceptionFixtures,
   paymentResultRows as resultFixtures,
+  priceLinesFor,
   returnedPdfPages as pdfFixtures,
   scbBatches as batchFixtures,
 } from '@/fixtures'
@@ -50,6 +54,34 @@ export const usePaymentsStore = defineStore('payments', () => {
     return list.length > 0 && list.every(isPaid)
   }
 
+  /**
+   * สร้าง obligations เมื่อกลุ่มเข้าสู่ payment hold (จำลอง PRICE-001..003)
+   * 1 รายการ = ผู้พัก 1 คน × 1 action; ห้อง HL ได้ ROOM + HL แยกกัน; idempotent ต่อกลุ่ม
+   */
+  function generateObligationsForGroup(resv: ReservationGroup, roomConfig: RoomConfig, deadline: string) {
+    if (obligations.value.some(o => o.reservationGroupId === resv.id)) return
+    const today = new Date().toISOString().slice(0, 10)
+    for (const memberId of resv.memberIds) {
+      for (const line of priceLinesFor(roomConfig, resv.occupancyMode)) {
+        obligations.value.push({
+          id: `ob-${resv.id}-${memberId}-${line.action}`,
+          residentId: memberId,
+          reservationGroupId: resv.id,
+          roomNumber: resv.roomNumber,
+          action: line.action,
+          ref2: line.ref2,
+          title: line.title,
+          amount: line.amount,
+          billIssueDate: today,
+          paymentDeadline: deadline,
+          academicYear: CURRENT_ACADEMIC_YEAR,
+          documentStatus: 'ready_for_export',
+          resultStatus: 'awaiting_payment',
+        })
+      }
+    }
+  }
+
   const openExceptions = computed(() => exceptions.value.filter(e => e.status === 'open'))
   const unmatchedPdfPages = computed(() =>
     pdfPages.value.filter(p => p.matchStatus === 'ambiguous' || p.matchStatus === 'unmatched'),
@@ -69,6 +101,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     obligationsForGroup,
     isPaid,
     groupPaymentComplete,
+    generateObligationsForGroup,
     openExceptions,
     unmatchedPdfPages,
     readyForExport,

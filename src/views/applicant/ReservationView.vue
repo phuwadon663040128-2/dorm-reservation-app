@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { toast } from 'vue-sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,6 +30,13 @@ const memberPaymentStates = computed(() => {
     return { memberId, paid, total: own.length, complete: own.length > 0 && paid === own.length }
   })
 })
+
+// หมดเวลา hold → ปล่อยห้องครั้งเดียว (จำลอง expiry worker ฝั่ง server)
+function onHoldExpired() {
+  if (!myResv.value) return
+  const result = reservation.expireHold(myResv.value.id)
+  if (result.ok) toast(result.message)
+}
 </script>
 
 <template>
@@ -52,11 +60,13 @@ const memberPaymentStates = computed(() => {
             v-if="myResv.holdStatus === 'held_roommate_confirmation' && myResv.confirmationDeadline"
             :expires-at="myResv.confirmationDeadline"
             label="รูมเมทต้องยืนยันห้องภายใน"
+            @expired="onHoldExpired"
           />
           <HoldCountdown
             v-else-if="myResv.holdStatus === 'held_payment' && myResv.paymentDeadline"
             :expires-at="myResv.paymentDeadline"
             label="deadline ชำระเงินร่วมของกลุ่ม เหลือ"
+            @expired="onHoldExpired"
           />
 
           <!-- ความครบของการชำระรายสมาชิก — กลุ่ม shared ใช้ deadline เดียว (doc 08) -->

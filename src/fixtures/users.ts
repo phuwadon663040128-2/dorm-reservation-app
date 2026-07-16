@@ -1,4 +1,4 @@
-import type { Permission, Role, User } from '@/types'
+import type { Permission, StaffSection, User } from '@/types'
 
 // ข้อมูลสมมติทั้งหมด — ห้ามใช้ข้อมูลนักศึกษา/ธนาคารจริง (PDPA, doc 14)
 export const users: User[] = [
@@ -83,51 +83,68 @@ export const users: User[] = [
     kkuSsoLinked: false,
     studentId: '663010072-7',
   },
+  // สองบัญชีนี้ว่างจากทุกสถานการณ์ — ไว้เดินชม flow เชิญรูมเมท → จอง → ยืนยัน ตั้งแต่ต้น
+  {
+    id: 'applicant-i',
+    role: 'applicant',
+    displayName: 'ณิชา อุ่นเรือน',
+    email: 'nicha.demo@example.test',
+    emailVerified: true,
+    profileComplete: true,
+    kkuSsoLinked: false,
+    studentId: '673010120-8',
+  },
+  {
+    id: 'applicant-j',
+    role: 'applicant',
+    displayName: 'ภูริ พัฒนกุล',
+    email: 'phuri.demo@example.test',
+    emailVerified: true,
+    profileComplete: true,
+    kkuSsoLinked: false,
+    studentId: '673010121-9',
+  },
+  // เจ้าหน้าที่มีบทบาทเดียว ทำได้ทุกอย่างในส่วนงานที่ได้รับ — ผู้ดูแลระบบกำหนดส่วนงานรายคน
   {
     id: 'staff-dorm',
-    role: 'dorm_staff',
+    role: 'staff',
     displayName: 'สมศักดิ์ ประจำหอ',
     email: 'dorm-staff.demo@example.test',
     emailVerified: true,
     profileComplete: true,
     kkuSsoLinked: false,
     dormGroupIds: ['dorm-8-lang', 'dorm-wor-inter'],
-  },
-  {
-    id: 'staff-manager',
-    role: 'dorm_manager',
-    displayName: 'อรทัย ผู้จัดการหอ',
-    email: 'dorm-manager.demo@example.test',
-    emailVerified: true,
-    profileComplete: true,
-    kkuSsoLinked: false,
-    dormGroupIds: ['dorm-8-lang', 'dorm-wor-inter'],
+    // ไม่กำหนด allowedSections = เข้าถึงได้ทุกส่วน
   },
   {
     id: 'staff-finance',
-    role: 'finance',
-    displayName: 'รัตนา ฝ่ายการเงิน',
+    role: 'staff',
+    displayName: 'รัตนา แก้วประเสริฐ',
     email: 'finance.demo@example.test',
     emailVerified: true,
     profileComplete: true,
     kkuSsoLinked: false,
     dormGroupIds: ['dorm-8-lang', 'dorm-wor-inter'],
+    // ตัวอย่างที่ผู้ดูแลระบบจำกัดให้เข้าเฉพาะงานการเงิน
+    allowedSections: ['overview', 'payment'],
   },
   {
     id: 'staff-contract',
-    role: 'contract_staff',
-    displayName: 'ประวิทย์ ฝ่ายสัญญา',
+    role: 'staff',
+    displayName: 'ประวิทย์ อินทรชัย',
     email: 'contract.demo@example.test',
     emailVerified: true,
     profileComplete: true,
     kkuSsoLinked: false,
     dormGroupIds: ['dorm-8-lang', 'dorm-wor-inter'],
+    // ตัวอย่างที่ผู้ดูแลระบบจำกัดให้เข้าเฉพาะงานสัญญา/ส่งต่อ
+    allowedSections: ['overview', 'contract'],
   },
   {
     id: 'staff-admin',
-    role: 'division_admin',
-    displayName: 'กองบริการหอพัก (แอดมิน)',
-    email: 'division-admin.demo@example.test',
+    role: 'admin',
+    displayName: 'กองบริการหอพัก (ผู้ดูแลระบบ)',
+    email: 'admin.demo@example.test',
     emailVerified: true,
     profileComplete: true,
     kkuSsoLinked: false,
@@ -135,35 +152,40 @@ export const users: User[] = [
   },
   {
     id: 'staff-unauthorized',
-    role: 'dorm_staff',
-    displayName: 'เจ้าหน้าที่ไม่มีสิทธิ์ (ทดสอบ)',
+    role: 'staff',
+    displayName: 'เจ้าหน้าที่ใหม่ (ยังไม่ได้รับสิทธิ์)',
     email: 'unauthorized.demo@example.test',
     emailVerified: true,
     profileComplete: true,
     kkuSsoLinked: false,
     dormGroupIds: [],
+    allowedSections: [],
   },
 ]
 
-// permission ต่อ role — deny by default; สิทธิ์แยกอิสระ การเงินไม่ได้สิทธิ์ห้อง/สัญญาอัตโนมัติ (doc 11)
-export const rolePermissions: Record<Role, Permission[]> = {
-  applicant: [],
-  dorm_staff: [
+// ---------------------------------------------------------------------------
+// ส่วนงานฝั่งเจ้าหน้าที่ — ผู้ดูแลระบบเปิด/ปิดรายคนที่หน้า "จัดการสิทธิ์เจ้าหน้าที่"
+// permission รายละเอียดยังคง deny-by-default และผูกกับส่วนงานที่ได้รับ (doc 11)
+// ---------------------------------------------------------------------------
+
+export const staffSectionMeta: { key: StaffSection; label: string; description: string }[] = [
+  { key: 'overview', label: 'ภาพรวมและรอบรับสมัคร', description: 'Dashboard สรุปสถานะ และการตั้งค่ารอบรับสมัคร' },
+  { key: 'reservation', label: 'ห้องพักและการจอง', description: 'จัดการห้อง ผู้สมัคร กลุ่มรูมเมท hold และจองแทน' },
+  { key: 'payment', label: 'การเงิน SCB', description: 'รายการชำระเงิน export SLIPS นำเข้า PDF/ผลชำระ และ exception' },
+  { key: 'contract', label: 'สัญญาและส่งต่อ', description: 'สัญญา ส่งมอบกุญแจ และส่งข้อมูลเข้าระบบมหาวิทยาลัย' },
+  { key: 'system', label: 'รายงานและระบบ', description: 'รายงาน audit log และการตั้งค่า' },
+]
+
+const sectionPermissions: Record<StaffSection, Permission[]> = {
+  overview: [],
+  reservation: [
     'room.manage',
     'room.block',
     'reservation.manual_create',
     'reservation.assign_room',
     'reservation.confirm',
   ],
-  dorm_manager: [
-    'room.manage',
-    'room.block',
-    'reservation.manual_create',
-    'reservation.assign_room',
-    'reservation.confirm',
-    'audit.view',
-  ],
-  finance: [
+  payment: [
     'pricing_rule.manage',
     'payment_obligation.override',
     'payment_export.create',
@@ -177,36 +199,7 @@ export const rolePermissions: Record<Role, Permission[]> = {
     'payment.cancel',
     'payment.refund_status.manage',
   ],
-  contract_staff: [
-    'contract_template.manage',
-    'contract.generate',
-    'contract.print',
-    'contract.receive',
-    'key_handover.record',
-  ],
-  division_admin: [
-    'university_export.create',
-    'correction_export.create',
-    'audit.view',
-  ],
-  super_admin: [
-    'room.manage',
-    'room.block',
-    'reservation.manual_create',
-    'reservation.assign_room',
-    'reservation.confirm',
-    'pricing_rule.manage',
-    'payment_obligation.override',
-    'payment_export.create',
-    'payment_export.download',
-    'payment_document.import',
-    'payment_document.match_review',
-    'payment_result.import',
-    'payment.manual_record',
-    'payment.exception.resolve',
-    'payment.confirm',
-    'payment.cancel',
-    'payment.refund_status.manage',
+  contract: [
     'contract_template.manage',
     'contract.generate',
     'contract.print',
@@ -214,12 +207,20 @@ export const rolePermissions: Record<Role, Permission[]> = {
     'key_handover.record',
     'university_export.create',
     'correction_export.create',
-    'audit.view',
   ],
+  system: ['audit.view'],
 }
 
-// ยกเว้น staff-unauthorized ที่ไม่มีสิทธิ์ใด ๆ (ไว้ demo สถานะ permission denied)
-export function permissionsForUser(user: User): Permission[] {
-  if (user.id === 'staff-unauthorized') return []
-  return rolePermissions[user.role]
+export const ALL_SECTIONS: StaffSection[] = staffSectionMeta.map(s => s.key)
+
+/** permission ทั้งหมดของชุดส่วนงานที่ได้รับ */
+export function permissionsForSections(sections: StaffSection[]): Permission[] {
+  return sections.flatMap(s => sectionPermissions[s])
+}
+
+/** ส่วนงานตั้งต้นของผู้ใช้ตาม fixture — ผู้ดูแลระบบปรับได้ระหว่างใช้งาน (store staffAccess) */
+export function defaultSectionsFor(user: User): StaffSection[] {
+  if (user.role === 'admin') return ALL_SECTIONS
+  if (user.role === 'applicant') return []
+  return user.allowedSections ?? ALL_SECTIONS
 }

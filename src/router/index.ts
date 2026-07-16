@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import type { StaffSection } from '@/types'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -12,6 +13,8 @@ const router = createRouter({
         { path: '', name: 'landing', component: () => import('@/views/public/LandingView.vue') },
         { path: 'campaigns/:id', name: 'campaign', component: () => import('@/views/public/CampaignView.vue') },
         { path: 'rooms', name: 'public-rooms', component: () => import('@/views/public/RoomBrowserView.vue') },
+        { path: 'announcements', name: 'announcements', component: () => import('@/views/public/AnnouncementsView.vue') },
+        { path: 'personnel', name: 'personnel', component: () => import('@/views/public/PersonnelView.vue') },
         { path: 'login', name: 'login', component: () => import('@/views/public/LoginView.vue') },
         { path: 'register', name: 'register', component: () => import('@/views/public/RegisterView.vue') },
         { path: 'verify-email', name: 'verify-email', component: () => import('@/views/public/VerifyEmailView.vue') },
@@ -35,29 +38,31 @@ const router = createRouter({
         { path: 'account', name: 'app-account', component: () => import('@/views/applicant/AccountView.vue') },
       ],
     },
-    // ---- Staff portal (เมนูตามเอกสาร 03) ----
+    // ---- Staff portal (เมนูตามเอกสาร 03) — meta.section ผูกกับส่วนงานที่ผู้ดูแลระบบกำหนดรายคน ----
     {
       path: '/staff',
       component: () => import('@/layouts/StaffLayout.vue'),
       meta: { requiresAuth: true, portal: 'staff' },
       children: [
         { path: '', name: 'staff-dashboard', component: () => import('@/views/staff/DashboardView.vue') },
-        { path: 'campaigns', name: 'staff-campaigns', component: () => import('@/views/staff/CampaignsView.vue') },
-        { path: 'rooms', name: 'staff-rooms', component: () => import('@/views/staff/RoomsView.vue') },
-        { path: 'applicants', name: 'staff-applicants', component: () => import('@/views/staff/ApplicantsView.vue') },
-        { path: 'groups', name: 'staff-groups', component: () => import('@/views/staff/GroupsView.vue') },
-        { path: 'holds', name: 'staff-holds', component: () => import('@/views/staff/HoldsView.vue') },
-        { path: 'reservations/manual', name: 'staff-manual', component: () => import('@/views/staff/ManualReservationView.vue') },
-        { path: 'obligations', name: 'staff-obligations', component: () => import('@/views/staff/ObligationsView.vue') },
-        { path: 'scb/export', name: 'staff-scb-export', component: () => import('@/views/staff/ScbExportView.vue') },
-        { path: 'scb/pdf-import', name: 'staff-pdf-import', component: () => import('@/views/staff/PdfImportView.vue') },
-        { path: 'scb/results', name: 'staff-results', component: () => import('@/views/staff/ResultsView.vue') },
-        { path: 'contracts', name: 'staff-contracts', component: () => import('@/views/staff/ContractsView.vue') },
-        { path: 'key-handover', name: 'staff-key-handover', component: () => import('@/views/staff/KeyHandoverView.vue') },
-        { path: 'handoff', name: 'staff-handoff', component: () => import('@/views/staff/HandoffView.vue') },
-        { path: 'reports', name: 'staff-reports', component: () => import('@/views/staff/ReportsView.vue') },
-        { path: 'audit', name: 'staff-audit', component: () => import('@/views/staff/AuditView.vue') },
-        { path: 'settings', name: 'staff-settings', component: () => import('@/views/staff/SettingsView.vue') },
+        { path: 'campaigns', name: 'staff-campaigns', component: () => import('@/views/staff/CampaignsView.vue'), meta: { section: 'overview' } },
+        { path: 'rooms', name: 'staff-rooms', component: () => import('@/views/staff/RoomsView.vue'), meta: { section: 'reservation' } },
+        { path: 'applicants', name: 'staff-applicants', component: () => import('@/views/staff/ApplicantsView.vue'), meta: { section: 'reservation' } },
+        { path: 'groups', name: 'staff-groups', component: () => import('@/views/staff/GroupsView.vue'), meta: { section: 'reservation' } },
+        { path: 'holds', name: 'staff-holds', component: () => import('@/views/staff/HoldsView.vue'), meta: { section: 'reservation' } },
+        { path: 'reservations/manual', name: 'staff-manual', component: () => import('@/views/staff/ManualReservationView.vue'), meta: { section: 'reservation' } },
+        { path: 'obligations', name: 'staff-obligations', component: () => import('@/views/staff/ObligationsView.vue'), meta: { section: 'payment' } },
+        { path: 'scb/export', name: 'staff-scb-export', component: () => import('@/views/staff/ScbExportView.vue'), meta: { section: 'payment' } },
+        { path: 'scb/pdf-import', name: 'staff-pdf-import', component: () => import('@/views/staff/PdfImportView.vue'), meta: { section: 'payment' } },
+        { path: 'scb/results', name: 'staff-results', component: () => import('@/views/staff/ResultsView.vue'), meta: { section: 'payment' } },
+        { path: 'contracts', name: 'staff-contracts', component: () => import('@/views/staff/ContractsView.vue'), meta: { section: 'contract' } },
+        { path: 'key-handover', name: 'staff-key-handover', component: () => import('@/views/staff/KeyHandoverView.vue'), meta: { section: 'contract' } },
+        { path: 'handoff', name: 'staff-handoff', component: () => import('@/views/staff/HandoffView.vue'), meta: { section: 'contract' } },
+        { path: 'reports', name: 'staff-reports', component: () => import('@/views/staff/ReportsView.vue'), meta: { section: 'system' } },
+        { path: 'audit', name: 'staff-audit', component: () => import('@/views/staff/AuditView.vue'), meta: { section: 'system' } },
+        { path: 'settings', name: 'staff-settings', component: () => import('@/views/staff/SettingsView.vue'), meta: { section: 'system' } },
+        // ผู้ดูแลระบบเท่านั้น — กำหนดส่วนงานที่เจ้าหน้าที่แต่ละคนเข้าถึงได้
+        { path: 'access', name: 'staff-access', component: () => import('@/views/staff/StaffAccessView.vue'), meta: { adminOnly: true } },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -74,6 +79,14 @@ router.beforeEach((to) => {
     return { path: '/app' }
   }
   if (to.meta.portal === 'applicant' && session.isLoggedIn && session.isStaff) {
+    return { path: '/staff' }
+  }
+  // หน้าเฉพาะผู้ดูแลระบบ
+  if (to.meta.adminOnly && !session.isAdmin) {
+    return { path: '/staff' }
+  }
+  // ส่วนงานที่ผู้ดูแลระบบไม่ได้เปิดให้ — กลับไป Dashboard (ซึ่งเข้าได้เสมอ)
+  if (typeof to.meta.section === 'string' && session.isStaff && !session.canAccessSection(to.meta.section as StaffSection)) {
     return { path: '/staff' }
   }
 })

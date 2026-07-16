@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 </script>
 
 <template>
-  <div class="mx-auto max-w-md">
+  <div class="mx-auto max-w-md px-4 py-8">
     <Card>
       <CardContent class="space-y-4 p-8 text-center">
         <div class="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">

@@ -109,7 +109,7 @@ export const obligations: PaymentObligation[] = [
     resultStatus: 'confirmed',
     pdfPageId: 'pdf-p7',
   },
-  // ---- กลุ่ม G3 ห้อง A201 (แอร์ปกติ ไม่ใช่ HL — มีเฉพาะ ROOM) ----
+  // ---- กลุ่ม G3 ห้อง A201 (ห้องธรรมดาตามผังจริง ไม่ใช่ HL — มีเฉพาะ ROOM) ----
   {
     id: 'ob-f-room',
     residentId: 'applicant-f',

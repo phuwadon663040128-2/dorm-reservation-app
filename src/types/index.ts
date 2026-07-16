@@ -16,8 +16,17 @@ export interface DormGroup {
   id: string
   /** เช่น "วรเรสซิเดนซ์ / หอ 8 หลัง" */
   name: string
+  /** ชื่อสั้นสำหรับการ์ดหน้า landing เช่น "วรเรสซิเดนซ์" */
+  shortName: string
   description: string
+  buildingCount: number
+  contractLabel: string
+  /** ราคาเริ่มต้นต่อภาคการศึกษา (ใช้แสดงการตลาดเท่านั้น — ราคาจริงคำนวณจาก pricing rule) */
+  priceFromPerTerm: number
+  photo?: string
 }
+
+export type BuildingGender = 'male' | 'female' | 'mixed'
 
 export interface Building {
   id: string
@@ -26,6 +35,7 @@ export interface Building {
   code: string
   name: string
   floors: number[]
+  gender: BuildingGender
 }
 
 export interface Room {
@@ -74,14 +84,17 @@ export interface Campaign {
 // Users, roles, permissions (doc 11)
 // ---------------------------------------------------------------------------
 
-export type Role =
-  | 'applicant'
-  | 'dorm_staff'
-  | 'dorm_manager'
-  | 'finance'
-  | 'contract_staff'
-  | 'division_admin'
-  | 'super_admin'
+// บทบาทมี 3 แบบ: ผู้สมัคร / เจ้าหน้าที่ (บทบาทเดียว ทำได้ทุกอย่างตามส่วนงานที่ได้รับ)
+// / ผู้ดูแลระบบ (กำหนดส่วนงานที่เจ้าหน้าที่แต่ละคนเข้าถึงได้)
+export type Role = 'applicant' | 'staff' | 'admin'
+
+/** ส่วนงานฝั่งเจ้าหน้าที่ — ผู้ดูแลระบบเปิด/ปิดการเข้าถึงรายคนได้ */
+export type StaffSection =
+  | 'overview'
+  | 'reservation'
+  | 'payment'
+  | 'contract'
+  | 'system'
 
 export type Permission =
   | 'room.manage'
@@ -124,6 +137,8 @@ export interface User {
   phone?: string
   /** dorm scope ของเจ้าหน้าที่ */
   dormGroupIds?: string[]
+  /** ส่วนงานที่เจ้าหน้าที่คนนี้เข้าถึงได้ (ผู้ดูแลระบบกำหนด) — undefined = เข้าถึงได้ทุกส่วน */
+  allowedSections?: StaffSection[]
 }
 
 // ---------------------------------------------------------------------------

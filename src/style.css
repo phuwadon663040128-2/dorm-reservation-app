@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn-vue/tailwind.css";
@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", "IBM Plex Sans Thai", ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,77 +49,79 @@
 }
 
 @layer base {
+  /* ธีมสว่าง — โทนครีมอบอุ่น + ส้มตามแบบ Figma; สีดินแดง #A73B24 เป็นสีอัตลักษณ์ มข. */
   :root {
     --kku-red: #A73B24;
-    --background: oklch(0.982 0.003 247.858);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: var(--kku-red);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.955 0.004 247.858);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.952 0.005 247.858);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.952 0.005 247.858);
-    --accent-foreground: oklch(0.205 0 0);
+    --background: #f4efe6;
+    --foreground: #211d18;
+    --card: #ffffff;
+    --card-foreground: #211d18;
+    --popover: #ffffff;
+    --popover-foreground: #211d18;
+    --primary: #ee6f1e;
+    --primary-foreground: #ffffff;
+    --secondary: #ece4d4;
+    --secondary-foreground: #3d3831;
+    --muted: #ece4d4;
+    --muted-foreground: #6f675b;
+    --accent: #faf6ee;
+    --accent-foreground: #3d3831;
     --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: var(--kku-red);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: var(--kku-red);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --destructive-foreground: #ffffff;
+    --border: #e2d8c4;
+    --input: #e2d8c4;
+    --ring: #ee6f1e;
+    --chart-1: #ee6f1e;
+    --chart-2: #A73B24;
+    --chart-3: #6f675b;
+    --chart-4: #3d3831;
+    --chart-5: #b8ad97;
+    --radius: 0.75rem;
+    --sidebar: #faf6ee;
+    --sidebar-foreground: #211d18;
+    --sidebar-primary: #ee6f1e;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #ece4d4;
+    --sidebar-accent-foreground: #3d3831;
+    --sidebar-border: #e2d8c4;
+    --sidebar-ring: #ee6f1e;
   }
 
+  /* ธีมมืด — น้ำเงินเข้มเกือบดำ + ส้มตามแบบ Figma */
   .dark {
-    --kku-red: #A73B24;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: var(--kku-red);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --kku-red: #d96a4a;
+    --background: #0a101d;
+    --foreground: #eef1f6;
+    --card: #101a2c;
+    --card-foreground: #eef1f6;
+    --popover: #12203a;
+    --popover-foreground: #eef1f6;
+    --primary: #f47a20;
+    --primary-foreground: #ffffff;
+    --secondary: #1a2438;
+    --secondary-foreground: #dbe2ec;
+    --muted: #1a2438;
+    --muted-foreground: #93a0b4;
+    --accent: #16213a;
+    --accent-foreground: #dbe2ec;
     --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: var(--kku-red);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: var(--kku-red);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --destructive-foreground: #ffffff;
+    --border: rgb(255 255 255 / 10%);
+    --input: rgb(255 255 255 / 14%);
+    --ring: #f47a20;
+    --chart-1: #f47a20;
+    --chart-2: #d96a4a;
+    --chart-3: #93a0b4;
+    --chart-4: #dbe2ec;
+    --chart-5: #1a2438;
+    --sidebar: #0d1526;
+    --sidebar-foreground: #eef1f6;
+    --sidebar-primary: #f47a20;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #1a2438;
+    --sidebar-accent-foreground: #dbe2ec;
+    --sidebar-border: rgb(255 255 255 / 10%);
+    --sidebar-ring: #f47a20;
   }
 
   * {
@@ -128,14 +130,5 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }

@@ -26,12 +26,13 @@ const accountHint: Record<string, string> = {
   'applicant-e': 'เหมาห้อง — ยืนยันแล้ว รอรับกุญแจ',
   'applicant-f': 'ลงนามสัญญาแล้ว (กลุ่มยังไม่ครบ)',
   'applicant-g': 'ยังไม่ส่งสัญญาที่ลงนาม',
-  'staff-dorm': 'สิทธิ์จัดการห้อง/จองแทน',
-  'staff-manager': 'ผู้จัดการหอ + ดู audit',
-  'staff-finance': 'สิทธิ์ export / นำเข้า PDF / ผลชำระ',
-  'staff-contract': 'สิทธิ์สัญญา + ส่งมอบกุญแจ',
-  'staff-admin': 'ส่งข้อมูลมหาวิทยาลัย + audit',
-  'staff-unauthorized': 'ไม่มีสิทธิ์ใด ๆ (ทดสอบจอ denied)',
+  'applicant-i': 'บัญชีว่าง — ลอง flow จองใหม่ตั้งแต่ต้น',
+  'applicant-j': 'บัญชีว่าง — ไว้รับคำเชิญ/ยืนยันห้อง',
+  'staff-dorm': 'เจ้าหน้าที่ — เข้าถึงได้ทุกส่วนงาน',
+  'staff-finance': 'เจ้าหน้าที่ — ถูกจำกัดเฉพาะงานการเงิน',
+  'staff-contract': 'เจ้าหน้าที่ — ถูกจำกัดเฉพาะงานสัญญา',
+  'staff-admin': 'ผู้ดูแลระบบ — กำหนดสิทธิ์เจ้าหน้าที่ได้',
+  'staff-unauthorized': 'เจ้าหน้าที่ใหม่ — ยังไม่ได้รับสิทธิ์ (ทดสอบจอ denied)',
 }
 
 function signIn(userId: string) {
@@ -48,7 +49,7 @@ function ssoSignIn() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl space-y-6">
+  <div class="mx-auto max-w-2xl space-y-6 px-4 py-8">
     <div class="space-y-1 text-center">
       <h1 class="text-2xl font-bold">เข้าสู่ระบบ</h1>
       <p class="text-sm text-muted-foreground">
@@ -82,9 +83,9 @@ function ssoSignIn() {
     <Card>
       <CardHeader>
         <CardTitle class="flex items-center gap-2 text-base">
-          <KeyRoundIcon class="size-4" aria-hidden="true" /> เจ้าหน้าที่
+          <KeyRoundIcon class="size-4" aria-hidden="true" /> เจ้าหน้าที่ / ผู้ดูแลระบบ
         </CardTitle>
-        <CardDescription>สิทธิ์แต่ละด้านแยกอิสระ (RBAC) — การเงินไม่เห็นเมนูสัญญา ฯลฯ</CardDescription>
+        <CardDescription>เจ้าหน้าที่มีบทบาทเดียว — ผู้ดูแลระบบกำหนดว่าแต่ละคนเข้าถึงส่วนงานใดได้บ้าง</CardDescription>
       </CardHeader>
       <CardContent class="grid gap-2 sm:grid-cols-2">
         <Button

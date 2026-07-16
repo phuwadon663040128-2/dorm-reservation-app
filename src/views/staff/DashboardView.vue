@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { ShieldAlertIcon } from '@lucide/vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { useContractsStore } from '@/stores/contracts'
 import { useDormStore } from '@/stores/dorm'
 import { usePaymentsStore } from '@/stores/payments'
 import { useReservationStore } from '@/stores/reservation'
+import { useSessionStore } from '@/stores/session'
 
 const dorm = useDormStore()
 const reservation = useReservationStore()
 const payments = usePaymentsStore()
 const contractsStore = useContractsStore()
+const session = useSessionStore()
+
+// Dashboard เป็นหน้า fallback ของทุกคน แต่ตัวเลขปฏิบัติการอยู่ในส่วนงาน overview —
+// เจ้าหน้าที่ที่ผู้ดูแลระบบยังไม่เปิดสิทธิ์ต้องเห็นจอแจ้งสถานะแทน (AUTH-005/006)
+const canViewOverview = computed(() => session.canAccessSection('overview'))
 
 // widget ตามเอกสาร 03 §Staff Dashboard + เอกสาร 05 §Daily operational dashboard
 const widgets = computed(() => {
@@ -39,7 +46,19 @@ const widgets = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-5">
+  <!-- เจ้าหน้าที่ที่ยังไม่ได้รับสิทธิ์ส่วนงานใด — ห้ามเห็นตัวเลขปฏิบัติการ -->
+  <div v-if="!canViewOverview" class="mx-auto max-w-md py-16 text-center">
+    <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-muted">
+      <ShieldAlertIcon class="size-7 text-muted-foreground" aria-hidden="true" />
+    </div>
+    <h1 class="text-xl font-bold">ยังไม่ได้รับสิทธิ์เข้าถึงส่วนงาน</h1>
+    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+      บัญชีของคุณเป็นเจ้าหน้าที่แล้ว แต่ผู้ดูแลระบบยังไม่ได้เปิดสิทธิ์ส่วนงานใดให้
+      กรุณาติดต่อผู้ดูแลระบบ (กองบริการหอพัก) เพื่อกำหนดสิทธิ์การเข้าถึง
+    </p>
+  </div>
+
+  <div v-else class="space-y-5">
     <div class="space-y-1">
       <h1 class="text-2xl font-bold">Dashboard ปฏิบัติการรายวัน</h1>
       <p class="text-sm text-muted-foreground">

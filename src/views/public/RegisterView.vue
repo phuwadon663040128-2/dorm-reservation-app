@@ -37,7 +37,7 @@ function submit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-md space-y-6">
+  <div class="mx-auto max-w-md space-y-6 px-4 py-8">
     <div class="space-y-1 text-center">
       <h1 class="text-2xl font-bold">สมัครสมาชิกด้วยอีเมลส่วนตัว</h1>
       <p class="text-sm text-muted-foreground">

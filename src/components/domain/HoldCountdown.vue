@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from 'vue'
 import { TimerIcon } from '@lucide/vue'
 import { useCountdown } from '@/composables/useCountdown'
 
@@ -8,7 +9,13 @@ const props = defineProps<{
   label: string
 }>()
 
+const emit = defineEmits<{ (e: 'expired'): void }>()
+
 const { display, expired } = useCountdown(() => props.expiresAt)
+
+watch(expired, (v) => {
+  if (v) emit('expired')
+}, { immediate: true })
 </script>
 
 <template>

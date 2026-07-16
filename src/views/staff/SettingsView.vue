@@ -8,7 +8,7 @@ import PlaceholderPage from '@/components/domain/PlaceholderPage.vue'
     phase="P5/P6"
     description="การตั้งค่ากลางของระบบ — ค่าที่นโยบายยังไม่นิ่งต้องเป็น configuration ที่แก้ได้ ไม่ hard-code (เอกสาร 16)"
     :features="[
-      'จัดการบทบาทและสิทธิ์ราย permission (deny-by-default)',
+      'สิทธิ์การเข้าถึงส่วนงานของเจ้าหน้าที่รายคน — ผู้ดูแลระบบจัดการที่เมนู จัดการสิทธิ์เจ้าหน้าที่',
       'กำหนด dorm scope ของเจ้าหน้าที่แต่ละคน',
       'ตั้งค่า pricing rule แบบมีเวอร์ชัน (แยกจาก override รายรายการ)',
       'จัดการแม่แบบสัญญาและเวอร์ชัน',

@@ -1,7 +1,12 @@
 # แผน Redesign Frontend — KKU Affiliated Dorm Application & Reservation System
 
-> อ้างอิงรายละเอียดงานล่าสุดจากโฟลเดอร์ `notion/` (เอกสาร 01–17, แก้ไขล่าสุด 2026-07-10/11)
+> อ้างอิงรายละเอียดงานล่าสุดจากโฟลเดอร์ `reference/notion/` (เอกสาร 01–17, แก้ไขล่าสุด 2026-07-10/11)
 > จัดทำ: 2026-07-12 · Branch: `redesign`
+>
+> **สถานะล่าสุด (2026-07-12):** P0 ✅ (โครง router/pinia/types/fixtures/layouts + 33 จอ) ·
+> Visual redesign ตาม Figma ✅ (ธีมสว่าง–มืด, IBM Plex Sans Thai, ตรา มข., landing ใหม่) ·
+> P3 core ✅ (เชิญรูมเมท → Reserve ล็อกห้อง → ยืนยัน 15 นาที → payment hold 72 ชม. → สร้าง obligations, hold expiry ฝั่ง client) ·
+> ถัดไป: P4 (จอชำระเงินเชื่อม batch จริง) และ P5 (staff actions พร้อม ReasonDialog)
 
 ---
 

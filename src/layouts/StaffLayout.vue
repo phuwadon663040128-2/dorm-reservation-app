@@ -1,17 +1,23 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { LogOutIcon, ShieldCheckIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from '@/components/domain/ThemeToggle.vue'
 import { useSessionStore } from '@/stores/session'
+import type { StaffSection } from '@/types'
 
 const session = useSessionStore()
 const router = useRouter()
 const route = useRoute()
 
-// เมนู staff ตามเอกสาร 03 §Staff navigation — จัดกลุ่มตาม workflow
-const navGroups: { title: string; items: { to: string; label: string }[] }[] = [
+const roleLabel = computed(() => (session.isAdmin ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่'))
+
+// เมนู staff ตามเอกสาร 03 §Staff navigation — จัดกลุ่มตามส่วนงานที่ผู้ดูแลระบบกำหนดรายคน
+const allNavGroups: { title: string; section?: StaffSection; adminOnly?: boolean; items: { to: string; label: string }[] }[] = [
   {
     title: 'ภาพรวม',
+    section: 'overview',
     items: [
       { to: '/staff', label: 'Dashboard' },
       { to: '/staff/campaigns', label: 'รอบรับสมัคร' },
@@ -19,6 +25,7 @@ const navGroups: { title: string; items: { to: string; label: string }[] }[] = [
   },
   {
     title: 'ห้องพักและการจอง',
+    section: 'reservation',
     items: [
       { to: '/staff/rooms', label: 'อาคาร / ชั้น / ห้อง' },
       { to: '/staff/applicants', label: 'ผู้สมัคร' },
@@ -29,6 +36,7 @@ const navGroups: { title: string; items: { to: string; label: string }[] }[] = [
   },
   {
     title: 'การเงิน SCB',
+    section: 'payment',
     items: [
       { to: '/staff/obligations', label: 'รายการชำระเงิน' },
       { to: '/staff/scb/export', label: 'Export batch (SLIPS)' },
@@ -38,6 +46,7 @@ const navGroups: { title: string; items: { to: string; label: string }[] }[] = [
   },
   {
     title: 'สัญญาและส่งต่อ',
+    section: 'contract',
     items: [
       { to: '/staff/contracts', label: 'สัญญา' },
       { to: '/staff/key-handover', label: 'ส่งมอบกุญแจ' },
@@ -46,13 +55,34 @@ const navGroups: { title: string; items: { to: string; label: string }[] }[] = [
   },
   {
     title: 'ระบบ',
+    section: 'system',
     items: [
       { to: '/staff/reports', label: 'รายงาน' },
       { to: '/staff/audit', label: 'Audit log' },
       { to: '/staff/settings', label: 'ตั้งค่า' },
     ],
   },
+  {
+    title: 'ผู้ดูแลระบบ',
+    adminOnly: true,
+    items: [
+      { to: '/staff/access', label: 'จัดการสิทธิ์เจ้าหน้าที่' },
+    ],
+  },
 ]
+
+// แสดงเฉพาะกลุ่มที่เข้าถึงได้ — Dashboard เข้าได้เสมอ จึงคงกลุ่มภาพรวมไว้บางส่วน
+const navGroups = computed(() =>
+  allNavGroups
+    .filter(g => (g.adminOnly ? session.isAdmin : true))
+    .map(g => ({
+      ...g,
+      items: g.section && !session.canAccessSection(g.section)
+        ? g.items.filter(item => item.to === '/staff')
+        : g.items,
+    }))
+    .filter(g => g.items.length > 0),
+)
 
 function isActive(to: string) {
   if (to === '/staff') return route.path === '/staff'
@@ -76,8 +106,9 @@ function logout() {
         <div class="flex items-center gap-2 text-sm">
           <div class="hidden text-right sm:block">
             <p class="font-medium leading-tight">{{ session.currentUser?.displayName }}</p>
-            <p class="text-xs text-muted-foreground">{{ session.currentUser?.role }}</p>
+            <p class="text-xs text-muted-foreground">{{ roleLabel }}</p>
           </div>
+          <ThemeToggle />
           <Button size="sm" variant="ghost" aria-label="ออกจากระบบ" @click="logout">
             <LogOutIcon aria-hidden="true" />
             <span class="hidden sm:inline">ออกจากระบบ</span>
@@ -123,7 +154,7 @@ function logout() {
         </nav>
       </aside>
 
-      <main class="min-w-0 flex-1 px-4 py-6 lg:px-8">
+      <main class="min-w-0 flex-1 px-3 py-5 lg:px-6">
         <RouterView />
       </main>
     </div>
