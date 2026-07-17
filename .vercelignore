@@ -1,0 +1,19 @@
+.git/
+.github/
+.idea/
+.vscode/
+.vercel/
+.cache/
+dist/
+logs/
+node_modules/
+reference/
+scripts/
+
+# Source/reference assets kept in the workspace but not used by the built app.
+/light-dark-mode-หออินเตอร์.zip
+/แบบแผนผัง3D.glb
+/แผนที่หอ8หลัง.png
+/แผนที่หออินเตอร์.png
+/รูปหอพัก8หลัง-drak-mode.png
+/รูปหอพัก8หลัง-light-mode.png
