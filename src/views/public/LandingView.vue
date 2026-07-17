@@ -4,9 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import {
   ArrowRightIcon,
   CalendarDaysIcon,
-  CheckCircle2Icon,
   FileSignatureIcon,
-  TimerIcon,
   UsersIcon,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
@@ -23,6 +21,10 @@ import { useTheme } from '@/composables/useTheme'
 import { useDormStore } from '@/stores/dorm'
 import heroDay from '@/assets/hero-day.png'
 import heroNight from '@/assets/hero-night.png'
+import dorm8Light from '@/assets/dorm-home/dorm-8-light.png'
+import dorm8Dark from '@/assets/dorm-home/dorm-8-dark.png'
+import dormInterLight from '@/assets/dorm-home/dorm-inter-light.png'
+import dormInterDark from '@/assets/dorm-home/dorm-inter-dark.png'
 
 const dorm = useDormStore()
 const router = useRouter()
@@ -30,9 +32,12 @@ const { theme } = useTheme()
 
 // โหลดเฉพาะรูปของธีมที่ใช้อยู่ (กลางวัน/กลางคืน) — สลับทันทีเมื่อเปลี่ยนธีม
 const heroPhoto = computed(() => (theme.value === 'dark' ? heroNight : heroDay))
+const homeDormPhotos = computed<Record<string, string>>(() => ({
+  'dorm-8-lang': theme.value === 'dark' ? dorm8Dark : dorm8Light,
+  'dorm-wor-inter': theme.value === 'dark' ? dormInterDark : dormInterLight,
+}))
 
 const openCampaign = computed(() => dorm.openCampaigns[0])
-const summary = dorm.availabilitySummary
 
 // ตัวกรองใน search bar — ส่งต่อไปหน้า /rooms เป็น query
 const searchDorm = ref('all')
@@ -75,15 +80,19 @@ const steps = [
         alt="อาคารหอพัก KKU-WORA International Dormitory"
         class="absolute inset-0 h-full w-full object-cover object-center"
       />
-      <!-- overlay ไล่เฉดตามธีมอัตโนมัติผ่านตัวแปร background -->
-      <div class="absolute inset-0 bg-linear-to-r from-background via-background/70 to-transparent" aria-hidden="true" />
+      <!-- overlay ไล่เฉดตามธีมอัตโนมัติผ่านตัวแปร background
+           มือถือ (จอแคบ ข้อความซ้อนบนรูปเต็มจอ) ใช้ไล่เฉดแนวตั้งเข้มกว่าเพื่อ contrast — จอใหญ่ไล่ซ้าย→ขวาแบบเดิม -->
+      <div
+        class="absolute inset-0 bg-linear-to-b from-background via-background/85 to-background/55 sm:bg-linear-to-r sm:from-background sm:via-background/70 sm:to-transparent"
+        aria-hidden="true"
+      />
       <div class="absolute inset-x-0 bottom-0 h-28 bg-linear-to-t from-background to-transparent" aria-hidden="true" />
 
       <div class="relative mx-auto flex min-h-135 w-full max-w-352 flex-col justify-center px-3 py-14 sm:px-5 lg:min-h-155 lg:py-20">
         <div class="max-w-5xl space-y-5">
           <p
             v-if="openCampaign"
-            class="inline-flex items-center gap-2 rounded-full border bg-card/90 px-4 py-1.5 text-sm font-medium shadow-sm backdrop-blur"
+            class="inline-flex items-center gap-2 rounded-full border bg-card/90 px-3.5 py-1.5 text-xs font-medium shadow-sm backdrop-blur sm:px-4 sm:text-sm"
           >
             <span class="relative flex size-2" aria-hidden="true">
               <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -92,12 +101,13 @@ const steps = [
             เปิดให้จอง · {{ formatDate(openCampaign.openDate) }} – {{ formatDate(openCampaign.closeDate) }}
           </p>
 
-          <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-            บริการของหอพักออนไลน์<br />
-            <span class="text-primary">เลือกห้องพัก ชำระเงิน และทำสัญญา<br />ครบในระบบเดียว</span>
+          <!-- มือถือลดขนาดลงและปล่อยตัดบรรทัดตามธรรมชาติ (ซ่อน <br> บังคับ) — จอใหญ่คง 3 บรรทัดตามดีไซน์ -->
+          <h1 class="text-balance text-[1.6rem] font-bold leading-snug tracking-tight sm:text-5xl sm:leading-tight">
+            บริการของหอพักออนไลน์<br class="hidden sm:block" />
+            <span class="text-primary">เลือกห้องพัก ชำระเงิน และทำสัญญา<br class="hidden sm:block" />ครบในระบบเดียว</span>
           </h1>
 
-          <p class="max-w-xl text-pretty leading-relaxed text-muted-foreground">
+          <p class="max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
             ระบบรับสมัครและจองหอพักในกำกับมหาวิทยาลัยขอนแก่น รองรับการเลือกห้องเป็นรายห้อง จับคู่รูมเมท
             เหมาห้อง ชำระเงินผ่านแบบฟอร์มธนาคารอย่างเป็นทางการ และติดตามสัญญาจนถึงวันรับกุญแจ
           </p>
@@ -147,23 +157,16 @@ const steps = [
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" size="lg" class="rounded-full md:h-14 md:px-8">
-            ค้นหาห้อง <ArrowRightIcon aria-hidden="true" />
+          <!-- hover = ปุ่มยกตัว + เงาอุ่นด้านล่าง + ลูกศรเลื่อนนำสายตา · active = กดจมกลับ เงาหุบ -->
+          <Button
+            type="submit"
+            size="lg"
+            class="rounded-full duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/40 hover:brightness-105 active:translate-y-0 active:bg-primary active:shadow-sm active:shadow-primary/25 active:brightness-95 md:h-14 md:px-8"
+          >
+            ค้นหาห้อง
+            <ArrowRightIcon class="transition-transform duration-200 group-hover/button:translate-x-1" aria-hidden="true" />
           </Button>
         </form>
-
-        <!-- สถิติเรียลไทม์จากห้องจริง -->
-        <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <span class="inline-flex items-center gap-1.5 font-medium">
-            <CheckCircle2Icon class="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-            ว่างตอนนี้ {{ summary.available }} ห้อง
-          </span>
-          <span class="inline-flex items-center gap-1.5 text-muted-foreground">
-            <TimerIcon class="size-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            ถูกจองชั่วคราว {{ summary.temporarilyHeld }} ห้อง
-          </span>
-          <span class="text-muted-foreground">อัปเดตจากสถานะห้องจริงรายห้อง</span>
-        </div>
       </div>
     </section>
 
@@ -172,7 +175,7 @@ const steps = [
       <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div class="space-y-5">
           <div class="flex items-end justify-between gap-3">
-            <h2 class="text-2xl font-bold tracking-tight">หอพักแนะนำ</h2>
+            <h2 class="text-xl font-bold tracking-tight sm:text-2xl">หอพักแนะนำ</h2>
             <RouterLink to="/rooms" class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               ดูตึกทั้งหมด →
             </RouterLink>
@@ -186,14 +189,15 @@ const steps = [
               class="group relative block overflow-hidden rounded-2xl border shadow-sm transition-shadow hover:shadow-lg"
             >
               <img
-                :src="g.photo"
+                :src="homeDormPhotos[g.id] ?? g.photo"
                 :alt="`ภาพ${g.name}`"
                 class="aspect-4/5 w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <div class="absolute inset-x-0 bottom-0 h-3/4 bg-linear-to-t from-black/90 via-black/45 to-transparent" aria-hidden="true" />
+              <!-- โหมดมืดใช้ภาพกลางคืน (เข้มอยู่แล้ว) จึงลดความเข้มของ gradient ลงให้ภาพสว่างขึ้น -->
+              <div class="absolute inset-x-0 bottom-0 h-3/4 bg-linear-to-t from-black/90 via-black/45 to-transparent dark:from-black/70 dark:via-black/20" aria-hidden="true" />
               <div class="absolute inset-x-0 bottom-0 space-y-3 p-5 text-white">
                 <div class="space-y-1">
-                  <p class="text-2xl font-bold tracking-tight">{{ g.shortName }}</p>
+                  <p class="text-xl font-bold tracking-tight sm:text-2xl">{{ g.shortName }}</p>
                   <p class="text-sm text-white/85">{{ g.buildingCount }} ตึก · {{ g.contractLabel }}</p>
                   <p class="line-clamp-2 text-xs leading-relaxed text-white/70">{{ g.description }}</p>
                 </div>
@@ -216,7 +220,7 @@ const steps = [
         <!-- ขั้นตอนการจอง — การ์ดซ้อนแนวตั้งตามดีไซน์ Figma: ไอคอนวงกลม + หัวข้อมีเลขนำหน้า
              การ์ดยืดเฉลี่ยเต็มความสูงคอลัมน์ (flex-1) ให้ขอบล่างเสมอกับการ์ดหอพักฝั่งซ้าย -->
         <div class="flex flex-col gap-5">
-          <h2 class="text-2xl font-bold tracking-tight">ขั้นตอนการจอง</h2>
+          <h2 class="text-xl font-bold tracking-tight sm:text-2xl">ขั้นตอนการจอง</h2>
           <ol class="flex flex-1 flex-col gap-2.5">
             <li v-for="(s, i) in steps" :key="s.title" class="flex flex-1">
               <!-- py-0 ตัด padding ในตัว Card ออก — ใช้ padding จาก CardContent ที่เดียว ให้สามใบรวมแล้วสูงไม่เกินคอลัมน์ซ้าย -->

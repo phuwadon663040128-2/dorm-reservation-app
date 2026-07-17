@@ -33,16 +33,19 @@ const statusClass: Record<Room['publicStatus'], string> = {
   unavailable: 'border-red-500/70 bg-red-400/20 text-red-800 hover:bg-red-400/30 dark:text-red-950',
 }
 
-const spots = computed<Spot[]>(() =>
-  props.overlay.rooms
+const spots = computed<Spot[]>(() => {
+  // พิกัดห้องเป็นพิกัดสัมบูรณ์ของภาพ — แปลงเป็น % ของหน้าต่างครอบตัด (เริ่มที่ cropX/cropY)
+  const ox = props.overlay.cropX ?? 0
+  const oy = props.overlay.cropY ?? 0
+  return props.overlay.rooms
     .map((rect) => {
       const room = roomByNumber.value.get(rect.number)
       if (!room) return null
       return {
         room,
         style: {
-          left: `${(rect.x / props.overlay.cropW) * 100}%`,
-          top: `${(rect.y / props.overlay.cropH) * 100}%`,
+          left: `${((rect.x - ox) / props.overlay.cropW) * 100}%`,
+          top: `${((rect.y - oy) / props.overlay.cropH) * 100}%`,
           width: `${(rect.w / props.overlay.cropW) * 100}%`,
           height: `${(rect.h / props.overlay.cropH) * 100}%`,
         },
@@ -50,8 +53,8 @@ const spots = computed<Spot[]>(() =>
         dimmed: !props.matchedNumbers.has(room.number),
       }
     })
-    .filter((s): s is Spot => s !== null),
-)
+    .filter((s): s is Spot => s !== null)
+})
 
 function label(room: Room) {
   return `ห้อง ${room.number} — ${roomConfigLabel[room.config]} — ${roomPublicStatusLabel[room.publicStatus]}`
@@ -77,7 +80,7 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
            (ไฟล์แปลนมี viewBox เลื่อนจุดเริ่ม การใช้ <img> ตรง ๆ จะทำให้ภาพเพี้ยนไม่ตรงพิกัดห้อง) -->
       <svg
         class="block w-full"
-        :viewBox="`0 0 ${overlay.cropW} ${overlay.cropH}`"
+        :viewBox="`${overlay.cropX ?? 0} ${overlay.cropY ?? 0} ${overlay.cropW} ${overlay.cropH}`"
         role="img"
         aria-label="แบบแปลนอาคาร"
       >

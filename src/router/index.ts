@@ -16,6 +16,7 @@ const router = createRouter({
         { path: 'announcements', name: 'announcements', component: () => import('@/views/public/AnnouncementsView.vue') },
         { path: 'personnel', name: 'personnel', component: () => import('@/views/public/PersonnelView.vue') },
         { path: 'guide', name: 'guide', component: () => import('@/views/public/GuideView.vue') },
+        { path: 'services', name: 'services', component: () => import('@/views/public/ServicesView.vue') },
         { path: 'services/:serviceId', name: 'online-service', component: () => import('@/views/public/OnlineServiceView.vue') },
         { path: 'info/rules', name: 'info-rules', component: () => import('@/views/public/RulesView.vue') },
         { path: 'info/fees', name: 'info-fees', component: () => import('@/views/public/FeesView.vue') },

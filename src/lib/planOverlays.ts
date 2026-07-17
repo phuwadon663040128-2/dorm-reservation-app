@@ -1,6 +1,7 @@
 // ผังห้องแบบวางทับแบบแปลนจริง (room overlay) — พิกัดห้องอ้างอิง viewBox ของแบบแปลนแต่ละชั้น
 // ที่มา: ไฟล์ออกแบบ 101-room-overlay.html (reference/design/) — พื้นหลังเป็นแปลนฉบับลบตัวเลขห้อง
-// เพิ่มชั้น/อาคารใหม่ = เพิ่มรายการในตารางนี้ (ไม่ต้องแก้ component)
+// ชั้นอื่นของอาคารโฟกัส (1,2,A,B) ใช้ชุด generate จากแปลนจริงใน planOverlayData.ts
+import { generatedOverlays } from './planOverlayData'
 
 export interface OverlayRoomRect {
   number: string
@@ -11,11 +12,14 @@ export interface OverlayRoomRect {
 }
 
 export interface PlanOverlay {
-  /** ภาพพื้นหลังแปลน (ฉบับไม่มีเลขห้อง) ใน public/plans/overlay */
+  /** ภาพพื้นหลังแปลน (ฉบับลบเลขห้อง ใน public/plans/overlay หรือแปลนจริงใน public/plans) */
   image: string
   /** ขนาดธรรมชาติของภาพแปลน (ใช้วาง <image> ใน svg) */
   viewW: number
   viewH: number
+  /** จุดเริ่มหน้าต่างครอบตัด (ไม่ระบุ = 0,0) — พิกัดห้องเป็นพิกัดสัมบูรณ์ของภาพเสมอ */
+  cropX?: number
+  cropY?: number
   /** หน้าต่างแสดงผลครอบตัดเฉพาะส่วนที่มีแบบแปลน — ตัด margin ว่างออกให้ผังเต็มการ์ด */
   cropW: number
   cropH: number
@@ -74,5 +78,7 @@ const overlays: Record<string, PlanOverlay> = {
 }
 
 export function overlayFor(dormGroupId: string, buildingCode: string, floor: number): PlanOverlay | null {
-  return overlays[`${dormGroupId}:${buildingCode}:${floor}`] ?? null
+  const key = `${dormGroupId}:${buildingCode}:${floor}`
+  // ชั้นที่วาด background ฉบับลบเลขห้องแล้ว (ตารางบนไฟล์นี้) มาก่อนชุด generate จากแปลนจริง
+  return overlays[key] ?? generatedOverlays[key] ?? null
 }

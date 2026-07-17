@@ -16,11 +16,13 @@ import FloorPlanGrid from './FloorPlanGrid.vue'
 import RealPlanDialog from './RealPlanDialog.vue'
 import RealPlanOverlay from './RealPlanOverlay.vue'
 import RoomTile from './RoomTile.vue'
-import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
+import { Badge } from '@/components/ui/badge'
+import { formatBaht, roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
 import { overlayFor } from '@/lib/planOverlays'
 import { campusFor } from '@/lib/campus3d'
+import { priceLinesFor } from '@/fixtures'
 import { useDormStore } from '@/stores/dorm'
-import type { Room, RoomPublicStatus } from '@/types'
+import type { Room, RoomConfig, RoomPublicStatus } from '@/types'
 
 // โหลด Three.js เฉพาะตอนเปิดมุมมองตึก 3D — ไม่ถ่วง bundle หน้าอื่น
 const Campus3D = defineAsyncComponent(() => import('./Campus3D.vue'))
@@ -158,6 +160,27 @@ function onSelectFloorFrom3d(payload: { buildingCode: string; floor: number }) {
   viewMode.value = 'plan'
 }
 
+// สรุปภาพรวมอาคารที่เลือก: จำนวนห้อง/ว่าง + ประเภทห้องพร้อมราคาเริ่มต้นต่อคน (พักคู่) ต่อปีการศึกษา
+const buildingSummary = computed(() => {
+  const b = selectedBuilding.value
+  if (!b) return null
+  const all = dorm.roomsOf(b.id)
+  if (!all.length) return null
+  const configs = (Object.keys(roomConfigLabel) as RoomConfig[])
+    .map((config) => {
+      const count = all.filter(r => r.config === config).length
+      if (!count) return null
+      const priceFrom = priceLinesFor(config, 'shared').reduce((s, l) => s + l.amount, 0)
+      return { config, count, priceFrom }
+    })
+    .filter((x): x is { config: RoomConfig; count: number; priceFrom: number } => x !== null)
+  return {
+    total: all.length,
+    available: all.filter(r => r.publicStatus === 'available').length,
+    configs,
+  }
+})
+
 // legend นับจากชั้นที่กำลังแสดง
 const legendItems: { status: RoomPublicStatus; dot: string }[] = [
   { status: 'available', dot: 'bg-emerald-500' },
@@ -178,11 +201,12 @@ function statusCount(status: RoomPublicStatus) {
       <div v-if="$slots.header" class="px-4 pt-4 pb-3.5 sm:px-5">
         <slot name="header" />
       </div>
+      <!-- มือถือ: grid 2 คอลัมน์เท่ากันทุกช่อง · จอใหญ่ (sm+): แถว flex เดิม -->
       <div
-        class="flex flex-wrap items-end gap-x-2.5 gap-y-2.5 p-3 sm:px-5 sm:py-3.5"
+        class="grid grid-cols-2 items-end gap-2.5 p-3 sm:flex sm:flex-wrap sm:gap-x-2.5 sm:gap-y-2.5 sm:px-5 sm:py-3.5"
         :class="$slots.header ? 'border-t bg-muted/40' : ''"
       >
-      <div class="min-w-40">
+      <div class="min-w-0 sm:min-w-40">
         <Label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">หอพัก</Label>
         <Select v-model="selectedDormGroupId">
           <SelectTrigger class="w-full" aria-label="เลือกหอพัก">
@@ -194,7 +218,7 @@ function statusCount(status: RoomPublicStatus) {
         </Select>
       </div>
 
-      <div class="min-w-44">
+      <div class="min-w-0 sm:min-w-44">
         <Label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">อาคาร</Label>
         <Select v-model="selectedBuildingId" :disabled="!visibleBuildings.length">
           <SelectTrigger class="w-full" aria-label="เลือกอาคาร">
@@ -208,7 +232,7 @@ function statusCount(status: RoomPublicStatus) {
         </Select>
       </div>
 
-      <div class="min-w-36">
+      <div class="min-w-0 sm:min-w-36">
         <Label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">ประเภทห้อง</Label>
         <Select v-model="configFilter">
           <SelectTrigger class="w-full" aria-label="กรองประเภทห้อง">
@@ -221,7 +245,7 @@ function statusCount(status: RoomPublicStatus) {
         </Select>
       </div>
 
-      <div class="min-w-24">
+      <div class="min-w-0 sm:min-w-24">
         <Label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">เพศ</Label>
         <Select v-model="genderFilter">
           <SelectTrigger class="w-full" aria-label="กรองตามเพศ">
@@ -235,13 +259,17 @@ function statusCount(status: RoomPublicStatus) {
         </Select>
       </div>
 
-      <label class="flex items-center gap-2 self-end pb-2 ps-1 text-sm">
+      <label class="col-span-2 flex items-center gap-2 ps-1 pt-0.5 text-sm sm:col-auto sm:self-end sm:pb-2 sm:pt-0">
         <Switch v-model="onlyAvailable" aria-label="แสดงเฉพาะห้องว่าง" />
         แสดงเฉพาะห้องว่าง
       </label>
 
-      <!-- สลับมุมมอง + ผังจริง ชิดขวา -->
-      <div class="ms-auto flex items-center gap-1 self-end pb-0.5" role="group" aria-label="เลือกมุมมองห้อง">
+      <!-- สลับมุมมอง + ผังจริง — มือถือ: ปุ่ม 2×2 เต็มความกว้าง · จอใหญ่: ชิดขวาแถวเดียว -->
+      <div
+        class="col-span-2 grid grid-cols-2 gap-1.5 sm:ms-auto sm:flex sm:items-center sm:gap-1 sm:self-end sm:pb-0.5"
+        role="group"
+        aria-label="เลือกมุมมองห้อง"
+      >
         <Button
           v-if="has3d"
           size="sm"
@@ -284,9 +312,34 @@ function statusCount(status: RoomPublicStatus) {
     />
 
     <template v-if="viewMode !== '3d' && selectedBuilding && floorsWithRooms.length">
-      <!-- ปุ่มกลับมุมมอง 3D เมื่อเข้ามาจากการกดชั้นบนตึก -->
-      <div v-if="has3d" class="flex">
-        <Button size="sm" variant="ghost" class="-ms-1" @click="viewMode = '3d'">
+      <!-- แถบสรุปอาคาร: ชื่อ + เพศ + จำนวนห้อง/ว่าง + ประเภทห้องพร้อมราคาเริ่มต้น (+ ปุ่มกลับ 3D) -->
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-2xl border bg-card px-4 py-3 shadow-sm sm:px-5">
+        <div class="min-w-0">
+          <p class="flex flex-wrap items-center gap-2 font-bold leading-tight">
+            {{ selectedBuilding.name }}
+            <Badge variant="secondary" class="font-medium">
+              {{ selectedBuilding.gender === 'female' ? 'หอพักหญิง' : 'หอพักชาย' }}
+            </Badge>
+          </p>
+          <p v-if="buildingSummary" class="text-xs text-muted-foreground">
+            {{ floorsWithRooms.length }} ชั้น · {{ buildingSummary.total }} ห้อง ·
+            ว่าง <b class="tabular-nums text-emerald-700 dark:text-emerald-400">{{ buildingSummary.available }}</b> ห้อง
+          </p>
+        </div>
+
+        <div v-if="buildingSummary" class="flex flex-wrap items-center gap-1.5 text-xs">
+          <span
+            v-for="c in buildingSummary.configs"
+            :key="c.config"
+            class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5"
+          >
+            <b>{{ roomConfigLabel[c.config] }}</b>
+            <span class="tabular-nums text-muted-foreground">× {{ c.count }}</span>
+            <span class="text-muted-foreground">เริ่ม {{ formatBaht(c.priceFrom) }}/คน/ปี</span>
+          </span>
+        </div>
+
+        <Button v-if="has3d" size="sm" variant="ghost" class="ms-auto" @click="viewMode = '3d'">
           <Building2Icon aria-hidden="true" /> กลับไปมุมมองตึก 3 มิติ
         </Button>
       </div>

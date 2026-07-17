@@ -29,7 +29,7 @@ const route = useRoute()
 
 const mobileOpen = ref(false)
 
-// โครงเมนูตามที่ออกแบบ: หน้าหลัก · หอพัก▾ · โครงสร้างบุคลากร · ประกาศ · บริการออนไลน์▾ · ข้อมูลหอพัก▾ · ติดต่อ
+// โครงเมนูเรียงตามความสำคัญ: หน้าหลัก · หอพัก▾ · บริการออนไลน์▾ · ประกาศ · ข้อมูลหอพัก▾ · โครงสร้างบุคลากร · ติดต่อ
 interface MenuItem { label: string; to: RouteLocationRaw; hint?: string }
 
 const dormItems: MenuItem[] = [
@@ -37,7 +37,10 @@ const dormItems: MenuItem[] = [
   { label: 'หอพักวรอินเตอร์ (4 หลัง)', to: { path: '/rooms', query: { dorm: 'dorm-wor-inter' } } },
 ]
 
-const serviceItems: MenuItem[] = onlineServices.map(s => ({ label: s.title, to: `/services/${s.id}` }))
+const serviceItems: MenuItem[] = [
+  { label: 'บริการออนไลน์ทั้งหมด', to: '/services' },
+  ...onlineServices.map(s => ({ label: s.title, to: `/services/${s.id}` })),
+]
 
 const infoItems: MenuItem[] = [
   { label: 'คู่มือการจองหอพักออนไลน์', to: '/guide' },
@@ -58,16 +61,38 @@ interface TopMenu {
 const topMenus: TopMenu[] = [
   { label: 'หน้าหลัก', to: '/', activePrefixes: [] },
   { label: 'หอพัก', items: dormItems, activePrefixes: ['/rooms'] },
-  { label: 'โครงสร้างบุคลากร', to: '/personnel', activePrefixes: ['/personnel'] },
-  { label: 'ประกาศ', to: '/announcements', activePrefixes: ['/announcements'] },
   { label: 'บริการออนไลน์', items: serviceItems, activePrefixes: ['/services'] },
+  { label: 'ประกาศ', to: '/announcements', activePrefixes: ['/announcements'] },
   { label: 'ข้อมูลเกี่ยวกับหอพักนักศึกษา', items: infoItems, activePrefixes: ['/info', '/guide', '/campaigns'] },
+  { label: 'โครงสร้างบุคลากร', to: '/personnel', activePrefixes: ['/personnel'] },
   { label: 'ติดต่อ', to: '/contact', activePrefixes: ['/contact'] },
 ]
 
 function isMenuActive(menu: TopMenu) {
   if (menu.to === '/') return route.path === '/'
   return menu.activePrefixes.some(p => route.path === p || route.path.startsWith(p + '/') || route.path.startsWith(p))
+}
+
+// เมนูมือถือแบ่งเป็นหมวดเดียวกับเดสก์ท็อป เรียงตามความสำคัญ — หมวดไม่มีป้าย = ลิงก์เดี่ยว
+const mobileSections: { label?: string; items: MenuItem[] }[] = [
+  { items: [{ label: 'หน้าหลัก', to: '/' }] },
+  { label: 'หอพัก', items: dormItems },
+  { label: 'บริการออนไลน์', items: serviceItems },
+  { items: [{ label: 'ประกาศ', to: '/announcements' }] },
+  { label: 'ข้อมูลเกี่ยวกับหอพักนักศึกษา', items: infoItems },
+  { items: [{ label: 'โครงสร้างบุคลากร', to: '/personnel' }, { label: 'ติดต่อ', to: '/contact' }] },
+]
+
+// ไฮไลต์รายการเมนูมือถือที่ตรงกับหน้าปัจจุบัน (ลิงก์หอพักเทียบ query dorm ด้วย)
+function isNavItemActive(to: RouteLocationRaw) {
+  if (typeof to === 'string') return route.path === to
+  if (typeof to === 'object' && to !== null && 'path' in to && to.path) {
+    if (route.path !== to.path) return false
+    const q = (to as { query?: Record<string, string> }).query
+    if (!q) return true
+    return Object.entries(q).every(([k, v]) => route.query[k] === v)
+  }
+  return false
 }
 
 function goToPortal() {
@@ -106,21 +131,26 @@ function navigate(to: RouteLocationRaw) {
             <RouterLink
               v-if="menu.to"
               :to="menu.to"
-              class="relative px-3 py-2 transition-colors hover:text-primary"
+              class="px-3 py-2 transition-colors hover:text-primary"
               :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
             >
-              {{ menu.label }}
-              <span v-if="isMenuActive(menu)" class="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-primary" aria-hidden="true" />
+              <span class="relative">
+                {{ menu.label }}
+                <span v-if="isMenuActive(menu)" class="absolute -bottom-3 left-0 right-0 h-0.5 rounded-full bg-primary" aria-hidden="true" />
+              </span>
             </RouterLink>
 
-            <!-- เมนูแบบ dropdown -->
+            <!-- เมนูแบบ dropdown — ขีดเส้นใต้ผูกกับ "ข้อความ" เท่านั้น (ไม่รวมไอคอน ▾) จึงอยู่กึ่งกลางคำ -->
             <DropdownMenu v-else>
               <DropdownMenuTrigger
-                class="relative flex items-center gap-1 px-3 py-2 transition-colors hover:text-primary"
+                class="flex items-center gap-1 px-3 py-2 transition-colors hover:text-primary"
                 :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
               >
-                {{ menu.label }} <ChevronDownIcon class="size-3.5" aria-hidden="true" />
-                <span v-if="isMenuActive(menu)" class="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-primary" aria-hidden="true" />
+                <span class="relative">
+                  {{ menu.label }}
+                  <span v-if="isMenuActive(menu)" class="absolute -bottom-3 left-0 right-0 h-0.5 rounded-full bg-primary" aria-hidden="true" />
+                </span>
+                <ChevronDownIcon class="size-3.5" aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" class="min-w-64">
                 <DropdownMenuItem
@@ -154,7 +184,12 @@ function navigate(to: RouteLocationRaw) {
 
           <ThemeToggle />
 
-          <Button v-if="!session.isLoggedIn" class="hidden rounded-full sm:inline-flex" @click="router.push('/login')">
+          <!-- ภาษาเดียวกับปุ่มค้นหาห้องหน้าแรก: ยกตัว+เงาตอน hover · กดจมตอน active -->
+          <Button
+            v-if="!session.isLoggedIn"
+            class="hidden rounded-full duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/40 hover:brightness-105 active:translate-y-0 active:bg-primary active:shadow-none active:brightness-95 sm:inline-flex"
+            @click="router.push('/login')"
+          >
             เข้าสู่ระบบ
           </Button>
           <Button v-else class="hidden rounded-full sm:inline-flex" variant="outline" @click="goToPortal">
@@ -172,49 +207,34 @@ function navigate(to: RouteLocationRaw) {
               <SheetHeader>
                 <SheetTitle class="text-left text-kku-red">หอพักในกำกับ มข.</SheetTitle>
               </SheetHeader>
-              <nav class="flex flex-col gap-0.5 px-4 pb-6" aria-label="เมนูหลัก (มือถือ)">
-                <Button variant="ghost" class="justify-start" @click="navigate('/')">หน้าหลัก</Button>
-                <Button variant="ghost" class="justify-start" @click="navigate('/personnel')">โครงสร้างบุคลากร</Button>
-                <Button variant="ghost" class="justify-start" @click="navigate('/announcements')">ประกาศ</Button>
-                <Button variant="ghost" class="justify-start" @click="navigate('/contact')">ติดต่อ</Button>
+              <!-- เมนูแบ่งหมวดด้วยเส้นคั่น + ป้ายหมวดสีหลัก · รายการกะทัดรัด text-sm · ไฮไลต์หน้าปัจจุบัน -->
+              <nav class="flex flex-col px-3 pb-6" aria-label="เมนูหลัก (มือถือ)">
+                <template v-for="(sec, i) in mobileSections" :key="sec.label ?? `sec-${i}`">
+                  <div v-if="i > 0" class="my-2 border-t" aria-hidden="true" />
+                  <p
+                    v-if="sec.label"
+                    class="px-3 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-primary"
+                  >
+                    {{ sec.label }}
+                  </p>
+                  <button
+                    v-for="item in sec.items"
+                    :key="item.label"
+                    type="button"
+                    class="rounded-lg px-3 py-2 text-left text-sm leading-snug transition-colors"
+                    :class="isNavItemActive(item.to)
+                      ? 'bg-primary/10 font-semibold text-primary'
+                      : 'text-foreground/80 hover:bg-muted hover:text-foreground'"
+                    @click="navigate(item.to)"
+                  >
+                    {{ item.label }}
+                  </button>
+                </template>
 
-                <p class="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">หอพัก</p>
-                <Button
-                  v-for="item in dormItems"
-                  :key="item.label"
-                  variant="ghost"
-                  class="h-auto justify-start whitespace-normal py-2 text-left"
-                  @click="navigate(item.to)"
-                >
-                  {{ item.label }}
-                </Button>
-
-                <p class="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">บริการออนไลน์</p>
-                <Button
-                  v-for="item in serviceItems"
-                  :key="item.label"
-                  variant="ghost"
-                  class="h-auto justify-start whitespace-normal py-2 text-left"
-                  @click="navigate(item.to)"
-                >
-                  {{ item.label }}
-                </Button>
-
-                <p class="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">ข้อมูลเกี่ยวกับหอพักนักศึกษา</p>
-                <Button
-                  v-for="item in infoItems"
-                  :key="item.label"
-                  variant="ghost"
-                  class="h-auto justify-start whitespace-normal py-2 text-left"
-                  @click="navigate(item.to)"
-                >
-                  {{ item.label }}
-                </Button>
-
-                <Button v-if="!session.isLoggedIn" class="mt-3 rounded-full" @click="navigate('/login')">
+                <Button v-if="!session.isLoggedIn" class="mt-4 rounded-full" @click="navigate('/login')">
                   เข้าสู่ระบบ
                 </Button>
-                <Button v-else class="mt-3 rounded-full" variant="outline" @click="goToPortal">
+                <Button v-else class="mt-4 rounded-full" variant="outline" @click="goToPortal">
                   {{ session.isStaff ? 'พื้นที่เจ้าหน้าที่' : 'การจองของฉัน' }}
                 </Button>
               </nav>
