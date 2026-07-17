@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { LayoutGridIcon, MapIcon } from '@lucide/vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { Building2Icon, LayoutGridIcon, MapIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -18,8 +18,12 @@ import RealPlanOverlay from './RealPlanOverlay.vue'
 import RoomTile from './RoomTile.vue'
 import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
 import { overlayFor } from '@/lib/planOverlays'
+import { campusFor } from '@/lib/campus3d'
 import { useDormStore } from '@/stores/dorm'
 import type { Room, RoomPublicStatus } from '@/types'
+
+// โหลด Three.js เฉพาะตอนเปิดมุมมองตึก 3D — ไม่ถ่วง bundle หน้าอื่น
+const Campus3D = defineAsyncComponent(() => import('./Campus3D.vue'))
 
 // แผนผังห้องรายชั้นตามเอกสาร 03: กลุ่มหอ → อาคาร → ชั้น → ห้องจริง
 // ตัวกรองทั้งหมดเป็น toolbar ด้านบน — พื้นที่ผังเต็มความกว้าง แสดงทีละชั้นตามแท็บที่เลือก
@@ -110,9 +114,49 @@ const currentOverlay = computed(() =>
     : null,
 )
 
-// มุมมองผังโครงสร้าง (ค่าเริ่มต้น) หรือรายการ + modal ผังจริงของชั้นที่เลือก
-const viewMode = ref<'plan' | 'list'>('plan')
+// มุมมอง: ตึก 3D (ค่าเริ่มต้นถ้าหอนี้มีโมเดล) / ผังชั้น / รายการ + modal ผังจริง
+const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
+const viewMode = ref<'3d' | 'plan' | 'list'>(has3d.value ? '3d' : 'plan')
 const realPlanOpen = ref(false)
+const campusRef = ref<{ focusBuilding: (code: string) => void } | null>(null)
+
+// ในมุมมอง 3D — เลือกอาคารจาก dropdown ด้านบน = โฟกัสตึกนั้นในฉาก 3D
+watch(selectedBuildingId, (id) => {
+  if (viewMode.value !== '3d' || !campusRef.value) return
+  const b = dorm.buildings.find(x => x.id === id)
+  if (b) campusRef.value.focusBuilding(b.code)
+})
+
+// เปลี่ยนหอแล้วถ้าหอใหม่ไม่มีโมเดล 3D ให้เด้งไปมุมมองผัง
+watch(has3d, (v) => {
+  if (!v && viewMode.value === '3d') viewMode.value = 'plan'
+})
+
+// ข้อมูลจำนวนห้องว่าง/ทั้งหมด รายอาคาร→รายชั้น สำหรับป้ายบนตึก 3D (คีย์ด้วย building.code)
+const availabilityByCode = computed(() => {
+  const out: Record<string, Record<number, { available: number; total: number }>> = {}
+  for (const b of dorm.buildingsOf(selectedDormGroupId.value)) {
+    for (const floor of b.floors) {
+      const rooms = dorm.roomsOf(b.id, floor)
+      if (!rooms.length) continue
+      out[b.code] ??= {}
+      out[b.code]![floor] = {
+        available: rooms.filter(r => r.publicStatus === 'available').length,
+        total: rooms.length,
+      }
+    }
+  }
+  return out
+})
+
+// จาก 3D กดเลือกชั้น → ตั้งอาคาร/ชั้น แล้วสลับไปแผนผังห้อง (พร้อมปุ่มกลับ 3D)
+function onSelectFloorFrom3d(payload: { buildingCode: string; floor: number }) {
+  const building = dorm.buildingsOf(selectedDormGroupId.value).find(b => b.code === payload.buildingCode)
+  if (!building) return
+  selectedBuildingId.value = building.id
+  selectedFloor.value = payload.floor
+  viewMode.value = 'plan'
+}
 
 // legend นับจากชั้นที่กำลังแสดง
 const legendItems: { status: RoomPublicStatus; dot: string }[] = [
@@ -199,12 +243,21 @@ function statusCount(status: RoomPublicStatus) {
       <!-- สลับมุมมอง + ผังจริง ชิดขวา -->
       <div class="ms-auto flex items-center gap-1 self-end pb-0.5" role="group" aria-label="เลือกมุมมองห้อง">
         <Button
+          v-if="has3d"
+          size="sm"
+          :variant="viewMode === '3d' ? 'default' : 'outline'"
+          :aria-pressed="viewMode === '3d'"
+          @click="viewMode = '3d'"
+        >
+          <Building2Icon aria-hidden="true" /> ตึก 3 มิติ
+        </Button>
+        <Button
           size="sm"
           :variant="viewMode === 'plan' ? 'default' : 'outline'"
           :aria-pressed="viewMode === 'plan'"
           @click="viewMode = 'plan'"
         >
-          <MapIcon aria-hidden="true" /> ผังตึก
+          <MapIcon aria-hidden="true" /> ผังชั้น
         </Button>
         <Button
           size="sm"
@@ -214,14 +267,30 @@ function statusCount(status: RoomPublicStatus) {
         >
           <LayoutGridIcon aria-hidden="true" /> รายการ
         </Button>
-        <Button size="sm" variant="outline" :disabled="!selectedBuilding || selectedFloor === null" @click="realPlanOpen = true">
+        <Button size="sm" variant="outline" :disabled="!selectedBuilding || selectedFloor === null || viewMode === '3d'" @click="realPlanOpen = true">
           <MapIcon aria-hidden="true" /> ดูผังจริง
         </Button>
       </div>
       </div>
     </div>
 
-    <template v-if="selectedBuilding && floorsWithRooms.length">
+    <!-- มุมมองตึก 3 มิติ — เต็มความกว้าง (แยกจากแท็บชั้น) -->
+    <Campus3D
+      v-if="viewMode === '3d'"
+      :dorm-group-id="selectedDormGroupId"
+      :availability="availabilityByCode"
+      @select-floor="onSelectFloorFrom3d"
+      @switch-dorm="selectedDormGroupId = $event"
+    />
+
+    <template v-if="viewMode !== '3d' && selectedBuilding && floorsWithRooms.length">
+      <!-- ปุ่มกลับมุมมอง 3D เมื่อเข้ามาจากการกดชั้นบนตึก -->
+      <div v-if="has3d" class="flex">
+        <Button size="sm" variant="ghost" class="-ms-1" @click="viewMode = '3d'">
+          <Building2Icon aria-hidden="true" /> กลับไปมุมมองตึก 3 มิติ
+        </Button>
+      </div>
+
       <!-- แท็บเลือกชั้น — แสดงผังทีละชั้น -->
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="เลือกชั้น">
@@ -285,7 +354,7 @@ function statusCount(status: RoomPublicStatus) {
         </p>
       </section>
     </template>
-    <Card v-else>
+    <Card v-else-if="viewMode !== '3d'">
       <CardContent class="p-10 text-center text-sm text-muted-foreground">
         ไม่พบห้องตามเงื่อนไขที่เลือก — ลองเปลี่ยนอาคารหรือปรับตัวกรอง
       </CardContent>

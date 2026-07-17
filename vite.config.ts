@@ -19,6 +19,10 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return
+          // three โหลดแบบ lazy เฉพาะตอนเปิดมุมมองตึก 3D — แยก chunk ไม่ให้ปนกับ vendor หลัก
+          if (id.includes('node_modules/three')) {
+            return 'vendor-three'
+          }
           if (
             id.includes('vue')
             || id.includes('reka-ui')

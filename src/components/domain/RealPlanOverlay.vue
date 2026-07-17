@@ -108,13 +108,13 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
         </span>
       </button>
 
-      <!-- เข็มทิศ — ทิศเหนือชี้ขึ้นตามแบบแปลน -->
+      <!-- เข็มทิศ — เข็มหมุนตามมุมทิศเหนือจริงของแบบแปลน (เทียบ Google Maps) -->
       <div
         class="absolute left-3 top-3 flex flex-col items-center gap-0.5 rounded-xl border bg-background/90 px-2.5 py-2 shadow-sm backdrop-blur"
         role="img"
-        aria-label="เข็มทิศ — ทิศเหนือชี้ขึ้นด้านบนของแบบแปลน"
+        :aria-label="`เข็มทิศ — ทิศเหนือทำมุม ${overlay.northAngle} องศาจากด้านบนของแบบแปลน`"
       >
-        <svg viewBox="0 0 24 24" class="size-7" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="size-7" :style="{ transform: `rotate(${overlay.northAngle}deg)` }" aria-hidden="true">
           <circle cx="12" cy="12" r="10.5" class="fill-none stroke-border" stroke-width="1.5" />
           <path d="M12 4 L15 13 L12 11.4 L9 13 Z" class="fill-primary" />
           <path d="M12 20 L9 13 L12 14.6 L15 13 Z" class="fill-muted-foreground/40" />
