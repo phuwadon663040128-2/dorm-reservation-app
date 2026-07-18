@@ -1529,6 +1529,17 @@ function buildScene() {
 }
 
 // ---------- ไฮไลต์ตามสถานะ ----------
+// three.js ฝัง define OPAQUE ลงใน shader ตอน compile ครั้งแรกถ้า material ไม่โปร่งใส
+// การสลับ mat.transparent ภายหลังจึงต้องสั่ง recompile (needsUpdate) ไม่งั้น shader เดิม
+// จะบังคับ alpha = 1 ทำให้ตึกไม่จางแม้ตั้ง opacity แล้ว (อาการ: ต้องสลับธีมก่อนถึงจะจาง)
+function setFade(mat: THREE.MeshStandardMaterial, transparent: boolean, opacity: number) {
+  if (mat.transparent !== transparent) {
+    mat.transparent = transparent
+    mat.needsUpdate = true
+  }
+  mat.opacity = opacity
+}
+
 function applyHighlight() {
   const p = pal()
   const accent = new THREE.Color(p.accent)
@@ -1537,8 +1548,7 @@ function applyHighlight() {
     const mat = m.material as THREE.MeshStandardMaterial
     if (context) {
       // ตึกของอีกหอ — จางลงอีกเมื่อกำลังโฟกัสตึกของหอที่เลือก
-      mat.transparent = true
-      mat.opacity = selectedCode.value ? 0.25 : 0.8
+      setFade(mat, true, selectedCode.value ? 0.25 : 0.8)
       if (theme.value === 'dark') {
         mat.emissive.set(mixColor(buildingColor(buildingOf(code), p), p.hemiSky, 0.22))
         mat.emissiveIntensity = 0.055
@@ -1548,8 +1558,7 @@ function applyHighlight() {
       continue
     }
     const dimOther = selectedCode.value !== null && selectedCode.value !== code
-    mat.transparent = dimOther
-    mat.opacity = dimOther ? 0.15 : 1
+    setFade(mat, dimOther, dimOther ? 0.15 : 1)
     const hovered = hoverFloor.code === code && hoverFloor.floor === floor
     if (theme.value === 'dark' && !hovered) {
       mat.emissive.set(mixColor(buildingColor(buildingOf(code), p), p.lampGlow, 0.18))
@@ -1631,9 +1640,7 @@ function dive(code: string, floor: number) {
   for (const m of pickables) {
     const u = m.userData as { buildingCode: string; floor: number }
     if (u.buildingCode === code && u.floor > floor) {
-      const mat = m.material as THREE.MeshStandardMaterial
-      mat.transparent = true
-      mat.opacity = 0.05
+      setFade(m.material as THREE.MeshStandardMaterial, true, 0.05)
     }
   }
   mode.value = 'diving'
