@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   ArrowRightIcon,
@@ -15,6 +16,15 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import PageHeader from '@/components/domain/PageHeader.vue'
+import { useSessionStore } from '@/stores/session'
+
+const session = useSessionStore()
+
+const accountAction = computed(() => {
+  if (!session.isLoggedIn) return { label: 'เข้าสู่ระบบ', to: '/login' }
+  if (session.isStaff) return { label: 'ไปพื้นที่เจ้าหน้าที่', to: '/staff' }
+  return { label: 'ไปที่การจองของฉัน', to: '/app' }
+})
 
 // คู่มือการจอง — เนื้อหายึดกติกาจริงของระบบ: คำเชิญ 48 ชม. / ยืนยันห้อง 15 นาที / ชำระใน 72 ชม.
 const checklist = [
@@ -167,7 +177,7 @@ const occupancyModes = [
             <RouterLink to="/rooms">ดูแผนผังห้องพัก <ArrowRightIcon aria-hidden="true" /></RouterLink>
           </Button>
           <Button as-child variant="outline" class="rounded-full">
-            <RouterLink to="/register">สมัครสมาชิก</RouterLink>
+            <RouterLink :to="accountAction.to">{{ accountAction.label }}</RouterLink>
           </Button>
         </div>
       </CardContent>

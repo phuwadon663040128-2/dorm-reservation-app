@@ -312,7 +312,7 @@ function statusCount(status: RoomPublicStatus) {
     />
 
     <template v-if="viewMode !== '3d' && selectedBuilding && floorsWithRooms.length">
-      <!-- แถบสรุปอาคาร: ชื่อ + เพศ + จำนวนห้อง/ว่าง + ประเภทห้องพร้อมราคาเริ่มต้น (+ ปุ่มกลับ 3D) -->
+      <!-- แถบสรุปอาคาร: ชื่อ + เพศ + จำนวนห้อง/ว่าง + ประเภทห้องพร้อมราคาเริ่มต้น -->
       <div class="flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-2xl border bg-card px-4 py-3 shadow-sm sm:px-5">
         <div class="min-w-0">
           <p class="flex flex-wrap items-center gap-2 font-bold leading-tight">
@@ -338,10 +338,6 @@ function statusCount(status: RoomPublicStatus) {
             <span class="text-muted-foreground">เริ่ม {{ formatBaht(c.priceFrom) }}/คน/ปี</span>
           </span>
         </div>
-
-        <Button v-if="has3d" size="sm" variant="ghost" class="ms-auto" @click="viewMode = '3d'">
-          <Building2Icon aria-hidden="true" /> กลับไปมุมมองตึก 3 มิติ
-        </Button>
       </div>
 
       <!-- แท็บเลือกชั้น — แสดงผังทีละชั้น -->
@@ -380,7 +376,21 @@ function statusCount(status: RoomPublicStatus) {
 
       <!-- ผังของชั้นที่เลือก -->
       <section v-if="currentFloor" :key="currentFloor.floor" class="space-y-3">
-        <h3 class="sr-only">{{ selectedBuilding.name }} ชั้น {{ currentFloor.floor }}</h3>
+        <!-- ปุ่มกลับอยู่ติดมุมขวาบนของพื้นที่ผังโดยตรง จึงหาเจอได้ทั้งธีมสว่าง/มืดและไม่หลุดเมื่อสรุปอาคารตัดบรรทัด -->
+        <div class="flex min-h-9 flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-semibold">
+            {{ viewMode === 'plan' ? 'ผัง' : 'รายการห้อง' }} {{ selectedBuilding.name }} · ชั้น {{ currentFloor.floor }}
+          </h3>
+          <Button
+            v-if="has3d && viewMode === 'plan'"
+            size="sm"
+            variant="outline"
+            class="ms-auto bg-background shadow-sm"
+            @click="viewMode = '3d'"
+          >
+            <Building2Icon aria-hidden="true" /> กลับไปมุมมองตึก 3 มิติ
+          </Button>
+        </div>
 
         <!-- มุมมองผัง: ชั้นที่มีพิกัดห้องใช้ผังวางทับแบบแปลนจริง — ชั้นอื่นใช้ผังโครงสร้าง -->
         <RealPlanOverlay

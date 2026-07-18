@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KKU Dorm Building & Floor Explorer</title>
+<style>
+:root{
+  --ink:#102033;--muted:#637286;--paper:rgba(255,255,255,.92);--line:rgba(16,32,51,.11);
+  --blue:#2f6fec;--terracotta:#bd7456;--gold:#e5a949;--shadow:0 22px 65px rgba(30,53,77,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:linear-gradient(180deg,#eef7fb 0%,#dcebf4 55%,#c8dbe7 100%);color:var(--ink);font-family:Inter,"Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;user-select:none;-webkit-user-select:none}#app,#view,#labels{position:fixed;inset:0;width:100%;height:100%}#view{display:block;touch-action:none;cursor:grab}#view:active{cursor:grabbing}#labels{z-index:8;pointer-events:none;overflow:hidden}
+.glass{background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+#overview{position:fixed;left:18px;top:18px;z-index:20;width:min(405px,calc(100vw - 36px));padding:18px;border-radius:24px}.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:850;color:#56708d;margin-bottom:7px}h1{font-size:23px;line-height:1.15;margin:0 0 8px;letter-spacing:-.025em}.lead{font-size:13px;line-height:1.5;color:var(--muted);margin:0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.stat{padding:10px 9px;border-radius:14px;background:rgba(239,246,255,.78);border:1px solid rgba(47,111,236,.12)}.stat b{display:block;font-size:17px;line-height:1.05;color:#214f9f}.stat span{display:block;margin-top:4px;font-size:10px;color:#68788d}.legend{display:grid;gap:8px;margin-top:14px}.legend-row{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#334155}.legend-row strong{display:block;font-size:12px}.legend-row small{display:block;color:var(--muted);margin-top:2px}.swatch{width:12px;height:12px;border-radius:4px;flex:none;margin-top:2px}.sw-eight{background:linear-gradient(135deg,#e9dfc8 55%,var(--blue) 56%)}.sw-inter{background:linear-gradient(135deg,#ca8a6d 55%,var(--gold) 56%)}.note{margin-top:13px;padding:10px 11px;border-radius:13px;background:#fff8e7;border:1px solid rgba(229,169,73,.28);font-size:11px;line-height:1.45;color:#75582c}
+#toolbar{position:fixed;right:18px;top:18px;z-index:22;padding:8px;border-radius:17px;display:flex;gap:7px}.tool{border:0;padding:10px 13px;border-radius:11px;cursor:pointer;font-size:12px;font-weight:800;color:#2a3b50;background:#e9f0f7;transition:.18s ease}.tool:hover{transform:translateY(-1px);background:#dfeaf4}.tool.primary{background:#183a63;color:#fff}.tool.active{background:#2f6fec;color:#fff}
+#detail{position:fixed;right:18px;bottom:18px;z-index:22;width:310px;min-height:196px;padding:16px;border-radius:22px;transition:opacity .18s ease,transform .18s ease}#detail.empty{opacity:.82}.detail-head{display:flex;align-items:center;gap:11px}.id-orb{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#183a63;color:#fff;font-size:15px;font-weight:900;box-shadow:0 10px 28px rgba(24,58,99,.22)}.detail-title{min-width:0}.detail-title h2{font-size:16px;margin:0;line-height:1.2}.detail-title p{font-size:11px;color:var(--muted);margin:4px 0 0}.floor-summary{margin-top:13px;display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:13px;background:#f3f7fb}.floor-summary b{font-size:13px}.floor-summary span{font-size:11px;color:var(--muted)}.floor-stack{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.floor-btn{border:1px solid rgba(47,111,236,.16);background:#edf3fb;color:#315274;border-radius:10px;padding:8px 9px;min-width:38px;cursor:pointer;font-size:11px;font-weight:850;transition:.15s ease}.floor-btn:hover,.floor-btn.hot{background:#2f6fec;color:#fff;border-color:#2f6fec;transform:translateY(-1px)}.detail-foot{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:10px;color:var(--muted)}
+#hint{position:fixed;left:18px;bottom:18px;z-index:20;padding:10px 13px;border-radius:15px;font-size:11px;color:#5a6b7e;line-height:1.4}#tooltip{position:fixed;z-index:40;pointer-events:none;opacity:0;transform:translate(14px,14px);padding:10px 12px;border-radius:13px;background:rgba(17,35,56,.94);color:white;box-shadow:0 15px 40px rgba(9,21,35,.28);font-size:11px;line-height:1.35;transition:opacity .1s ease;max-width:220px}#tooltip b{display:block;font-size:12px;margin-bottom:2px}#tooltip span{color:#cdd9e7}
+.building-label{position:absolute;pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;padding:6px 9px 6px 6px;border-radius:999px;background:rgba(255,255,255,.94);border:1px solid rgba(16,32,51,.12);box-shadow:0 10px 28px rgba(29,55,82,.18);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,opacity .16s ease;color:#17324f;font-size:10px;font-weight:850;white-space:nowrap}.building-label:hover,.building-label.hot{transform:translate(-50%,-50%) scale(1.08);box-shadow:0 13px 32px rgba(29,55,82,.25)}.building-label i{font-style:normal;width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#183a63;color:white;font-size:11px}.building-label.eight i{background:#2f6fec}.building-label.inter i{background:#bd7456}.building-label small{color:#738295;font-size:9px;font-weight:750}
+#compass{position:fixed;right:18px;top:86px;z-index:19;width:94px;height:106px;border-radius:21px;display:grid;place-items:center;padding:8px 8px 7px;pointer-events:none}.compass-wrap{display:grid;place-items:center;gap:4px}.compass-ring{position:relative;width:68px;height:68px;border-radius:50%;border:1px solid rgba(16,32,51,.16);background:radial-gradient(circle at 50% 46%,rgba(255,255,255,.96) 0 36%,rgba(240,246,251,.92) 37% 100%);box-shadow:inset 0 0 0 4px rgba(16,32,51,.035)}.compass-ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:repeating-conic-gradient(from -1deg,rgba(71,91,113,.46) 0 1deg,transparent 1deg 14deg);-webkit-mask:radial-gradient(circle,transparent 0 78%,#000 79% 100%);mask:radial-gradient(circle,transparent 0 78%,#000 79% 100%)}.compass-ring::after{content:"";position:absolute;left:50%;top:2px;width:8px;height:3px;border-radius:3px;transform:translateX(-50%);background:#183a63;box-shadow:0 1px 0 rgba(255,255,255,.8)}.compass-card{--counter-angle:0deg;position:absolute;inset:0;transform-origin:50% 50%;will-change:transform}.compass-card::before,.compass-card::after{content:"";position:absolute;left:50%;top:50%;background:rgba(68,89,111,.24);border-radius:999px;transform:translate(-50%,-50%)}.compass-card::before{width:1px;height:34px}.compass-card::after{width:34px;height:1px}.compass-card .dir{position:absolute;font-size:9px;font-weight:950;line-height:1;color:#738196;transform:translate(-50%,-50%) rotate(var(--counter-angle));transform-origin:center}.compass-card .n{left:50%;top:11px;color:#d94c4c}.compass-card .s{left:50%;top:57px}.compass-card .e{left:57px;top:50%}.compass-card .w{left:11px;top:50%}.compass-center{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;transform:translate(-50%,-50%);background:#183a63;border:2px solid #fff;box-shadow:0 1px 4px rgba(16,32,51,.28)}.compass-caption{font-size:8px;font-weight:850;letter-spacing:.055em;text-transform:uppercase;color:#66778b;white-space:nowrap}.compass-caption b{color:#2f6fec;font-weight:950}
+#loading{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:linear-gradient(145deg,#edf6fb,#d8e6f1);font-size:13px;font-weight:800;color:#49627b;transition:opacity .25s}.loader-ring{width:34px;height:34px;border:3px solid #c8d8e5;border-top-color:#2f6fec;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}@keyframes spin{to{transform:rotate(360deg)}}
+#error{display:none;position:fixed;inset:0;z-index:200;place-items:center;padding:32px;background:#eef5fa;color:#334155;text-align:center}#error b{display:block;font-size:18px;margin-bottom:8px}
+
+.tool[hidden]{display:none!important}
+#overview.focus-mode{width:min(315px,calc(100vw - 36px));padding:15px 16px}
+#overview.focus-mode .stats,#overview.focus-mode .legend,#overview.focus-mode .note{display:none}
+#overview.focus-mode h1{font-size:19px;margin-bottom:5px}
+#overview.focus-mode .lead{font-size:11px;line-height:1.42}
+.floor-marker{position:absolute;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;background:rgba(255,255,255,.95);border:1px solid rgba(16,32,51,.13);box-shadow:0 10px 28px rgba(29,55,82,.19);color:#18324d;font-size:10px;font-weight:900;white-space:nowrap;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,opacity .15s ease}
+.floor-marker::before{content:"";width:7px;height:7px;border-radius:50%;background:#2f6fec;box-shadow:0 0 0 3px rgba(47,111,236,.12)}
+.floor-marker.inter::before{background:#d8834f;box-shadow:0 0 0 3px rgba(216,131,79,.14)}
+.floor-marker small{font-size:9px;font-weight:700;color:#748396}
+.floor-marker:hover,.floor-marker.hot{transform:translate(-50%,-50%) scale(1.08);background:#183a63;color:#fff;border-color:#183a63}
+.floor-marker:hover small,.floor-marker.hot small{color:#dbe7f3}
+.detail-action{width:100%;margin-top:12px;border:0;border-radius:12px;padding:10px 12px;background:#183a63;color:#fff;font-size:11px;font-weight:850;cursor:pointer}
+.detail-action:hover{background:#2f6fec}
+.mode-chip{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 9px;border-radius:999px;background:#edf4fb;color:#365572;font-size:10px;font-weight:800}
+.mode-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:#28a987}
+
+@media(max-width:820px){#overview{left:10px;top:10px;width:calc(100vw - 20px);padding:14px;border-radius:19px}h1{font-size:19px}.lead{font-size:11px}.stats{margin-top:10px}.legend,.note{display:none}#toolbar{right:10px;top:auto;bottom:82px}.tool{padding:9px 10px}#detail{right:10px;bottom:10px;width:min(300px,calc(100vw - 20px));min-height:0;padding:13px}#detail.empty{display:none}#hint{left:10px;bottom:10px;max-width:calc(100vw - 330px)}#compass{right:10px;top:150px;width:76px;height:88px}.building-label{padding:4px 7px 4px 4px}.building-label i{width:21px;height:21px}.building-label small{display:none}}
+@media(max-width:570px){.stats{grid-template-columns:repeat(3,1fr)}.stat{padding:8px 6px}.stat b{font-size:14px}.stat span{font-size:8px}#toolbar{left:10px;right:auto;bottom:78px}#detail{left:10px;right:10px;width:auto}#hint{display:none}#compass{top:142px}.floor-stack{gap:4px}.floor-btn{padding:7px 8px;min-width:34px}}
+
+
+/* Cross-device and accessibility optimization layer */
+:root{
+  --safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);
+}
+html,body{height:100%;height:100dvh;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{position:fixed;inset:0;min-width:280px;min-height:320px}
+#app,#view,#labels{width:100vw;height:100vh;height:100dvh}
+#view{-webkit-tap-highlight-color:transparent;outline:none}
+#view:focus-visible{outline:3px solid rgba(47,111,236,.55);outline-offset:-4px}
+button,.building-label,.floor-marker{-webkit-tap-highlight-color:transparent;-webkit-appearance:none;appearance:none}
+button:focus-visible,.building-label:focus-visible,.floor-marker:focus-visible{outline:3px solid rgba(47,111,236,.48);outline-offset:2px}
+.tool,.floor-btn,.detail-action{min-height:42px}
+#overview{top:calc(18px + var(--safe-top));left:calc(18px + var(--safe-left));transition:opacity .2s ease,transform .2s ease}
+#toolbar{top:calc(18px + var(--safe-top));right:calc(18px + var(--safe-right));max-width:calc(100vw - var(--safe-left) - var(--safe-right) - 24px);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+#toolbar::-webkit-scrollbar{display:none}
+#detail{right:calc(18px + var(--safe-right));bottom:calc(18px + var(--safe-bottom));max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 36px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#hint{left:calc(18px + var(--safe-left));bottom:calc(18px + var(--safe-bottom))}
+#compass{right:calc(18px + var(--safe-right));top:calc(86px + var(--safe-top))}
+body.overview-hidden #overview{opacity:0;transform:translateY(-14px);pointer-events:none}
+body.overview-hidden #guide{background:#e9f0f7;color:#2a3b50}
+#guide{display:inline-flex;align-items:center;justify-content:center}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+#error{overflow:auto;align-items:start;text-align:left}
+.fallback-shell{width:min(760px,100%);margin:auto;padding:clamp(18px,4vw,36px)}
+.fallback-shell h2{margin:0 0 8px;font-size:clamp(21px,4vw,30px)}
+.fallback-shell>p{color:#64748b;line-height:1.55;margin:0 0 18px}
+.fallback-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.fallback-card{background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:16px;padding:0;box-shadow:0 10px 28px rgba(15,23,42,.08)}
+.fallback-card summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:850}.fallback-card summary::-webkit-details-marker{display:none}
+.fallback-card summary span{display:block;margin-top:3px;color:#64748b;font-size:11px;font-weight:600}
+.fallback-floors{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 15px}.fallback-floors span{padding:7px 9px;border-radius:9px;background:#edf3fb;color:#315274;font-size:11px;font-weight:800}
+.low-power .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.97);box-shadow:0 12px 34px rgba(30,53,77,.14)}
+.low-power .building-label,.low-power .floor-marker{backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 7px 18px rgba(29,55,82,.16)}
+
+@media (hover:hover) and (pointer:fine){
+  .tool:hover{transform:translateY(-1px);background:#dfeaf4}
+  .floor-btn:hover,.floor-btn.hot{background:#2f6fec;color:#fff;border-color:#2f6fec;transform:translateY(-1px)}
+  .building-label:hover,.building-label.hot,.floor-marker:hover,.floor-marker.hot{transform:translate(-50%,-50%) scale(1.07)}
+}
+@media (hover:none),(pointer:coarse){
+  #tooltip{display:none!important}.tool:hover,.floor-btn:hover,.building-label:hover,.floor-marker:hover{transform:none}
+  .tool,.floor-btn,.detail-action{min-height:44px}.building-label,.floor-marker{min-height:44px;min-width:44px;justify-content:center}
+}
+@media(max-width:820px){
+  #overview{left:calc(10px + var(--safe-left));top:calc(10px + var(--safe-top));width:min(350px,calc(100vw - var(--safe-left) - var(--safe-right) - 20px));padding:13px 14px;border-radius:18px}
+  #overview h1{font-size:18px;margin-bottom:5px}#overview .lead{font-size:11px;line-height:1.4}#overview .stats,#overview .legend,#overview .note{display:none}
+  #toolbar{right:calc(10px + var(--safe-right));top:calc(10px + var(--safe-top));bottom:auto;padding:6px;gap:5px;border-radius:14px}.tool{padding:9px 10px;font-size:11px;white-space:nowrap}
+  #detail{right:calc(10px + var(--safe-right));bottom:calc(10px + var(--safe-bottom));width:min(320px,calc(100vw - var(--safe-left) - var(--safe-right) - 20px));min-height:0;padding:13px;border-radius:18px;max-height:min(48dvh,430px)}
+  #detail.empty{display:none}#hint{display:none}#compass{right:calc(10px + var(--safe-right));top:calc(76px + var(--safe-top));width:82px;height:96px}
+  .building-label{padding:4px 7px 4px 4px}.building-label i{width:28px;height:28px}.building-label small{display:none}
+}
+@media(max-width:680px){body:not(.overview-hidden) #toolbar{top:calc(104px + var(--safe-top))}}
+@media(max-width:570px){
+  #overview{width:calc(100vw - var(--safe-left) - var(--safe-right) - 20px)}
+  #toolbar{left:calc(10px + var(--safe-left));right:calc(10px + var(--safe-right));width:auto;justify-content:flex-start}
+  body:not(.overview-hidden) #toolbar{top:calc(104px + var(--safe-top))}
+  #detail{left:calc(10px + var(--safe-left));right:calc(10px + var(--safe-right));width:auto;max-height:min(44dvh,390px)}
+  #compass{display:grid;right:calc(10px + var(--safe-right));top:calc(164px + var(--safe-top));width:62px;height:76px;padding:5px;border-radius:16px}body.overview-hidden #compass{top:calc(64px + var(--safe-top))}.compass-ring{width:50px;height:50px}.compass-card .n{top:8px}.compass-card .s{top:42px}.compass-card .e{left:42px}.compass-card .w{left:8px}.compass-caption{font-size:7px}.floor-stack{gap:5px}.floor-btn{padding:8px 10px;min-width:42px}.detail-foot{flex-wrap:wrap}
+  .building-label{padding:5px}.building-label span{display:none}.building-label i{width:32px;height:32px}
+  .floor-marker{padding:7px 9px}.floor-marker small{display:none}
+}
+@media(max-height:520px) and (orientation:landscape){
+  #overview{display:none}#guide{display:none!important}#toolbar{left:auto;right:calc(8px + var(--safe-right));top:calc(8px + var(--safe-top));bottom:auto;width:auto}
+  #detail{left:auto;right:calc(8px + var(--safe-right));bottom:calc(8px + var(--safe-bottom));width:min(300px,42vw);max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 70px);padding:11px}
+  #hint{display:none}#compass{display:grid;left:calc(8px + var(--safe-left));right:auto;top:calc(8px + var(--safe-top));width:60px;height:72px;padding:5px;border-radius:15px}.compass-ring{width:48px;height:48px}.compass-card .n{top:8px}.compass-card .s{top:40px}.compass-card .e{left:40px}.compass-card .w{left:8px}.compass-caption{font-size:7px}.building-label span{display:none}.building-label{padding:4px}.building-label i{width:30px;height:30px}
+}
+@media(prefers-reduced-motion:reduce){
+  ,::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}
+}
+
+</style>
+</head>
+<body>
+<canvas id="view" tabindex="0" role="application" aria-label="Interactive KKU dorm 3D map. Drag to rotate, use two fingers or the mouse wheel to zoom, and select a building to inspect its floors."></canvas><div id="labels" aria-label="Building and floor controls"></div>
+<div id="loading" role="status" aria-live="polite"><div><div class="loader-ring"></div>Starting the building drill-down model…</div></div>
+<div id="error" role="region" aria-label="Compatibility fallback"></div>
+<section id="overview" class="glass">
+  <div class="eyebrow">Campus → building → floor</div>
+  <h1>KKU Dorm Building Explorer</h1>
+  <p class="lead">In the campus view, select a whole building. The chosen building then opens in an isolated view with its floors automatically separated for inspection.</p>
+  <div class="stats"><div class="stat"><b>12</b><span>building masses</span></div><div class="stat"><b>60</b><span>interactive floors</span></div><div class="stat"><b>2,008</b><span>estimated rooms</span></div></div>
+  <div class="legend"><div class="legend-row"><span class="swatch sw-eight"></span><div><strong>แปลนผัง 8 หลัง</strong><small>8 buildings · 4 floors · 131 rooms each</small></div></div><div class="legend-row"><span class="swatch sw-inter"></span><div><strong>ผังหออินเตอร์</strong><small>4 blocks · 7 floors · 240 rooms each</small></div></div></div>
+  <div class="note">Facade balconies are represented as flat rectangular panels, so they add architectural detail without protruding geometry. A–L remain temporary 3D model IDs.</div>
+</section>
+<nav id="toolbar" class="glass" aria-label="Map controls"><button id="perspective" class="tool primary" type="button" aria-label="Perspective view">Perspective</button><button id="top" class="tool" type="button" aria-label="Top view">Top</button><button id="guide" class="tool active" type="button" aria-pressed="true" aria-label="Show or hide map guide">Guide</button><button id="back" class="tool active" type="button" hidden>Back to campus</button></nav>
+<div id="compass" class="glass" role="img" aria-label="Compass calibrated to the supplied map screenshot: the lower end of the orange International buildings is north, and the upper end is south. The building axis is offset 7.08 degrees from the north-south line."><div class="compass-wrap"><div class="compass-ring"><div id="compassCard" class="compass-card"><span class="dir n">N</span><span class="dir e">E</span><span class="dir s">S</span><span class="dir w">W</span><i class="compass-center" aria-hidden="true"></i></div></div><div class="compass-caption" title="Lower end of the orange buildings is north">true north</div></div></div>
+<section id="detail" class="glass empty" aria-live="polite"></section><div id="hint" class="glass">Campus: click a building · Building view: inspect separated floors · Drag to rotate · wheel/pinch to zoom</div><div id="tooltip" role="tooltip"></div><div id="ariaStatus" class="sr-only" aria-live="polite"></div>
+<script>
+'use strict';
+const SITE_TRIANGLES=[[[-241.0,-0.0,39.0],[-260.0,-0.0,39.0],[-241.0,-0.0,19.0]],[[-260.0,-0.0,39.0],[-260.0,-0.0,-1.0],[-241.0,-0.0,19.0]],[[-260.0,-0.0,-1.0],[-165.0,-0.0,-1.0],[-241.0,-0.0,19.0]],[[-165.0,-0.0,19.0],[-241.0,-0.0,19.0],[-165.0,-0.0,-1.0]],[[-240.0,-0.0,70.0],[-240.0,-0.0,50.0],[-164.0,-0.0,50.0]],[[-145.0,-0.0,70.0],[-240.0,-0.0,70.0],[-164.0,-0.0,50.0]],[[-164.0,-0.0,30.0],[-145.0,-0.0,30.0],[-164.0,-0.0,50.0]],[[-145.0,-0.0,70.0],[-164.0,-0.0,50.0],[-145.0,-0.0,30.0]],[[-41.0,20.0,71.0],[-41.0,0.0,71.0],[-41.0,20.0,57.0]],[[-41.0,0.0,71.0],[-41.0,-0.0,57.0],[-41.0,20.0,57.0]],[[-100.0,20.0,57.0],[-100.0,-0.0,57.0],[-100.0,20.0,71.0]],[[-100.0,-0.0,57.0],[-100.0,0.0,71.0],[-100.0,20.0,71.0]],[[-100.0,20.0,57.0],[-100.0,20.0,71.0],[-41.0,20.0,57.0]],[[-100.0,20.0,71.0],[-41.0,20.0,71.0],[-41.0,20.0,57.0]],[[-100.0,0.0,71.0],[-100.0,-0.0,57.0],[-41.0,0.0,71.0]],[[-100.0,-0.0,57.0],[-41.0,-0.0,57.0],[-41.0,0.0,71.0]],[[-100.0,20.0,71.0],[-100.0,0.0,71.0],[-41.0,20.0,71.0]],[[-100.0,0.0,71.0],[-41.0,0.0,71.0],[-41.0,20.0,71.0]],[[-41.0,20.0,57.0],[-41.0,-0.0,57.0],[-100.0,20.0,57.0]],[[-41.0,-0.0,57.0],[-100.0,-0.0,57.0],[-100.0,20.0,57.0]],[[-36.0,20.0,47.0],[-36.0,0.0,47.0],[-36.0,20.0,17.0]],[[-36.0,0.0,47.0],[-36.0,-0.0,17.0],[-36.0,20.0,17.0]],[[-106.0,20.0,17.0],[-106.0,-0.0,17.0],[-106.0,20.0,47.0]],[[-106.0,-0.0,17.0],[-106.0,0.0,47.0],[-106.0,20.0,47.0]],[[-106.0,20.0,17.0],[-106.0,20.0,47.0],[-36.0,20.0,17.0]],[[-106.0,20.0,47.0],[-36.0,20.0,47.0],[-36.0,20.0,17.0]],[[-106.0,0.0,47.0],[-106.0,-0.0,17.0],[-36.0,0.0,47.0]],[[-106.0,-0.0,17.0],[-36.0,-0.0,17.0],[-36.0,0.0,47.0]],[[-106.0,20.0,47.0],[-106.0,0.0,47.0],[-36.0,20.0,47.0]],[[-106.0,0.0,47.0],[-36.0,0.0,47.0],[-36.0,20.0,47.0]],[[-36.0,20.0,17.0],[-36.0,-0.0,17.0],[-106.0,20.0,17.0]],[[-36.0,-0.0,17.0],[-106.0,-0.0,17.0],[-106.0,20.0,17.0]],[[-241.0,-0.0,-69.0],[-260.0,-0.0,-69.0],[-241.0,-0.0,-89.0]],[[-260.0,-0.0,-69.0],[-260.0,0.0,-109.0],[-241.0,-0.0,-89.0]],[[-260.0,0.0,-109.0],[-165.0,0.0,-109.0],[-241.0,-0.0,-89.0]],[[-165.0,-0.0,-89.0],[-241.0,-0.0,-89.0],[-165.0,0.0,-109.0]],[[-240.0,-0.0,-38.0],[-240.0,-0.0,-58.0],[-164.0,-0.0,-58.0]],[[-145.0,-0.0,-38.0],[-240.0,-0.0,-38.0],[-164.0,-0.0,-58.0]],[[-164.0,-0.0,-78.0],[-145.0,-0.0,-78.0],[-164.0,-0.0,-58.0]],[[-145.0,-0.0,-38.0],[-164.0,-0.0,-58.0],[-145.0,-0.0,-78.0]],[[-26.0,5.0,-23.0],[-26.0,-0.0,-23.0],[-26.0,5.0,-65.0]],[[-26.0,-0.0,-23.0],[-26.0,-0.0,-65.0],[-26.0,5.0,-65.0]],[[-116.0,5.0,-65.0],[-116.0,-0.0,-65.0],[-116.0,5.0,-23.0]],[[-116.0,-0.0,-65.0],[-116.0,-0.0,-23.0],[-116.0,5.0,-23.0]],[[-116.0,5.0,-65.0],[-116.0,5.0,-23.0],[-26.0,5.0,-65.0]],[[-116.0,5.0,-23.0],[-26.0,5.0,-23.0],[-26.0,5.0,-65.0]],[[-116.0,-0.0,-23.0],[-116.0,-0.0,-65.0],[-26.0,-0.0,-23.0]],[[-116.0,-0.0,-65.0],[-26.0,-0.0,-65.0],[-26.0,-0.0,-23.0]],[[-116.0,5.0,-23.0],[-116.0,-0.0,-23.0],[-26.0,5.0,-23.0]],[[-116.0,-0.0,-23.0],[-26.0,-0.0,-23.0],[-26.0,5.0,-23.0]],[[-26.0,5.0,-65.0],[-26.0,-0.0,-65.0],[-116.0,5.0,-65.0]],[[-26.0,-0.0,-65.0],[-116.0,-0.0,-65.0],[-116.0,5.0,-65.0]],[[-91.0,20.0,-91.0],[-91.0,0.0,-91.0],[-91.0,20.0,-111.0]],[[-91.0,0.0,-91.0],[-91.0,-0.0,-111.0],[-91.0,20.0,-111.0]],[[-119.0,20.0,-111.0],[-119.0,-0.0,-111.0],[-119.0,20.0,-91.0]],[[-119.0,-0.0,-111.0],[-119.0,0.0,-91.0],[-119.0,20.0,-91.0]],[[-119.0,20.0,-111.0],[-119.0,20.0,-91.0],[-91.0,20.0,-111.0]],[[-119.0,20.0,-91.0],[-91.0,20.0,-91.0],[-91.0,20.0,-111.0]],[[-119.0,0.0,-91.0],[-119.0,-0.0,-111.0],[-91.0,0.0,-91.0]],[[-119.0,-0.0,-111.0],[-91.0,-0.0,-111.0],[-91.0,0.0,-91.0]],[[-119.0,20.0,-91.0],[-119.0,0.0,-91.0],[-91.0,20.0,-91.0]],[[-119.0,0.0,-91.0],[-91.0,0.0,-91.0],[-91.0,20.0,-91.0]],[[-91.0,20.0,-111.0],[-91.0,-0.0,-111.0],[-119.0,20.0,-111.0]],[[-91.0,-0.0,-111.0],[-119.0,-0.0,-111.0],[-119.0,20.0,-111.0]],[[-27.0,20.0,-91.0],[-27.0,0.0,-91.0],[-27.0,20.0,-111.0]],[[-27.0,0.0,-91.0],[-27.0,0.0,-111.0],[-27.0,20.0,-111.0]],[[-66.0,20.0,-111.0],[-66.0,0.0,-111.0],[-66.0,20.0,-91.0]],[[-66.0,0.0,-111.0],[-66.0,0.0,-91.0],[-66.0,20.0,-91.0]],[[-66.0,20.0,-111.0],[-66.0,20.0,-91.0],[-27.0,20.0,-111.0]],[[-66.0,20.0,-91.0],[-27.0,20.0,-91.0],[-27.0,20.0,-111.0]],[[-66.0,0.0,-91.0],[-66.0,0.0,-111.0],[-27.0,0.0,-91.0]],[[-66.0,0.0,-111.0],[-27.0,0.0,-111.0],[-27.0,0.0,-91.0]],[[-66.0,20.0,-91.0],[-66.0,0.0,-91.0],[-27.0,20.0,-91.0]],[[-66.0,0.0,-91.0],[-27.0,0.0,-91.0],[-27.0,20.0,-91.0]],[[-27.0,20.0,-111.0],[-27.0,0.0,-111.0],[-66.0,20.0,-111.0]],[[-27.0,0.0,-111.0],[-66.0,0.0,-111.0],[-66.0,20.0,-111.0]],[[20.0,-0.0,49.0],[1.0,-0.0,49.0],[20.0,-0.0,29.0]],[[1.0,-0.0,49.0],[1.0,0.0,9.0],[20.0,-0.0,29.0]],[[1.0,0.0,9.0],[96.0,0.0,9.0],[20.0,-0.0,29.0]],[[96.0,-0.0,29.0],[20.0,-0.0,29.0],[96.0,0.0,9.0]],[[21.0,-0.0,82.0],[21.0,-0.0,62.0],[97.0,-0.0,62.0]],[[116.0,-0.0,82.0],[21.0,-0.0,82.0],[97.0,-0.0,62.0]],[[97.0,-0.0,42.0],[116.0,-0.0,42.0],[97.0,-0.0,62.0]],[[116.0,-0.0,82.0],[97.0,-0.0,62.0],[116.0,-0.0,42.0]],[[20.0,-0.0,-67.0],[1.0,-0.0,-67.0],[20.0,-0.0,-87.0]],[[1.0,-0.0,-67.0],[1.0,0.0,-107.0],[20.0,-0.0,-87.0]],[[1.0,0.0,-107.0],[96.0,0.0,-107.0],[20.0,-0.0,-87.0]],[[96.0,-0.0,-87.0],[20.0,-0.0,-87.0],[96.0,0.0,-107.0]],[[21.0,-0.0,-36.0],[21.0,-0.0,-56.0],[97.0,-0.0,-56.0]],[[116.0,-0.0,-36.0],[21.0,-0.0,-36.0],[97.0,-0.0,-56.0]],[[97.0,-0.0,-76.0],[116.0,-0.0,-76.0],[97.0,-0.0,-56.0]],[[116.0,-0.0,-36.0],[97.0,-0.0,-56.0],[116.0,-0.0,-76.0]],[[262.0,0.0,-47.0],[242.0,0.0,-87.0],[262.0,-0.0,-107.0]],[[242.0,0.0,-47.0],[242.0,0.0,-87.0],[262.0,0.0,-47.0]],[[192.0,-0.0,-107.0],[262.0,-0.0,-107.0],[242.0,0.0,-87.0]],[[192.0,-0.0,-107.0],[242.0,0.0,-87.0],[192.0,0.0,-87.0]],[[157.0,0.0,-86.0],[177.0,0.0,-46.0],[157.0,-0.0,-26.0]],[[177.0,0.0,-86.0],[177.0,0.0,-46.0],[157.0,0.0,-86.0]],[[227.0,-0.0,-26.0],[157.0,-0.0,-26.0],[177.0,0.0,-46.0]],[[227.0,-0.0,-26.0],[177.0,0.0,-46.0],[227.0,0.0,-46.0]],[[241.0,0.0,62.0],[261.0,0.0,22.0],[261.0,0.0,82.0]],[[241.0,0.0,62.0],[241.0,0.0,22.0],[261.0,0.0,22.0]],[[261.0,0.0,82.0],[191.0,0.0,82.0],[241.0,0.0,62.0]],[[241.0,0.0,62.0],[191.0,0.0,82.0],[191.0,0.0,62.0]],[[176.0,0.0,21.0],[156.0,0.0,61.0],[156.0,-0.0,1.0]],[[176.0,0.0,21.0],[176.0,0.0,61.0],[156.0,0.0,61.0]],[[156.0,-0.0,1.0],[226.0,-0.0,1.0],[176.0,0.0,21.0]],[[176.0,0.0,21.0],[226.0,-0.0,1.0],[226.0,0.0,21.0]],[[-286.0,0.0,123.0],[-286.0,2.0,123.0],[-286.0,2.0,110.0]],[[-286.0,-0.0,110.0],[-286.0,0.0,123.0],[-286.0,2.0,110.0]],[[286.0,-0.0,110.0],[286.0,2.0,110.0],[286.0,2.0,123.0]],[[286.0,0.0,123.0],[286.0,-0.0,110.0],[286.0,2.0,123.0]],[[286.0,2.0,123.0],[286.0,2.0,110.0],[-286.0,2.0,110.0]],[[-286.0,2.0,123.0],[286.0,2.0,123.0],[-286.0,2.0,110.0]],[[286.0,-0.0,110.0],[286.0,0.0,123.0],[-286.0,0.0,123.0]],[[-286.0,-0.0,110.0],[286.0,-0.0,110.0],[-286.0,0.0,123.0]],[[286.0,0.0,123.0],[286.0,2.0,123.0],[-286.0,2.0,123.0]],[[-286.0,0.0,123.0],[286.0,0.0,123.0],[-286.0,2.0,123.0]],[[-286.0,-0.0,110.0],[-286.0,2.0,110.0],[286.0,2.0,110.0]],[[286.0,-0.0,110.0],[-286.0,-0.0,110.0],[286.0,2.0,110.0]],[[-125.0,0.0,111.0],[-125.0,2.0,111.0],[-130.0,2.0,111.0]],[[-130.0,-0.0,111.0],[-125.0,0.0,111.0],[-130.0,2.0,111.0]],[[-130.0,-0.0,-72.0],[-130.0,2.0,-72.0],[-125.0,2.0,-72.0]],[[-125.0,0.0,-72.0],[-130.0,-0.0,-72.0],[-125.0,2.0,-72.0]],[[-125.0,2.0,-72.0],[-130.0,2.0,-72.0],[-130.0,2.0,111.0]],[[-125.0,2.0,111.0],[-125.0,2.0,-72.0],[-130.0,2.0,111.0]],[[-130.0,-0.0,-72.0],[-125.0,0.0,-72.0],[-125.0,0.0,111.0]],[[-130.0,-0.0,111.0],[-130.0,-0.0,-72.0],[-125.0,0.0,111.0]],[[-125.0,0.0,-72.0],[-125.0,2.0,-72.0],[-125.0,2.0,111.0]],[[-125.0,0.0,111.0],[-125.0,0.0,-72.0],[-125.0,2.0,111.0]],[[-130.0,-0.0,111.0],[-130.0,2.0,111.0],[-130.0,2.0,-72.0]],[[-130.0,-0.0,-72.0],[-130.0,-0.0,111.0],[-130.0,2.0,-72.0]],[[-6.0,-0.0,-74.4021],[-6.0,2.0,-74.4021],[-6.0601,2.0,-71.8593]],[[-6.0601,-0.0,-71.8593],[-6.0,-0.0,-74.4021],[-6.0601,2.0,-71.8593]],[[-130.0598,-0.0,-73.4572],[-130.0598,2.0,-73.4572],[-129.9997,2.0,-76.0]],[[-129.9997,-0.0,-76.0],[-130.0598,-0.0,-73.4572],[-129.9997,2.0,-76.0]],[[-129.9997,2.0,-76.0],[-130.0598,2.0,-73.4572],[-6.0601,2.0,-71.8593]],[[-6.0,2.0,-74.4021],[-129.9997,2.0,-76.0],[-6.0601,2.0,-71.8593]],[[-130.0598,-0.0,-73.4572],[-129.9997,-0.0,-76.0],[-6.0,-0.0,-74.4021]],[[-6.0601,-0.0,-71.8593],[-130.0598,-0.0,-73.4572],[-6.0,-0.0,-74.4021]],[[-129.9997,-0.0,-76.0],[-129.9997,2.0,-76.0],[-6.0,2.0,-74.4021]],[[-6.0,-0.0,-74.4021],[-129.9997,-0.0,-76.0],[-6.0,2.0,-74.4021]],[[-6.0601,-0.0,-71.8593],[-6.0601,2.0,-71.8593],[-130.0598,2.0,-73.4572]],[[-130.0598,-0.0,-73.4572],[-6.0601,-0.0,-71.8593],[-130.0598,2.0,-73.4572]],[[-5.0,-0.0,-4.5428],[-5.0,2.0,-4.5428],[-5.0601,2.0,-2.0]],[[-5.0601,-0.0,-2.0],[-5.0,-0.0,-4.5428],[-5.0601,2.0,-2.0]],[[-129.0598,-0.0,-3.5979],[-129.0598,2.0,-3.5979],[-128.9997,2.0,-6.1407]],[[-128.9997,-0.0,-6.1407],[-129.0598,-0.0,-3.5979],[-128.9997,2.0,-6.1407]],[[-128.9997,2.0,-6.1407],[-129.0598,2.0,-3.5979],[-5.0601,2.0,-2.0]],[[-5.0,2.0,-4.5428],[-128.9997,2.0,-6.1407],[-5.0601,2.0,-2.0]],[[-129.0598,-0.0,-3.5979],[-128.9997,-0.0,-6.1407],[-5.0,-0.0,-4.5428]],[[-5.0601,-0.0,-2.0],[-129.0598,-0.0,-3.5979],[-5.0,-0.0,-4.5428]],[[-128.9997,-0.0,-6.1407],[-128.9997,2.0,-6.1407],[-5.0,2.0,-4.5428]],[[-5.0,-0.0,-4.5428],[-128.9997,-0.0,-6.1407],[-5.0,2.0,-4.5428]],[[-5.0601,-0.0,-2.0],[-5.0601,2.0,-2.0],[-129.0598,2.0,-3.5979]],[[-129.0598,-0.0,-3.5979],[-5.0601,-0.0,-2.0],[-129.0598,2.0,-3.5979]],[[-5.0,-0.0,110.0],[-5.0,2.0,110.0],[-10.0,2.0,110.0]],[[-10.0,-0.0,110.0],[-5.0,-0.0,110.0],[-10.0,2.0,110.0]],[[-10.0,-0.0,-74.0],[-10.0,2.0,-74.0],[-5.0,2.0,-74.0]],[[-5.0,-0.0,-74.0],[-10.0,-0.0,-74.0],[-5.0,2.0,-74.0]],[[-5.0,2.0,-74.0],[-10.0,2.0,-74.0],[-10.0,2.0,110.0]],[[-5.0,2.0,110.0],[-5.0,2.0,-74.0],[-10.0,2.0,110.0]],[[-10.0,-0.0,-74.0],[-5.0,-0.0,-74.0],[-5.0,-0.0,110.0]],[[-10.0,-0.0,110.0],[-10.0,-0.0,-74.0],[-5.0,-0.0,110.0]],[[-5.0,-0.0,-74.0],[-5.0,2.0,-74.0],[-5.0,2.0,110.0]],[[-5.0,-0.0,110.0],[-5.0,-0.0,-74.0],[-5.0,2.0,110.0]],[[-10.0,-0.0,110.0],[-10.0,2.0,110.0],[-10.0,2.0,-74.0]],[[-10.0,-0.0,-74.0],[-10.0,-0.0,110.0],[-10.0,2.0,-74.0]],[[145.0,-0.0,110.0],[145.0,2.0,110.0],[142.0,2.0,110.0]],[[142.0,-0.0,110.0],[145.0,-0.0,110.0],[142.0,2.0,110.0]],[[142.0,-0.0,-124.0],[142.0,2.0,-124.0],[145.0,2.0,-124.0]],[[145.0,-0.0,-124.0],[142.0,-0.0,-124.0],[145.0,2.0,-124.0]],[[145.0,2.0,-124.0],[142.0,2.0,-124.0],[142.0,2.0,110.0]],[[145.0,2.0,110.0],[145.0,2.0,-124.0],[142.0,2.0,110.0]],[[142.0,-0.0,-124.0],[145.0,-0.0,-124.0],[145.0,-0.0,110.0]],[[142.0,-0.0,110.0],[142.0,-0.0,-124.0],[145.0,-0.0,110.0]],[[145.0,-0.0,-124.0],[145.0,2.0,-124.0],[145.0,2.0,110.0]],[[145.0,-0.0,110.0],[145.0,-0.0,-124.0],[145.0,2.0,110.0]],[[142.0,-0.0,110.0],[142.0,2.0,110.0],[142.0,2.0,-124.0]],[[142.0,-0.0,-124.0],[142.0,-0.0,110.0],[142.0,2.0,-124.0]],[[283.0,-0.0,112.0],[283.0,2.0,112.0],[280.0,2.0,112.0]],[[280.0,-0.0,112.0],[283.0,-0.0,112.0],[280.0,2.0,112.0]],[[280.0,-0.0,-122.0],[280.0,2.0,-122.0],[283.0,2.0,-122.0]],[[283.0,-0.0,-122.0],[280.0,-0.0,-122.0],[283.0,2.0,-122.0]],[[283.0,2.0,-122.0],[280.0,2.0,-122.0],[280.0,2.0,112.0]],[[283.0,2.0,112.0],[283.0,2.0,-122.0],[280.0,2.0,112.0]],[[280.0,-0.0,-122.0],[283.0,-0.0,-122.0],[283.0,-0.0,112.0]],[[280.0,-0.0,112.0],[280.0,-0.0,-122.0],[283.0,-0.0,112.0]],[[283.0,-0.0,-122.0],[283.0,2.0,-122.0],[283.0,2.0,112.0]],[[283.0,-0.0,112.0],[283.0,-0.0,-122.0],[283.0,2.0,112.0]],[[280.0,-0.0,112.0],[280.0,2.0,112.0],[280.0,2.0,-122.0]],[[280.0,-0.0,-122.0],[280.0,-0.0,112.0],[280.0,2.0,-122.0]],[[284.0,-0.0,-123.2282],[284.0,2.0,-123.2282],[283.9316,2.0,-122.0]],[[283.9316,-0.0,-122.0],[284.0,-0.0,-123.2282],[283.9316,2.0,-122.0]],[[142.9402,-0.0,-122.7718],[142.9402,2.0,-122.7718],[143.0085,2.0,-124.0]],[[143.0085,-0.0,-124.0],[142.9402,-0.0,-122.7718],[143.0085,2.0,-124.0]],[[143.0085,2.0,-124.0],[142.9402,2.0,-122.7718],[283.9316,2.0,-122.0]],[[284.0,2.0,-123.2282],[143.0085,2.0,-124.0],[283.9316,2.0,-122.0]],[[142.9402,-0.0,-122.7718],[143.0085,-0.0,-124.0],[284.0,-0.0,-123.2282]],[[283.9316,-0.0,-122.0],[142.9402,-0.0,-122.7718],[284.0,-0.0,-123.2282]],[[143.0085,-0.0,-124.0],[143.0085,2.0,-124.0],[284.0,2.0,-123.2282]],[[284.0,-0.0,-123.2282],[143.0085,-0.0,-124.0],[284.0,2.0,-123.2282]],[[283.9316,-0.0,-122.0],[283.9316,2.0,-122.0],[142.9402,2.0,-122.7718]],[[142.9402,-0.0,-122.7718],[283.9316,-0.0,-122.0],[142.9402,2.0,-122.7718]],[[283.0,-0.0,-11.8423],[283.0,2.0,-11.8423],[282.9331,2.0,-10.0]],[[282.9331,-0.0,-10.0],[283.0,-0.0,-11.8423],[282.9331,2.0,-10.0]],[[144.9402,-0.0,-11.1577],[144.9402,2.0,-11.1577],[145.0071,2.0,-13.0]],[[145.0071,-0.0,-13.0],[144.9402,-0.0,-11.1577],[145.0071,2.0,-13.0]],[[145.0071,2.0,-13.0],[144.9402,2.0,-11.1577],[282.9331,2.0,-10.0]],[[283.0,2.0,-11.8423],[145.0071,2.0,-13.0],[282.9331,2.0,-10.0]],[[144.9402,-0.0,-11.1577],[145.0071,-0.0,-13.0],[283.0,-0.0,-11.8423]],[[282.9331,-0.0,-10.0],[144.9402,-0.0,-11.1577],[283.0,-0.0,-11.8423]],[[145.0071,-0.0,-13.0],[145.0071,2.0,-13.0],[283.0,2.0,-11.8423]],[[283.0,-0.0,-11.8423],[145.0071,-0.0,-13.0],[283.0,2.0,-11.8423]],[[282.9331,-0.0,-10.0],[282.9331,2.0,-10.0],[144.9402,2.0,-11.1577]],[[144.9402,-0.0,-11.1577],[282.9331,-0.0,-10.0],[144.9402,2.0,-11.1577]]];
+const SITE_NORMALS=[[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[1.0,0.0,0.0],[1.0,-0.0,0.0],[-1.0,-0.0,0.0],[-1.0,0.0,0.0],[-0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[-0.0,0.0,1.0],[0.0,0.0,1.0],[0.0,0.0,-1.0],[0.0,0.0,-1.0],[1.0,0.0,0.0],[1.0,-0.0,0.0],[-1.0,-0.0,0.0],[-1.0,0.0,0.0],[0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-0.0,1.0],[0.0,-0.0,1.0],[0.0,0.0,-1.0],[0.0,0.0,-1.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[1.0,0.0,0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[-0.0,0.0,1.0],[0.0,0.0,1.0],[-0.0,-0.0,-1.0],[0.0,0.0,-1.0],[1.0,0.0,0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[-0.0,0.0,1.0],[0.0,0.0,1.0],[-0.0,-0.0,-1.0],[0.0,0.0,-1.0],[1.0,0.0,0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[-0.0,0.0,1.0],[0.0,0.0,1.0],[-0.0,-0.0,-1.0],[0.0,0.0,-1.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[-0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[1.0,0.0,-0.0],[1.0,-0.0,0.0],[0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[0.0,-0.0,1.0],[0.0,-0.0,1.0],[0.0,0.0,-1.0],[0.0,0.0,-1.0],[0.0,-0.0,1.0],[0.0,-0.0,1.0],[0.0,0.0,-1.0],[-0.0,0.0,-1.0],[0.0,1.0,0.0],[0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[1.0,0.0,-0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.99972,-0.0,0.02364],[0.99972,0.0,0.02364],[-0.99972,0.0,-0.02364],[-0.99972,0.0,-0.02364],[0.0,1.0,0.0],[0.0,1.0,0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.01288,0.0,-0.99992],[0.01288,0.0,-0.99992],[-0.01288,0.0,0.99992],[-0.01288,0.0,0.99992],[0.99972,-0.0,0.02364],[0.99972,-0.0,0.02364],[-0.99972,0.0,-0.02364],[-0.99972,0.0,-0.02364],[0.0,1.0,0.0],[0.0,1.0,0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.01288,0.0,-0.99992],[0.01288,0.0,-0.99992],[-0.01288,-0.0,0.99992],[-0.01288,-0.0,0.99992],[0.0,-0.0,1.0],[0.0,-0.0,1.0],[0.0,0.0,-1.0],[-0.0,0.0,-1.0],[0.0,1.0,0.0],[0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[1.0,0.0,-0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.0,-0.0,1.0],[0.0,-0.0,1.0],[0.0,0.0,-1.0],[-0.0,0.0,-1.0],[0.0,1.0,0.0],[0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[1.0,0.0,-0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.0,-0.0,1.0],[0.0,-0.0,1.0],[0.0,0.0,-1.0],[-0.0,0.0,-1.0],[0.0,1.0,0.0],[0.0,1.0,0.0],[0.0,-1.0,0.0],[0.0,-1.0,0.0],[1.0,0.0,-0.0],[1.0,-0.0,0.0],[-1.0,0.0,0.0],[-1.0,0.0,0.0],[0.99845,-0.0,0.05557],[0.99845,0.0,0.05557],[-0.99845,0.0,-0.05557],[-0.99845,0.0,-0.05557],[-0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.00547,0.0,-0.99999],[0.00547,0.0,-0.99999],[-0.00547,0.0,0.99999],[-0.00547,0.0,0.99999],[0.99934,-0.0,0.03629],[0.99934,0.0,0.03629],[-0.99934,0.0,-0.03629],[-0.99934,0.0,-0.03629],[0.0,1.0,0.0],[-0.0,1.0,0.0],[0.0,-1.0,-0.0],[0.0,-1.0,-0.0],[0.00839,0.0,-0.99996],[0.00839,0.0,-0.99996],[-0.00839,0.0,0.99996],[-0.00839,0.0,0.99996]];
+const BUILDINGS=[{"id":"A","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[116.0,82.0],[116.0,42.0],[97.0,42.0],[97.0,62.0],[21.0,62.0],[21.0,82.0]],"labelPoint":[68.5,72.0]},{"id":"C","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[-145.0,70.0],[-145.0,30.0],[-164.0,30.0],[-164.0,50.0],[-240.0,50.0],[-240.0,70.0]],"labelPoint":[-192.5,60.0]},{"id":"E","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[1.0,49.0],[20.0,49.0],[20.0,29.0],[96.0,29.0],[96.0,9.0],[1.0,9.0]],"labelPoint":[10.5,39.0]},{"id":"F","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[-260.0,39.0],[-241.0,39.0],[-241.0,19.0],[-165.0,19.0],[-165.0,-1.0],[-260.0,-1.0]],"labelPoint":[-250.5,29.0]},{"id":"H","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[116.0,-36.0],[116.0,-76.0],[97.0,-76.0],[97.0,-56.0],[21.0,-56.0],[21.0,-36.0]],"labelPoint":[68.5,-46.0]},{"id":"I","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[-145.0,-38.0],[-145.0,-78.0],[-164.0,-78.0],[-164.0,-58.0],[-240.0,-58.0],[-240.0,-38.0]],"labelPoint":[-192.5,-48.0]},{"id":"K","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[1.0,-67.0],[20.0,-67.0],[20.0,-87.0],[96.0,-87.0],[96.0,-107.0],[1.0,-107.0]],"labelPoint":[10.5,-77.0]},{"id":"L","kind":"eight","height":40,"floors":4,"rooms":[29,34,34,34],"totalRooms":131,"poly":[[-260.0,-69.0],[-241.0,-69.0],[-241.0,-89.0],[-165.0,-89.0],[-165.0,-109.0],[-260.0,-109.0]],"labelPoint":[-250.5,-79.0]},{"id":"B","kind":"inter","height":70,"floors":7,"rooms":[30,35,35,35,35,35,35],"totalRooms":240,"poly":[[191.0,82.0],[261.0,82.0],[261.0,22.0],[241.0,22.0],[241.0,62.0],[191.0,62.0]],"labelPoint":[251.0,42.0]},{"id":"D","kind":"inter","height":70,"floors":7,"rooms":[30,35,35,35,35,35,35],"totalRooms":240,"poly":[[156.0,1.0],[156.0,61.0],[176.0,61.0],[176.0,21.0],[226.0,21.0],[226.0,1.0]],"labelPoint":[166.0,41.0]},{"id":"G","kind":"inter","height":70,"floors":7,"rooms":[30,35,35,35,35,35,35],"totalRooms":240,"poly":[[227.0,-46.0],[177.0,-46.0],[177.0,-86.0],[157.0,-86.0],[157.0,-26.0],[227.0,-26.0]],"labelPoint":[167.0,-66.0]},{"id":"J","kind":"inter","height":70,"floors":7,"rooms":[30,35,35,35,35,35,35],"totalRooms":240,"poly":[[242.0,-87.0],[242.0,-47.0],[262.0,-47.0],[262.0,-107.0],[192.0,-107.0],[192.0,-87.0]],"labelPoint":[252.0,-67.0]}];
+
+const canvas=document.getElementById('view');
+const labelsRoot=document.getElementById('labels');
+const loading=document.getElementById('loading');
+const detail=document.getElementById('detail');
+const tooltip=document.getElementById('tooltip');
+const compassCard=document.getElementById('compassCard'),compassEl=document.getElementById('compass');
+const perspectiveBtn=document.getElementById('perspective');
+const topBtn=document.getElementById('top');
+const backBtn=document.getElementById('back');
+const guideBtn=document.getElementById('guide');
+const overview=document.getElementById('overview');
+const errorPanel=document.getElementById('error');
+const ariaStatus=document.getElementById('ariaStatus');
+
+const MEDIA={
+  coarse:!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches),
+  hover:!!(window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches),
+  reducedMotion:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)
+};
+const DEVICE_MEMORY=Number(navigator.deviceMemory||0),CPU_CORES=Number(navigator.hardwareConcurrency||0);
+const PERF={
+  mobile:MEDIA.coarse||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),
+  lowPower:(DEVICE_MEMORY>0&&DEVICE_MEMORY<=4)||(CPU_CORES>0&&CPU_CORES<=4),
+  hover:MEDIA.hover,
+  reducedMotion:MEDIA.reducedMotion
+};
+if(PERF.mobile&&(DEVICE_MEMORY===0||DEVICE_MEMORY<=6))PERF.lowPower=true;
+document.documentElement.classList.toggle('low-power',PERF.lowPower);
+const contextOptions={alpha:true,antialias:!PERF.lowPower,depth:true,stencil:false,premultipliedAlpha:false,preserveDrawingBuffer:false,powerPreference:PERF.lowPower?'low-power':'high-performance',failIfMajorPerformanceCaveat:false};
+const gl=canvas.getContext('webgl',contextOptions)||canvas.getContext('experimental-webgl',contextOptions);
+if(!gl){
+  const cards=BUILDINGS.map(b=>`<details class="fallback-card"><summary>Building ${b.id}<span>${b.kind==='eight'?'4-floor dorm building':'7-floor international block'} · ${b.totalRooms} rooms</span></summary><div class="fallback-floors">${b.rooms.map((rooms,i)=>`<span>Floor ${i+1}: ${rooms} rooms</span>`).join('')}</div></details>`).join('');
+  errorPanel.innerHTML=`<div class="fallback-shell"><h2>3D view is not available on this device</h2><p>The building and floor information is still available below. For the interactive 3D version, use a browser with WebGL enabled.</p><div class="fallback-grid">${cards}</div></div>`;
+  errorPanel.style.display='block';loading.remove();canvas.hidden=true;labelsRoot.hidden=true;overview.hidden=true;document.getElementById('toolbar').hidden=true;document.getElementById('compass').hidden=true;detail.hidden=true;document.getElementById('hint').hidden=true;
+  throw new Error('WebGL unavailable; accessible fallback displayed');
+}
+let contextLost=false;
+
+const KIND={
+  eight:{title:'แปลนผัง 8 หลัง',subtitle:'4-floor dorm building',wall:[.89,.855,.78],roof:[.79,.755,.67],window:[.31,.39,.49],balcony:[.22,.28,.34],rail:[.69,.73,.74],accent:[.18,.43,.94],types:'แอร์พิเศษ · แอร์ · ธรรมดา'},
+  inter:{title:'ผังหออินเตอร์',subtitle:'7-floor international block',wall:[.75,.47,.35],roof:[.61,.33,.25],window:[.27,.20,.19],balcony:[.20,.14,.12],rail:[.53,.36,.29],accent:[.95,.56,.18],types:'แอร์ธรรมดา · ธรรมดา · แอร์พิเศษ'}
+};
+
+// ---------- Small vector / matrix library ----------
+function v3sub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
+function v3dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function v3cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function v3norm(v){const n=Math.hypot(v[0],v[1],v[2])||1;return[v[0]/n,v[1]/n,v[2]/n]}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function mix3(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
+function mul3(a,s){return[a[0]*s,a[1]*s,a[2]*s]}
+function mat4Perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),nf=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0])}
+function mat4LookAt(eye,center,up){const z=v3norm(v3sub(eye,center)),x=v3norm(v3cross(up,z)),y=v3cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-v3dot(x,eye),-v3dot(y,eye),-v3dot(z,eye),1])}
+function mat4Mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[0*4+r]*b[c*4+0]+a[1*4+r]*b[c*4+1]+a[2*4+r]*b[c*4+2]+a[3*4+r]*b[c*4+3];return o}
+function projectPoint(p,m,w,h){const x=p[0],y=p[1],z=p[2],cx=m[0]*x+m[4]*y+m[8]*z+m[12],cy=m[1]*x+m[5]*y+m[9]*z+m[13],cz=m[2]*x+m[6]*y+m[10]*z+m[14],cw=m[3]*x+m[7]*y+m[11]*z+m[15];if(cw<=0.001)return null;const nx=cx/cw,ny=cy/cw,nz=cz/cw;return{x:(nx*.5+.5)*w,y:(1-(ny*.5+.5))*h,z:nz,w:cw,visible:nz>=-1&&nz<=1}}
+
+// ---------- Shader setup ----------
+function compileShader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const err=gl.getShaderInfoLog(s);gl.deleteShader(s);throw new Error(err)}return s}
+function createProgram(vs,fs){const p=gl.createProgram();gl.attachShader(p,compileShader(gl.VERTEX_SHADER,vs));gl.attachShader(p,compileShader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS)){const err=gl.getProgramInfoLog(p);gl.deleteProgram(p);throw new Error(err)}return p}
+
+const renderProgram=createProgram(`
+attribute vec3 aPosition;
+attribute vec3 aNormal;
+attribute vec3 aColor;
+uniform mat4 uViewProj;
+uniform vec3 uOffset;
+varying vec3 vNormal;
+varying vec3 vColor;
+varying float vDistance;
+void main(){
+  vec3 world=aPosition+uOffset;
+  vec4 clip=uViewProj*vec4(world,1.0);
+  gl_Position=clip;
+  vNormal=aNormal;
+  vColor=aColor;
+  vDistance=clip.w;
+}` , `
+precision mediump float;
+uniform vec3 uLightDir;
+uniform vec3 uOverride;
+uniform float uOverrideMix;
+uniform float uEmissive;
+varying vec3 vNormal;
+varying vec3 vColor;
+varying float vDistance;
+void main(){
+  vec3 n=normalize(vNormal);
+  float diffuse=max(dot(n,normalize(uLightDir)),0.0);
+  float hemi=.5+.5*n.y;
+  float light=.56+.32*diffuse+.12*hemi;
+  vec3 base=mix(vColor,uOverride,uOverrideMix);
+  vec3 color=base*light+base*uEmissive;
+  float fog=clamp((vDistance-470.0)/900.0,0.0,.28);
+  color=mix(color,vec3(.86,.91,.95),fog);
+  gl_FragColor=vec4(color,1.0);
+}`);
+
+const pickProgram=createProgram(`
+attribute vec3 aPosition;
+uniform mat4 uViewProj;
+uniform vec3 uOffset;
+void main(){gl_Position=uViewProj*vec4(aPosition+uOffset,1.0);}
+`, `
+precision mediump float;
+uniform vec3 uPickColor;
+void main(){gl_FragColor=vec4(uPickColor,1.0);}
+`);
+
+const R={
+ p:renderProgram,
+ aPos:gl.getAttribLocation(renderProgram,'aPosition'),
+ aNorm:gl.getAttribLocation(renderProgram,'aNormal'),
+ aColor:gl.getAttribLocation(renderProgram,'aColor'),
+ uVP:gl.getUniformLocation(renderProgram,'uViewProj'),
+ uOffset:gl.getUniformLocation(renderProgram,'uOffset'),
+ uLight:gl.getUniformLocation(renderProgram,'uLightDir'),
+ uOverride:gl.getUniformLocation(renderProgram,'uOverride'),
+ uMix:gl.getUniformLocation(renderProgram,'uOverrideMix'),
+ uEmissive:gl.getUniformLocation(renderProgram,'uEmissive')
+};
+const P={
+ p:pickProgram,
+ aPos:gl.getAttribLocation(pickProgram,'aPosition'),
+ uVP:gl.getUniformLocation(pickProgram,'uViewProj'),
+ uOffset:gl.getUniformLocation(pickProgram,'uOffset'),
+ uColor:gl.getUniformLocation(pickProgram,'uPickColor')
+};
+
+function makeBuffer(data){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);return b}
+function createMesh(positions,normals,colors,meta={}){return{pos:makeBuffer(positions),norm:makeBuffer(normals),color:makeBuffer(colors),count:positions.length/3,source:{positions,normals,colors},...meta}}
+function mergeMeshSources(meshes,meta={}){const p=[],n=[],c=[];for(const m of meshes){if(!m.source)continue;for(const v of m.source.positions)p.push(v);for(const v of m.source.normals)n.push(v);for(const v of m.source.colors)c.push(v)}return createMesh(p,n,c,meta)}
+function bindRenderMesh(m){gl.bindBuffer(gl.ARRAY_BUFFER,m.pos);gl.enableVertexAttribArray(R.aPos);gl.vertexAttribPointer(R.aPos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,m.norm);gl.enableVertexAttribArray(R.aNorm);gl.vertexAttribPointer(R.aNorm,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,m.color);gl.enableVertexAttribArray(R.aColor);gl.vertexAttribPointer(R.aColor,3,gl.FLOAT,false,0,0)}
+function bindPickMesh(m){gl.bindBuffer(gl.ARRAY_BUFFER,m.pos);gl.enableVertexAttribArray(P.aPos);gl.vertexAttribPointer(P.aPos,3,gl.FLOAT,false,0,0)}
+
+// ---------- Geometry builders ----------
+function pushVertex(arr,p,n,c){arr.p.push(p[0],p[1],p[2]);arr.n.push(n[0],n[1],n[2]);arr.c.push(c[0],c[1],c[2])}
+function pushTri(arr,a,b,c,n,color){pushVertex(arr,a,n,color);pushVertex(arr,b,n,color);pushVertex(arr,c,n,color)}
+function pushQuad(arr,a,b,c,d,n,color){pushTri(arr,a,b,c,n,color);pushTri(arr,a,c,d,n,color)}
+function polygonArea(poly){let a=0;for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length];a+=p[0]*q[1]-q[0]*p[1]}return a*.5}
+function pointInTri2(p,a,b,c){const s=(p1,p2,p3)=>(p1[0]-p3[0])*(p2[1]-p3[1])-(p2[0]-p3[0])*(p1[1]-p3[1]);const d1=s(p,a,b),d2=s(p,b,c),d3=s(p,c,a),neg=d1<0||d2<0||d3<0,pos=d1>0||d2>0||d3>0;return!(neg&&pos)}
+function triangulate(poly){const ids=poly.map((_,i)=>i),out=[],cw=polygonArea(poly)<0;let guard=0;while(ids.length>3&&guard++<100){let found=false;for(let k=0;k<ids.length;k++){const ia=ids[(k-1+ids.length)%ids.length],ib=ids[k],ic=ids[(k+1)%ids.length],a=poly[ia],b=poly[ib],c=poly[ic],cross=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);if(cw?cross>=-1e-7:cross<=1e-7)continue;let inside=false;for(const j of ids){if(j===ia||j===ib||j===ic)continue;if(pointInTri2(poly[j],a,b,c)){inside=true;break}}if(inside)continue;out.push([ia,ib,ic]);ids.splice(k,1);found=true;break}if(!found)break}if(ids.length===3)out.push([ids[0],ids[1],ids[2]]);return out}
+function brighten(c,f){return[c[0]*f,c[1]*f,c[2]*f].map(v=>Math.min(1,v))}
+
+function buildSiteMesh(){const a={p:[],n:[],c:[]};for(let i=0;i<SITE_TRIANGLES.length;i++){const t=SITE_TRIANGLES[i],n=SITE_NORMALS[i],cy=(t[0][1]+t[1][1]+t[2][1])/3;let col;if(cy<=2.5)col=n[1]>.5?[.34,.53,.36]:[.29,.45,.31];else if(cy<8)col=[.56,.61,.64];else if(cy<25)col=[.66,.69,.70];else col=[.72,.73,.71];pushTri(a,t[0],t[1],t[2],n,col)}return createMesh(a.p,a.n,a.c,{type:'site'})}
+
+function horizontalQuad(a,x0,z0,x1,z1,y,color){const n=[0,1,0],p0=[x0,y,z0],p1=[x0,y,z1],p2=[x1,y,z1],p3=[x1,y,z0];pushQuad(a,p0,p1,p2,p3,n,color)}
+function addCylinder(a,cx,cz,y0,y1,r,segments,color){for(let i=0;i<segments;i++){const a0=-i/segments*Math.PI*2,a1=-(i+1)/segments*Math.PI*2,p0=[cx+r*Math.cos(a0),y0,cz+r*Math.sin(a0)],p1=[cx+r*Math.cos(a1),y0,cz+r*Math.sin(a1)],p2=[p1[0],y1,p1[2]],p3=[p0[0],y1,p0[2]],n=v3norm([Math.cos((a0+a1)/2),0,Math.sin((a0+a1)/2)]);pushQuad(a,p0,p1,p2,p3,n,color)}}
+function addCone(a,cx,cz,y0,y1,r,segments,color){const top=[cx,y1,cz];for(let i=0;i<segments;i++){const a0=-i/segments*Math.PI*2,a1=-(i+1)/segments*Math.PI*2,p0=[cx+r*Math.cos(a0),y0,cz+r*Math.sin(a0)],p1=[cx+r*Math.cos(a1),y0,cz+r*Math.sin(a1)],mid=(a0+a1)/2,n=v3norm([Math.cos(mid),r/(y1-y0),Math.sin(mid)]);pushTri(a,p0,p1,top,n,color)}}
+function buildDecorMesh(){const a={p:[],n:[],c:[]};horizontalQuad(a,-360,-195,345,165,-.8,[.79,.87,.78]);horizontalQuad(a,-350,109,345,135,.05,[.59,.64,.68]);horizontalQuad(a,-350,-145,345,-119,.05,[.59,.64,.68]);horizontalQuad(a,130,-148,150,138,.06,[.62,.67,.70]);for(let x=-320;x<330;x+=45){horizontalQuad(a,x,121.35,x+23,122.65,.09,[.91,.92,.91]);horizontalQuad(a,x,-132.65,x+23,-131.35,.09,[.91,.92,.91])}
+  const pondCenter=[-30,-.18,-175],pondColor=[.28,.58,.70],pondSegments=PERF.lowPower?20:40;for(let i=0;i<pondSegments;i++){const a0=-i/pondSegments*Math.PI*2,a1=-(i+1)/pondSegments*Math.PI*2,p0=[-30+95*Math.cos(a0),-.18,-175+28*Math.sin(a0)],p1=[-30+95*Math.cos(a1),-.18,-175+28*Math.sin(a1)];pushTri(a,pondCenter,p0,p1,[0,1,0],pondColor)}
+  const trees=[[-286,91],[-270,46],[-278,-25],[-278,-82],[-132,93],[-124,50],[-124,-24],[-126,-94],[-20,94],[-16,56],[-15,-18],[-17,-88],[122,92],[122,45],[122,-20],[122,-94],[286,92],[286,45],[286,-20],[286,-93],[-92,4],[-76,-13],[-62,-75],[52,1],[62,-15],[176,94],[214,94],[176,-118],[220,-118]];
+  const visibleTrees=PERF.lowPower?trees.filter((_,i)=>i%2===0):trees,treeSegments=PERF.lowPower?5:8;for(const [x,z] of visibleTrees){addCylinder(a,x,z,0,7,1.25,Math.max(5,treeSegments-1),[.40,.28,.18]);addCone(a,x,z,5.5,14.5,5.4,treeSegments,[.23,.52,.33]);addCone(a,x,z,8.5,17.2,4.2,treeSegments,[.34,.64,.42])}
+  return createMesh(a.p,a.n,a.c,{type:'decor'})}
+
+function buildFloorMesh(b,bi,f,pickId){
+  const a={p:[],n:[],c:[]},k=KIND[b.kind],height=b.height/b.floors,gap=.31,y0=(f-1)*height+gap,y1=f*height-gap,shadeMul=f%2?1.015:.985,wall=brighten(k.wall,shadeMul),roof=brighten(k.roof,shadeMul),tris=triangulate(b.poly);
+  for(const tr of tris){const A=b.poly[tr[0]],B=b.poly[tr[1]],C=b.poly[tr[2]];pushTri(a,[A[0],y1,A[1]],[B[0],y1,B[1]],[C[0],y1,C[1]],[0,1,0],roof);pushTri(a,[C[0],y0,C[1]],[B[0],y0,B[1]],[A[0],y0,A[1]],[0,-1,0],brighten(wall,.80))}
+  const cw=polygonArea(b.poly)<0,skirt=y0+(y1-y0)*.12;
+  for(let i=0;i<b.poly.length;i++){
+    const A=b.poly[i],B=b.poly[(i+1)%b.poly.length],dx=B[0]-A[0],dz=B[1]-A[1],n=v3norm(cw?[-dz,0,dx]:[dz,0,-dx]);
+    const q=(lo,hi,col)=>pushQuad(a,[A[0],lo,A[1]],[B[0],lo,B[1]],[B[0],hi,B[1]],[A[0],hi,A[1]],n,col);
+    q(y0,skirt,brighten(wall,.90));q(skirt,y1,wall);
+  }
+  return createMesh(a.p,a.n,a.c,{type:'floor',b:bi,f,pickId});
+}
+
+function buildBalconyMesh(b,bi,f){
+  const a={p:[],n:[],c:[]},k=KIND[b.kind],height=b.height/b.floors,gap=.31,y0=(f-1)*height+gap,y1=f*height-gap,cw=polygonArea(b.poly)<0;
+  const panelLow=y0+(y1-y0)*.27,panelHigh=y0+(y1-y0)*.73,railLow=y0+(y1-y0)*.29,railHigh=y0+(y1-y0)*.40;
+  for(let i=0;i<b.poly.length;i++){
+    const A=b.poly[i],B=b.poly[(i+1)%b.poly.length],dx=B[0]-A[0],dz=B[1]-A[1],len=Math.hypot(dx,dz);
+    if(len<34)continue;
+    const ux=dx/len,uz=dz/len,n=v3norm(cw?[-dz,0,dx]:[dz,0,-dx]),margin=4,count=Math.max(1,Math.floor((len-margin*2)/(PERF.lowPower?18:14))),slot=(len-margin*2)/count,panelWidth=Math.min(10.8,slot*.76),eps=.055;
+    for(let j=0;j<count;j++){
+      const mid=margin+slot*(j+.5),s0=mid-panelWidth/2,s1=mid+panelWidth/2;
+      const p=(s,y,e=eps)=>[A[0]+ux*s+n[0]*e,y,A[1]+uz*s+n[2]*e];
+      pushQuad(a,p(s0,panelLow),p(s1,panelLow),p(s1,panelHigh),p(s0,panelHigh),n,k.balcony);
+      pushQuad(a,p(s0,railLow,eps+.016),p(s1,railLow,eps+.016),p(s1,railHigh,eps+.016),p(s0,railHigh,eps+.016),n,k.rail);
+      const barW=Math.min(.34,panelWidth*.05),left=s0+panelWidth*.33,right=s0+panelWidth*.66;
+      for(const s of (PERF.lowPower?[left]:[left,right]))pushQuad(a,p(s-barW/2,railLow,eps+.022),p(s+barW/2,railLow,eps+.022),p(s+barW/2,panelHigh,eps+.022),p(s-barW/2,panelHigh,eps+.022),n,brighten(k.rail,.78));
+    }
+  }
+  return createMesh(a.p,a.n,a.c,{type:'balcony',b:bi,f});
+}
+
+function buildFocusPad(b,bi){
+  const a={p:[],n:[],c:[]},xs=b.poly.map(p=>p[0]),zs=b.poly.map(p=>p[1]),minX=Math.min(...xs)-12,maxX=Math.max(...xs)+12,minZ=Math.min(...zs)-12,maxZ=Math.max(...zs)+12;
+  horizontalQuad(a,minX,minZ,maxX,maxZ,-.04,[.67,.75,.79]);
+  horizontalQuad(a,minX+2,minZ+2,maxX-2,maxZ-2,-.02,[.88,.92,.94]);
+  return createMesh(a.p,a.n,a.c,{type:'focus-pad',b:bi});
+}
+
+const groundAndDecor=buildDecorMesh();
+const siteMesh=buildSiteMesh();
+const floorMeshes=[];
+const balconyMeshes=[];
+const focusPads=[];
+const pickLookup=new Map();
+let nextPickId=1;
+BUILDINGS.forEach((b,bi)=>{
+  focusPads.push(buildFocusPad(b,bi));
+  for(let f=1;f<=b.floors;f++){
+    const m=buildFloorMesh(b,bi,f,nextPickId++);
+    floorMeshes.push(m);
+    balconyMeshes.push(buildBalconyMesh(b,bi,f));
+    pickLookup.set(m.pickId,{b:bi,f,mesh:m});
+  }
+});
+const campusBuildingMeshes=BUILDINGS.map((b,bi)=>{
+  const parts=[...floorMeshes.filter(m=>m.b===bi),...balconyMeshes.filter(m=>m.b===bi)];
+  const merged=mergeMeshSources(parts,{type:'campus-building',b:bi,pickId:nextPickId++});
+  pickLookup.set(merged.pickId,{b:bi,f:0,mesh:merged});
+  return merged;
+});
+for(const m of [groundAndDecor,siteMesh,...focusPads,...floorMeshes,...balconyMeshes,...campusBuildingMeshes])delete m.source;
+
+// ---------- UI labels ----------
+const floorMarkerEls=Array.from({length:7},()=>{
+  const el=document.createElement('button');
+  el.type='button';el.className='floor-marker';el.style.opacity='0';el.tabIndex=-1;
+  if(PERF.hover){
+    el.addEventListener('pointerenter',()=>{if(mode!=='building'||selectedBuilding==null)return;const f=+el.dataset.floor;floorHover={b:selectedBuilding,f};updateDetail();requestRender()});
+    el.addEventListener('pointerleave',()=>{if(mode!=='building')return;floorHover=null;updateDetail();requestRender()});
+  }
+  el.addEventListener('click',e=>{e.stopPropagation();if(mode!=='building'||selectedBuilding==null)return;const f=+el.dataset.floor;pinnedFloor={b:selectedBuilding,f};floorHover=null;ariaStatus.textContent=`Building ${BUILDINGS[selectedBuilding].id}, floor ${f}, ${BUILDINGS[selectedBuilding].rooms[f-1]} rooms`;updateDetail();requestRender()});
+  labelsRoot.appendChild(el);return el;
+});
+
+BUILDINGS.forEach((b,i)=>{
+  const el=document.createElement('button');
+  el.type='button';el.className=`building-label ${b.kind}`;
+  el.innerHTML=`<i aria-hidden="true">${b.id}</i><span>${b.kind==='eight'?'4F':'7F'} <small>open building</small></span>`;
+  el.setAttribute('aria-label',`Open building ${b.id}, ${b.floors} floors, ${b.totalRooms} rooms`);
+  if(PERF.hover){
+    el.addEventListener('pointerenter',()=>{if(!drag&&mode==='campus'){labelHover={b:i,f:0};updateDetail();requestRender()}});
+    el.addEventListener('pointerleave',()=>{if(!drag&&mode==='campus'){labelHover=null;updateDetail();requestRender()}});
+  }
+  el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(mode==='campus')enterBuilding(i)});
+  labelsRoot.appendChild(el);b.el=el;
+});
+
+// ---------- Camera / state ----------
+const CAMPUS_CAMERA={az:.86,elv:.66,dist:700,target:[5,28,0]};
+// Calibrated from the supplied screenshot as requested: the LOWER end of the
+// orange International buildings is the north-facing end, and the UPPER end is
+// south. In model space the upper end is +Z, so true north lies near model -Z.
+// The long axis remains 7.08° off the north-south line.
+const ORANGE_BUILDING_AXIS_OFFSET_DEG=7.08;
+const TRUE_NORTH_MODEL_HEADING_DEG=180-ORANGE_BUILDING_AXIS_OFFSET_DEG;
+const TRUE_NORTH_MODEL_HEADING_RAD=TRUE_NORTH_MODEL_HEADING_DEG*Math.PI/180;
+// Camera azimuth that makes true north point to the top of the screen.
+const NORTH_UP_CAMERA_AZ=TRUE_NORTH_MODEL_HEADING_RAD-Math.PI;
+function normalizeHeadingDeg(value){return((value%360)+360)%360}
+function updateCompass(){
+  if(!compassCard)return;
+  // Camera ground-plane forward heading is az + 180°. Rotate the compass card
+  // beneath the fixed top index so the cardinal directions remain truthful.
+  const viewHeading=az+Math.PI;
+  const relativeHeading=viewHeading-TRUE_NORTH_MODEL_HEADING_RAD;
+  const cardAngle=-relativeHeading*180/Math.PI;
+  compassCard.style.transform=`rotate(${cardAngle}deg)`;
+  compassCard.style.setProperty('--counter-angle',`${-cardAngle}deg`);
+  if(compassEl){
+    const heading=normalizeHeadingDeg(relativeHeading*180/Math.PI);
+    compassEl.setAttribute('aria-label',`Compass. View heading ${heading.toFixed(0)} degrees from true north. The lower end of the orange International buildings is north-facing; the upper end is south-facing; their long axis is offset 7.08 degrees from north-south.`);
+  }
+}
+let az=CAMPUS_CAMERA.az,elv=CAMPUS_CAMERA.elv,dist=CAMPUS_CAMERA.dist,target=[...CAMPUS_CAMERA.target];
+let mode='campus',selectedBuilding=null,separation=0,buildingHover=null,labelHover=null,floorHover=null,panelHover=null,pinnedFloor=null;
+let drag=false,dragMode='rotate',pointerStart=[0,0],last=[0,0],moved=false,mouse=[0,0];
+let viewProj=null,currentEye=null,currentDpr=1,renderPending=false,cameraAnimationToken=0,cssWidth=1,cssHeight=1;
+const activePointers=new Map();let gesture=null,pointerDownAt=0;
+
+function boundsFor(b){const xs=b.poly.map(p=>p[0]),zs=b.poly.map(p=>p[1]);return{minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)}}
+BUILDINGS.forEach(b=>{b.bounds=boundsFor(b);b.center=[(b.bounds.minX+b.bounds.maxX)/2,(b.bounds.minZ+b.bounds.maxZ)/2]});
+function detailGap(b){return b.kind==='eight'?5.0:3.8}
+function active(){
+  if(mode==='campus')return labelHover||buildingHover;
+  return panelHover||floorHover||pinnedFloor||(selectedBuilding!=null?{b:selectedBuilding,f:0}:null);
+}
+function cameraState(){const h=dist*Math.cos(elv),eye=[target[0]+h*Math.sin(az),target[1]+dist*Math.sin(elv),target[2]+h*Math.cos(az)],view=mat4LookAt(eye,target,[0,1,0]),proj=mat4Perspective(46*Math.PI/180,canvas.width/canvas.height,1,2200);return{eye,viewProj:mat4Mul(proj,view)}}
+function floorLift(mesh){return mode==='building'&&mesh.b===selectedBuilding?(mesh.f-1)*detailGap(BUILDINGS[mesh.b])*separation:0}
+function meshVisible(m){return mode==='campus'||m.b===selectedBuilding}
+function requestRender(){if(renderPending||contextLost||document.hidden)return;renderPending=true;requestAnimationFrame(()=>{renderPending=false;if(!contextLost&&!document.hidden)renderScene()})}
+function cancelCameraAnimation(){cameraAnimationToken++}
+function easeInOut(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+function shortestAngle(a,b){let d=(b-a)%(Math.PI*2);if(d>Math.PI)d-=Math.PI*2;if(d<-Math.PI)d+=Math.PI*2;return d}
+function animateCamera(dest,sepTo,duration=680){
+  if(PERF.reducedMotion||duration<=0){az=dest.az;elv=dest.elv;dist=dest.dist;target=[...dest.target];separation=sepTo;requestRender();return}
+  const token=++cameraAnimationToken,start=performance.now(),s={az,elv,dist,target:[...target],sep:separation},da=shortestAngle(az,dest.az);
+  function frame(now){if(token!==cameraAnimationToken||document.hidden||contextLost)return;const t=clamp((now-start)/duration,0,1),e=easeInOut(t);az=s.az+da*e;elv=s.elv+(dest.elv-s.elv)*e;dist=s.dist+(dest.dist-s.dist)*e;target=[s.target[0]+(dest.target[0]-s.target[0])*e,s.target[1]+(dest.target[1]-s.target[1])*e,s.target[2]+(dest.target[2]-s.target[2])*e];separation=s.sep+(sepTo-s.sep)*e;renderScene();if(t<1)requestAnimationFrame(frame)}
+  requestAnimationFrame(frame);
+}
+function focusCameraFor(b,top=false){const w=b.bounds.maxX-b.bounds.minX,d=b.bounds.maxZ-b.bounds.minZ,totalH=b.height+(b.floors-1)*detailGap(b),fit=Math.max(w,d,totalH*1.08);return{az:top?NORTH_UP_CAMERA_AZ:az,elv:top?1.49:.60,dist:clamp(fit*(top?2.10:2.35),190,360),target:[b.center[0],totalH*.46,b.center[1]]}}
+function updateHash(){try{const value=mode==='building'&&selectedBuilding!=null?`#building=${BUILDINGS[selectedBuilding].id}`:'';if(location.origin!=='null'&&location.protocol!=='about:')history.replaceState(null,'',location.pathname+location.search+value)}catch(_){}}
+function enterBuilding(bi){
+  if(bi==null||!BUILDINGS[bi])return;
+  mode='building';selectedBuilding=bi;buildingHover=null;labelHover=null;floorHover=null;panelHover=null;pinnedFloor=null;separation=0;
+  backBtn.hidden=false;overview.classList.add('focus-mode');document.body.classList.add('building-mode');if(PERF.mobile&&matchMedia('(max-width:680px)').matches)setOverviewVisible(false);perspectiveBtn.classList.add('primary');topBtn.classList.remove('primary');ariaStatus.textContent=`Opened building ${BUILDINGS[bi].id}. ${BUILDINGS[bi].floors} floors are separated for inspection.`;updateHash();updateDetail();animateCamera(focusCameraFor(BUILDINGS[bi],false),1,720);
+}
+function exitBuilding(){
+  mode='campus';selectedBuilding=null;buildingHover=null;labelHover=null;floorHover=null;panelHover=null;pinnedFloor=null;separation=0;
+  backBtn.hidden=true;overview.classList.remove('focus-mode');document.body.classList.remove('building-mode');ariaStatus.textContent='Returned to campus view.';updateHash();updateDetail();animateCamera(CAMPUS_CAMERA,0,720);
+}
+
+const MAX_RENDERBUFFER=gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)||4096;
+function viewportSize(){const r=canvas.getBoundingClientRect();return{w:Math.max(1,Math.round(r.width||document.documentElement.clientWidth||innerWidth)),h:Math.max(1,Math.round(r.height||document.documentElement.clientHeight||innerHeight))}}
+function ensureSize(){
+  const size=viewportSize();cssWidth=size.w;cssHeight=size.h;
+  const dprCap=PERF.lowPower?1.15:(PERF.mobile?1.55:1.85),pixelBudget=PERF.lowPower?1200000:(PERF.mobile?2200000:4200000);
+  const budgetScale=Math.sqrt(pixelBudget/(cssWidth*cssHeight));currentDpr=Math.max(.7,Math.min(devicePixelRatio||1,dprCap,budgetScale,MAX_RENDERBUFFER/cssWidth,MAX_RENDERBUFFER/cssHeight));
+  const w=Math.max(1,Math.floor(cssWidth*currentDpr)),h=Math.max(1,Math.floor(cssHeight*currentDpr));
+  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
+  const pickBudget=PERF.lowPower?420000:950000,pickScale=Math.max(.45,Math.min(1,Math.sqrt(pickBudget/(cssWidth*cssHeight)),MAX_RENDERBUFFER/cssWidth,MAX_RENDERBUFFER/cssHeight));
+  const pw=Math.max(1,Math.floor(cssWidth*pickScale)),ph=Math.max(1,Math.floor(cssHeight*pickScale));if(pw!==pickW||ph!==pickH)resizePickTarget(pw,ph);
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+function drawRenderMesh(m,offset=[0,0,0],override=[0,0,0],mix=0,emissive=0){bindRenderMesh(m);gl.uniform3fv(R.uOffset,offset);gl.uniform3fv(R.uOverride,override);gl.uniform1f(R.uMix,mix);gl.uniform1f(R.uEmissive,emissive);gl.drawArrays(gl.TRIANGLES,0,m.count)}
+function highlightFor(m){const k=KIND[BUILDINGS[m.b].kind];if(mode==='campus'){const a=labelHover||buildingHover;return a&&a.b===m.b?{k:k.accent,mix:.25,em:.025}:{k:k.accent,mix:0,em:0}}const a=panelHover||floorHover||pinnedFloor;if(a&&a.b===m.b&&a.f===m.f)return{k:k.accent,mix:.72,em:.08};return{k:k.accent,mix:m.b===selectedBuilding?.10:0,em:m.b===selectedBuilding?.012:0}}
+function renderScene(){
+  if(contextLost||document.hidden)return;
+  ensureSize();const cam=cameraState();viewProj=cam.viewProj;currentEye=cam.eye;gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.clearDepth(1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.frontFace(gl.CCW);gl.disable(gl.BLEND);gl.enable(gl.DITHER);
+  gl.useProgram(R.p);gl.uniformMatrix4fv(R.uVP,false,viewProj);gl.uniform3fv(R.uLight,[.36,.89,.42]);
+  if(mode==='campus'){
+    drawRenderMesh(groundAndDecor);drawRenderMesh(siteMesh);
+    for(const m of campusBuildingMeshes){const h=highlightFor(m);drawRenderMesh(m,[0,0,0],h.k,h.mix,h.em)}
+  }else if(selectedBuilding!=null){
+    drawRenderMesh(focusPads[selectedBuilding]);
+    for(const m of floorMeshes){if(m.b!==selectedBuilding)continue;const h=highlightFor(m);drawRenderMesh(m,[0,floorLift(m),0],h.k,h.mix,h.em)}
+    for(const m of balconyMeshes){if(m.b!==selectedBuilding)continue;const h=highlightFor(m);drawRenderMesh(m,[0,floorLift(m),0],h.k,h.mix*.22,h.em*.18)}
+  }
+  updateLabels();updateCompass();
+}
+function setOverlayInteractive(el,visible){el.style.opacity=visible?'1':'0';el.style.pointerEvents=visible?'auto':'none';el.tabIndex=visible?0:-1;el.setAttribute('aria-hidden',visible?'false':'true')}
+function updateLabels(){
+  if(!viewProj)return;
+  if(mode==='campus'){
+    floorMarkerEls.forEach(el=>setOverlayInteractive(el,false));const a=labelHover||buildingHover;
+    BUILDINGS.forEach((b,i)=>{const p=projectPoint([b.labelPoint[0],b.height+6,b.labelPoint[1]],viewProj,cssWidth,cssHeight),visible=!!p&&p.visible&&p.x>=-80&&p.x<=cssWidth+80&&p.y>=-80&&p.y<=cssHeight+80;setOverlayInteractive(b.el,visible);if(!visible)return;b.el.style.left=p.x+'px';b.el.style.top=p.y+'px';b.el.classList.toggle('hot',!!a&&a.b===i)});
+    return;
+  }
+  BUILDINGS.forEach(b=>setOverlayInteractive(b.el,false));
+  if(selectedBuilding==null){floorMarkerEls.forEach(el=>setOverlayInteractive(el,false));return}
+  const b=BUILDINGS[selectedBuilding],h=b.height/b.floors,a=panelHover||floorHover||pinnedFloor;
+  floorMarkerEls.forEach((el,index)=>{const f=index+1;if(f>b.floors){setOverlayInteractive(el,false);return}const y=(f-.5)*h+(f-1)*detailGap(b)*separation,p=projectPoint([b.labelPoint[0],y,b.labelPoint[1]],viewProj,cssWidth,cssHeight);if(!p||!p.visible){setOverlayInteractive(el,false);return}const hot=!!a&&a.f===f,sig=`${f}:${hot}`;el.dataset.floor=String(f);if(el.dataset.sig!==sig){el.dataset.sig=sig;el.className=`floor-marker ${b.kind}${hot?' hot':''}`;el.innerHTML=`F${f}<small>${b.rooms[f-1]} rooms</small>`;el.setAttribute('aria-label',`Floor ${f}, ${b.rooms[f-1]} rooms`)}setOverlayInteractive(el,true);el.style.left=p.x+'px';el.style.top=p.y+'px'});
+}
+
+// ---------- Depth-aware GPU picking ----------
+let pickFbo=null,pickTex=null,pickDepth=null,pickW=0,pickH=0,pickReady=false;
+function resizePickTarget(w,h){
+  pickReady=false;
+  try{
+    if(pickTex){gl.deleteTexture(pickTex);gl.deleteRenderbuffer(pickDepth);gl.deleteFramebuffer(pickFbo)}
+    pickW=w;pickH=h;pickFbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,pickFbo);pickTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,pickTex);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,pickTex,0);
+    pickDepth=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,pickDepth);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,w,h);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,pickDepth);
+    pickReady=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
+  }catch(_){pickReady=false}
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+}
+function idColor(id){return[(id&255)/255,((id>>8)&255)/255,((id>>16)&255)/255]}
+function drawPickMesh(m,offset,color){bindPickMesh(m);gl.uniform3fv(P.uOffset,offset);gl.uniform3fv(P.uColor,color);gl.drawArrays(gl.TRIANGLES,0,m.count)}
+function pickSurface(cssX,cssY){
+  ensureSize();if(!pickReady||contextLost)return null;const cam=cameraState();viewProj=cam.viewProj;gl.bindFramebuffer(gl.FRAMEBUFFER,pickFbo);gl.viewport(0,0,pickW,pickH);gl.clearColor(0,0,0,1);gl.clearDepth(1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.frontFace(gl.CCW);gl.disable(gl.BLEND);gl.disable(gl.DITHER);gl.useProgram(P.p);gl.uniformMatrix4fv(P.uVP,false,viewProj);
+  if(mode==='campus'){
+    drawPickMesh(groundAndDecor,[0,0,0],[0,0,0]);drawPickMesh(siteMesh,[0,0,0],[0,0,0]);
+    for(const m of campusBuildingMeshes)drawPickMesh(m,[0,0,0],idColor(m.pickId));
+  }else if(selectedBuilding!=null){
+    drawPickMesh(focusPads[selectedBuilding],[0,0,0],[0,0,0]);
+    for(const m of floorMeshes){if(m.b!==selectedBuilding)continue;drawPickMesh(m,[0,floorLift(m),0],idColor(m.pickId))}
+  }
+  const rect=canvas.getBoundingClientRect(),localX=cssX-rect.left,localY=cssY-rect.top,px=clamp(Math.floor(localX*pickW/Math.max(1,rect.width)),0,pickW-1),py=clamp(pickH-1-Math.floor(localY*pickH/Math.max(1,rect.height)),0,pickH-1),pixel=new Uint8Array(4);
+  gl.readPixels(px,py,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.enable(gl.DITHER);const id=pixel[0]+(pixel[1]<<8)+(pixel[2]<<16),hit=pickLookup.get(id);return hit?{b:hit.b,f:hit.f}:null;
+}
+let hoverPickQueued=false,hoverPickPoint=null,lastHoverPick=0;
+function applyHoverHit(hit){
+  if(mode==='campus'){
+    const next=hit?{b:hit.b,f:0}:null;if(!sameHit(next,buildingHover)){buildingHover=next;updateDetail();requestRender()}
+  }else{
+    const next=hit&&hit.b===selectedBuilding?hit:null;if(!sameHit(next,floorHover)){floorHover=next;updateDetail();requestRender()}
+  }
+  updateTooltip(true);
+}
+function queueHoverPick(x,y){
+  if(!PERF.hover||drag||document.hidden||contextLost)return;hoverPickPoint=[x,y];if(hoverPickQueued)return;hoverPickQueued=true;
+  const run=now=>{const wait=(PERF.lowPower?70:38)-(now-lastHoverPick);if(wait>0){setTimeout(()=>requestAnimationFrame(run),wait);return}hoverPickQueued=false;lastHoverPick=now;const p=hoverPickPoint;hoverPickPoint=null;if(p)applyHoverHit(pickSurface(p[0],p[1]));};
+  requestAnimationFrame(run);
+}
+
+// ---------- Detail / tooltip ----------
+function sameHit(a,b){return(!a&&!b)||(a&&b&&a.b===b.b&&a.f===b.f)}
+function updateTooltip(show=true){
+  if(!show||drag){tooltip.style.opacity='0';return}
+  if(mode==='campus'){
+    const a=labelHover||buildingHover;if(!a){tooltip.style.opacity='0';return}const b=BUILDINGS[a.b],k=KIND[b.kind];tooltip.innerHTML=`<b>ID ${b.id} · ${k.title}</b><span>${b.floors} floors · ${b.totalRooms} rooms<br>Click to isolate this building</span>`;
+  }else{
+    const a=floorHover;if(!a){tooltip.style.opacity='0';return}const b=BUILDINGS[a.b],k=KIND[b.kind];tooltip.innerHTML=`<b>ID ${b.id} · Floor ${a.f}</b><span>${k.title}<br>${b.rooms[a.f-1]} rooms on this floor</span>`;
+  }
+  tooltip.style.left=Math.min(cssWidth-230,Math.max(0,mouse[0]))+'px';tooltip.style.top=Math.min(cssHeight-90,Math.max(0,mouse[1]))+'px';tooltip.style.opacity='1';
+}
+function updateDetail(){
+  if(mode==='campus'){
+    const a=labelHover||buildingHover;
+    if(!a){detail.className='glass empty';detail.innerHTML=`<div class="detail-head"><div class="id-orb">↗</div><div class="detail-title"><h2>Select a building</h2><p>Floor interaction starts after selection</p></div></div><div class="floor-summary"><b>Campus overview</b><span>12 buildings</span></div><div class="mode-chip">Whole-building selection only</div><div class="detail-foot"><span>Click a building or ID badge</span><span>No floor hover here</span></div>`;return}
+    const b=BUILDINGS[a.b],k=KIND[b.kind];detail.className='glass';detail.innerHTML=`<div class="detail-head"><div class="id-orb">${b.id}</div><div class="detail-title"><h2>${k.title}</h2><p>${k.subtitle} · temporary model ID</p></div></div><div class="floor-summary"><b>${b.floors} floors</b><span>${b.totalRooms} rooms total</span></div><div class="mode-chip">Building selected as one object</div><button class="detail-action">Open and separate floors</button><div class="detail-foot"><span>${k.types}</span><span>Flat balcony panels</span></div>`;detail.querySelector('.detail-action').onclick=()=>enterBuilding(a.b);return;
+  }
+  if(selectedBuilding==null)return;
+  const b=BUILDINGS[selectedBuilding],k=KIND[b.kind],a=panelHover||floorHover||pinnedFloor,floor=a?a.f:null,rooms=floor?b.rooms[floor-1]:null;
+  detail.className='glass';detail.innerHTML=`<div class="detail-head"><div class="id-orb">${b.id}</div><div class="detail-title"><h2>${k.title}</h2><p>Isolated building · floors separated</p></div></div><div class="floor-summary"><b>${floor?`Floor ${floor} of ${b.floors}`:`All ${b.floors} floors`}</b><span>${floor?`${rooms} rooms`:`${b.totalRooms} rooms total`}</span></div><div class="floor-stack">${Array.from({length:b.floors},(_,j)=>{const f=b.floors-j;return`<button class="floor-btn ${floor===f?'hot':''}" data-floor="${f}">F${f}</button>`}).join('')}</div><div class="detail-foot"><span>${k.types}</span><span>Esc / Back to return</span></div>`;
+  detail.querySelectorAll('.floor-btn').forEach(btn=>{const f=+btn.dataset.floor;if(PERF.hover){btn.addEventListener('pointerenter',()=>{panelHover={b:selectedBuilding,f};requestRender()});btn.addEventListener('pointerleave',()=>{panelHover=null;requestRender()})}btn.addEventListener('click',()=>{pinnedFloor={b:selectedBuilding,f};panelHover=null;ariaStatus.textContent=`Building ${BUILDINGS[selectedBuilding].id}, floor ${f}, ${BUILDINGS[selectedBuilding].rooms[f-1]} rooms`;updateDetail();requestRender()})});
+}
+
+// ---------- Interaction ----------
+function zoomBounds(){return mode==='campus'?[210,1250]:[120,700]}
+function pointerPair(){const pts=[...activePointers.values()];if(pts.length<2)return null;const a=pts[0],b=pts[1];return{distance:Math.hypot(a.x-b.x,a.y-b.y),center:[(a.x+b.x)/2,(a.y+b.y)/2]}}
+canvas.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button!==0&&e.button!==2)return;
+  cancelCameraAnimation();activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY,type:e.pointerType});mouse=[e.clientX,e.clientY];pointerDownAt=performance.now();tooltip.style.opacity='0';
+  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+  if(activePointers.size===1){drag=true;dragMode=(e.button===2||e.shiftKey)?'pan':'rotate';pointerStart=last=[e.clientX,e.clientY];moved=false;gesture=null}
+  else if(activePointers.size===2){const pair=pointerPair();drag=true;dragMode='pinch';moved=true;gesture={distance:pair.distance,center:pair.center,dist,target:[...target],az,elv}}
+});
+canvas.addEventListener('pointermove',e=>{
+  mouse=[e.clientX,e.clientY];
+  if(!activePointers.has(e.pointerId)){if(e.pointerType!=='touch')queueHoverPick(e.clientX,e.clientY);return}
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY,type:e.pointerType});
+  if(activePointers.size>=2){
+    const pair=pointerPair();if(!pair||!gesture)return;const bounds=zoomBounds();dist=clamp(gesture.dist*gesture.distance/Math.max(8,pair.distance),bounds[0],bounds[1]);const dx=pair.center[0]-gesture.center[0],dy=pair.center[1]-gesture.center[1],s=gesture.dist*.00135;target=[gesture.target[0]-dx*Math.cos(gesture.az)*s-dy*Math.sin(gesture.az)*s,gesture.target[1],gesture.target[2]+dx*Math.sin(gesture.az)*s-dy*Math.cos(gesture.az)*s];requestRender();return;
+  }
+  const dx=e.clientX-last[0],dy=e.clientY-last[1];last=[e.clientX,e.clientY];const threshold=e.pointerType==='touch'?8:3;if(Math.hypot(e.clientX-pointerStart[0],e.clientY-pointerStart[1])>threshold)moved=true;
+  if(dragMode==='rotate'){az-=dx*(e.pointerType==='touch'?.0065:.008);elv=clamp(elv+dy*(e.pointerType==='touch'?.005:.006),.09,1.49)}else{const s=dist*.0015;target[0]-=dx*Math.cos(az)*s+dy*Math.sin(az)*s;target[2]+=dx*Math.sin(az)*s-dy*Math.cos(az)*s}requestRender();
+});
+function finishPointer(e,cancelled=false){
+  const wasOnly=activePointers.size===1,wasTap=wasOnly&&!moved&&!cancelled&&(performance.now()-pointerDownAt)<650&&(e.pointerType!=='mouse'||e.button===0),tapPoint=[e.clientX,e.clientY];activePointers.delete(e.pointerId);
+  if(activePointers.size===1){const p=[...activePointers.values()][0];last=pointerStart=[p.x,p.y];dragMode='rotate';moved=true;gesture=null;drag=true}else if(activePointers.size===0){drag=false;gesture=null}
+  if(wasTap){const hit=pickSurface(tapPoint[0],tapPoint[1]);if(mode==='campus'){if(hit)enterBuilding(hit.b)}else{pinnedFloor=hit&&hit.b===selectedBuilding?hit:null;floorHover=pinnedFloor;if(pinnedFloor)ariaStatus.textContent=`Building ${BUILDINGS[selectedBuilding].id}, floor ${pinnedFloor.f}, ${BUILDINGS[selectedBuilding].rooms[pinnedFloor.f-1]} rooms`;updateDetail()}}
+  requestRender();
+}
+canvas.addEventListener('pointerup',e=>finishPointer(e,false));canvas.addEventListener('pointercancel',e=>finishPointer(e,true));
+canvas.addEventListener('pointerleave',e=>{if(!drag&&e.pointerType!=='touch'){buildingHover=null;floorHover=null;updateTooltip(false);updateDetail();requestRender()}});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{e.preventDefault();cancelCameraAnimation();const unit=e.deltaMode===1?16:e.deltaMode===2?cssHeight:1,bounds=zoomBounds();dist=clamp(dist*Math.exp(e.deltaY*unit*.001),bounds[0],bounds[1]);requestRender()},{passive:false});
+canvas.addEventListener('keydown',e=>{let handled=true;cancelCameraAnimation();switch(e.key){case'ArrowLeft':az-=.12;break;case'ArrowRight':az+=.12;break;case'ArrowUp':elv=clamp(elv-.08,.09,1.49);break;case'ArrowDown':elv=clamp(elv+.08,.09,1.49);break;case'+':case'=':{const b=zoomBounds();dist=clamp(dist*.88,b[0],b[1]);break}case'-':case'_':{const b=zoomBounds();dist=clamp(dist*1.14,b[0],b[1]);break}case'Home':if(mode==='campus')animateCamera(CAMPUS_CAMERA,0,0);else animateCamera(focusCameraFor(BUILDINGS[selectedBuilding],false),1,0);break;default:handled=false}if(handled){e.preventDefault();requestRender()}});
+
+// Legacy touch fallback for older Safari / embedded webviews without Pointer Events.
+if(!window.PointerEvent){
+  let legacy={touches:0,start:[0,0],last:[0,0],distance:0,center:[0,0],cameraDist:dist,cameraTarget:[...target],moved:false};
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();cancelCameraAnimation();legacy.touches=e.touches.length;legacy.moved=false;if(e.touches.length===1){const t=e.touches[0];legacy.start=legacy.last=[t.clientX,t.clientY]}else if(e.touches.length>=2){const a=e.touches[0],b=e.touches[1];legacy.distance=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);legacy.center=[(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2];legacy.cameraDist=dist;legacy.cameraTarget=[...target]}},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches.length===1){const t=e.touches[0],dx=t.clientX-legacy.last[0],dy=t.clientY-legacy.last[1];legacy.last=[t.clientX,t.clientY];if(Math.hypot(t.clientX-legacy.start[0],t.clientY-legacy.start[1])>8)legacy.moved=true;az-=dx*.0065;elv=clamp(elv+dy*.005,.09,1.49)}else if(e.touches.length>=2){legacy.moved=true;const a=e.touches[0],b=e.touches[1],d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),c=[(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2],bounds=zoomBounds();dist=clamp(legacy.cameraDist*legacy.distance/Math.max(8,d),bounds[0],bounds[1]);const dx=c[0]-legacy.center[0],dy=c[1]-legacy.center[1],s=legacy.cameraDist*.00135;target=[legacy.cameraTarget[0]-dx*Math.cos(az)*s-dy*Math.sin(az)*s,legacy.cameraTarget[1],legacy.cameraTarget[2]+dx*Math.sin(az)*s-dy*Math.cos(az)*s]}requestRender()},{passive:false});
+  canvas.addEventListener('touchend',e=>{e.preventDefault();if(e.touches.length===0&&legacy.touches===1&&!legacy.moved&&e.changedTouches[0]){const t=e.changedTouches[0],hit=pickSurface(t.clientX,t.clientY);if(mode==='campus'){if(hit)enterBuilding(hit.b)}else{pinnedFloor=hit&&hit.b===selectedBuilding?hit:null;floorHover=pinnedFloor;updateDetail();requestRender()}}legacy.touches=e.touches.length},{passive:false});
+}
+
+function setOverviewVisible(show){document.body.classList.toggle('overview-hidden',!show);guideBtn.classList.toggle('active',show);guideBtn.setAttribute('aria-pressed',String(show));guideBtn.textContent=show?'Hide guide':'Guide'}
+perspectiveBtn.onclick=()=>{cancelCameraAnimation();if(mode==='campus')animateCamera(CAMPUS_CAMERA,0,520);else animateCamera(focusCameraFor(BUILDINGS[selectedBuilding],false),1,520);perspectiveBtn.classList.add('primary');topBtn.classList.remove('primary')};
+topBtn.onclick=()=>{cancelCameraAnimation();if(mode==='campus')animateCamera({az:NORTH_UP_CAMERA_AZ,elv:1.49,dist:720,target:[5,8,0]},0,520);else animateCamera(focusCameraFor(BUILDINGS[selectedBuilding],true),1,520);topBtn.classList.add('primary');perspectiveBtn.classList.remove('primary')};
+guideBtn.onclick=()=>setOverviewVisible(document.body.classList.contains('overview-hidden'));
+backBtn.onclick=exitBuilding;
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(mode==='building')exitBuilding();else{buildingHover=null;labelHover=null;updateDetail();requestRender()}}});
+let resizeTimer=0;function handleResize(){clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{ensureSize();requestRender()},80)}
+addEventListener('resize',handleResize,{passive:true});addEventListener('orientationchange',handleResize,{passive:true});if(window.visualViewport)visualViewport.addEventListener('resize',handleResize,{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelCameraAnimation();hoverPickPoint=null}else requestRender()});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;cancelCameraAnimation();errorPanel.innerHTML='<div class="fallback-shell"><h2>3D graphics paused</h2><p>The browser temporarily lost its graphics context. The viewer will reload automatically if the context is restored.</p></div>';errorPanel.style.display='grid'});
+canvas.addEventListener('webglcontextrestored',()=>{location.reload()});
+
+if(PERF.mobile&&matchMedia('(max-width:680px)').matches)setOverviewVisible(false);else setOverviewVisible(true);
+updateDetail();
+requestAnimationFrame(()=>{
+  ensureSize();renderScene();loading.style.opacity='0';setTimeout(()=>loading.remove(),PERF.reducedMotion?0:260);
+  const match=location.hash.match(/building=([A-L])/i);if(match){const bi=BUILDINGS.findIndex(b=>b.id.toUpperCase()===match[1].toUpperCase());if(bi>=0)setTimeout(()=>enterBuilding(bi),PERF.reducedMotion?0:120)}
+});
+</script>
+</body>
+</html>

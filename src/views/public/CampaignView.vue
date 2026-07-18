@@ -7,10 +7,28 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDormStore } from '@/stores/dorm'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
 const dorm = useDormStore()
+const session = useSessionStore()
 const campaign = computed(() => dorm.campaignById(String(route.params.id)))
+
+// ผู้ที่มี session แล้วต้องไปต่อใน portal เดิมทันที ไม่ถูกส่งกลับไปสมัคร/เข้าสู่ระบบซ้ำ
+const primaryAction = computed(() => {
+  if (!session.isLoggedIn) {
+    return {
+      label: 'เข้าสู่ระบบเพื่อสมัคร',
+      to: { path: '/login', query: { redirect: '/app/campaigns' } },
+    }
+  }
+  if (session.isStaff) {
+    return session.canAccessSection('overview')
+      ? { label: 'จัดการรอบรับสมัคร', to: '/staff/campaigns' }
+      : { label: 'ไปพื้นที่เจ้าหน้าที่', to: '/staff' }
+  }
+  return { label: 'ดำเนินการสมัครและเลือกห้อง', to: '/app/rooms' }
+})
 </script>
 
 <template>
@@ -56,7 +74,7 @@ const campaign = computed(() => dorm.campaignById(String(route.params.id)))
 
     <div class="flex flex-wrap gap-3">
       <Button as-child size="lg" :disabled="campaign.status !== 'open'">
-        <RouterLink to="/register">เริ่มสมัคร / เข้าสู่ระบบ</RouterLink>
+        <RouterLink :to="primaryAction.to">{{ primaryAction.label }}</RouterLink>
       </Button>
       <Button as-child size="lg" variant="outline">
         <RouterLink to="/rooms">ดูห้องว่างก่อน</RouterLink>

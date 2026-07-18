@@ -115,7 +115,7 @@ const steps = [
 
         <!-- Search bar -->
         <form
-          class="mt-8 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
+          class="mt-6 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
           @submit.prevent="search"
         >
           <div class="min-w-0 flex-1 px-4 py-1.5">
@@ -124,7 +124,7 @@ const steps = [
               <SelectTrigger aria-label="เลือกหอพัก" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
                 <SelectItem value="all">หอพักทั้งหมด</SelectItem>
                 <SelectItem v-for="g in dorm.dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</SelectItem>
               </SelectContent>
@@ -137,7 +137,7 @@ const steps = [
               <SelectTrigger aria-label="เลือกประเภทห้อง" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
                 <SelectItem value="all">ทุกประเภท</SelectItem>
                 <SelectItem v-for="(label, key) in roomConfigLabel" :key="key" :value="key">{{ label }}</SelectItem>
               </SelectContent>
@@ -150,7 +150,7 @@ const steps = [
               <SelectTrigger aria-label="เลือกเพศ" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
                 <SelectItem value="all">ทั้งหมด</SelectItem>
                 <SelectItem value="male">ชาย</SelectItem>
                 <SelectItem value="female">หญิง</SelectItem>

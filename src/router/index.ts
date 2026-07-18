@@ -79,6 +79,10 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const session = useSessionStore()
+  // มี session แล้วไม่ควรเห็นหน้าสมัคร/เข้าสู่ระบบซ้ำ แม้เปิดจากลิงก์เดิมหรือกดย้อนกลับ
+  if (session.isLoggedIn && ['login', 'register', 'verify-email'].includes(String(to.name))) {
+    return { path: session.isStaff ? '/staff' : '/app' }
+  }
   if (to.meta.requiresAuth && !session.isLoggedIn) {
     return { path: '/login', query: { redirect: to.fullPath } }
   }

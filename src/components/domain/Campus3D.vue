@@ -77,7 +77,9 @@ function detectRenderProfile(): RenderProfile {
   const compactViewport = window.innerWidth < 768
 
   if (device.connection?.saveData || compactViewport || coarsePointer || cores <= 4 || (memory !== undefined && memory <= 4)) {
-    return { quality: 'low', pixelRatioCap: 1, maxFps: 30, shadows: false, shadowSize: 512, autoRotate: false }
+    // มือถือปิดเงา/ลด FPS เพื่อประหยัดเครื่อง แต่คงความหนาแน่นพิกเซลและ antialias
+    // ให้ขอบตึกกับข้อความบน canvas ไม่แตกบนจอ DPR สูง
+    return { quality: 'low', pixelRatioCap: 1.5, maxFps: 30, shadows: false, shadowSize: 512, autoRotate: false }
   }
   if (cores <= 6 || (memory !== undefined && memory <= 8)) {
     return { quality: 'medium', pixelRatioCap: 1.4, maxFps: 45, shadows: true, shadowSize: 1024, autoRotate: true }
@@ -271,20 +273,20 @@ function makeGroundText(text: string, widthMeters: number, p: CampusPalette, rot
 // ชื่อสถานที่โปร่งใสเหนือพื้นที่ — ไม่มีกรอบหรือพื้นป้าย และหันเข้ากล้องเสมอ
 function makeFloatingText(text: string, widthMeters: number, p: CampusPalette) {
   const canvas = document.createElement('canvas')
-  canvas.width = 1024
-  canvas.height = 192
+  canvas.width = 1536
+  canvas.height = 288
   const ctx = canvas.getContext('2d')!
   const isDark = theme.value === 'dark'
 
-  ctx.font = '900 132px "Noto Sans Thai", sans-serif'
+  ctx.font = '900 198px "Noto Sans Thai", sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.lineJoin = 'round'
   ctx.strokeStyle = isDark ? 'rgba(10, 19, 34, 0.96)' : 'rgba(255, 252, 247, 0.96)'
-  ctx.lineWidth = 24
+  ctx.lineWidth = 36
   ctx.fillStyle = p.labelText
-  ctx.strokeText(text, 512, 100, 960)
-  ctx.fillText(text, 512, 100, 960)
+  ctx.strokeText(text, 768, 150, 1440)
+  ctx.fillText(text, 768, 150, 1440)
 
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
@@ -316,8 +318,8 @@ function makeFloatingText(text: string, widthMeters: number, p: CampusPalette) {
 // รหัสอาคารโปร่งใสตั้งชิดหลังคา ไม่มีกรอบหรือพื้นป้าย และหันเข้ากล้องเสมอ
 function makeBuildingText(code: string, buildingHeight: number, p: CampusPalette) {
   const canvas = document.createElement('canvas')
-  canvas.width = 512
-  canvas.height = 512
+  canvas.width = 1024
+  canvas.height = 1024
   const ctx = canvas.getContext('2d')!
   const isDark = theme.value === 'dark'
   const fill = p.labelText
@@ -328,10 +330,10 @@ function makeBuildingText(code: string, buildingHeight: number, p: CampusPalette
   ctx.lineJoin = 'round'
   ctx.strokeStyle = outline
   ctx.fillStyle = fill
-  ctx.font = '900 360px "Noto Sans Thai", sans-serif'
-  ctx.lineWidth = 30
-  ctx.strokeText(code, 256, 270)
-  ctx.fillText(code, 256, 270)
+  ctx.font = '900 720px "Noto Sans Thai", sans-serif'
+  ctx.lineWidth = 60
+  ctx.strokeText(code, 512, 540)
+  ctx.fillText(code, 512, 540)
 
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
@@ -1835,7 +1837,7 @@ onMounted(() => {
   reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   renderProfile = detectRenderProfile()
   renderer = new THREE.WebGLRenderer({
-    antialias: renderProfile.quality !== 'low',
+    antialias: true,
     alpha: false,
     powerPreference: 'high-performance',
   })
@@ -1945,15 +1947,15 @@ const headerLabel = computed(() =>
 
 <template>
   <div class="relative overflow-hidden rounded-2xl border bg-card">
-    <div ref="host" class="h-[62vh] min-h-105 w-full" />
+    <div ref="host" class="h-[58svh] min-h-105 w-full sm:h-[62vh]" />
 
     <!-- แถบสถานะ/คำแนะนำ ซ้ายบน -->
-    <div class="pointer-events-none absolute left-3 top-3 flex max-w-[70%] flex-col gap-2">
-      <div class="pointer-events-auto flex items-center gap-2 rounded-xl border bg-background/85 px-3 py-2 shadow-sm backdrop-blur">
+    <div class="pointer-events-none absolute left-2 right-2 top-2 flex flex-col gap-1.5 sm:left-3 sm:right-auto sm:top-3 sm:max-w-[70%] sm:gap-2">
+      <div class="pointer-events-auto flex w-fit max-w-full items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
         <Building2Icon class="size-4 shrink-0 text-primary" aria-hidden="true" />
-        <span class="text-sm font-semibold">{{ headerLabel }}</span>
+        <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
       </div>
-      <p class="rounded-lg bg-background/70 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur">
+      <p class="w-fit max-w-full rounded-lg border bg-background/92 px-2.5 py-1.5 text-xs leading-relaxed text-foreground shadow-sm backdrop-blur sm:border-0 sm:bg-background/75 sm:py-1 sm:text-muted-foreground sm:shadow-none">
         <template v-if="mode === 'campus'">
           <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ตึกเพื่อเลือกอาคาร · ลากหมุนดูรอบ · ตึกจางคืออีกหอ กดเพื่อสลับ
         </template>
@@ -1982,7 +1984,7 @@ const headerLabel = computed(() =>
     </div>
 
     <!-- คำอธิบายประเภทถนน ล่างซ้าย -->
-    <div class="pointer-events-none absolute bottom-3 left-3 space-y-1 rounded-xl border bg-background/80 px-3 py-2 backdrop-blur">
+    <div class="pointer-events-none absolute bottom-3 left-3 hidden space-y-1 rounded-xl border bg-background/85 px-3 py-2 backdrop-blur sm:block">
       <p
         v-for="item in roadLegend"
         :key="item.label"
@@ -1993,7 +1995,7 @@ const headerLabel = computed(() =>
       </p>
     </div>
 
-    <div class="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-[11px] text-muted-foreground backdrop-blur">
+    <div class="pointer-events-none absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full border bg-background/90 px-2.5 py-1 text-[11px] text-foreground shadow-sm backdrop-blur sm:bottom-3 sm:right-3 sm:border-0 sm:bg-background/70 sm:text-muted-foreground sm:shadow-none">
       <Rotate3dIcon class="size-3.5" aria-hidden="true" /> มุมมอง 3 มิติ · ผังอิงแผนที่จริง
     </div>
   </div>
