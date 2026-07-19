@@ -8,9 +8,10 @@ import { useTheme } from '@/composables/useTheme'
 import { CAMPUS_PALETTES, campusArea } from '@/lib/campus3d'
 import type { Building3DConfig, CampusPalette, RoadKind } from '@/lib/campus3d'
 
-// ฉากตึก 3 มิติทั้งพื้นที่ (อิงแผนที่จริง): หอที่เลือก = ตึกสีเต็มกดได้ · อีกหอ = ตึกจาง กดเพื่อสลับหอ
-// มีถนนมอดินแดง + ถนนภายใน + ป้ายชื่อเหนืออาคาร + ลูกศรทิศเหนือ เพื่อให้เทียบตำแหน่งกับของจริงได้
-// flow: กดตึก → กดชั้น → dive → แจ้ง select-floor ให้พาไปแผนผังห้องของชั้นนั้น
+// ฉากตึก 3 มิติทั้งพื้นที่ (ระยะห่าง/ทิศตาม docs/test.html): หอที่เลือก = ตึกสีเต็มกดได้ · อีกหอ = ตึกจาง กดเพื่อสลับหอ
+// มีถนนมอดินแดง + ถนนภายใน + ป้ายชื่อเหนืออาคาร + ลูกศรทิศเหนือ + ปุ่มมุมมอง Top/Perspective
+// flow: กดตึก → ชั้นของตึกแยกออกจากกัน (อนิเมชันแบบ test.html) พร้อมป้าย F1..Fn ข้างชั้น
+//       → กดชั้นหรือป้าย → dive → แจ้ง select-floor ให้พาไปแผนผังห้องของชั้นนั้น
 const props = defineProps<{
   dormGroupId: string
   availability: Record<string, Record<number, { available: number; total: number }>>
@@ -28,6 +29,18 @@ const host = ref<HTMLDivElement>()
 const mode = ref<'campus' | 'building' | 'diving'>('campus')
 const selectedCode = ref<string | null>(null)
 const hoverLabel = ref<{ x: number; y: number; text: string; sub: string } | null>(null)
+// มุมมองกล้องจากปุ่ม Top/Perspective (แบบเดียวกับ toolbar ของ docs/test.html)
+const viewMode = ref<'perspective' | 'top'>('perspective')
+// ป้ายชั้น F1..Fn ข้างตึกตอนชั้นแยกออก (ตำแหน่งคำนวณจากการ project จุด 3D ลงจอทุกเฟรม)
+interface FloorMarker {
+  floor: number
+  x: number
+  y: number
+  sub: string
+  hot: boolean
+  disabled: boolean
+}
+const floorMarkers = ref<FloorMarker[]>([])
 
 // ---- Three.js state (นอก reactivity) ----
 let renderer: THREE.WebGLRenderer | null = null
@@ -54,7 +67,6 @@ interface RenderProfile {
   maxFps: number
   shadows: boolean
   shadowSize: number
-  autoRotate: boolean
 }
 
 let renderProfile: RenderProfile = {
@@ -63,7 +75,6 @@ let renderProfile: RenderProfile = {
   maxFps: 60,
   shadows: true,
   shadowSize: 2048,
-  autoRotate: true,
 }
 
 function detectRenderProfile(): RenderProfile {
@@ -79,17 +90,33 @@ function detectRenderProfile(): RenderProfile {
   if (device.connection?.saveData || compactViewport || coarsePointer || cores <= 4 || (memory !== undefined && memory <= 4)) {
     // มือถือปิดเงา/ลด FPS เพื่อประหยัดเครื่อง แต่คงความหนาแน่นพิกเซลและ antialias
     // ให้ขอบตึกกับข้อความบน canvas ไม่แตกบนจอ DPR สูง
-    return { quality: 'low', pixelRatioCap: 1.5, maxFps: 30, shadows: false, shadowSize: 512, autoRotate: false }
+    return { quality: 'low', pixelRatioCap: 1.5, maxFps: 30, shadows: false, shadowSize: 512 }
   }
   if (cores <= 6 || (memory !== undefined && memory <= 8)) {
-    return { quality: 'medium', pixelRatioCap: 1.4, maxFps: 45, shadows: true, shadowSize: 1024, autoRotate: true }
+    return { quality: 'medium', pixelRatioCap: 1.4, maxFps: 45, shadows: true, shadowSize: 1024 }
   }
-  return { quality: 'high', pixelRatioCap: 1.75, maxFps: 60, shadows: true, shadowSize: 2048, autoRotate: true }
+  return { quality: 'high', pixelRatioCap: 1.75, maxFps: 60, shadows: true, shadowSize: 2048 }
 }
 
 const desiredPos = new THREE.Vector3()
 const desiredTarget = new THREE.Vector3()
 let transitioning = false
+// ทิศเหนือจริงตาม docs/test.html: −z เอียงไปทาง +x 7.08° → มุม azimuth ที่ทำให้ทิศเหนือชี้ขึ้นบนจอ
+const TRUE_NORTH_OFFSET_DEG = 7.08
+const NORTH_UP_AZIMUTH = THREE.MathUtils.degToRad(-TRUE_NORTH_OFFSET_DEG)
+// สัดส่วนช่องว่างตอนแยกชั้นเท่ากับ test.html (eight 5/10, inter 3.8/10 ของความสูงชั้น)
+// separation 0→1 คืออนิเมชันระเบิดชั้น — 1 = แยกเต็มที่, 0 = ตึกประกบปกติ
+let separation = 0
+let separationTarget = 0
+
+function sphericalCameraPos(target: THREE.Vector3, azimuth: number, elevation: number, distance: number) {
+  const horizontal = distance * Math.cos(elevation)
+  return new THREE.Vector3(
+    target.x + horizontal * Math.sin(azimuth),
+    target.y + distance * Math.sin(elevation),
+    target.z + horizontal * Math.cos(azimuth),
+  )
+}
 let diveResolveAt = 0
 let diveTarget: { code: string; floor: number } | null = null
 let diveEmitted = false
@@ -118,6 +145,12 @@ function isContext(b: Building3DConfig) {
 
 function shapeOf(b: Building3DConfig) {
   return area.lShape[b.dormGroupId]!
+}
+
+// ระยะห่างระหว่างชั้นตอนแยกชั้น — สัดส่วนเดียวกับ detailGap ใน docs/test.html
+// (ตึก 4 ชั้น = 5/10 ของความสูงชั้น, หออินเตอร์ 7 ชั้น = 3.8/10)
+function separationGap(b: Building3DConfig) {
+  return shapeOf(b).floorHeight * (b.floors >= 6 ? 0.38 : 0.5)
 }
 
 function buildingColor(b: Building3DConfig, p: CampusPalette) {
@@ -457,6 +490,7 @@ function makeWeatheredConcreteTexture() {
 }
 
 // ลูกศรทิศเหนือบนพื้น (หมุนไปพร้อมฉาก — ชี้ทิศถูกเสมอ)
+// ทิศเหนือจริงตาม docs/test.html: −z เอียงไปทาง +x 7.08°
 function makeNorthArrow(p: CampusPalette) {
   const canvas = document.createElement('canvas')
   canvas.width = 256
@@ -486,6 +520,7 @@ function makeNorthArrow(p: CampusPalette) {
   disposables.push(tex, geo, mat)
   const mesh = new THREE.Mesh(geo, mat)
   mesh.rotation.x = -Math.PI / 2
+  mesh.rotation.z = THREE.MathUtils.degToRad(-TRUE_NORTH_OFFSET_DEG)
   mesh.position.set(-20, 0.22, 46) // ลานโล่งด้านใต้ของโซนกลาง ไม่ทับอาคารใด
   mesh.userData = { decor: true }
   return mesh
@@ -527,7 +562,8 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
       mesh.position.set(w.cx, y, w.cz)
       mesh.castShadow = !context
       mesh.receiveShadow = true
-      mesh.userData = { buildingCode: b.code, floor: f + 1, dormGroupId: b.dormGroupId, context }
+      // baseY/gap ใช้คำนวณการยกชั้นตอนแยกชั้น (y เป็นแกนตั้ง ไม่ถูกกระทบจาก rotationY ของกลุ่ม)
+      mesh.userData = { buildingCode: b.code, floor: f + 1, dormGroupId: b.dormGroupId, context, baseY: y, gap: separationGap(b) }
       g.add(mesh)
       pickables.push(mesh)
     }
@@ -923,13 +959,13 @@ function addRoads(root: THREE.Group, p: CampusPalette) {
   }
 
   // ทางม้าลายตรงจุดที่ถนนภายในเชื่อมถนนมอดินแดง
-  for (const crossingX of [-57, -8, 68, 143]) {
+  for (const crossingX of [-63.75, -3.75, 71.75, 140.75]) {
     for (let stripe = 0; stripe < 6; stripe++) {
-      dashMatrices.push(boxMatrix(crossingX - 2.25 + stripe * 0.9, 0.195, 58, 0.48, 0.03, 7.25))
+      dashMatrices.push(boxMatrix(crossingX - 2.25 + stripe * 0.9, 0.195, 58.25, 0.48, 0.03, 7.25))
     }
     drainMatrices.push(
-      boxMatrix(crossingX - 3.45, 0.205, 52.9, 1.45, 0.08, 0.4),
-      boxMatrix(crossingX + 3.45, 0.205, 63.1, 1.45, 0.08, 0.4),
+      boxMatrix(crossingX - 3.45, 0.205, 53.15, 1.45, 0.08, 0.4),
+      boxMatrix(crossingX + 3.45, 0.205, 63.35, 1.45, 0.08, 0.4),
     )
   }
 
@@ -1572,9 +1608,10 @@ function applyHighlight() {
     mat.color.set(buildingColor(buildingOf(code), p))
   }
 
-  for (const [code, details] of buildingDetails) {
-    const selected = selectedCode.value
-    details.visible = mode.value !== 'diving' && (selected === null || selected === code)
+  // เมื่อเลือกตึกแล้ว ชั้นจะแยกออกเป็นแผ่น ๆ แบบ test.html — ซ่อนงานตกแต่ง (หน้าต่าง/หลังคา)
+  // ของทุกตึก เพราะ decor สร้างแบบตึกประกบ จะลอยค้างผิดตำแหน่งเมื่อชั้นถูกยก
+  for (const [, details] of buildingDetails) {
+    details.visible = mode.value === 'campus' && selectedCode.value === null
   }
 }
 
@@ -1583,10 +1620,15 @@ function buildingOf(code: string) {
   return area.buildings.find(x => x.code === code)!
 }
 
+// ความสูงรวมของตึกตอนชั้นแยกเต็มที่ (ใช้จัดกรอบกล้องแบบ focusCameraFor ใน test.html)
+function separatedHeight(b: Building3DConfig) {
+  return b.floors * shapeOf(b).floorHeight + (b.floors - 1) * separationGap(b)
+}
+
 function buildingCenter(code: string): THREE.Vector3 {
   const b = buildingOf(code)
   const shape = shapeOf(b)
-  const center = new THREE.Vector3(0, (b.floors * shape.floorHeight) / 2, -shape.wing.d / 2)
+  const center = new THREE.Vector3(0, separatedHeight(b) * 0.46, -shape.wing.d / 2)
   center.applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(b.rotationY))
   return center.add(new THREE.Vector3(b.x, 0, b.z))
 }
@@ -1594,8 +1636,15 @@ function buildingCenter(code: string): THREE.Vector3 {
 function setCameraForMode(m: 'campus' | 'building', instant = false) {
   const focus = area.focus[props.dormGroupId]!
   if (m === 'campus') {
-    desiredPos.set(focus.x + focus.radius * 0.62, focus.radius * 0.7, focus.z + focus.radius * 0.88)
-    desiredTarget.set(focus.x, 6, focus.z)
+    if (viewMode.value === 'top') {
+      // มุมมองบนแบบ test.html: กล้องเกือบตั้งฉาก (elv 1.49) โดยทิศเหนือจริงชี้ขึ้นบนจอ
+      desiredTarget.set(focus.x, 4, focus.z)
+      desiredPos.copy(sphericalCameraPos(desiredTarget, NORTH_UP_AZIMUTH, 1.49, focus.radius * 1.5))
+    } else {
+      // มุมมอง perspective เริ่มต้นทิศเดียวกับ CAMPUS_CAMERA ของ test.html (az .86, elv .66)
+      desiredTarget.set(focus.x, 6, focus.z)
+      desiredPos.copy(sphericalCameraPos(desiredTarget, 0.86, 0.66, focus.radius * 1.3))
+    }
     if (controls) {
       controls.enabled = true
       controls.minDistance = 70
@@ -1611,14 +1660,18 @@ function setCameraForMode(m: 'campus' | 'building', instant = false) {
     const boundRadius = Math.hypot(
       shape.main.w / 2,
       (shape.main.d + shape.wing.d) / 2,
-      (b.floors * shape.floorHeight) / 2,
+      separatedHeight(b) / 2,
     )
     // Keep enough breathing room around the whole L-shaped building.  The old
     // radius was technically outside the mesh, but was close enough that an
     // immediate orbit could put the near face across almost the whole screen.
     const viewDistance = Math.max(132, (boundRadius / Math.sin(limitingHalfFov)) * 1.42)
-    const viewDirection = new THREE.Vector3(0.48, 0.46, 0.75).normalize()
-    desiredPos.copy(c).addScaledVector(viewDirection, viewDistance)
+    if (viewMode.value === 'top') {
+      desiredPos.copy(sphericalCameraPos(c, NORTH_UP_AZIMUTH, 1.49, viewDistance * 0.9))
+    } else {
+      const viewDirection = new THREE.Vector3(0.48, 0.46, 0.75).normalize()
+      desiredPos.copy(c).addScaledVector(viewDirection, viewDistance)
+    }
     desiredTarget.copy(c)
     if (controls) {
       controls.enabled = true
@@ -1635,10 +1688,18 @@ function setCameraForMode(m: 'campus' | 'building', instant = false) {
   }
 }
 
+// สลับมุมมองจากปุ่ม Top / Perspective (แบบ toolbar ของ test.html)
+function setView(v: 'perspective' | 'top') {
+  viewMode.value = v
+  if (mode.value === 'diving') return
+  setCameraForMode(mode.value === 'building' ? 'building' : 'campus')
+}
+
 function dive(code: string, floor: number) {
   const b = buildingOf(code)
   const fh = shapeOf(b).floorHeight
-  const floorY = (floor - 1) * fh + fh / 2
+  // ชั้นถูกยกขึ้นตาม separation อยู่ — จุดดำดิ่งต้องรวมระยะยกด้วย
+  const floorY = (floor - 1) * fh + fh / 2 + (floor - 1) * separationGap(b) * separation
   for (const m of pickables) {
     const u = m.userData as { buildingCode: string; floor: number }
     if (u.buildingCode === code && u.floor > floor) {
@@ -1731,6 +1792,8 @@ function activatePickedObject() {
     selectedCode.value = hit.buildingCode
     mode.value = 'building'
     hoverLabel.value = null
+    separationTarget = 1 // เริ่มอนิเมชันแยกชั้นแบบ test.html
+    viewMode.value = 'perspective'
     applyHighlight()
     setCameraForMode('building')
   } else if (mode.value === 'building') {
@@ -1789,8 +1852,64 @@ function backToCampus() {
   selectedCode.value = null
   mode.value = 'campus'
   hoverLabel.value = null
+  separationTarget = 0 // ชั้นค่อย ๆ ประกบกลับ
+  viewMode.value = 'perspective'
   applyHighlight()
   setCameraForMode('campus')
+}
+
+// ---------- ป้ายชั้น F1..Fn ข้างตึกตอนชั้นแยกออก ----------
+function markerAvailability(code: string, floor: number) {
+  return props.availability[code]?.[floor]
+}
+
+function onMarkerEnter(floor: number) {
+  if (mode.value !== 'building' || !selectedCode.value) return
+  hoverFloor.code = selectedCode.value
+  hoverFloor.floor = floor
+  applyHighlight()
+}
+
+function onMarkerLeave() {
+  hoverFloor.code = ''
+  hoverFloor.floor = 0
+  applyHighlight()
+}
+
+function onMarkerClick(floor: number) {
+  if (mode.value !== 'building' || !selectedCode.value) return
+  if (!markerAvailability(selectedCode.value, floor)) return
+  hoverLabel.value = null
+  dive(selectedCode.value, floor)
+}
+
+// project จุดกึ่งกลางปีกหลักของแต่ละชั้น (รวมระยะยก) ลงจอ — เรียกทุกเฟรมจาก tick แบบ updateLabels ใน test.html
+function updateFloorMarkers() {
+  if (mode.value !== 'building' || !selectedCode.value || !camera || !host.value) {
+    if (floorMarkers.value.length) floorMarkers.value = []
+    return
+  }
+  const b = buildingOf(selectedCode.value)
+  const fh = shapeOf(b).floorHeight
+  const gap = separationGap(b)
+  const w = host.value.clientWidth
+  const h = host.value.clientHeight
+  const point = new THREE.Vector3()
+  const markers: FloorMarker[] = []
+  for (let floor = 1; floor <= b.floors; floor++) {
+    point.set(b.x, (floor - 0.5) * fh + (floor - 1) * gap * separation, b.z).project(camera)
+    if (point.z < -1 || point.z > 1) continue
+    const info = markerAvailability(b.code, floor)
+    markers.push({
+      floor,
+      x: (point.x * 0.5 + 0.5) * w,
+      y: (1 - (point.y * 0.5 + 0.5)) * h,
+      sub: info ? `ว่าง ${info.available}/${info.total} ห้อง` : 'ไม่มีข้อมูลห้อง',
+      hot: hoverFloor.code === b.code && hoverFloor.floor === floor,
+      disabled: !info,
+    })
+  }
+  floorMarkers.value = markers
 }
 
 // ---------- ลูปเรนเดอร์ ----------
@@ -1811,9 +1930,24 @@ function tick(now = performance.now()) {
     if (camera.position.distanceTo(desiredPos) < 0.6 && mode.value !== 'diving') transitioning = false
   }
 
-  controls.autoRotate = mode.value === 'campus' && !transitioning && !reduceMotion && renderProfile.autoRotate
+  // อนิเมชันแยก/ประกบชั้นแบบ test.html (ค่อย ๆ เข้า 0→1 ด้วย easing แบบ lerp ต่อเฟรม)
+  if (separation !== separationTarget) {
+    separation = reduceMotion
+      ? separationTarget
+      : separation + (separationTarget - separation) * 0.1
+    if (Math.abs(separation - separationTarget) < 0.001) separation = separationTarget
+  }
+  for (const m of pickables) {
+    const u = m.userData as { buildingCode: string; floor: number; context: boolean; baseY: number; gap: number }
+    const lift = !u.context && mode.value !== 'campus' && u.buildingCode === selectedCode.value
+      ? (u.floor - 1) * u.gap * separation
+      : 0
+    m.position.y = u.baseY + lift
+  }
+
   controls.update()
   updateAdaptiveLabels()
+  updateFloorMarkers()
 
   if (mode.value === 'diving' && !diveEmitted && diveTarget && performance.now() >= diveResolveAt) {
     diveEmitted = true
@@ -1863,7 +1997,6 @@ onMounted(() => {
   controls.minDistance = 30
   controls.maxDistance = 320
   controls.maxPolarAngle = Math.PI / 2.15
-  controls.autoRotateSpeed = 0.55
   controls.addEventListener('start', onControlsStart)
 
   resize()
@@ -1888,12 +2021,15 @@ onMounted(() => {
       focus: (code: string) => {
         selectedCode.value = code
         mode.value = 'building'
+        separationTarget = 1
         applyHighlight()
         setCameraForMode('building')
       },
       dive: (code: string, floor: number) => {
         selectedCode.value = code
         mode.value = 'building'
+        separation = 1
+        separationTarget = 1
         applyHighlight()
         dive(code, floor)
       },
@@ -1916,6 +2052,8 @@ watch(() => props.dormGroupId, () => {
   selectedCode.value = null
   mode.value = 'campus'
   hoverLabel.value = null
+  separation = 0
+  separationTarget = 0
   buildScene()
 })
 
@@ -1966,12 +2104,48 @@ const headerLabel = computed(() =>
       </p>
     </div>
 
-    <!-- ปุ่มย้อนกลับ ขวาบน -->
+    <!-- ปุ่มมุมมอง Top/Perspective + ปุ่มย้อนกลับ ขวาบน (แบบ toolbar ของ docs/test.html) -->
     <div class="absolute right-3 top-3 flex gap-2">
+      <Button
+        size="sm"
+        :variant="viewMode === 'perspective' ? 'default' : 'secondary'"
+        class="shadow-sm"
+        :aria-pressed="viewMode === 'perspective'"
+        @click="setView('perspective')"
+      >
+        Perspective
+      </Button>
+      <Button
+        size="sm"
+        :variant="viewMode === 'top' ? 'default' : 'secondary'"
+        class="shadow-sm"
+        :aria-pressed="viewMode === 'top'"
+        @click="setView('top')"
+      >
+        Top
+      </Button>
       <Button v-if="mode !== 'campus'" size="sm" variant="secondary" class="shadow-sm" @click="backToCampus">
         <ArrowLeftIcon aria-hidden="true" /> ดูทุกอาคาร
       </Button>
     </div>
+
+    <!-- ป้ายชั้น F1..Fn ข้างชั้นที่แยกออก (ตำแหน่ง project จาก 3D ทุกเฟรม แบบ floor-marker ใน test.html) -->
+    <button
+      v-for="m in floorMarkers"
+      :key="m.floor"
+      type="button"
+      class="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border bg-background/95 py-1 pl-2 pr-2.5 text-xs shadow-md backdrop-blur transition-transform disabled:opacity-55"
+      :class="m.hot ? 'scale-110 border-primary' : ''"
+      :style="{ left: m.x + 'px', top: m.y + 'px' }"
+      :disabled="m.disabled"
+      @click="onMarkerClick(m.floor)"
+      @pointerenter="onMarkerEnter(m.floor)"
+      @pointerleave="onMarkerLeave"
+    >
+      <span class="inline-block size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+      <span class="font-bold">F{{ m.floor }}</span>
+      <span class="text-[10px] text-muted-foreground">{{ m.sub }}</span>
+    </button>
 
     <!-- ป้ายลอยตามเมาส์ -->
     <div

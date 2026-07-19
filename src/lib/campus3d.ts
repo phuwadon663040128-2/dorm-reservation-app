@@ -1,7 +1,7 @@
-// ข้อมูลผังพื้นที่ 3D — อิงแผนที่ Google Maps จริงที่ผู้ใช้ระบุ:
-// หอ 8 หลัง (แดง) = 2 กลุ่ม กลุ่มละ 4 ตึกเรียงสลับฟันปลา · วรอินเตอร์ (ส้ม) อยู่ฝั่งตะวันออกข้ามถนน
-// ถนนหลัก: ถนนมอดินแดงด้านใต้ พร้อมถนนภายในของแต่ละกลุ่มหอ
-// สัดส่วนตึกรูปตัว L อิงแบบแปลนจริง (ปีกหลัก ~47×18 ม. + ปีกตั้งฉาก ~15×23 ม.)
+// ข้อมูลผังพื้นที่ 3D — ตำแหน่ง/ระยะห่างของตึก ถนน และสิ่งปลูกสร้าง อิงโมเดลใน docs/test.html
+// (พิกัด BUILDINGS + site mesh ของไฟล์นั้น คูณสเกล 0.5 ให้เข้ากับหน่วยฉากเดิมของเรา)
+// หอ 8 หลัง = 2 กลุ่ม กลุ่มละ 4 ตึกประกบเป็นกรอบสี่เหลี่ยม · วรอินเตอร์อยู่ฝั่งตะวันออกข้ามถนนภายใน
+// ทิศ: เหนือจริง ≈ −z เอียงไปทาง +x 7.08° (แกนตึกหออินเตอร์เอียง 7.08° จากแนวเหนือ-ใต้ ตาม test.html)
 // ⚠️ การจับคู่ "เลขตึก ↔ ตำแหน่ง" ยังเป็นค่าชั่วคราว (Provisional) แก้ใน config นี้ได้เลย
 
 export interface Building3DConfig {
@@ -109,63 +109,64 @@ const R8 = 'dorm-8-lang'
 const INT = 'dorm-wor-inter'
 
 export const campusArea: CampusArea = {
+  // ขนาดฐานตึกจากโพลิกอนใน docs/test.html ×0.5 — 8 หลัง: ปีกหลัก 95×20 → 47.5×10, ปีกตั้งฉาก 19×20 → 9.5×10
+  // อินเตอร์: ปีกหลัก 70×20 → 35×10, ปีกตั้งฉาก 20×40 → 10×20
   lShape: {
-    [R8]: { main: { w: 47, d: 18 }, wing: { w: 15.4, d: 23 }, floorHeight: 3.2 },
-    [INT]: { main: { w: 44, d: 18 }, wing: { w: 15, d: 25 }, floorHeight: 3.2 },
+    [R8]: { main: { w: 47.5, d: 10 }, wing: { w: 9.5, d: 10 }, floorHeight: 3.2 },
+    [INT]: { main: { w: 35, d: 10 }, wing: { w: 10, d: 20 }, floorHeight: 3.2 },
   },
   dormColors: {
     [R8]: { colorLight: 0xcecdbc, colorDark: 0x56564e },
     [INT]: { colorLight: 0xc7a289, colorDark: 0x54443a },
   },
-  // ── ตำแหน่งอิงพิมพ์เขียว แบบแผนผัง3D.glb (สเกล 0.5, +Y ของโมเดล = ทิศเหนือ = -z) ──
+  // ── ตำแหน่ง = จุดกึ่งกลางปีกหลักของโพลิกอนใน docs/test.html ×0.5 (ทิศเหนือ ≈ -z) ──
   // หอ 8 หลัง: คู่ตึกบน ┌ (rot180) + ล่าง ┘ (rot0) ประกบเป็นกรอบสี่เหลี่ยม เว้นช่องทุกจุด
   // ลำดับตามภาพอ้างอิง: ฝั่งตะวันตก 4→3→2→1 และฝั่งตะวันออก 8→7→6→5 จากเหนือไปใต้
+  // (จับคู่กับ ID ชั่วคราวของ test.html: 4↔L 3↔I 2↔F 1↔C · 8↔K 7↔H 6↔E 5↔A · D↔J C↔G B↔D A↔B)
   buildings: [
-    { code: '4', dormGroupId: R8, label: 'อาคาร 4', floors: 4, x: -104, z: -40, rotationY: 180 },
-    { code: '3', dormGroupId: R8, label: 'อาคาร 3', floors: 4, x: -84, z: -16, rotationY: 0 },
-    { code: '2', dormGroupId: R8, label: 'อาคาร 2', floors: 4, x: -104, z: 8, rotationY: 180 },
-    { code: '1', dormGroupId: R8, label: 'อาคาร 1', floors: 4, x: -84, z: 32, rotationY: 0 },
-    { code: '8', dormGroupId: R8, label: 'อาคาร 8', floors: 4, x: 20, z: -40, rotationY: 180 },
-    { code: '7', dormGroupId: R8, label: 'อาคาร 7', floors: 4, x: 40, z: -16, rotationY: 0 },
-    { code: '6', dormGroupId: R8, label: 'อาคาร 6', floors: 4, x: 20, z: 8, rotationY: 180 },
-    { code: '5', dormGroupId: R8, label: 'อาคาร 5', floors: 4, x: 40, z: 32, rotationY: 0 },
+    { code: '4', dormGroupId: R8, label: 'อาคาร 4', floors: 4, x: -106.25, z: -49.5, rotationY: 180 },
+    { code: '3', dormGroupId: R8, label: 'อาคาร 3', floors: 4, x: -96.25, z: -24, rotationY: 0 },
+    { code: '2', dormGroupId: R8, label: 'อาคาร 2', floors: 4, x: -106.25, z: 4.5, rotationY: 180 },
+    { code: '1', dormGroupId: R8, label: 'อาคาร 1', floors: 4, x: -96.25, z: 30, rotationY: 0 },
+    { code: '8', dormGroupId: R8, label: 'อาคาร 8', floors: 4, x: 24.25, z: -48.5, rotationY: 180 },
+    { code: '7', dormGroupId: R8, label: 'อาคาร 7', floors: 4, x: 34.25, z: -23, rotationY: 0 },
+    { code: '6', dormGroupId: R8, label: 'อาคาร 6', floors: 4, x: 24.25, z: 9.5, rotationY: 180 },
+    { code: '5', dormGroupId: R8, label: 'อาคาร 5', floors: 4, x: 34.25, z: 36, rotationY: 0 },
     // วรอินเตอร์ตามพิมพ์เขียว: C ซ้ายบน, D ขวาบน, B ซ้ายล่าง, A ขวาล่าง
     // คู่บน (D,C) ใช้รูปเดิม (mirror) — คู่ล่าง (B,A) "พลิกด้าน" (กระจกแนวตั้ง = ไม่ mirror)
-    { code: 'D', dormGroupId: INT, label: 'อาคาร D', floors: 7, x: 114, z: -36, rotationY: 180, mirror: true },
-    { code: 'C', dormGroupId: INT, label: 'อาคาร C', floors: 7, x: 96, z: -12, rotationY: 0, mirror: true },
-    { code: 'B', dormGroupId: INT, label: 'อาคาร B', floors: 7, x: 96, z: 14, rotationY: 180 },
-    { code: 'A', dormGroupId: INT, label: 'อาคาร A', floors: 7, x: 114, z: 38, rotationY: 0 },
+    { code: 'D', dormGroupId: INT, label: 'อาคาร D', floors: 7, x: 113.5, z: -48.5, rotationY: 180, mirror: true },
+    { code: 'C', dormGroupId: INT, label: 'อาคาร C', floors: 7, x: 96, z: -18, rotationY: 0, mirror: true },
+    { code: 'B', dormGroupId: INT, label: 'อาคาร B', floors: 7, x: 95.5, z: 5.5, rotationY: 180 },
+    { code: 'A', dormGroupId: INT, label: 'อาคาร A', floors: 7, x: 113, z: 36, rotationY: 0 },
   ],
-  // ถนนตามภาพ: ถนนมอดินแดงด้านใต้ และถนนภายในหอพักของทั้งสองกลุ่ม
+  // ถนนตามแถบถนนใน site mesh ของ docs/test.html ×0.5
   roads: [
-    // ── ถนนหลักด้านใต้ (นำเส้นด้านเหนือออกตามภาพแก้ไข) ──
-    { x: 0, z: 58, length: 300, axis: 'x', kind: 'main', name: 'ถนนมอดินแดง' },
-    // ── วงถนนหอ 8 หลัง (ม่วง) รูป 日 ล้อมโซนสำนักงาน/ตลาด/สนาม/โรงอาหาร/พยาบาล ──
-    { x: -57, z: 10, length: 92, axis: 'z', kind: 'internal' }, // ฝั่งตะวันตก (เลียบขอบตึก 2/4)
-    { x: -8, z: 9, length: 92, axis: 'z', kind: 'internal' }, // ฝั่งตะวันออก (เลียบขอบตึก 5/7)
-    { x: -34, z: -37, length: 52, axis: 'x', kind: 'internal' }, // ขอบบนของวง
-    { x: -35, z: -2, length: 52, axis: 'x', kind: 'internal' }, // คานกลาง คั่นสนามกับโรงอาหาร (ตามพิมพ์เขียว)
-    // ── วงถนนวรอินเตอร์ (ฟ้า) รูป 日 รอบตึกทั้งสี่ ──
-    { x: 68, z: 1, length: 102, axis: 'z', kind: 'internal' },
-    { x: 143, z: 1, length: 102, axis: 'z', kind: 'internal' },
-    { x: 105.5, z: -49, length: 75, axis: 'x', kind: 'internal' },
-    { x: 105.5, z: 1, length: 75, axis: 'x', kind: 'internal' },
+    // ── ถนนหลักด้านใต้ (test.html: x −286..286, z 110..123) ──
+    { x: 0, z: 58.25, length: 286, axis: 'x', kind: 'main', name: 'ถนนมอดินแดง' },
+    // ── ถนนภายในหอ 8 หลัง ล้อมโซนสำนักงาน/ตลาด/สนาม/โรงอาหาร/พยาบาล ──
+    { x: -63.75, z: 9.75, length: 91.5, axis: 'z', kind: 'internal' }, // ฝั่งตะวันตก (เลียบขอบตึก 2/4)
+    { x: -3.75, z: 9, length: 92, axis: 'z', kind: 'internal' }, // ฝั่งตะวันออก (เลียบขอบตึก 6/8)
+    { x: -34, z: -37.4, length: 62, axis: 'x', kind: 'internal' }, // ขอบบนของวง
+    { x: -33.5, z: -2, length: 62, axis: 'x', kind: 'internal' }, // คานกลาง คั่นสนามกับโรงอาหาร
+    // ── วงถนนวรอินเตอร์รอบตึกทั้งสี่ ──
+    { x: 71.75, z: -3.5, length: 117, axis: 'z', kind: 'internal' },
+    { x: 140.75, z: -2.5, length: 117, axis: 'z', kind: 'internal' },
+    { x: 106.75, z: -61.6, length: 70.5, axis: 'x', kind: 'internal' },
+    { x: 107, z: -6.2, length: 69, axis: 'x', kind: 'internal' },
   ],
-  // สิ่งปลูกสร้างตามพิมพ์เขียว (สี = ตามที่ผู้ใช้ระบุในโมเดล)
-  // แถบด้านเหนือ (z≈-44.5) เว้นให้พ้นปีกอาคาร 3 (ขอบตะวันออก x=-60.5) และอาคาร 8 (ขอบตะวันตก x=-3.5)
-  //   → หน่วยบริการปฐมภูมิ 123 (กว้าง 29) ไว้ฝั่งตะวันตก x=-42 · สำนักงาน (กว้าง 14) ฝั่งตะวันออก x=-16
-  // โรงอาหาร/ตลาด/สนาม จัดกึ่งกลางฐานพื้นที่ (แกนกลางวงถนน x=-32.5)
+  // สิ่งปลูกสร้าง: ตำแหน่ง/ขนาดจากมวลอาคารใน docs/test.html ×0.5 (จับคู่มวลตามขนาดฐานเดิม)
+  // แถบด้านเหนือ (z=-50.5): มวลตะวันตก 14×10 = สำนักงาน · มวลตะวันออก 19.5×10 = หน่วยบริการปฐมภูมิ
   extras: [
-    { kind: 'clinic', label: 'หน่วยบริการปฐมภูมิ 123', w: 29, d: 7, h: 4, x: -42, z: -44.5, colorLight: 0xb8d8e8, colorDark: 0x38576a },
-    { kind: 'office', label: 'สำนักงานหอพักแปดหลัง', w: 14, d: 10, h: 4.5, x: -16, z: -44.5, colorLight: 0xa6a598, colorDark: 0x4a4942 },
-    { kind: 'court', label: 'สนาม', w: 40, d: 21, h: 0.3, x: -32.5, z: -22, colorLight: 0xbbb9b1, colorDark: 0x54524e, flat: true },
-    { kind: 'cafeteria', label: 'โรงอาหารหอ 8 หลัง', w: 35, d: 15, h: 5.5, x: -32.5, z: 16, colorLight: 0xa6a598, colorDark: 0x4a4942 },
-    { kind: 'market', label: 'ตลาดหอพัก 8 หลัง', w: 20, d: 10, h: 3.5, x: -32.5, z: 32, colorLight: 0x4caa7e, colorDark: 0x2f6d52 },
+    { kind: 'office', label: 'สำนักงานหอพักแปดหลัง', w: 14, d: 10, h: 4.5, x: -52.5, z: -50.5, colorLight: 0xa6a598, colorDark: 0x4a4942 },
+    { kind: 'clinic', label: 'หน่วยบริการปฐมภูมิ 123', w: 19.5, d: 10, h: 4, x: -23.25, z: -50.5, colorLight: 0xb8d8e8, colorDark: 0x38576a },
+    { kind: 'court', label: 'สนาม', w: 45, d: 21, h: 0.3, x: -35.5, z: -22, colorLight: 0xbbb9b1, colorDark: 0x54524e, flat: true },
+    { kind: 'cafeteria', label: 'โรงอาหารหอ 8 หลัง', w: 35, d: 15, h: 5.5, x: -35.5, z: 16, colorLight: 0xa6a598, colorDark: 0x4a4942 },
+    { kind: 'market', label: 'ตลาดหอพัก 8 หลัง', w: 29.5, d: 7, h: 3.5, x: -35.25, z: 32, colorLight: 0x4caa7e, colorDark: 0x2f6d52 },
   ],
   trees: [
     { x: -50, z: -34, s: 1.1 }, { x: -16, z: -34, s: 1 },
     { x: -52, z: 4, s: 1 }, { x: -16, z: 4, s: 1.1 },
-    { x: -122, z: -46, s: 1 }, { x: 50, z: -48, s: 1 },
+    { x: -137, z: -46, s: 1 }, { x: 50, z: -48, s: 1 },
     { x: 148, z: 50, s: 1 }, { x: 58, z: 50, s: 1.1 },
   ],
   // แนวไม้ใหญ่ตามภาพดาวเทียมบริเวณขอบพื้นที่และแนวถนน
@@ -185,8 +186,8 @@ export const campusArea: CampusArea = {
   parkingLots: [
     // ลานจอดรถหน้าอาคารสำนักงาน/หออินเตอร์ตามภาพหน้างาน
     { x: 111, z: 50, w: 43, d: 5.4, spaces: 8 },
-    // ลานจอดรถด้านเหนือที่เห็นจากภาพดาวเทียม
-    { x: 105.5, z: -58.5, w: 68, d: 8, spaces: 12 },
+    // ลานจอดรถด้านเหนือ — ขยับพ้นถนนวงอินเตอร์เส้นบน (z=-61.6) ที่ย้ายตาม test.html
+    { x: 105.5, z: -70, w: 68, d: 8, spaces: 12 },
   ],
   fences: [
     { x: -151, z: 0, length: 112, axis: 'z' },
@@ -210,27 +211,27 @@ export const campusArea: CampusArea = {
     { x: -48, z: 4, scale: 0.92, rotationY: 0 },
     { x: -33, z: 4, scale: 0.92, rotationY: 0 },
     { x: -18, z: 4, scale: 0.92, rotationY: 0 },
-    { x: 80, z: -54, scale: 0.95, rotationY: 180 },
-    { x: 105, z: -54, scale: 0.95, rotationY: 180 },
-    { x: 130, z: -54, scale: 0.95, rotationY: 180 },
+    { x: 80, z: -56, scale: 0.95, rotationY: 180 },
+    { x: 105, z: -56, scale: 0.95, rotationY: 180 },
+    { x: 130, z: -56, scale: 0.95, rotationY: 180 },
   ],
   benches: [
     { x: -43, z: -8, scale: 0.9, rotationY: 0 },
     { x: -22, z: -8, scale: 0.9, rotationY: 0 },
-    { x: -52, z: 14, scale: 0.9, rotationY: 90 },
+    { x: -57, z: 14, scale: 0.9, rotationY: 90 },
     { x: -13, z: 14, scale: 0.9, rotationY: 90 },
-    { x: -48, z: 31, scale: 0.88, rotationY: 90 },
+    { x: -54, z: 31, scale: 0.88, rotationY: 90 },
     { x: -17, z: 31, scale: 0.88, rotationY: 90 },
     { x: -32.5, z: 42, scale: 0.95, rotationY: 0 },
     { x: -32.5, z: 5, scale: 0.9, rotationY: 0 },
   ],
   shrubs: [
-    { x: -53, z: -52, scale: 0.9, rotationY: 12 },
-    { x: -46, z: -52, scale: 0.72, rotationY: -18 },
+    { x: -42, z: -52, scale: 0.9, rotationY: 12 },
+    { x: -44, z: -58, scale: 0.72, rotationY: -18 },
     { x: -36, z: -52, scale: 0.84, rotationY: 28 },
-    { x: -28, z: -52, scale: 0.7, rotationY: -8 },
-    { x: -20, z: -52, scale: 0.82, rotationY: 20 },
-    { x: -11, z: -52, scale: 0.74, rotationY: -24 },
+    { x: -38, z: -58, scale: 0.7, rotationY: -8 },
+    { x: -10, z: -52, scale: 0.82, rotationY: 20 },
+    { x: -11, z: -58, scale: 0.74, rotationY: -24 },
     { x: -50, z: -8, scale: 0.75, rotationY: 8 },
     { x: -34, z: -8, scale: 0.88, rotationY: -15 },
     { x: -15, z: -8, scale: 0.72, rotationY: 25 },
@@ -249,8 +250,8 @@ export const campusArea: CampusArea = {
     { x: -135, z: 34, scale: 0.78, rotationY: 24 },
   ],
   focus: {
-    [R8]: { x: -32, z: -2, radius: 188 },
-    [INT]: { x: 105, z: 0, radius: 142 },
+    [R8]: { x: -36, z: -7, radius: 195 },
+    [INT]: { x: 104.5, z: -6, radius: 148 },
   },
   dormNames: {
     [R8]: 'วรเรสซิเดนซ์ (หอพัก 8 หลัง)',
