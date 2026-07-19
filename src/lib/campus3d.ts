@@ -1,7 +1,8 @@
 // ข้อมูลผังพื้นที่ 3D — ตำแหน่ง/ระยะห่างของตึก ถนน และสิ่งปลูกสร้าง อิงโมเดลใน docs/test.html
 // (พิกัด BUILDINGS + site mesh ของไฟล์นั้น คูณสเกล 0.5 ให้เข้ากับหน่วยฉากเดิมของเรา)
 // หอ 8 หลัง = 2 กลุ่ม กลุ่มละ 4 ตึกประกบเป็นกรอบสี่เหลี่ยม · วรอินเตอร์อยู่ฝั่งตะวันออกข้ามถนนภายใน
-// ทิศ: เหนือจริง ≈ −z เอียงไปทาง +x 7.08° (แกนตึกหออินเตอร์เอียง 7.08° จากแนวเหนือ-ใต้ ตาม test.html)
+// ทิศ: เหนือจริง = −z เอียงไปทาง −x 7.09° — วัดจาก footprint จริงใน OSM (แกนยาวตึก bearing 97.09°)
+//      และภาพดาวเทียม Esri (เครื่องหมายมุมใน docs/test.html กลับด้าน — ใช้ค่าที่วัดจริงแทน)
 // ⚠️ การจับคู่ "เลขตึก ↔ ตำแหน่ง" ยังเป็นค่าชั่วคราว (Provisional) แก้ใน config นี้ได้เลย
 
 export interface Building3DConfig {
@@ -67,6 +68,16 @@ export interface CampusInterOffice {
   rotationY: number
 }
 
+/** กำแพงล้อมกลุ่มอาคารหอ 8 หลัง (กลุ่ม 1-4 และ 5-8) พร้อมช่องประตูรั้วที่มีป้อมยามกลางช่อง */
+export interface DormClusterWall {
+  minX: number
+  maxX: number
+  minZ: number
+  maxZ: number
+  /** ประตูรั้วอยู่ด้านตะวันออกหรือตะวันตกของกำแพง ตรงกลางช่องมีป้อมยาม */
+  gate: { side: 'east' | 'west'; z: number; width: number }
+}
+
 /** ผังนี้มีถนนสองประเภท: ถนนมอดินแดง และถนนภายในหอพัก */
 export type RoadKind = 'main' | 'internal'
 
@@ -99,6 +110,7 @@ export interface CampusArea {
   shrubs: CampusDecorationPlacement[]
   parkingLots: CampusParkingLot[]
   fences: CampusFenceSegment[]
+  clusterWalls: DormClusterWall[]
   interOffice: CampusInterOffice
   /** จุดโฟกัสกล้องต่อหอ */
   focus: Record<string, { x: number; z: number; radius: number }>
@@ -147,18 +159,19 @@ export const campusArea: CampusArea = {
     { x: -63.75, z: 9.75, length: 91.5, axis: 'z', kind: 'internal' }, // ฝั่งตะวันตก (เลียบขอบตึก 2/4)
     { x: -3.75, z: 9, length: 92, axis: 'z', kind: 'internal' }, // ฝั่งตะวันออก (เลียบขอบตึก 6/8)
     { x: -34, z: -37.4, length: 62, axis: 'x', kind: 'internal' }, // ขอบบนของวง
-    { x: -33.5, z: -2, length: 62, axis: 'x', kind: 'internal' }, // คานกลาง คั่นสนามกับโรงอาหาร
+    // คานกลาง คั่นสนามกับโรงอาหาร — ต่อความยาวให้ชนประตูรั้วของทั้งสองกลุ่มอาคาร (กำแพง x=-68 และ -0.5)
+    { x: -33.5, z: -2, length: 70, axis: 'x', kind: 'internal' },
     // ── วงถนนวรอินเตอร์รอบตึกทั้งสี่ ──
     { x: 71.75, z: -3.5, length: 117, axis: 'z', kind: 'internal' },
     { x: 140.75, z: -2.5, length: 117, axis: 'z', kind: 'internal' },
     { x: 106.75, z: -61.6, length: 70.5, axis: 'x', kind: 'internal' },
     { x: 107, z: -6.2, length: 69, axis: 'x', kind: 'internal' },
   ],
-  // สิ่งปลูกสร้าง: ตำแหน่ง/ขนาดจากมวลอาคารใน docs/test.html ×0.5 (จับคู่มวลตามขนาดฐานเดิม)
-  // แถบด้านเหนือ (z=-50.5): มวลตะวันตก 14×10 = สำนักงาน · มวลตะวันออก 19.5×10 = หน่วยบริการปฐมภูมิ
+  // สิ่งปลูกสร้าง: ตำแหน่ง/ขนาดจากมวลอาคารใน docs/test.html ×0.5
+  // แถบด้านเหนือ (z=-50.5): หน่วยบริการปฐมภูมิฝั่งตะวันตก (มวล 14×10) · สำนักงานหอ 8 หลังฝั่งตะวันออก (มวล 19.5×10)
   extras: [
-    { kind: 'office', label: 'สำนักงานหอพักแปดหลัง', w: 14, d: 10, h: 4.5, x: -52.5, z: -50.5, colorLight: 0xa6a598, colorDark: 0x4a4942 },
-    { kind: 'clinic', label: 'หน่วยบริการปฐมภูมิ 123', w: 19.5, d: 10, h: 4, x: -23.25, z: -50.5, colorLight: 0xb8d8e8, colorDark: 0x38576a },
+    { kind: 'clinic', label: 'หน่วยบริการปฐมภูมิ 123', w: 14, d: 10, h: 4, x: -52.5, z: -50.5, colorLight: 0xb8d8e8, colorDark: 0x38576a },
+    { kind: 'office', label: 'สำนักงานหอ 8 หลัง', w: 19.5, d: 10, h: 4.5, x: -23.25, z: -50.5, colorLight: 0xa6a598, colorDark: 0x4a4942 },
     { kind: 'court', label: 'สนาม', w: 45, d: 21, h: 0.3, x: -35.5, z: -22, colorLight: 0xbbb9b1, colorDark: 0x54524e, flat: true },
     { kind: 'cafeteria', label: 'โรงอาหารหอ 8 หลัง', w: 35, d: 15, h: 5.5, x: -35.5, z: 16, colorLight: 0xa6a598, colorDark: 0x4a4942 },
     { kind: 'market', label: 'ตลาดหอพัก 8 หลัง', w: 29.5, d: 7, h: 3.5, x: -35.25, z: 32, colorLight: 0x4caa7e, colorDark: 0x2f6d52 },
@@ -184,8 +197,8 @@ export const campusArea: CampusArea = {
     { x: 82, z: 72, s: 1.04 }, { x: 108, z: 71, s: 0.9 }, { x: 134, z: 73, s: 1.17 },
   ],
   parkingLots: [
-    // ลานจอดรถหน้าอาคารสำนักงาน/หออินเตอร์ตามภาพหน้างาน
-    { x: 111, z: 50, w: 43, d: 5.4, spaces: 8 },
+    // ลานจอดรถหน้าอาคารสำนักงาน/หออินเตอร์ — ขยับตะวันออกให้พ้นตัวสำนักงานที่หันออกถนนใหญ่
+    { x: 116, z: 50, w: 43, d: 5.4, spaces: 8 },
     // ลานจอดรถด้านเหนือ — ขยับพ้นถนนวงอินเตอร์เส้นบน (z=-61.6) ที่ย้ายตาม test.html
     { x: 105.5, z: -70, w: 68, d: 8, spaces: 12 },
   ],
@@ -194,8 +207,15 @@ export const campusArea: CampusArea = {
     { x: 161, z: 0, length: 112, axis: 'z' },
     { x: 116, z: 68, length: 76, axis: 'x' },
   ],
-  // สำนักงานจริงหน้า KKU-WORA: อาคารสีขาว 2 ชั้นอยู่ชิดทางเข้าฝั่งตะวันตกเฉียงใต้
-  interOffice: { x: 81.5, z: 51, w: 18, d: 4.5, floorHeight: 3.05, rotationY: 0 },
+  // กำแพงล้อมกลุ่มอาคาร 1-4 (ตะวันตก) และ 5-8 (ตะวันออก) — ประตูรั้ว+ป้อมยามหันเข้าโซนกลาง
+  // ช่องประตูอยู่แนวถนนแกนกลาง z=-2 ระหว่างอาคาร 2↔3 และ 6↔7 (ตามภาพหน้างานจริง)
+  clusterWalls: [
+    { minX: -134, maxX: -68, minZ: -58, maxZ: 39, gate: { side: 'east', z: -2, width: 10 } },
+    { minX: -0.5, maxX: 62, minZ: -57, maxZ: 45, gate: { side: 'west', z: -2, width: 10 } },
+  ],
+  // สำนักงาน KKU-WORA อยู่ชิดตึก B (ใต้ปีกตึก B ห่าง ~1.25 หน่วย ตามภาพจริง — ไม่ติดถนนใหญ่)
+  // หันหน้า (ป้าย/กันสาด/ร้านซักผ้า Bubble) ออกถนนมอดินแดงทิศใต้ ป้ายอยู่ปลายฝั่งตะวันตกใกล้ทางเข้า
+  interOffice: { x: 84.5, z: 34, w: 18, d: 4.5, floorHeight: 3.05, rotationY: 0 },
   // เสาไฟวางบนแนวทางเท้าด้านในของถนนหลักและถนนภายใน โดยหลบอาคาร/พื้นที่ใช้งานเดิม
   lamps: [
     { x: -135, z: 51, scale: 1, rotationY: 0 },

@@ -8,10 +8,11 @@ import { useTheme } from '@/composables/useTheme'
 import { CAMPUS_PALETTES, campusArea } from '@/lib/campus3d'
 import type { Building3DConfig, CampusPalette, RoadKind } from '@/lib/campus3d'
 
-// ฉากตึก 3 มิติทั้งพื้นที่ (ระยะห่าง/ทิศตาม docs/test.html): หอที่เลือก = ตึกสีเต็มกดได้ · อีกหอ = ตึกจาง กดเพื่อสลับหอ
-// มีถนนมอดินแดง + ถนนภายใน + ป้ายชื่อเหนืออาคาร + ลูกศรทิศเหนือ + ปุ่มมุมมอง Top/Perspective
-// flow: กดตึก → ชั้นของตึกแยกออกจากกัน (อนิเมชันแบบ test.html) พร้อมป้าย F1..Fn ข้างชั้น
-//       → กดชั้นหรือป้าย → dive → แจ้ง select-floor ให้พาไปแผนผังห้องของชั้นนั้น
+// ฉากตึก 3 มิติทั้งพื้นที่ (ระยะห่างตาม docs/test.html · ทิศเหนือคาลิเบรตจาก OSM/ดาวเทียมจริง):
+// หอที่เลือก = ตึกสีเต็มกดได้ · อีกหอ = ตึกจาง กดเพื่อสลับหอ
+// มีถนนมอดินแดง + ถนนภายใน + ป้ายชื่อเหนืออาคาร + ปุ่มมุมมองเฉียง/ด้านบน + เข็มทิศทิศเหนือจริงใต้ปุ่ม
+// flow: กดตึก → ชั้นของตึกแยกออกจากกัน (อนิเมชันแบบ test.html, หน้าตาอาคารครบทุกชั้น)
+//       พร้อมป้าย F1..Fn + จุดเขียว/แดงบอกว่าง/เต็ม → กดชั้นหรือป้าย → dive → แจ้ง select-floor
 const props = defineProps<{
   dormGroupId: string
   availability: Record<string, Record<number, { available: number; total: number }>>
@@ -29,14 +30,18 @@ const host = ref<HTMLDivElement>()
 const mode = ref<'campus' | 'building' | 'diving'>('campus')
 const selectedCode = ref<string | null>(null)
 const hoverLabel = ref<{ x: number; y: number; text: string; sub: string } | null>(null)
-// มุมมองกล้องจากปุ่ม Top/Perspective (แบบเดียวกับ toolbar ของ docs/test.html)
+// มุมมองกล้องจากปุ่มมุมมองเฉียง/มุมมองด้านบน (แบบเดียวกับ toolbar ของ docs/test.html)
 const viewMode = ref<'perspective' | 'top'>('perspective')
+// มุมหมุนการ์ดเข็มทิศ (องศา CSS) — อัปเดตทุกเฟรมตามทิศกล้อง แบบ updateCompass ใน test.html
+const compassAngle = ref(0)
 // ป้ายชั้น F1..Fn ข้างตึกตอนชั้นแยกออก (ตำแหน่งคำนวณจากการ project จุด 3D ลงจอทุกเฟรม)
+// dot: จุดสถานะหน้าป้าย — เขียว = ยังมีห้องว่าง · แดง = เต็ม · เทา = ไม่มีข้อมูล
 interface FloorMarker {
   floor: number
   x: number
   y: number
   sub: string
+  dot: string
   hot: boolean
   disabled: boolean
 }
@@ -52,6 +57,8 @@ const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 let pickables: THREE.Mesh[] = []
 const buildingDetails = new Map<string, THREE.Group>()
+// งานตกแต่งรายชั้นของตึกหอที่เลือก — ยกขึ้นพร้อมชั้นตอนแยกชั้น (หน้าตาตึกคงเดิมตอนประกบ)
+const buildingFloorGroups = new Map<string, { gap: number; groups: THREE.Group[] }>()
 const adaptiveLabels: THREE.Sprite[] = []
 const disposables: { dispose: () => void }[] = []
 let ro: ResizeObserver | null = null
@@ -101,9 +108,15 @@ function detectRenderProfile(): RenderProfile {
 const desiredPos = new THREE.Vector3()
 const desiredTarget = new THREE.Vector3()
 let transitioning = false
-// ทิศเหนือจริงตาม docs/test.html: −z เอียงไปทาง +x 7.08° → มุม azimuth ที่ทำให้ทิศเหนือชี้ขึ้นบนจอ
-const TRUE_NORTH_OFFSET_DEG = 7.08
-const NORTH_UP_AZIMUTH = THREE.MathUtils.degToRad(-TRUE_NORTH_OFFSET_DEG)
+// ทิศเหนือจริง — คาลิเบรตจากพิกัดจริง: footprint หอ 8 หลังทั้ง 8 หลังใน OpenStreetMap
+// (way 319171193-319171202 · แกนยาวตึก bearing 96.80–97.39° เฉลี่ย 97.09°) ตรงกับภาพดาวเทียม Esri
+// → แกน −z ของโมเดลชี้ 7.09° "ตะวันออก" ของเหนือจริง = ทิศเหนือจริงคือ −z เอียงไปทาง −x
+// (ขนาดมุมตรงกับ 7.08° ใน docs/test.html แต่เครื่องหมายที่ไฟล์นั้นกลับด้าน — ใช้ค่าที่วัดจริง)
+const TRUE_NORTH_OFFSET_DEG = 7.09
+// heading ตามแบบแผน dir = [sin H, cos H]: ทิศเหนือจริงอยู่ที่ H = 180° + offset
+const TRUE_NORTH_HEADING = Math.PI + THREE.MathUtils.degToRad(TRUE_NORTH_OFFSET_DEG)
+// มุมกล้อง (กล้องมองไปทาง H = az + 180°) ที่ทำให้ทิศเหนือชี้ขึ้นบนจอ
+const NORTH_UP_AZIMUTH = TRUE_NORTH_HEADING - Math.PI
 // สัดส่วนช่องว่างตอนแยกชั้นเท่ากับ test.html (eight 5/10, inter 3.8/10 ของความสูงชั้น)
 // separation 0→1 คืออนิเมชันระเบิดชั้น — 1 = แยกเต็มที่, 0 = ตึกประกบปกติ
 let separation = 0
@@ -489,43 +502,6 @@ function makeWeatheredConcreteTexture() {
   return tex
 }
 
-// ลูกศรทิศเหนือบนพื้น (หมุนไปพร้อมฉาก — ชี้ทิศถูกเสมอ)
-// ทิศเหนือจริงตาม docs/test.html: −z เอียงไปทาง +x 7.08°
-function makeNorthArrow(p: CampusPalette) {
-  const canvas = document.createElement('canvas')
-  canvas.width = 256
-  canvas.height = 256
-  const ctx = canvas.getContext('2d')!
-  const accent = '#' + p.accent.toString(16).padStart(6, '0')
-  ctx.strokeStyle = accent
-  ctx.lineWidth = 8
-  ctx.beginPath()
-  ctx.arc(128, 128, 96, 0, Math.PI * 2)
-  ctx.stroke()
-  ctx.fillStyle = accent
-  ctx.beginPath()
-  ctx.moveTo(128, 40)
-  ctx.lineTo(158, 128)
-  ctx.lineTo(128, 108)
-  ctx.lineTo(98, 128)
-  ctx.closePath()
-  ctx.fill()
-  ctx.font = 'bold 54px sans-serif'
-  ctx.textAlign = 'center'
-  ctx.fillText('N', 128, 196)
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.colorSpace = THREE.SRGBColorSpace
-  const geo = new THREE.PlaneGeometry(16, 16)
-  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
-  disposables.push(tex, geo, mat)
-  const mesh = new THREE.Mesh(geo, mat)
-  mesh.rotation.x = -Math.PI / 2
-  mesh.rotation.z = THREE.MathUtils.degToRad(-TRUE_NORTH_OFFSET_DEG)
-  mesh.position.set(-20, 0.22, 46) // ลานโล่งด้านใต้ของโซนกลาง ไม่ทับอาคารใด
-  mesh.userData = { decor: true }
-  return mesh
-}
-
 // ---------- ตึกรูปตัว L หนึ่งหลัง ----------
 function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
   const { main, wing, floorHeight: fh } = shapeOf(b)
@@ -574,6 +550,17 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
   decor.name = `details-${b.code}`
   decor.userData = { decor: true, buildingCode: b.code, context }
 
+  // งานตกแต่งของตึกหอที่เลือก แยกเก็บเป็นกลุ่มรายชั้น (index 0 = ชั้น 1) เพื่อยกตามชั้นตอนแยกชั้น
+  // ชั้นบนสุดถือหลังคา/ของบนดาดฟ้า/ป้ายรหัสตึกไปด้วย — ตอนประกบ (separation = 0) หน้าตาเหมือนเดิมทุกประการ
+  const floorGroups: THREE.Group[] = Array.from({ length: b.floors }, (_, i) => {
+    const grp = new THREE.Group()
+    grp.userData = { decor: true, buildingCode: b.code, floor: i + 1 }
+    decor.add(grp)
+    return grp
+  })
+  const topGroup = floorGroups[b.floors - 1]!
+  if (!context) buildingFloorGroups.set(b.code, { gap: separationGap(b), groups: floorGroups })
+
   const roofColor = mixColor(dormColor, p.roof, context ? 0.35 : 0.48)
   const roofMat = new THREE.MeshStandardMaterial({
     color: roofColor,
@@ -592,7 +579,7 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
     )
   }
   disposables.push(roofMat)
-  addInstancedBoxes(decor, roofMatrices, roofMat, { castShadow: !context, receiveShadow: true })
+  addInstancedBoxes(context ? decor : topGroup, roofMatrices, roofMat, { castShadow: !context, receiveShadow: true })
 
   if (!context) {
     const trimMat = new THREE.MeshStandardMaterial({
@@ -618,20 +605,22 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
     const panelMat = new THREE.MeshStandardMaterial({ color: theme.value === 'dark' ? 0x16283a : 0x294c5d, roughness: 0.3, metalness: 0.35 })
     disposables.push(trimMat, baseMat, frameMat, glassMat, litGlassMat, metalMat, darkMetalMat, panelMat)
 
-    const trimMatrices: THREE.Matrix4[] = []
-    const baseMatrices: THREE.Matrix4[] = []
-    const frameMatrices: THREE.Matrix4[] = []
-    const glassMatrices: THREE.Matrix4[] = []
-    const litGlassMatrices: THREE.Matrix4[] = []
-    const shadeMatrices: THREE.Matrix4[] = []
-    const mullionMatrices: THREE.Matrix4[] = []
-    const airconMatrices: THREE.Matrix4[] = []
+    // matrix แยกตามชั้น (index = ชั้น − 1) เพื่อสร้าง InstancedMesh ลงกลุ่มของชั้นนั้น ๆ
+    const perFloor = () => Array.from({ length: b.floors }, () => [] as THREE.Matrix4[])
+    const trimMatrices = perFloor()
+    const baseMatrices = perFloor()
+    const frameMatrices = perFloor()
+    const glassMatrices = perFloor()
+    const litGlassMatrices = perFloor()
+    const shadeMatrices = perFloor()
+    const mullionMatrices = perFloor()
+    const airconMatrices = perFloor()
 
     const windowSeed = Array.from(b.code).reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
     const selectGlassPool = (floor: number, index: number, side: number, wingIndex: number) =>
       theme.value === 'dark' && (windowSeed + floor * 17 + index * 7 + side * 11 + wingIndex * 23) % 5 === 0
-        ? litGlassMatrices
-        : glassMatrices
+        ? litGlassMatrices[floor]!
+        : glassMatrices[floor]!
 
     const addWindowOnZ = (
       x: number,
@@ -643,10 +632,10 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
       side: number,
       wingIndex: number,
     ) => {
-      frameMatrices.push(boxMatrix(x, y, z, 2.5, 1.62, 0.18))
+      frameMatrices[floor]!.push(boxMatrix(x, y, z, 2.5, 1.62, 0.18))
       selectGlassPool(floor, index, side, wingIndex).push(boxMatrix(x, y, z + outward * 0.11, 2.08, 1.27, 0.12))
-      mullionMatrices.push(boxMatrix(x, y, z + outward * 0.2, 0.08, 1.26, 0.08))
-      shadeMatrices.push(boxMatrix(x, y + 0.97, z + outward * 0.2, 2.75, 0.13, 0.55))
+      mullionMatrices[floor]!.push(boxMatrix(x, y, z + outward * 0.2, 0.08, 1.26, 0.08))
+      shadeMatrices[floor]!.push(boxMatrix(x, y + 0.97, z + outward * 0.2, 2.75, 0.13, 0.55))
     }
 
     const addWindowOnX = (
@@ -659,18 +648,19 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
       side: number,
       wingIndex: number,
     ) => {
-      frameMatrices.push(boxMatrix(x, y, z, 0.18, 1.62, 2.5))
+      frameMatrices[floor]!.push(boxMatrix(x, y, z, 0.18, 1.62, 2.5))
       selectGlassPool(floor, index, side, wingIndex).push(boxMatrix(x + outward * 0.11, y, z, 0.12, 1.27, 2.08))
-      mullionMatrices.push(boxMatrix(x + outward * 0.2, y, z, 0.08, 1.26, 0.08))
-      shadeMatrices.push(boxMatrix(x + outward * 0.2, y + 0.97, z, 0.55, 0.13, 2.75))
+      mullionMatrices[floor]!.push(boxMatrix(x + outward * 0.2, y, z, 0.08, 1.26, 0.08))
+      shadeMatrices[floor]!.push(boxMatrix(x + outward * 0.2, y + 0.97, z, 0.55, 0.13, 2.75))
     }
 
     wings.forEach((w, wingIndex) => {
-      baseMatrices.push(boxMatrix(w.cx, 0.23, w.cz, w.w + 0.7, 0.46, w.d + 0.7))
+      baseMatrices[0]!.push(boxMatrix(w.cx, 0.23, w.cz, w.w + 0.7, 0.46, w.d + 0.7))
 
+      // แนวคาดที่ y = level*fh คือขอบบนของชั้น level — เก็บกับชั้นนั้นให้ยกตามกัน
       for (let level = 1; level < b.floors; level++) {
         const y = level * fh
-        trimMatrices.push(
+        trimMatrices[level - 1]!.push(
           boxMatrix(w.cx, y, w.cz + w.d / 2 + 0.08, w.w + 0.35, 0.18, 0.3),
           boxMatrix(w.cx, y, w.cz - w.d / 2 - 0.08, w.w + 0.35, 0.18, 0.3),
           boxMatrix(w.cx + w.w / 2 + 0.08, y, w.cz, 0.3, 0.18, w.d),
@@ -678,16 +668,19 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
         )
       }
 
+      // เสามุมแบ่งเป็นท่อนละชั้น — ตอนประกบต่อเนื่องเป็นเสาเดียว ตอนแยกชั้นยกตามชั้นของมัน
       for (const xSide of [-1, 1]) {
         for (const zSide of [-1, 1]) {
-          trimMatrices.push(boxMatrix(
-            w.cx + xSide * (w.w / 2 + 0.08),
-            buildingHeight / 2,
-            w.cz + zSide * (w.d / 2 + 0.08),
-            0.34,
-            buildingHeight,
-            0.34,
-          ))
+          for (let floor = 0; floor < b.floors; floor++) {
+            trimMatrices[floor]!.push(boxMatrix(
+              w.cx + xSide * (w.w / 2 + 0.08),
+              floor * fh + fh / 2,
+              w.cz + zSide * (w.d / 2 + 0.08),
+              0.34,
+              fh,
+              0.34,
+            ))
+          }
         }
       }
 
@@ -701,7 +694,7 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
           const behindWing = w.isMain && Math.abs(x - wingCx) < wing.w / 2 + 1.1
           if (!behindWing) addWindowOnZ(x, y, w.cz - w.d / 2 - 0.11, -1, floor, i, 1, wingIndex)
           if (w.isMain && i % 3 === 1) {
-            airconMatrices.push(boxMatrix(x + 1.35, y - 0.43, w.cz - w.d / 2 - 0.42, 0.8, 0.58, 0.52))
+            airconMatrices[floor]!.push(boxMatrix(x + 1.35, y - 0.43, w.cz - w.d / 2 - 0.42, 0.8, 0.58, 0.52))
           }
         }
         for (let i = 0; i < zCount; i++) {
@@ -712,42 +705,44 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
       }
     })
 
-    // ทางเข้า: ประตูกระจก กันสาด เสา และขั้นบันไดอยู่ด้านหน้าปีกหลัก
+    // ทางเข้า (ชั้น 1): ประตูกระจก กันสาด เสา และขั้นบันไดอยู่ด้านหน้าปีกหลัก
     const entranceZ = main.d / 2 + 0.18
-    frameMatrices.push(boxMatrix(0, 1.42, entranceZ, 3.7, 2.65, 0.22))
-    glassMatrices.push(
+    frameMatrices[0]!.push(boxMatrix(0, 1.42, entranceZ, 3.7, 2.65, 0.22))
+    glassMatrices[0]!.push(
       boxMatrix(-0.86, 1.42, entranceZ + 0.14, 1.45, 2.25, 0.12),
       boxMatrix(0.86, 1.42, entranceZ + 0.14, 1.45, 2.25, 0.12),
     )
-    mullionMatrices.push(boxMatrix(0, 1.42, entranceZ + 0.24, 0.1, 2.3, 0.1))
-    shadeMatrices.push(
+    mullionMatrices[0]!.push(boxMatrix(0, 1.42, entranceZ + 0.24, 0.1, 2.3, 0.1))
+    shadeMatrices[0]!.push(
       boxMatrix(0, 3.05, entranceZ + 1.05, 6.2, 0.24, 2.3),
       boxMatrix(-2.55, 1.62, entranceZ + 1.7, 0.18, 2.86, 0.18),
       boxMatrix(2.55, 1.62, entranceZ + 1.7, 0.18, 2.86, 0.18),
     )
     for (let step = 0; step < 3; step++) {
-      baseMatrices.push(boxMatrix(0, 0.09 + step * 0.09, entranceZ + 0.7 + step * 0.38, 5.1 - step * 0.45, 0.18, 0.72))
+      baseMatrices[0]!.push(boxMatrix(0, 0.09 + step * 0.09, entranceZ + 0.7 + step * 0.38, 5.1 - step * 0.45, 0.18, 0.72))
     }
 
-    // ช่องบันไดสูงที่ปลายปีกช่วยให้มวลอาคารไม่เป็นกล่องเรียบ
+    // ช่องบันไดที่ปลายปีก — กรอบแบ่งเป็นท่อนละชั้นเช่นเดียวกับเสามุม
     const stairZ = -(main.d / 2 + wing.d) - 0.16
-    frameMatrices.push(boxMatrix(wingCx, buildingHeight / 2, stairZ, wing.w * 0.42, buildingHeight - 0.8, 0.22))
     for (let floor = 0; floor < b.floors; floor++) {
       const y = floor * fh + fh / 2
-      glassMatrices.push(boxMatrix(wingCx, y, stairZ - 0.14, wing.w * 0.34, fh * 0.6, 0.12))
-      mullionMatrices.push(boxMatrix(wingCx, y, stairZ - 0.22, 0.1, fh * 0.58, 0.08))
+      frameMatrices[floor]!.push(boxMatrix(wingCx, y, stairZ, wing.w * 0.42, fh, 0.22))
+      glassMatrices[floor]!.push(boxMatrix(wingCx, y, stairZ - 0.14, wing.w * 0.34, fh * 0.6, 0.12))
+      mullionMatrices[floor]!.push(boxMatrix(wingCx, y, stairZ - 0.22, 0.1, fh * 0.58, 0.08))
     }
 
-    addInstancedBoxes(decor, baseMatrices, baseMat, { receiveShadow: true })
-    addInstancedBoxes(decor, trimMatrices, trimMat, { receiveShadow: true })
-    addInstancedBoxes(decor, frameMatrices, frameMat)
-    addInstancedBoxes(decor, glassMatrices, glassMat)
-    addInstancedBoxes(decor, litGlassMatrices, litGlassMat)
-    addInstancedBoxes(decor, shadeMatrices, trimMat)
-    addInstancedBoxes(decor, mullionMatrices, metalMat)
-    addInstancedBoxes(decor, airconMatrices, darkMetalMat)
+    floorGroups.forEach((grp, floor) => {
+      addInstancedBoxes(grp, baseMatrices[floor]!, baseMat, { receiveShadow: true })
+      addInstancedBoxes(grp, trimMatrices[floor]!, trimMat, { receiveShadow: true })
+      addInstancedBoxes(grp, frameMatrices[floor]!, frameMat)
+      addInstancedBoxes(grp, glassMatrices[floor]!, glassMat)
+      addInstancedBoxes(grp, litGlassMatrices[floor]!, litGlassMat)
+      addInstancedBoxes(grp, shadeMatrices[floor]!, trimMat)
+      addInstancedBoxes(grp, mullionMatrices[floor]!, metalMat)
+      addInstancedBoxes(grp, airconMatrices[floor]!, darkMetalMat)
+    })
 
-    // ห้องบันได ถังน้ำ โซลาร์ และช่องระบายอากาศบนดาดฟ้า
+    // ห้องบันได ถังน้ำ โซลาร์ และช่องระบายอากาศบนดาดฟ้า — ยกไปพร้อมชั้นบนสุด
     const roofHouseGeo = new THREE.BoxGeometry(5.4, 2.3, 4.2)
     const roofHouse = new THREE.Mesh(roofHouseGeo, trimMat)
     roofHouse.position.set(-wingCx * 0.45, buildingHeight + 1.55, -1.2)
@@ -755,7 +750,7 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
     roofHouse.receiveShadow = true
     roofHouse.userData = { decor: true }
     disposables.push(roofHouseGeo)
-    decor.add(roofHouse)
+    topGroup.add(roofHouse)
 
     const tankGeo = new THREE.CylinderGeometry(1.2, 1.35, 1.8, 14)
     const tank = new THREE.Mesh(tankGeo, metalMat)
@@ -763,7 +758,7 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
     tank.castShadow = true
     tank.userData = { decor: true }
     disposables.push(tankGeo)
-    decor.add(tank)
+    topGroup.add(tank)
 
     for (let i = 0; i < 2; i++) {
       const panelGeo = new THREE.BoxGeometry(4.2, 0.16, 2.1)
@@ -773,13 +768,13 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
       panel.castShadow = true
       panel.userData = { decor: true }
       disposables.push(panelGeo)
-      decor.add(panel)
+      topGroup.add(panel)
     }
   }
 
   const label = makeBuildingText(b.code, buildingHeight, p)
   label.position.set(0, buildingHeight + (context ? 2 : 3.1), -wing.d * 0.22)
-  decor.add(label)
+  ;(context ? decor : topGroup).add(label)
   buildingDetails.set(b.code, decor)
   g.add(decor)
 
@@ -1076,7 +1071,8 @@ function addFacility(root: THREE.Group, ex: (typeof area.extras)[number], p: Cam
 
     const frontZ = ex.d / 2 + 0.08
     if (ex.kind === 'clinic' || ex.kind === 'office') {
-      const windowCount = ex.kind === 'clinic' ? 5 : 2
+      // จำนวนหน้าต่างตามความกว้างอาคาร (ขนาดฐานมาจาก test.html จึงกำหนดตายตัวไม่ได้)
+      const windowCount = Math.max(2, Math.floor(ex.w / 5.5))
       const gap = ex.w / (windowCount + 1)
       for (let i = 0; i < windowCount; i++) {
         const x = -ex.w / 2 + gap * (i + 1)
@@ -1095,10 +1091,11 @@ function addFacility(root: THREE.Group, ex: (typeof area.extras)[number], p: Cam
       if (ex.kind === 'clinic') {
         addBox(group, trimMat, [0.6, 2.25, 0.22], [-ex.w * 0.36, 2.35, frontZ + 0.18])
         addBox(group, trimMat, [2.25, 0.6, 0.22], [-ex.w * 0.36, 2.35, frontZ + 0.18])
-        const ramp = addBox(group, p.curb === p.facadeBase ? trimMat : bodyMat, [5.2, 0.18, 2.8], [4.8, 0.18, frontZ + 1.25])
+        const rampX = ex.w * 0.3
+        const ramp = addBox(group, p.curb === p.facadeBase ? trimMat : bodyMat, [5.2, 0.18, 2.8], [rampX, 0.18, frontZ + 1.25])
         ramp.rotation.x = -0.035
-        addBox(group, metalMat, [0.1, 0.8, 2.8], [2.35, 0.75, frontZ + 1.25])
-        addBox(group, metalMat, [0.1, 0.8, 2.8], [7.25, 0.75, frontZ + 1.25])
+        addBox(group, metalMat, [0.1, 0.8, 2.8], [rampX - 2.45, 0.75, frontZ + 1.25])
+        addBox(group, metalMat, [0.1, 0.8, 2.8], [rampX + 2.45, 0.75, frontZ + 1.25])
       }
     } else if (ex.kind === 'cafeteria') {
       addBox(group, darkMat, [ex.w * 0.86, ex.h * 0.56, 0.22], [0, ex.h * 0.46, frontZ + 0.04])
@@ -1192,7 +1189,40 @@ function makeInterOfficeSignTexture() {
   return texture
 }
 
-// สำนักงานจริงหน้าหออินเตอร์ — อิงภาพหน้างาน: อาคารขาว 2 ชั้น หลังคายื่น ระแนง และกรอบป้ายหน้าอาคาร
+// ป้ายร้านซักผ้า Bubble Wash & Dry (ป้ายดำ ตัวอักษรขาว/เหลือง ตามภาพจริง)
+function makeLaundrySignTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 512
+  canvas.height = 160
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = '#141414'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = '#ffd23f'
+  ctx.beginPath()
+  ctx.arc(96, 74, 34, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#141414'
+  ctx.beginPath()
+  ctx.arc(96, 74, 22, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '900 62px "Noto Sans", sans-serif'
+  ctx.fillText('Bubble', 152, 62)
+  ctx.fillStyle = '#ffd23f'
+  ctx.font = '700 36px "Noto Sans", sans-serif'
+  ctx.fillText('Wash & Dry', 154, 116)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = textureAnisotropy()
+  disposables.push(texture)
+  return texture
+}
+
+// สำนักงานจริงหน้าหออินเตอร์ — อิงภาพหน้างาน: อาคารขาว 2 ชั้น หลังคายื่น ระแนง กรอบป้ายหน้าอาคาร
+// และร้านซักผ้า Bubble Wash & Dry ที่ปลายด้านหนึ่งของอาคาร (local +x)
 function addInterOffice(root: THREE.Group, p: CampusPalette) {
   const config = area.interOffice
   const group = new THREE.Group()
@@ -1266,14 +1296,134 @@ function addInterOffice(root: THREE.Group, p: CampusPalette) {
 
   const planterMatrices = [
     boxMatrix(-0.6, 0.32, config.d / 2 + 1.12, 1.4, 0.62, 1.2),
-    boxMatrix(8.1, 0.32, config.d / 2 + 1.12, 1.4, 0.62, 1.2),
   ]
   addInstancedBoxes(group, planterMatrices, planterMat, { receiveShadow: true })
+
+  // ── ร้านซักผ้า Bubble Wash & Dry ปลายอาคารฝั่ง +x (Street View: อยู่ขวามือเมื่อมองจากถนนซอย) ──
+  const laundryGreenMat = new THREE.MeshStandardMaterial({
+    color: dark ? 0x4e7a5e : 0x9ccbaa,
+    roughness: 0.78,
+    metalness: 0.16,
+  })
+  const washerMat = new THREE.MeshStandardMaterial({ color: dark ? 0xc9ced4 : 0xf6f6f2, roughness: 0.42, metalness: 0.1 })
+  const washerDoorMat = new THREE.MeshStandardMaterial({ color: 0x2d3439, roughness: 0.28, metalness: 0.32 })
+  disposables.push(laundryGreenMat, washerMat, washerDoorMat)
+
+  // เครื่องซักผ้าหยอดเหรียญวางซ้อนสองชั้นเรียงแถวใต้กันสาด (ถัดจากประตูกระจกไปทางปลายอาคาร)
+  const washerMatrices: THREE.Matrix4[] = []
+  const washerDoorMatrices: THREE.Matrix4[] = []
+  for (const wx of [6.95, 7.75, 8.55]) {
+    for (const wy of [0.42, 1.18]) {
+      washerMatrices.push(boxMatrix(wx, wy, config.d / 2 + 0.5, 0.74, 0.74, 0.7))
+      washerDoorMatrices.push(boxMatrix(wx, wy, config.d / 2 + 0.88, 0.46, 0.46, 0.05))
+    }
+  }
+  addInstancedBoxes(group, washerMatrices, washerMat, { castShadow: true })
+  addInstancedBoxes(group, washerDoorMatrices, washerDoorMat)
+
+  // ป้ายดำ Bubble Wash & Dry บนผนังชั้นสอง (ผนังชั้นสองร่นเข้า d*0.9)
+  const laundrySignGeo = new THREE.PlaneGeometry(2.7, 0.85)
+  const laundrySignMat = new THREE.MeshBasicMaterial({ map: makeLaundrySignTexture(), toneMapped: false })
+  const laundrySign = new THREE.Mesh(laundrySignGeo, laundrySignMat)
+  laundrySign.position.set(7.2, floorHeight * 1.55, (config.d * 0.9) / 2 - 0.25 + 0.06)
+  laundrySign.userData = { decor: true }
+  disposables.push(laundrySignGeo, laundrySignMat)
+  group.add(laundrySign)
+
+  // รั้วตะแกรงเหล็กสีเขียวมินต์หน้าร้าน เว้นช่องทางเข้าตรงประตูกระจก
+  const grilleMatrices: THREE.Matrix4[] = []
+  const grilleZ = config.d / 2 + 1.95
+  for (const [from, to] of [[1.3, 3.2], [5.8, 8.8]] as const) {
+    grilleMatrices.push(
+      boxMatrix((from + to) / 2, 0.62, grilleZ, to - from, 0.08, 0.08),
+      boxMatrix((from + to) / 2, 1.42, grilleZ, to - from, 0.08, 0.08),
+      boxMatrix(from, 0.85, grilleZ, 0.12, 1.7, 0.12),
+      boxMatrix(to, 0.85, grilleZ, 0.12, 1.7, 0.12),
+    )
+    for (let gx = from + 0.19; gx < to; gx += 0.38) {
+      grilleMatrices.push(boxMatrix(gx, 1.02, grilleZ, 0.05, 1.5, 0.05))
+    }
+  }
+  addInstancedBoxes(group, grilleMatrices, laundryGreenMat, { castShadow: true })
+
   root.add(group)
 
   const label = makeFloatingText('สำนักงานหออินเตอร์', 22, p)
   label.position.set(config.x, floorHeight * 2 + 1.4, config.z)
   root.add(label)
+}
+
+// กำแพงล้อมกลุ่มอาคาร 1-4 และ 5-8 + ประตูรั้วเหล็กสีส้มอิฐ + ป้อมยามหลังคาแดงบนเกาะกลางช่องประตู
+// อิงภาพหน้างานจริง: กำแพงครีมมีเสาเป็นระยะ ประตูโปร่งสองบานพับข้างช่อง ป้อมมีขอบเกาะสีแดง
+function addClusterWalls(root: THREE.Group, p: CampusPalette) {
+  const dark = theme.value === 'dark'
+  const wallMat = new THREE.MeshStandardMaterial({ color: dark ? 0x55606e : 0xeae3d3, roughness: 0.93 })
+  const postMat = new THREE.MeshStandardMaterial({ color: dark ? 0x67727f : 0xd8d0bd, roughness: 0.9 })
+  const gateMat = new THREE.MeshStandardMaterial({ color: dark ? 0x91492c : 0xb3502e, roughness: 0.68, metalness: 0.22 })
+  const boothBodyMat = new THREE.MeshStandardMaterial({ color: dark ? 0x9d7a5c : 0xf2e0c8, roughness: 0.86 })
+  const boothRoofMat = new THREE.MeshStandardMaterial({ color: dark ? 0x76382a : 0xad5a40, roughness: 0.8 })
+  const islandMat = new THREE.MeshStandardMaterial({ color: dark ? 0x8a4038 : 0xc2564b, roughness: 0.92 })
+  const boothGlassMat = new THREE.MeshStandardMaterial({ color: p.glass, roughness: 0.25, metalness: 0.1 })
+  disposables.push(wallMat, postMat, gateMat, boothBodyMat, boothRoofMat, islandMat, boothGlassMat)
+
+  const wallH = 1.9
+  const wallT = 0.35
+  const wallMatrices: THREE.Matrix4[] = []
+  const postMatrices: THREE.Matrix4[] = []
+  const gateMatrices: THREE.Matrix4[] = []
+
+  const postsAlong = (axis: 'x' | 'z', fixed: number, from: number, to: number, skip?: [number, number]) => {
+    for (let v = from; v <= to + 0.01; v += 7.4) {
+      if (skip && v > skip[0] && v < skip[1]) continue
+      postMatrices.push(axis === 'x'
+        ? boxMatrix(v, 1.08, fixed, 0.52, 2.16, 0.52)
+        : boxMatrix(fixed, 1.08, v, 0.52, 2.16, 0.52))
+    }
+  }
+
+  for (const wallRect of area.clusterWalls) {
+    const { minX, maxX, minZ, maxZ, gate } = wallRect
+    const cx = (minX + maxX) / 2
+    wallMatrices.push(boxMatrix(cx, wallH / 2, minZ, maxX - minX, wallH, wallT))
+    wallMatrices.push(boxMatrix(cx, wallH / 2, maxZ, maxX - minX, wallH, wallT))
+    postsAlong('x', minZ, minX, maxX)
+    postsAlong('x', maxZ, minX, maxX)
+
+    for (const side of ['west', 'east'] as const) {
+      const x = side === 'west' ? minX : maxX
+      if (gate.side !== side) {
+        wallMatrices.push(boxMatrix(x, wallH / 2, (minZ + maxZ) / 2, wallT, wallH, maxZ - minZ))
+        postsAlong('z', x, minZ, maxZ)
+        continue
+      }
+      // ฝั่งประตู: เว้นช่องรั้ว มีเสาประตูใหญ่สองต้น + บานรั้วโปร่งพับชิดสองข้าง
+      const gapMin = gate.z - gate.width / 2
+      const gapMax = gate.z + gate.width / 2
+      wallMatrices.push(boxMatrix(x, wallH / 2, (minZ + gapMin) / 2, wallT, wallH, gapMin - minZ))
+      wallMatrices.push(boxMatrix(x, wallH / 2, (gapMax + maxZ) / 2, wallT, wallH, maxZ - gapMax))
+      postsAlong('z', x, minZ, maxZ, [gapMin - 0.6, gapMax + 0.6])
+      gateMatrices.push(
+        boxMatrix(x, 1.25, gapMin - 0.45, 0.6, 2.5, 0.6),
+        boxMatrix(x, 1.25, gapMax + 0.45, 0.6, 2.5, 0.6),
+        boxMatrix(x, 0.92, gapMin + 1.45, 0.14, 1.7, 2.7),
+        boxMatrix(x, 0.92, gapMax - 1.45, 0.14, 1.7, 2.7),
+      )
+
+      // ป้อมยามบนเกาะกลางช่องประตู (ตัวป้อมครีม คาดกระจก หลังคาจั่วสีแดงอิฐ)
+      addBox(root, islandMat, [4.4, 0.24, 5.6], [x, 0.2, gate.z], { receiveShadow: true })
+      addBox(root, boothBodyMat, [2.1, 1.15, 2.1], [x, 0.85, gate.z], { castShadow: true, receiveShadow: true })
+      addBox(root, boothGlassMat, [1.9, 0.62, 1.9], [x, 1.74, gate.z], { castShadow: true })
+      for (const [ox, oz] of [[-0.95, -0.95], [-0.95, 0.95], [0.95, -0.95], [0.95, 0.95]] as const) {
+        addBox(root, boothBodyMat, [0.16, 0.72, 0.16], [x + ox, 1.74, gate.z + oz])
+      }
+      addBox(root, boothRoofMat, [3.0, 0.16, 3.0], [x, 2.18, gate.z], { castShadow: true })
+      addBox(root, boothRoofMat, [1.9, 0.42, 1.9], [x, 2.45, gate.z], { castShadow: true })
+    }
+  }
+
+  addInstancedBoxes(root, wallMatrices, wallMat, { castShadow: true, receiveShadow: true })
+  addInstancedBoxes(root, postMatrices, postMat, { castShadow: true })
+  addInstancedBoxes(root, gateMatrices, gateMat, { castShadow: true })
 }
 
 function addParkingLots(root: THREE.Group, p: CampusPalette) {
@@ -1486,6 +1636,7 @@ function buildScene() {
   disposables.length = 0
   pickables = []
   buildingDetails.clear()
+  buildingFloorGroups.clear()
   adaptiveLabels.length = 0
 
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -1550,13 +1701,13 @@ function buildScene() {
   scene.add(root)
 
   addRoads(root, p)
-  root.add(makeNorthArrow(p))
   addEnvironmentalContext(root, p)
   addParkingLots(root, p)
 
   for (const b of area.buildings) addBuilding(root, b, p)
   for (const ex of area.extras) addFacility(root, ex, p)
   addInterOffice(root, p)
+  addClusterWalls(root, p)
 
   for (const t of area.trees) scene.add(makeTree(t.x, t.z, t.s, p))
   addLandscape(root, p)
@@ -1608,10 +1759,10 @@ function applyHighlight() {
     mat.color.set(buildingColor(buildingOf(code), p))
   }
 
-  // เมื่อเลือกตึกแล้ว ชั้นจะแยกออกเป็นแผ่น ๆ แบบ test.html — ซ่อนงานตกแต่ง (หน้าต่าง/หลังคา)
-  // ของทุกตึก เพราะ decor สร้างแบบตึกประกบ จะลอยค้างผิดตำแหน่งเมื่อชั้นถูกยก
-  for (const [, details] of buildingDetails) {
-    details.visible = mode.value === 'campus' && selectedCode.value === null
+  // ตึกที่เลือกยังแสดงงานตกแต่งครบตอนแยกชั้น (แยกเก็บรายชั้นแล้ว) — ซ่อนเฉพาะตอน dive
+  for (const [code, details] of buildingDetails) {
+    const selected = selectedCode.value
+    details.visible = mode.value !== 'diving' && (selected === null || selected === code)
   }
 }
 
@@ -1760,12 +1911,8 @@ function onMove(e: PointerEvent) {
   } else if (mode.value === 'building' && hit.buildingCode === selectedCode.value) {
     hoverFloor.code = hit.buildingCode
     hoverFloor.floor = hit.floor
-    const info = props.availability[hit.buildingCode]?.[hit.floor]
-    hoverLabel.value = {
-      x: e.clientX, y: e.clientY,
-      text: `ชั้น ${hit.floor}`,
-      sub: info ? `ว่าง ${info.available} จาก ${info.total} ห้อง · กดเพื่อดูแผนผัง` : 'ยังไม่มีข้อมูลห้องชั้นนี้',
-    }
+    // ไม่แสดงป้ายลอยตามเมาส์ — รายละเอียดห้องว่างมีบนป้าย F ของแต่ละชั้นอยู่แล้ว
+    hoverLabel.value = null
   } else {
     hoverFloor.code = ''
     hoverFloor.floor = 0
@@ -1904,7 +2051,12 @@ function updateFloorMarkers() {
       floor,
       x: (point.x * 0.5 + 0.5) * w,
       y: (1 - (point.y * 0.5 + 0.5)) * h,
-      sub: info ? `ว่าง ${info.available}/${info.total} ห้อง` : 'ไม่มีข้อมูลห้อง',
+      sub: info
+        ? info.available > 0 ? `ว่าง ${info.available}/${info.total} ห้อง` : `เต็ม ${info.total} ห้อง`
+        : 'ไม่มีข้อมูลห้อง',
+      dot: info
+        ? info.available > 0 ? 'bg-emerald-500' : 'bg-red-500'
+        : 'bg-muted-foreground/40',
       hot: hoverFloor.code === b.code && hoverFloor.floor === floor,
       disabled: !info,
     })
@@ -1944,10 +2096,22 @@ function tick(now = performance.now()) {
       : 0
     m.position.y = u.baseY + lift
   }
+  // งานตกแต่งรายชั้น (หน้าต่าง/แนวคาด/หลังคา) ยกตามชั้นของมัน
+  for (const [code, { gap, groups }] of buildingFloorGroups) {
+    const active = mode.value !== 'campus' && code === selectedCode.value
+    for (let i = 0; i < groups.length; i++) {
+      groups[i]!.position.y = active ? i * gap * separation : 0
+    }
+  }
 
   controls.update()
   updateAdaptiveLabels()
   updateFloorMarkers()
+
+  // เข็มทิศ: ทิศที่กล้องหันบนพื้น เทียบกับทิศเหนือจริง (H = 180° + 7.09°)
+  const viewHeading = Math.atan2(controls.target.x - camera.position.x, controls.target.z - camera.position.z)
+  const cardAngle = -THREE.MathUtils.radToDeg(viewHeading - TRUE_NORTH_HEADING)
+  if (Math.abs(cardAngle - compassAngle.value) > 0.1) compassAngle.value = cardAngle
 
   if (mode.value === 'diving' && !diveEmitted && diveTarget && performance.now() >= diveResolveAt) {
     diveEmitted = true
@@ -2104,7 +2268,7 @@ const headerLabel = computed(() =>
       </p>
     </div>
 
-    <!-- ปุ่มมุมมอง Top/Perspective + ปุ่มย้อนกลับ ขวาบน (แบบ toolbar ของ docs/test.html) -->
+    <!-- ปุ่มมุมมองเฉียง/ด้านบน + ปุ่มย้อนกลับ ขวาบน (แบบ toolbar ของ docs/test.html) -->
     <div class="absolute right-3 top-3 flex gap-2">
       <Button
         size="sm"
@@ -2113,7 +2277,7 @@ const headerLabel = computed(() =>
         :aria-pressed="viewMode === 'perspective'"
         @click="setView('perspective')"
       >
-        Perspective
+        มุมมองเฉียง
       </Button>
       <Button
         size="sm"
@@ -2122,11 +2286,34 @@ const headerLabel = computed(() =>
         :aria-pressed="viewMode === 'top'"
         @click="setView('top')"
       >
-        Top
+        มุมมองด้านบน
       </Button>
       <Button v-if="mode !== 'campus'" size="sm" variant="secondary" class="shadow-sm" @click="backToCampus">
         <ArrowLeftIcon aria-hidden="true" /> ดูทุกอาคาร
       </Button>
+    </div>
+
+    <!-- เข็มทิศทิศเหนือจริง (เอียง 7.08° ตาม docs/test.html) ใต้ปุ่มมุมมอง -->
+    <div class="pointer-events-none absolute right-3 top-13 flex flex-col items-center gap-1 rounded-2xl border bg-background/90 px-2 py-1.5 shadow-sm backdrop-blur">
+      <div class="relative size-11 rounded-full border bg-background/80">
+        <span class="absolute left-1/2 top-0 h-1 w-0.5 -translate-x-1/2 rounded-b bg-foreground/50" aria-hidden="true" />
+        <div class="absolute inset-0" :style="{ transform: `rotate(${compassAngle}deg)` }">
+          <span class="absolute left-1/2 top-0.75 -translate-x-1/2 text-[9px] font-black leading-none text-red-500">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">N</span>
+          </span>
+          <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">E</span>
+          </span>
+          <span class="absolute bottom-0.75 left-1/2 -translate-x-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">S</span>
+          </span>
+          <span class="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">W</span>
+          </span>
+        </div>
+        <span class="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />
+      </div>
+      <span class="text-[8px] font-semibold leading-none text-muted-foreground">ทิศเหนือจริง</span>
     </div>
 
     <!-- ป้ายชั้น F1..Fn ข้างชั้นที่แยกออก (ตำแหน่ง project จาก 3D ทุกเฟรม แบบ floor-marker ใน test.html) -->
@@ -2142,7 +2329,7 @@ const headerLabel = computed(() =>
       @pointerenter="onMarkerEnter(m.floor)"
       @pointerleave="onMarkerLeave"
     >
-      <span class="inline-block size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+      <span class="inline-block size-1.5 shrink-0 rounded-full" :class="m.dot" aria-hidden="true" />
       <span class="font-bold">F{{ m.floor }}</span>
       <span class="text-[10px] text-muted-foreground">{{ m.sub }}</span>
     </button>
