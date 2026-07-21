@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { BracesIcon, CopyIcon, SearchIcon, XIcon } from '@lucide/vue'
+import { BracesIcon, CopyIcon, ScrollTextIcon, SearchIcon, XIcon } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import PermissionGate from '@/components/domain/PermissionGate.vue'
+import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { formatDateTime } from '@/lib/labels'
 import { useContractsStore } from '@/stores/contracts'
 import type { AuditEvent } from '@/types'
@@ -151,17 +152,17 @@ async function copyJson() {
 
 <template>
   <div class="space-y-5">
-    <div class="flex flex-wrap items-end justify-between gap-3">
-      <div class="space-y-1">
-        <h1 class="text-2xl font-bold">Audit Log</h1>
-        <p class="max-w-3xl text-sm text-muted-foreground">
-          ตรวจสอบว่าใครทำอะไร เมื่อใด และมีเหตุผลหรือข้อมูลอ้างอิงใด โดยเปิดดู payload ดิบของแต่ละเหตุการณ์เป็น JSON ได้
-        </p>
-      </div>
-      <Badge variant="outline" class="h-7 px-3 font-normal">
-        {{ contractsStore.auditEvents.length.toLocaleString('th-TH') }} เหตุการณ์ทั้งหมด
-      </Badge>
-    </div>
+    <StaffPageHeader
+      title="Audit Log"
+      description="ตรวจสอบว่าใครทำอะไร เมื่อใด และมีเหตุผลหรือข้อมูลอ้างอิงใด โดยเปิดดู payload ดิบของแต่ละเหตุการณ์เป็น JSON ได้"
+      :icon="ScrollTextIcon"
+    >
+      <template #actions>
+        <Badge variant="outline" class="h-7 px-3 font-normal">
+          {{ contractsStore.auditEvents.length.toLocaleString('th-TH') }} เหตุการณ์ทั้งหมด
+        </Badge>
+      </template>
+    </StaffPageHeader>
 
     <PermissionGate permission="audit.view">
       <div class="space-y-3">
@@ -240,7 +241,7 @@ async function copyJson() {
           </div>
         </div>
 
-        <div class="overflow-x-auto rounded-md border">
+        <div class="data-table-card">
           <Table class="min-w-225 table-fixed">
             <TableHeader>
               <TableRow>

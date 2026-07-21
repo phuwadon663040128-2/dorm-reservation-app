@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { toast } from 'vue-sonner'
+import { ReceiptTextIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { documentStatusLabel, formatBaht, resultStatusLabel } from '@/lib/labels'
 import { usePermissions } from '@/composables/usePermissions'
 import { users } from '@/fixtures'
@@ -17,6 +20,9 @@ import { usePaymentsStore } from '@/stores/payments'
 
 const payments = usePaymentsStore()
 const { can } = usePermissions()
+
+const paidCount = computed(() => payments.obligations.filter(o => payments.isPaid(o)).length)
+const exceptionCount = computed(() => payments.obligations.filter(o => o.resultStatus === 'exception').length)
 
 function nameOf(userId: string) {
   return users.find(u => u.id === userId)?.displayName ?? userId
@@ -30,15 +36,21 @@ function override(id: string) {
 
 <template>
   <div class="space-y-5">
-    <div class="space-y-1">
-      <h1 class="text-2xl font-bold">รายการชำระเงิน (Obligations)</h1>
-      <p class="text-sm text-muted-foreground">
-        1 รายการ = ผู้พัก 1 คน × 1 payment action · ห้อง HL สร้าง ROOM + HL แยกกัน ·
-        Ref.1+Ref.2 ซ้ำกันได้ระหว่างรูมเมท (ไม่ใช่ unique key)
-      </p>
-    </div>
+    <StaffPageHeader
+      title="รายการชำระเงิน (Obligations)"
+      description="1 รายการ = ผู้พัก 1 คน × 1 payment action · ห้อง HL สร้าง ROOM + HL แยกกัน · Ref.1+Ref.2 ซ้ำกันได้ระหว่างรูมเมท (ไม่ใช่ unique key)"
+      :icon="ReceiptTextIcon"
+    >
+      <template #meta>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <Badge variant="success">ชำระแล้ว {{ paidCount }}</Badge>
+          <Badge variant="outline">ทั้งหมด {{ payments.obligations.length }}</Badge>
+          <Badge v-if="exceptionCount" variant="destructive">exception {{ exceptionCount }}</Badge>
+        </div>
+      </template>
+    </StaffPageHeader>
 
-    <div class="overflow-x-auto rounded-md border">
+    <div class="data-table-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -56,15 +68,15 @@ function override(id: string) {
             <TableCell class="font-medium">{{ nameOf(o.residentId) }}</TableCell>
             <TableCell class="font-mono text-sm">{{ o.roomNumber }}</TableCell>
             <TableCell class="font-mono text-sm">{{ o.ref2 }}</TableCell>
-            <TableCell class="text-right tabular-nums">{{ formatBaht(o.amount) }}</TableCell>
+            <TableCell class="text-right font-semibold tabular-nums">{{ formatBaht(o.amount) }}</TableCell>
             <TableCell class="text-xs text-muted-foreground">{{ documentStatusLabel[o.documentStatus] }}</TableCell>
             <TableCell>
-              <Badge :variant="payments.isPaid(o) ? 'secondary' : o.resultStatus === 'exception' ? 'destructive' : 'outline'">
+              <Badge :variant="payments.isPaid(o) ? 'success' : o.resultStatus === 'exception' ? 'destructive' : 'outline'">
                 {{ resultStatusLabel[o.resultStatus] }}
               </Badge>
             </TableCell>
             <TableCell v-if="can('payment_obligation.override')" class="text-right">
-              <Button size="sm" variant="ghost" @click="override(o.id)">Override</Button>
+              <Button size="sm" variant="outline" @click="override(o.id)">Override</Button>
             </TableCell>
           </TableRow>
         </TableBody>

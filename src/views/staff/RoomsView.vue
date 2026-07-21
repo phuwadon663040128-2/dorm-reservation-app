@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ArrowUpDownIcon, SearchIcon, XIcon } from '@lucide/vue'
+import { ArrowUpDownIcon, Building2Icon, ImportIcon, SearchIcon, XIcon } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table'
 import PermissionGate from '@/components/domain/PermissionGate.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
+import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
 import { useDormStore } from '@/stores/dorm'
 
@@ -141,15 +142,17 @@ function blockRoom(number: string) {
 
 <template>
   <div class="space-y-5">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold">อาคาร / ชั้น / ห้อง</h1>
-        <p class="text-sm text-muted-foreground">ห้องจริงเป็น source of truth ของการจองทั้งหมด — เลขห้อง unique ทั้งระบบ</p>
-      </div>
-      <Button variant="outline" @click="toast('ต้นแบบ: นำเข้า room master พร้อม preview/ตรวจซ้ำ/นำเข้าซ้ำได้แบบ idempotent (เฟส P5)')">
-        นำเข้า Room Master
-      </Button>
-    </div>
+    <StaffPageHeader
+      title="อาคาร / ชั้น / ห้อง"
+      description="ห้องจริงเป็น source of truth ของการจองทั้งหมด — เลขห้อง unique ทั้งระบบ"
+      :icon="Building2Icon"
+    >
+      <template #actions>
+        <Button variant="outline" @click="toast('ต้นแบบ: นำเข้า room master พร้อม preview/ตรวจซ้ำ/นำเข้าซ้ำได้แบบ idempotent (เฟส P5)')">
+          <ImportIcon aria-hidden="true" /> นำเข้า Room Master
+        </Button>
+      </template>
+    </StaffPageHeader>
 
     <PermissionGate permission="room.manage">
       <div class="space-y-3">
@@ -260,7 +263,7 @@ function blockRoom(number: string) {
           </div>
         </div>
 
-        <div class="overflow-x-auto rounded-md border">
+        <div class="data-table-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -274,9 +277,10 @@ function blockRoom(number: string) {
             </TableHeader>
             <TableBody>
               <TableRow v-for="room in filteredRows" :key="room.number">
-                <TableCell class="font-semibold">{{ room.number }}</TableCell>
-                <TableCell class="text-sm text-muted-foreground">
-                  {{ room.dormGroupName }} · {{ room.buildingName }} · ชั้น {{ room.floor }}
+                <TableCell class="font-semibold tabular-nums">{{ room.number }}</TableCell>
+                <TableCell class="text-sm">
+                  <span class="font-medium">{{ room.buildingName }}</span>
+                  <span class="text-muted-foreground"> · ชั้น {{ room.floor }} · {{ room.dormGroupName }}</span>
                 </TableCell>
                 <TableCell>{{ roomConfigLabel[room.config] }}</TableCell>
                 <TableCell class="text-sm">{{ room.dimensions ?? 'ไม่มีข้อมูล' }}</TableCell>

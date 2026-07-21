@@ -385,7 +385,7 @@ function statusCount(status: RoomPublicStatus) {
             v-if="has3d && viewMode === 'plan'"
             size="sm"
             variant="outline"
-            class="ms-auto bg-background shadow-sm"
+            class="ms-auto bg-background shadow-sm dark:border-white/80 dark:bg-white dark:text-slate-950 dark:hover:bg-white/90 dark:hover:text-slate-950"
             @click="viewMode = '3d'"
           >
             <Building2Icon aria-hidden="true" /> กลับไปมุมมองตึก 3 มิติ

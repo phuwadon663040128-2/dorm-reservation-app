@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { staffSectionMeta, users } from '@/fixtures'
 import { useSessionStore } from '@/stores/session'
 import { useStaffAccessStore } from '@/stores/staffAccess'
@@ -42,15 +43,11 @@ function sectionCount(user: User) {
 
 <template>
   <div class="mx-auto max-w-4xl space-y-6">
-    <div class="space-y-1">
-      <h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
-        <UserCogIcon class="size-6 text-primary" aria-hidden="true" /> จัดการสิทธิ์เจ้าหน้าที่
-      </h1>
-      <p class="text-sm text-muted-foreground">
-        เจ้าหน้าที่ทุกคนมีบทบาทเดียวกัน — ผู้ดูแลระบบเลือกได้ว่าแต่ละคนเข้าถึงส่วนงานใดบ้าง
-        การเปิด/ปิดสิทธิ์มีผลกับเมนูและ permission ในส่วนงานนั้นทันที
-      </p>
-    </div>
+    <StaffPageHeader
+      title="จัดการสิทธิ์เจ้าหน้าที่"
+      description="เจ้าหน้าที่ทุกคนมีบทบาทเดียวกัน — ผู้ดูแลระบบเลือกได้ว่าแต่ละคนเข้าถึงส่วนงานใดบ้าง การเปิด/ปิดสิทธิ์มีผลกับเมนูและ permission ในส่วนงานนั้นทันที"
+      :icon="UserCogIcon"
+    />
 
     <Alert>
       <ShieldCheckIcon aria-hidden="true" />
@@ -64,7 +61,7 @@ function sectionCount(user: User) {
       <CardHeader>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <CardTitle class="text-base">{{ u.displayName }}</CardTitle>
-          <Badge :variant="sectionCount(u) ? 'secondary' : 'destructive'">
+          <Badge :variant="sectionCount(u) ? 'success' : 'destructive'">
             {{ sectionCount(u) ? `เข้าถึงได้ ${sectionCount(u)} ส่วนงาน` : 'ยังไม่ได้รับสิทธิ์' }}
           </Badge>
         </div>
@@ -74,7 +71,7 @@ function sectionCount(user: User) {
         <div
           v-for="s in staffSectionMeta"
           :key="s.key"
-          class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
+          class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 transition-colors hover:bg-muted/40"
         >
           <div class="min-w-0">
             <p class="text-sm font-medium">{{ s.label }}</p>

@@ -63,7 +63,7 @@
     --secondary: #ece4d4;
     --secondary-foreground: #3d3831;
     --muted: #ece4d4;
-    --muted-foreground: #6f675b;
+    --muted-foreground: #5d5546;
     --accent: #faf6ee;
     --accent-foreground: #3d3831;
     --destructive: oklch(0.577 0.245 27.325);
@@ -77,14 +77,16 @@
     --chart-4: #3d3831;
     --chart-5: #b8ad97;
     --radius: 0.75rem;
-    --sidebar: #faf6ee;
-    --sidebar-foreground: #211d18;
+    /* sidebar ฝั่งเจ้าหน้าที่ใช้โทนน้ำเงินเข้มทั้งสองธีม — แยกเมนูออกจากพื้นที่เนื้อหาชัดเจน
+       และให้ตัวหนังสือเมนูขาวคมบนพื้นเข้มเสมอ */
+    --sidebar: #1f2634;
+    --sidebar-foreground: #e8ebf1;
     --sidebar-primary: #ee6f1e;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #ece4d4;
-    --sidebar-accent-foreground: #3d3831;
-    --sidebar-border: #e2d8c4;
-    --sidebar-ring: #ee6f1e;
+    --sidebar-accent: #2d3648;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: rgb(255 255 255 / 10%);
+    --sidebar-ring: #f47a20;
   }
 
   /* ธีมมืด — น้ำเงินเข้มเกือบดำ + ส้มตามแบบ Figma */
@@ -101,7 +103,7 @@
     --secondary: #1a2438;
     --secondary-foreground: #dbe2ec;
     --muted: #1a2438;
-    --muted-foreground: #93a0b4;
+    --muted-foreground: #a0adc2;
     --accent: #16213a;
     --accent-foreground: #dbe2ec;
     --destructive: oklch(0.704 0.191 22.216);
@@ -118,8 +120,8 @@
     --sidebar-foreground: #eef1f6;
     --sidebar-primary: #f47a20;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #1a2438;
-    --sidebar-accent-foreground: #dbe2ec;
+    --sidebar-accent: #1e2a44;
+    --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgb(255 255 255 / 10%);
     --sidebar-ring: #f47a20;
   }
@@ -130,5 +132,25 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  /* กรอบตารางข้อมูลฝั่งเจ้าหน้าที่ — หัวตารางพื้นทึบตัวหนังสือเข้ม อ่านไล่คอลัมน์ได้ทันที
+     ใช้ครอบ <Table> ของ shadcn แทน div.overflow เดิม */
+  .data-table-card {
+    @apply overflow-hidden rounded-xl border bg-card shadow-sm;
+  }
+  .data-table-card thead {
+    @apply bg-muted/70;
+  }
+  .data-table-card thead th {
+    @apply h-11 px-3 text-[13px] font-semibold text-foreground;
+  }
+  .data-table-card tbody td {
+    @apply px-3 py-2.5;
+  }
+  .data-table-card tbody tr:last-child {
+    @apply border-b-0;
   }
 }

@@ -1,8 +1,48 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Component } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { LogOutIcon, ShieldCheckIcon } from '@lucide/vue'
+import {
+  BarChart3Icon,
+  Building2Icon,
+  CalendarRangeIcon,
+  FileCheck2Icon,
+  FileSignatureIcon,
+  FileSpreadsheetIcon,
+  FileUpIcon,
+  KeyRoundIcon,
+  LayoutDashboardIcon,
+  LogOutIcon,
+  ReceiptTextIcon,
+  ScrollTextIcon,
+  SendIcon,
+  SettingsIcon,
+  ShieldCheckIcon,
+  SquarePenIcon,
+  TimerIcon,
+  UserCogIcon,
+  UsersIcon,
+  UsersRoundIcon,
+} from '@lucide/vue'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
 import ThemeToggle from '@/components/domain/ThemeToggle.vue'
 import { useSessionStore } from '@/stores/session'
 import type { StaffSection } from '@/types'
@@ -12,61 +52,65 @@ const router = useRouter()
 const route = useRoute()
 
 const roleLabel = computed(() => (session.isAdmin ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่'))
+const userInitial = computed(() => session.currentUser?.displayName?.trim().charAt(0) ?? '?')
+
+interface NavItem { to: string; label: string; icon: Component }
+interface NavGroup { title: string; section?: StaffSection; adminOnly?: boolean; items: NavItem[] }
 
 // เมนู staff ตามเอกสาร 03 §Staff navigation — จัดกลุ่มตามส่วนงานที่ผู้ดูแลระบบกำหนดรายคน
-const allNavGroups: { title: string; section?: StaffSection; adminOnly?: boolean; items: { to: string; label: string }[] }[] = [
+const allNavGroups: NavGroup[] = [
   {
     title: 'ภาพรวม',
     section: 'overview',
     items: [
-      { to: '/staff', label: 'Dashboard' },
-      { to: '/staff/campaigns', label: 'รอบรับสมัคร' },
+      { to: '/staff', label: 'Dashboard', icon: LayoutDashboardIcon },
+      { to: '/staff/campaigns', label: 'รอบรับสมัคร', icon: CalendarRangeIcon },
     ],
   },
   {
     title: 'ห้องพักและการจอง',
     section: 'reservation',
     items: [
-      { to: '/staff/rooms', label: 'อาคาร / ชั้น / ห้อง' },
-      { to: '/staff/applicants', label: 'ผู้สมัคร' },
-      { to: '/staff/groups', label: 'กลุ่มรูมเมท' },
-      { to: '/staff/holds', label: 'ห้องที่ถูก hold' },
-      { to: '/staff/reservations/manual', label: 'จองแทน (manual)' },
+      { to: '/staff/rooms', label: 'อาคาร / ชั้น / ห้อง', icon: Building2Icon },
+      { to: '/staff/applicants', label: 'ผู้สมัคร', icon: UsersIcon },
+      { to: '/staff/groups', label: 'กลุ่มรูมเมท', icon: UsersRoundIcon },
+      { to: '/staff/holds', label: 'ห้องที่ถูก hold', icon: TimerIcon },
+      { to: '/staff/reservations/manual', label: 'จองแทน (manual)', icon: SquarePenIcon },
     ],
   },
   {
     title: 'การเงิน SCB',
     section: 'payment',
     items: [
-      { to: '/staff/obligations', label: 'รายการชำระเงิน' },
-      { to: '/staff/scb/export', label: 'Export batch (SLIPS)' },
-      { to: '/staff/scb/pdf-import', label: 'นำเข้า PDF จากธนาคาร' },
-      { to: '/staff/scb/results', label: 'ผลชำระ / Exception' },
+      { to: '/staff/obligations', label: 'รายการชำระเงิน', icon: ReceiptTextIcon },
+      { to: '/staff/scb/export', label: 'Export batch (SLIPS)', icon: FileSpreadsheetIcon },
+      { to: '/staff/scb/pdf-import', label: 'นำเข้า PDF จากธนาคาร', icon: FileUpIcon },
+      { to: '/staff/scb/results', label: 'ผลชำระ / Exception', icon: FileCheck2Icon },
     ],
   },
   {
     title: 'สัญญาและส่งต่อ',
     section: 'contract',
     items: [
-      { to: '/staff/contracts', label: 'สัญญา' },
-      { to: '/staff/key-handover', label: 'ส่งมอบกุญแจ' },
-      { to: '/staff/handoff', label: 'ส่งข้อมูลมหาวิทยาลัย' },
+      { to: '/staff/contracts', label: 'สัญญา', icon: FileSignatureIcon },
+      { to: '/staff/key-handover', label: 'ส่งมอบกุญแจ', icon: KeyRoundIcon },
+      { to: '/staff/handoff', label: 'ส่งข้อมูลมหาวิทยาลัย', icon: SendIcon },
     ],
   },
   {
     title: 'ระบบ',
     section: 'system',
     items: [
-      { to: '/staff/reports', label: 'รายงาน' },
-      { to: '/staff/audit', label: 'Audit log' },
-      { to: '/staff/settings', label: 'ตั้งค่า' },
+      { to: '/staff/reports', label: 'รายงาน', icon: BarChart3Icon },
+      { to: '/staff/audit', label: 'Audit log', icon: ScrollTextIcon },
+      { to: '/staff/settings', label: 'ตั้งค่า', icon: SettingsIcon },
     ],
   },
   {
     title: 'ผู้ดูแลระบบ',
     adminOnly: true,
     items: [
-      { to: '/staff/access', label: 'จัดการสิทธิ์เจ้าหน้าที่' },
+      { to: '/staff/access', label: 'จัดการสิทธิ์เจ้าหน้าที่', icon: UserCogIcon },
     ],
   },
 ]
@@ -89,6 +133,15 @@ function isActive(to: string) {
   return route.path === to || route.path.startsWith(to + '/')
 }
 
+// breadcrumb บน top-bar: กลุ่มงาน / ชื่อจอปัจจุบัน
+const currentCrumb = computed(() => {
+  for (const group of allNavGroups) {
+    const item = group.items.find(i => isActive(i.to))
+    if (item) return { group: group.title, page: item.label }
+  }
+  return { group: 'ภาพรวม', page: 'Dashboard' }
+})
+
 function logout() {
   session.logout()
   router.push('/')
@@ -96,67 +149,96 @@ function logout() {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-background text-foreground">
-    <header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div class="flex h-14 items-center justify-between gap-3 px-4">
-        <RouterLink to="/staff" class="flex items-center gap-2 font-bold">
-          <ShieldCheckIcon class="size-5 text-primary" aria-hidden="true" />
-          <span>พื้นที่เจ้าหน้าที่ — หอพักในกำกับ มข.</span>
-        </RouterLink>
-        <div class="flex items-center gap-2 text-sm">
-          <div class="hidden text-right sm:block">
-            <p class="font-medium leading-tight">{{ session.currentUser?.displayName }}</p>
-            <p class="text-xs text-muted-foreground">{{ roleLabel }}</p>
-          </div>
+  <SidebarProvider>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton as-child size="lg" tooltip="พื้นที่เจ้าหน้าที่" class="hover:bg-sidebar-accent">
+              <RouterLink to="/staff">
+                <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground" aria-hidden="true">
+                  <ShieldCheckIcon class="size-4.5" />
+                </div>
+                <div class="grid min-w-0 leading-tight">
+                  <span class="truncate text-sm font-bold">หอพักในกำกับ มข.</span>
+                  <span class="truncate text-xs text-sidebar-foreground/70">ระบบงานเจ้าหน้าที่</span>
+                </div>
+              </RouterLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup v-for="group in navGroups" :key="group.title">
+          <SidebarGroupLabel>{{ group.title }}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem v-for="item in group.items" :key="item.to">
+                <!-- จอที่เปิดอยู่ใช้พื้นสีส้มทึบ+ตัวหนังสือขาว ให้รู้ตำแหน่งได้แม้เหลือบมอง -->
+                <SidebarMenuButton
+                  as-child
+                  :is-active="isActive(item.to)"
+                  :tooltip="item.label"
+                  class="data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground data-active:hover:bg-sidebar-primary data-active:hover:text-sidebar-primary-foreground"
+                >
+                  <RouterLink :to="item.to">
+                    <component :is="item.icon" aria-hidden="true" />
+                    <span>{{ item.label }}</span>
+                  </RouterLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton as="div" size="lg" :tooltip="session.currentUser?.displayName ?? ''" class="cursor-default hover:bg-transparent active:bg-transparent">
+              <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-accent-foreground" aria-hidden="true">
+                {{ userInitial }}
+              </div>
+              <div class="grid min-w-0 leading-tight">
+                <span class="truncate text-sm font-medium">{{ session.currentUser?.displayName }}</span>
+                <span class="truncate text-xs text-sidebar-foreground/70">{{ roleLabel }}</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="ออกจากระบบ" class="text-sidebar-foreground/80" @click="logout">
+              <LogOutIcon aria-hidden="true" />
+              <span>ออกจากระบบ</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+
+    <SidebarInset>
+      <header class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur sm:px-4">
+        <SidebarTrigger aria-label="เปิด/ปิดเมนู" />
+        <Separator orientation="vertical" class="h-5! self-center!" />
+        <nav aria-label="ตำแหน่งปัจจุบัน" class="flex min-w-0 items-center gap-1.5 text-sm">
+          <span class="hidden text-muted-foreground sm:inline">{{ currentCrumb.group }}</span>
+          <span class="hidden text-muted-foreground/60 sm:inline" aria-hidden="true">/</span>
+          <span class="truncate font-semibold">{{ currentCrumb.page }}</span>
+        </nav>
+        <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <Badge variant="secondary" class="hidden md:inline-flex">{{ roleLabel }}</Badge>
           <ThemeToggle />
           <Button size="sm" variant="ghost" aria-label="ออกจากระบบ" @click="logout">
             <LogOutIcon aria-hidden="true" />
             <span class="hidden sm:inline">ออกจากระบบ</span>
           </Button>
         </div>
-      </div>
-      <!-- มือถือ: เมนูเลื่อนแนวนอน -->
-      <nav class="overflow-x-auto px-4 lg:hidden" aria-label="เมนูเจ้าหน้าที่ (มือถือ)">
-        <div class="flex w-max gap-1 pb-2">
-          <RouterLink
-            v-for="item in navGroups.flatMap(g => g.items)"
-            :key="item.to"
-            :to="item.to"
-            class="whitespace-nowrap rounded-md px-3 py-1.5 text-sm hover:bg-muted"
-            :class="isActive(item.to) ? 'bg-primary text-primary-foreground hover:bg-primary' : 'text-muted-foreground'"
-          >
-            {{ item.label }}
-          </RouterLink>
-        </div>
-      </nav>
-    </header>
+      </header>
 
-    <div class="flex flex-1">
-      <!-- เดสก์ท็อป: sidebar -->
-      <aside class="hidden w-60 shrink-0 border-r lg:block" aria-label="เมนูเจ้าหน้าที่">
-        <nav class="sticky top-14 space-y-5 p-4">
-          <div v-for="group in navGroups" :key="group.title">
-            <p class="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {{ group.title }}
-            </p>
-            <div class="space-y-0.5">
-              <RouterLink
-                v-for="item in group.items"
-                :key="item.to"
-                :to="item.to"
-                class="block rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-                :class="isActive(item.to) ? 'bg-primary text-primary-foreground hover:bg-primary' : 'text-muted-foreground'"
-              >
-                {{ item.label }}
-              </RouterLink>
-            </div>
-          </div>
-        </nav>
-      </aside>
-
-      <main class="min-w-0 flex-1 px-3 py-5 lg:px-6">
+      <main class="min-w-0 flex-1 px-3 py-5 sm:px-4 lg:px-6">
         <RouterView />
       </main>
-    </div>
-  </div>
+    </SidebarInset>
+  </SidebarProvider>
 </template>

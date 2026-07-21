@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { toast } from 'vue-sonner'
-import { CheckCircle2Icon, UploadIcon } from '@lucide/vue'
+import { CheckCircle2Icon, FileCheck2Icon, TriangleAlertIcon, UploadIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import PermissionGate from '@/components/domain/PermissionGate.vue'
+import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { exceptionTypeLabel, formatBaht } from '@/lib/labels'
 import { usePermissions } from '@/composables/usePermissions'
 import { users } from '@/fixtures'
@@ -60,29 +61,33 @@ function confirmReservation(roomNumber: string, complete: boolean) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold">ผลการชำระเงิน / Exception</h1>
-        <p class="text-sm text-muted-foreground">
-          นำเข้ารายงานผลจาก SCB — รายการปกติจับคู่อัตโนมัติ ส่วนผิดปกติเข้าคิวตรวจสอบ ไม่ยืนยัน/ปัดตกอัตโนมัติ
-        </p>
-      </div>
-      <PermissionGate permission="payment_result.import">
-        <Button @click="toast('ต้นแบบ: อัปโหลดรายงานผลชำระ — นำเข้าซ้ำได้แบบ idempotent ไม่เกิดรายการซ้ำ (RESULT-003)')">
-          <UploadIcon aria-hidden="true" /> นำเข้ารายงานผล
-        </Button>
-      </PermissionGate>
-    </div>
+  <div class="space-y-7">
+    <StaffPageHeader
+      title="ผลการชำระเงิน / Exception"
+      description="นำเข้ารายงานผลจาก SCB — รายการปกติจับคู่อัตโนมัติ ส่วนผิดปกติเข้าคิวตรวจสอบ ไม่ยืนยัน/ปัดตกอัตโนมัติ"
+      :icon="FileCheck2Icon"
+    >
+      <template #actions>
+        <PermissionGate permission="payment_result.import">
+          <Button @click="toast('ต้นแบบ: อัปโหลดรายงานผลชำระ — นำเข้าซ้ำได้แบบ idempotent ไม่เกิดรายการซ้ำ (RESULT-003)')">
+            <UploadIcon aria-hidden="true" /> นำเข้ารายงานผล
+          </Button>
+        </PermissionGate>
+      </template>
+    </StaffPageHeader>
 
-    <!-- คิว exception -->
+    <!-- คิว exception — งานที่ต้องมีคนตัดสินใจ วางไว้บนสุดเสมอ -->
     <section class="space-y-3">
-      <h2 class="text-lg font-semibold">คิวตรวจสอบ ({{ payments.openExceptions.length }})</h2>
-      <Card v-for="e in payments.openExceptions" :key="e.id">
+      <div class="flex items-center gap-2">
+        <TriangleAlertIcon class="size-4 text-destructive" aria-hidden="true" />
+        <h2 class="text-base font-semibold">คิวตรวจสอบ</h2>
+        <Badge variant="destructive">{{ payments.openExceptions.length }}</Badge>
+      </div>
+      <Card v-for="e in payments.openExceptions" :key="e.id" class="border-l-4 border-l-destructive py-0">
         <CardContent class="flex flex-wrap items-center justify-between gap-3 p-4">
-          <div class="space-y-1">
+          <div class="space-y-1.5">
             <Badge variant="destructive">{{ exceptionTypeLabel[e.type] }}</Badge>
-            <p class="text-sm">{{ e.detail }}</p>
+            <p class="text-sm leading-relaxed">{{ e.detail }}</p>
           </div>
           <Button
             v-if="can('payment.exception.resolve')"
@@ -98,8 +103,8 @@ function confirmReservation(roomNumber: string, complete: boolean) {
 
     <!-- ตารางผลนำเข้า -->
     <section class="space-y-3">
-      <h2 class="text-lg font-semibold">รายการจากรายงานล่าสุด (imp-2569-001)</h2>
-      <div class="overflow-x-auto rounded-md border">
+      <h2 class="text-base font-semibold">รายการจากรายงานล่าสุด <span class="font-mono text-sm font-normal text-muted-foreground">imp-2569-001</span></h2>
+      <div class="data-table-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -112,12 +117,12 @@ function confirmReservation(roomNumber: string, complete: boolean) {
           </TableHeader>
           <TableBody>
             <TableRow v-for="r in payments.resultRows" :key="r.id">
-              <TableCell class="font-mono text-xs">{{ r.transactionRef }}</TableCell>
+              <TableCell class="font-mono text-xs text-muted-foreground">{{ r.transactionRef }}</TableCell>
               <TableCell class="font-mono text-sm">{{ r.ref1 }}</TableCell>
               <TableCell class="font-mono text-sm">{{ r.ref2 }}</TableCell>
-              <TableCell class="text-right tabular-nums">{{ formatBaht(r.amount) }}</TableCell>
+              <TableCell class="text-right font-semibold tabular-nums">{{ formatBaht(r.amount) }}</TableCell>
               <TableCell>
-                <Badge :variant="r.outcome === 'paid' ? 'secondary' : 'destructive'">
+                <Badge :variant="r.outcome === 'paid' ? 'success' : 'destructive'">
                   {{ r.outcome === 'paid' ? 'สำเร็จ' : r.exceptionType ? exceptionTypeLabel[r.exceptionType] : r.outcome }}
                 </Badge>
               </TableCell>
@@ -129,34 +134,40 @@ function confirmReservation(roomNumber: string, complete: boolean) {
 
     <!-- ความครบของกลุ่ม + ยืนยันถาวร -->
     <section class="space-y-3">
-      <h2 class="text-lg font-semibold">ความครบถ้วนของกลุ่ม (รอยืนยันห้อง)</h2>
-      <Card v-for="g in pendingGroups" :key="g.resv.id">
-        <CardHeader>
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle class="text-base">ห้อง {{ g.resv.roomNumber }}</CardTitle>
-            <Badge :variant="g.complete ? 'secondary' : 'outline'">
-              {{ g.complete ? 'ชำระครบทุกคน' : 'ยังชำระไม่ครบ' }}
-            </Badge>
-          </div>
-          <CardDescription>ทุกรายการของทุกคนต้องครบก่อน จึงจะยืนยันถาวรได้ (deadline เดียวร่วมกัน)</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-3">
-          <div
-            v-for="m in g.members"
-            :key="m.memberId"
-            class="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
-          >
-            <span>{{ nameOf(m.memberId) }}</span>
-            <Badge :variant="m.paid === m.total ? 'secondary' : 'outline'">{{ m.paid }} / {{ m.total }} รายการ</Badge>
-          </div>
-          <PermissionGate permission="payment.confirm">
-            <Button :variant="g.complete ? 'default' : 'outline'" @click="confirmReservation(g.resv.roomNumber, g.complete)">
-              <CheckCircle2Icon aria-hidden="true" />
-              ยืนยันห้องถาวร
-            </Button>
-          </PermissionGate>
-        </CardContent>
-      </Card>
+      <h2 class="text-base font-semibold">ความครบถ้วนของกลุ่ม (รอยืนยันห้อง)</h2>
+      <div class="grid gap-3 lg:grid-cols-2">
+        <Card v-for="g in pendingGroups" :key="g.resv.id">
+          <CardHeader>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle class="text-base">ห้อง {{ g.resv.roomNumber }}</CardTitle>
+              <Badge :variant="g.complete ? 'success' : 'warning'">
+                {{ g.complete ? 'ชำระครบทุกคน' : 'ยังชำระไม่ครบ' }}
+              </Badge>
+            </div>
+            <CardDescription>ทุกรายการของทุกคนต้องครบก่อน จึงจะยืนยันถาวรได้ (deadline เดียวร่วมกัน)</CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-3">
+            <div
+              v-for="m in g.members"
+              :key="m.memberId"
+              class="flex items-center justify-between gap-2 rounded-lg border bg-background/50 px-3 py-2 text-sm"
+            >
+              <span class="font-medium">{{ nameOf(m.memberId) }}</span>
+              <Badge :variant="m.paid === m.total ? 'success' : 'warning'">{{ m.paid }} / {{ m.total }} รายการ</Badge>
+            </div>
+            <PermissionGate permission="payment.confirm">
+              <Button
+                class="w-full"
+                :variant="g.complete ? 'default' : 'outline'"
+                @click="confirmReservation(g.resv.roomNumber, g.complete)"
+              >
+                <CheckCircle2Icon aria-hidden="true" />
+                ยืนยันห้องถาวร
+              </Button>
+            </PermissionGate>
+          </CardContent>
+        </Card>
+      </div>
     </section>
   </div>
 </template>

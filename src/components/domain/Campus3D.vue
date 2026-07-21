@@ -2251,69 +2251,80 @@ const headerLabel = computed(() =>
   <div class="relative overflow-hidden rounded-2xl border bg-card">
     <div ref="host" class="h-[58svh] min-h-105 w-full sm:h-[62vh]" />
 
-    <!-- แถบสถานะ/คำแนะนำ ซ้ายบน -->
-    <div class="pointer-events-none absolute left-2 right-2 top-2 flex flex-col gap-1.5 sm:left-3 sm:right-auto sm:top-3 sm:max-w-[70%] sm:gap-2">
-      <div class="pointer-events-auto flex w-fit max-w-full items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
-        <Building2Icon class="size-4 shrink-0 text-primary" aria-hidden="true" />
-        <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
-      </div>
-      <p class="w-fit max-w-full rounded-lg border bg-background/92 px-2.5 py-1.5 text-xs leading-relaxed text-foreground shadow-sm backdrop-blur sm:border-0 sm:bg-background/75 sm:py-1 sm:text-muted-foreground sm:shadow-none">
-        <template v-if="mode === 'campus'">
-          <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ตึกเพื่อเลือกอาคาร · ลากหมุนดูรอบ · ตึกจางคืออีกหอ กดเพื่อสลับ
-        </template>
-        <template v-else-if="mode === 'building'">
-          <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ "ชั้น" บนตึกเพื่อเปิดแผนผังห้องของชั้นนั้น
-        </template>
-        <template v-else>กำลังเข้าสู่แผนผังห้อง…</template>
-      </p>
-    </div>
-
-    <!-- ปุ่มมุมมองเฉียง/ด้านบน + ปุ่มย้อนกลับ ขวาบน (แบบ toolbar ของ docs/test.html) -->
-    <div class="absolute right-3 top-3 flex gap-2">
-      <Button
-        size="sm"
-        :variant="viewMode === 'perspective' ? 'default' : 'secondary'"
-        class="shadow-sm"
-        :aria-pressed="viewMode === 'perspective'"
-        @click="setView('perspective')"
-      >
-        มุมมองเฉียง
-      </Button>
-      <Button
-        size="sm"
-        :variant="viewMode === 'top' ? 'default' : 'secondary'"
-        class="shadow-sm"
-        :aria-pressed="viewMode === 'top'"
-        @click="setView('top')"
-      >
-        มุมมองด้านบน
-      </Button>
-      <Button v-if="mode !== 'campus'" size="sm" variant="secondary" class="shadow-sm" @click="backToCampus">
-        <ArrowLeftIcon aria-hidden="true" /> ดูทุกอาคาร
-      </Button>
-    </div>
-
-    <!-- เข็มทิศทิศเหนือจริง (เอียง 7.08° ตาม docs/test.html) ใต้ปุ่มมุมมอง -->
-    <div class="pointer-events-none absolute right-3 top-13 flex flex-col items-center gap-1 rounded-2xl border bg-background/90 px-2 py-1.5 shadow-sm backdrop-blur">
-      <div class="relative size-11 rounded-full border bg-background/80">
-        <span class="absolute left-1/2 top-0 h-1 w-0.5 -translate-x-1/2 rounded-b bg-foreground/50" aria-hidden="true" />
-        <div class="absolute inset-0" :style="{ transform: `rotate(${compassAngle}deg)` }">
-          <span class="absolute left-1/2 top-0.75 -translate-x-1/2 text-[9px] font-black leading-none text-red-500">
-            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">N</span>
-          </span>
-          <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
-            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">E</span>
-          </span>
-          <span class="absolute bottom-0.75 left-1/2 -translate-x-1/2 text-[8px] font-bold leading-none text-muted-foreground">
-            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">S</span>
-          </span>
-          <span class="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
-            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">W</span>
-          </span>
+    <!-- มือถือเรียงข้อมูล ปุ่ม และเข็มทิศใน flow เดียวกัน เพื่อไม่ให้ control ลอยทับกัน -->
+    <div class="pointer-events-none absolute inset-x-2 top-2 z-20 flex flex-col gap-2 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+      <!-- แถบสถานะ/คำแนะนำ ซ้ายบน -->
+      <div class="flex min-w-0 flex-col gap-1.5 sm:max-w-[70%] sm:gap-2">
+        <div class="pointer-events-auto flex w-fit max-w-full items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
+          <Building2Icon class="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
         </div>
-        <span class="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />
+        <p class="w-fit max-w-full rounded-lg border bg-background/92 px-2.5 py-1.5 text-xs leading-relaxed text-foreground shadow-sm backdrop-blur sm:border-0 sm:bg-background/75 sm:py-1 sm:text-muted-foreground sm:shadow-none">
+          <template v-if="mode === 'campus'">
+            <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ตึกเพื่อเลือกอาคาร · ลากหมุนดูรอบ · ตึกจางคืออีกหอ กดเพื่อสลับ
+          </template>
+          <template v-else-if="mode === 'building'">
+            <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ "ชั้น" บนตึกเพื่อเปิดแผนผังห้องของชั้นนั้น
+          </template>
+          <template v-else>กำลังเข้าสู่แผนผังห้อง…</template>
+        </p>
       </div>
-      <span class="text-[8px] font-semibold leading-none text-muted-foreground">ทิศเหนือจริง</span>
+
+      <!-- ปุ่มมุมมอง + เข็มทิศ: เต็ม 2 คอลัมน์บนมือถือ, ชิดขวาบนบนจอใหญ่ -->
+      <div class="flex w-full shrink-0 flex-col items-end gap-2 sm:w-auto">
+        <div class="pointer-events-auto grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Button
+            size="sm"
+            :variant="viewMode === 'perspective' ? 'default' : 'secondary'"
+            class="w-full min-w-0 shadow-sm sm:w-auto"
+            :aria-pressed="viewMode === 'perspective'"
+            @click="setView('perspective')"
+          >
+            มุมมองเฉียง
+          </Button>
+          <Button
+            size="sm"
+            :variant="viewMode === 'top' ? 'default' : 'secondary'"
+            class="w-full min-w-0 shadow-sm sm:w-auto"
+            :aria-pressed="viewMode === 'top'"
+            @click="setView('top')"
+          >
+            มุมมองด้านบน
+          </Button>
+          <Button
+            v-if="mode !== 'campus'"
+            size="sm"
+            variant="secondary"
+            class="col-span-2 w-full shadow-sm sm:w-auto"
+            @click="backToCampus"
+          >
+            <ArrowLeftIcon aria-hidden="true" /> ดูทุกอาคาร
+          </Button>
+        </div>
+
+        <!-- เข็มทิศทิศเหนือจริง (เอียง 7.08° ตาม docs/test.html) -->
+        <div class="flex flex-col items-center gap-1 rounded-2xl border bg-background/90 px-2 py-1.5 shadow-sm backdrop-blur">
+          <div class="relative size-11 rounded-full border bg-background/80">
+            <span class="absolute left-1/2 top-0 h-1 w-0.5 -translate-x-1/2 rounded-b bg-foreground/50" aria-hidden="true" />
+            <div class="absolute inset-0" :style="{ transform: `rotate(${compassAngle}deg)` }">
+              <span class="absolute left-1/2 top-0.75 -translate-x-1/2 text-[9px] font-black leading-none text-red-500">
+                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">N</span>
+              </span>
+              <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">E</span>
+              </span>
+              <span class="absolute bottom-0.75 left-1/2 -translate-x-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">S</span>
+              </span>
+              <span class="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">W</span>
+              </span>
+            </div>
+            <span class="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />
+          </div>
+          <span class="text-[8px] font-semibold leading-none text-muted-foreground">ทิศเหนือจริง</span>
+        </div>
+      </div>
     </div>
 
     <!-- ป้ายชั้น F1..Fn ข้างชั้นที่แยกออก (ตำแหน่ง project จาก 3D ทุกเฟรม แบบ floor-marker ใน test.html) -->

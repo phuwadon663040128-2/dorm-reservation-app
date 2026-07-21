@@ -14,6 +14,10 @@ export const badgeVariants = cva(
         outline: 'border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground',
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
         link: 'text-primary underline-offset-4 hover:underline',
+        // โทนสถานะสำหรับจอปฏิบัติการ — พื้นจาง + ตัวหนังสือเข้มของสีเดียวกัน อ่านชัดทั้งสองธีม
+        success: 'bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300',
+        warning: 'bg-amber-500/15 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300',
+        info: 'bg-sky-500/10 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300',
       },
     },
     defaultVariants: {
