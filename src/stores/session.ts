@@ -5,15 +5,29 @@ import { permissionsForSections, users } from '@/fixtures'
 import { useStaffAccessStore } from './staffAccess'
 
 const STORAGE_KEY = 'dorm-demo-session-user'
+const CUSTOM_USER_KEY = 'dorm-demo-custom-user'
+const PENDING_EMAIL_KEY = 'dorm-demo-pending-email'
+
+function restoreCustomUser(): User | null {
+  try {
+    const raw = sessionStorage.getItem(CUSTOM_USER_KEY)
+    return raw ? JSON.parse(raw) as User : null
+  } catch {
+    return null
+  }
+}
 
 export const useSessionStore = defineStore('session', () => {
+  const customUser = ref<User | null>(restoreCustomUser())
   const currentUser = ref<User | null>(restore())
 
   function restore(): User | null {
     const id = sessionStorage.getItem(STORAGE_KEY)
     if (!id) return null
-    return users.find(u => u.id === id) ?? null
+    return users.find(u => u.id === id) ?? (customUser.value?.id === id ? customUser.value : null)
   }
+
+  const availableUsers = computed(() => customUser.value ? [...users, customUser.value] : users)
 
   const isLoggedIn = computed(() => currentUser.value !== null)
   const isStaff = computed(() => currentUser.value !== null && currentUser.value.role !== 'applicant')
@@ -37,10 +51,67 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function login(userId: string): User | null {
-    const user = users.find(u => u.id === userId) ?? null
+    const user = availableUsers.value.find(u => u.id === userId) ?? null
     currentUser.value = user
     if (user) sessionStorage.setItem(STORAGE_KEY, user.id)
     return user
+  }
+
+  function userByEmail(email: string) {
+    return availableUsers.value.find(user => user.email.toLowerCase() === email.trim().toLowerCase())
+  }
+
+  function beginEmailRegistration(email: string) {
+    sessionStorage.setItem(PENDING_EMAIL_KEY, email.trim().toLowerCase())
+  }
+
+  function pendingEmailRegistration() {
+    return sessionStorage.getItem(PENDING_EMAIL_KEY) ?? ''
+  }
+
+  function completeEmailRegistration(): User | null {
+    const email = pendingEmailRegistration()
+    if (!email) return null
+    const name = email.split('@')[0]
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+    const user: User = {
+      id: `applicant-email-${Date.now()}`,
+      role: 'applicant',
+      displayName: name || 'ผู้สมัครใหม่',
+      email,
+      emailVerified: true,
+      profileComplete: false,
+      kkuSsoLinked: false,
+    }
+    customUser.value = user
+    currentUser.value = user
+    sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(user))
+    sessionStorage.setItem(STORAGE_KEY, user.id)
+    sessionStorage.removeItem(PENDING_EMAIL_KEY)
+    return user
+  }
+
+  function linkCurrentUserToKkuSso() {
+    if (!currentUser.value) return false
+    currentUser.value.kkuSsoLinked = true
+    if (customUser.value?.id === currentUser.value.id) {
+      customUser.value = currentUser.value
+      sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(customUser.value))
+    }
+    return true
+  }
+
+  function markCurrentApplicantProfileComplete() {
+    if (!currentUser.value || currentUser.value.role !== 'applicant') return false
+    currentUser.value.profileComplete = true
+    if (customUser.value?.id === currentUser.value.id) {
+      customUser.value = currentUser.value
+      sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(customUser.value))
+    }
+    return true
   }
 
   function logout() {
@@ -50,6 +121,8 @@ export const useSessionStore = defineStore('session', () => {
 
   return {
     currentUser,
+    customUser,
+    availableUsers,
     isLoggedIn,
     isStaff,
     isAdmin,
@@ -58,6 +131,12 @@ export const useSessionStore = defineStore('session', () => {
     can,
     canAccessSection,
     login,
+    userByEmail,
+    beginEmailRegistration,
+    pendingEmailRegistration,
+    completeEmailRegistration,
+    linkCurrentUserToKkuSso,
+    markCurrentApplicantProfileComplete,
     logout,
   }
 })

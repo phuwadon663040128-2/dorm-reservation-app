@@ -45,6 +45,16 @@ function rematch(pageId: string) {
   // manual rematch เฉพาะผู้มีสิทธิ์ + เหตุผลบังคับ + เก็บ mapping เดิมเป็นประวัติ (PDF-008)
   toast(`ต้นแบบ: จับคู่หน้า ${pageId} ด้วยมือ — ต้องกรอกเหตุผล และระบบเก็บ mapping เดิมไว้เป็นประวัติ (เฟส P5)`)
 }
+
+function uploadReturnedPdf() {
+  const batch = payments.batches.find(item => item.status === 'awaiting_returned_pdf' || item.status === 'exported')
+  if (!batch) {
+    toast.info('ไม่มี batch ที่รอ PDF — ดาวน์โหลด batch จากหน้า SCB Export ก่อน')
+    return
+  }
+  const count = payments.importReturnedPdf(batch.id)
+  toast.success(`นำเข้า ${batch.id} และจับคู่แบบฟอร์มสำเร็จ ${count} หน้า`)
+}
 </script>
 
 <template>
@@ -56,8 +66,8 @@ function rematch(pageId: string) {
     >
       <template #actions>
         <PermissionGate permission="payment_document.import">
-          <Button @click="toast('ต้นแบบ: อัปโหลด PDF — เก็บไฟล์ต้นฉบับ+checksum แล้วแยกข้อความรายหน้า (เฟส P5)')">
-            <UploadIcon aria-hidden="true" /> อัปโหลด PDF รวม
+          <Button @click="uploadReturnedPdf">
+            <UploadIcon aria-hidden="true" /> จำลองอัปโหลด PDF รวม
           </Button>
         </PermissionGate>
       </template>

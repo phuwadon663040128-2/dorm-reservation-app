@@ -56,7 +56,19 @@ function confirmReservation(roomNumber: string, complete: boolean) {
     toast(`ยืนยันห้อง ${roomNumber} ไม่ได้ — ทุกรายการของทุกคนในกลุ่มต้องชำระครบก่อน (RESV-004)`)
     return
   }
-  toast(`ต้นแบบ: ยืนยันห้อง ${roomNumber} ถาวร — ทำได้ครั้งเดียว (idempotent) และบันทึก audit (เฟส P5)`)
+  const group = pendingGroups.value.find(item => item.resv.roomNumber === roomNumber)
+  if (!group) return
+  const result = reservation.confirmPaidReservation(group.resv.id)
+  result.ok ? toast.success(result.message) : toast.error(result.message)
+}
+
+function importResults() {
+  const count = payments.importDemoPaymentResults()
+  if (count === 0) {
+    toast.info('ไม่มีรายการ QR ที่รอผลชำระจาก SCB')
+    return
+  }
+  toast.success(`นำเข้าผลชำระสำเร็จ ${count} รายการ — ตรวจความครบของกลุ่มและยืนยันห้องต่อได้`)
 }
 </script>
 
@@ -69,8 +81,8 @@ function confirmReservation(roomNumber: string, complete: boolean) {
     >
       <template #actions>
         <PermissionGate permission="payment_result.import">
-          <Button @click="toast('ต้นแบบ: อัปโหลดรายงานผลชำระ — นำเข้าซ้ำได้แบบ idempotent ไม่เกิดรายการซ้ำ (RESULT-003)')">
-            <UploadIcon aria-hidden="true" /> นำเข้ารายงานผล
+          <Button @click="importResults">
+            <UploadIcon aria-hidden="true" /> จำลองนำเข้ารายงานผล
           </Button>
         </PermissionGate>
       </template>

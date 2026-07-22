@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import { CheckCircle2Icon, Clock3Icon, QrCodeIcon, WalletCardsIcon } from '@lucide/vue'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import ObligationCard from '@/components/domain/ObligationCard.vue'
@@ -11,6 +15,17 @@ const reservation = useReservationStore()
 
 const myObligations = computed(() => payments.myObligations)
 const myResv = computed(() => reservation.myReservation)
+const readyToPay = computed(() => myObligations.value.filter(
+  obligation => obligation.documentStatus === 'payment_form_ready'
+    && !['paid', 'manual_recorded', 'confirmed'].includes(obligation.resultStatus),
+))
+const waitingForForm = computed(() => myObligations.value.filter(
+  obligation => !['payment_form_ready', 'cancelled', 'superseded'].includes(obligation.documentStatus)
+    && !['paid', 'manual_recorded', 'confirmed'].includes(obligation.resultStatus),
+))
+const allPaid = computed(() => myObligations.value.length > 0 && myObligations.value.every(
+  obligation => ['paid', 'manual_recorded', 'confirmed'].includes(obligation.resultStatus),
+))
 </script>
 
 <template>
@@ -18,10 +33,29 @@ const myResv = computed(() => reservation.myReservation)
     <div class="space-y-1">
       <h1 class="text-2xl font-bold">การชำระเงิน</h1>
       <p class="text-sm text-muted-foreground">
-        แต่ละรายการแยกอิสระ (ห้องแอร์ HL มี 2 รายการ: ROOM + HL) —
-        ชำระด้วยแบบฟอร์ม QR อย่างเป็นทางการจากธนาคาร ไม่ต้องอัปโหลดสลิปในขั้นตอนปกติ
+        ชำระด้วยแบบฟอร์ม QR เฉพาะรายการที่ธนาคารส่งกลับมาให้ระบบ ไม่ต้องอัปโหลดสลิปในขั้นตอนปกติ
       </p>
     </div>
+
+    <Alert v-if="readyToPay.length">
+      <QrCodeIcon aria-hidden="true" />
+      <AlertTitle>ดำเนินการต่อ: เปิด QR และชำระ {{ readyToPay.length }} รายการ</AlertTitle>
+      <AlertDescription>
+        เลือก “เปิด QR เพื่อชำระเงิน” ในรายการด้านล่าง แต่ละรายการ ROOM/HL ต้องชำระแยกกันและมีสถานะของตัวเอง
+      </AlertDescription>
+    </Alert>
+    <Alert v-else-if="waitingForForm.length">
+      <Clock3Icon aria-hidden="true" />
+      <AlertTitle>ยังไม่ต้องชำระ — กำลังจัดทำแบบฟอร์ม QR</AlertTitle>
+      <AlertDescription>
+        เจ้าหน้าที่ต้องส่งออกรายการไป SCB และนำ combined PDF กลับเข้าระบบก่อน เมื่อพร้อมแล้วปุ่มเปิด QR จะปรากฏที่รายการโดยอัตโนมัติ
+      </AlertDescription>
+    </Alert>
+    <Alert v-else-if="allPaid">
+      <CheckCircle2Icon aria-hidden="true" />
+      <AlertTitle>ชำระครบทุกรายการแล้ว</AlertTitle>
+      <AlertDescription>รอเจ้าหน้าที่ตรวจความครบถ้วนของสมาชิกในห้องและยืนยันการจองถาวร</AlertDescription>
+    </Alert>
 
     <HoldCountdown
       v-if="myResv?.holdStatus === 'held_payment' && myResv.paymentDeadline"
@@ -33,8 +67,19 @@ const myResv = computed(() => reservation.myReservation)
       <ObligationCard v-for="o in myObligations" :key="o.id" :obligation="o" />
     </div>
     <Card v-else>
-      <CardContent class="p-8 text-center text-sm text-muted-foreground">
-        ยังไม่มีรายการชำระเงิน — รายการจะถูกสร้างหลังการจองห้องสำเร็จ
+      <CardContent class="flex flex-col items-center gap-4 p-8 text-center">
+        <div class="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <WalletCardsIcon class="size-5" aria-hidden="true" />
+        </div>
+        <div class="space-y-1">
+          <p class="font-medium">ยังไม่มีรายการชำระเงิน</p>
+          <p class="text-sm text-muted-foreground">
+            รายการจะถูกสร้างหลังเลือกห้องและยืนยันห้องเรียบร้อยแล้ว
+          </p>
+        </div>
+        <Button as-child variant="outline">
+          <RouterLink to="/app/rooms">ไปเลือกห้องพัก</RouterLink>
+        </Button>
       </CardContent>
     </Card>
   </div>

@@ -36,6 +36,7 @@ const router = createRouter({
       children: [
         { path: '', name: 'app-home', component: () => import('@/views/applicant/HomeView.vue') },
         { path: 'campaigns', name: 'app-campaigns', component: () => import('@/views/applicant/CampaignsView.vue') },
+        { path: 'application/:campaignId?', name: 'app-application', component: () => import('@/views/applicant/ApplicationView.vue') },
         { path: 'rooms', name: 'app-rooms', component: () => import('@/views/applicant/RoomsView.vue') },
         { path: 'roommate', name: 'app-roommate', component: () => import('@/views/applicant/RoommateView.vue') },
         { path: 'reservation', name: 'app-reservation', component: () => import('@/views/applicant/ReservationView.vue') },
@@ -43,7 +44,7 @@ const router = createRouter({
         { path: 'contracts', name: 'app-contracts', component: () => import('@/views/applicant/ContractsView.vue') },
         { path: 'next-steps', name: 'app-next-steps', component: () => import('@/views/applicant/NextStepsView.vue') },
         { path: 'renewal', name: 'app-renewal', component: () => import('@/views/applicant/RenewalView.vue') },
-        { path: 'account', name: 'app-account', component: () => import('@/views/applicant/AccountView.vue') },
+        { path: 'account', redirect: '/app' },
       ],
     },
     // ---- Staff portal (เมนูตามเอกสาร 03) — meta.section ผูกกับส่วนงานที่ผู้ดูแลระบบกำหนดรายคน ----

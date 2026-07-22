@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { OccupancyMode, ReservationGroup, RoommateGroup, RoommateInvitation } from '@/types'
 import { reservationGroups as resvFixtures, roommateGroups as groupFixtures, roommateInvitations as invitationFixtures, users } from '@/fixtures'
+import { useApplicationStore } from './application'
 import { useContractsStore } from './contracts'
 import { useDormStore } from './dorm'
 import { usePaymentsStore } from './payments'
@@ -25,6 +26,7 @@ export const useReservationStore = defineStore('reservation', () => {
   const reservationGroups = ref<ReservationGroup[]>(resvFixtures)
 
   const session = useSessionStore()
+  const application = useApplicationStore()
   const dorm = useDormStore()
   const payments = usePaymentsStore()
   const contractsStore = useContractsStore()
@@ -174,6 +176,14 @@ export const useReservationStore = defineStore('reservation', () => {
 
     const room = dorm.roomByNumber(roomNumber)
     if (!room) return { ok: false, message: 'ไม่พบห้องนี้' }
+    const building = dorm.buildings.find(item => item.id === room.buildingId)
+    if (!building) return { ok: false, message: 'ไม่พบข้อมูลอาคารของห้องนี้' }
+    if (!application.submittedDraft || !application.submittedReference) {
+      return { ok: false, message: 'ต้องส่งใบสมัครก่อนจึงจะยืนยันจองห้องได้' }
+    }
+    if (!application.submittedRoomMatches(room, building.dormGroupId, me.id)) {
+      return { ok: false, message: 'ห้องที่เลือกไม่ตรงกับหอพัก ประเภทห้อง หรือเลขห้องในใบสมัคร กรุณาแก้และส่งใบสมัครใหม่' }
+    }
     if (room.publicStatus !== 'available')
       return { ok: false, message: `ห้อง ${roomNumber} ไม่ว่างแล้ว (ROOM_NOT_AVAILABLE) — เลือกห้องอื่น` }
     if (!room.occupancyCapability.includes(occupancyMode))
@@ -287,6 +297,29 @@ export const useReservationStore = defineStore('reservation', () => {
     return { ok: true, message: `ห้อง ${resv.roomNumber} ถูกปล่อยคืนแล้ว` }
   }
 
+  /** เจ้าหน้าที่ยืนยันการจองเมื่อ obligation ของสมาชิกทุกคนชำระครบ */
+  function confirmPaidReservation(resvId: string): ActionResult {
+    const resv = reservationById(resvId)
+    if (!resv || resv.holdStatus !== 'held_payment') {
+      return { ok: false, message: 'การจองนี้ไม่อยู่ในขั้นรอยืนยันการชำระเงิน' }
+    }
+    if (!payments.groupPaymentComplete(resv.id)) {
+      return { ok: false, message: `ยืนยันห้อง ${resv.roomNumber} ไม่ได้ — สมาชิกทุกคนต้องชำระครบทุกรายการ` }
+    }
+    resv.holdStatus = 'confirmed'
+    resv.paymentDeadline = undefined
+    dorm.setRoomStatus(resv.roomNumber, 'reserved')
+    const group = roommateGroups.value.find(item => item.id === resv.roommateGroupId)
+    if (group) group.status = 'confirmed'
+    contractsStore.addAudit({
+      actor: session.currentUser?.id ?? 'staff-demo',
+      action: 'reservation.confirm',
+      relatedIds: [resv.id, resv.roomNumber],
+      detail: `ตรวจผลชำระครบและยืนยันห้อง ${resv.roomNumber} ถาวร`,
+    })
+    return { ok: true, message: `ยืนยันห้อง ${resv.roomNumber} ถาวรแล้ว` }
+  }
+
   return {
     invitations,
     roommateGroups,
@@ -305,5 +338,6 @@ export const useReservationStore = defineStore('reservation', () => {
     confirmRoomSelection,
     declineRoomSelection,
     expireHold,
+    confirmPaidReservation,
   }
 })

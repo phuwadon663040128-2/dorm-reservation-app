@@ -14,6 +14,7 @@ import {
   LayoutDashboardIcon,
   LogOutIcon,
   ReceiptTextIcon,
+  RotateCcwIcon,
   ScrollTextIcon,
   SendIcon,
   SettingsIcon,
@@ -24,6 +25,17 @@ import {
   UsersIcon,
   UsersRoundIcon,
 } from '@lucide/vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -44,6 +56,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import ThemeToggle from '@/components/domain/ThemeToggle.vue'
+import { resetDemoData } from '@/lib/demo-reset'
 import { useSessionStore } from '@/stores/session'
 import type { StaffSection } from '@/types'
 
@@ -205,6 +218,26 @@ function logout() {
                 <span class="truncate text-xs text-sidebar-foreground/70">{{ roleLabel }}</span>
               </div>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <AlertDialog>
+              <AlertDialogTrigger as-child>
+                <SidebarMenuButton tooltip="รีเซตข้อมูลทดสอบ" class="text-sidebar-foreground/80">
+                  <RotateCcwIcon aria-hidden="true" />
+                  <span>รีเซตข้อมูลทดสอบ</span>
+                </SidebarMenuButton>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>เริ่มการทดสอบใหม่?</AlertDialogTitle>
+                  <AlertDialogDescription>ข้อมูลที่เปลี่ยนใน workflow ทั้งฝั่งผู้สมัครและเจ้าหน้าที่จะกลับเป็นค่าเริ่มต้น และคุณจะออกจากระบบ</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                  <AlertDialogAction @click="resetDemoData">รีเซตและเริ่มใหม่</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="ออกจากระบบ" class="text-sidebar-foreground/80" @click="logout">

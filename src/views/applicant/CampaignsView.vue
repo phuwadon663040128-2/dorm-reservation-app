@@ -22,13 +22,20 @@ const statusLabel = { open: 'เปิดรับสมัคร', upcoming: '�
           </div>
           <CardDescription>{{ c.openDate }} – {{ c.closeDate }} · สัญญา{{ c.contractPeriod }}</CardDescription>
         </CardHeader>
-        <CardContent class="flex items-center justify-between gap-3">
+        <CardContent class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p class="text-sm text-muted-foreground">
             {{ c.kind === 'renewal' ? 'สำหรับผู้พักปัจจุบันต่อสัญญา' : 'สำหรับผู้สมัครใหม่และผู้พักเดิม' }}
           </p>
-          <Button as-child size="sm" variant="outline">
-            <RouterLink :to="`/campaigns/${c.id}`">รายละเอียด</RouterLink>
-          </Button>
+          <div class="flex flex-wrap gap-2">
+            <Button as-child size="sm" variant="outline">
+              <RouterLink :to="`/campaigns/${c.id}`">รายละเอียด</RouterLink>
+            </Button>
+            <Button v-if="c.status === 'open'" as-child size="sm">
+              <RouterLink :to="{ name: 'app-application', params: { campaignId: c.id } }">
+                เริ่ม / ทำใบสมัครต่อ
+              </RouterLink>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

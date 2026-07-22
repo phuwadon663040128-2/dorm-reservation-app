@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { InfoIcon, TimerIcon } from '@lucide/vue'
+import { AlertTriangleIcon, FileCheck2Icon, InfoIcon, TimerIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,24 +18,43 @@ import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
 import { priceLinesFor } from '@/fixtures'
+import { useApplicationStore } from '@/stores/application'
 import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
 import type { OccupancyMode, Room } from '@/types'
 
 const session = useSessionStore()
+const application = useApplicationStore()
 const reservation = useReservationStore()
 const dorm = useDormStore()
 const router = useRouter()
 
 const canReserve = computed(
-  () => session.currentUser?.profileComplete === true && !reservation.myReservation,
+  () => session.currentUser?.profileComplete === true
+    && !!application.submittedDraft
+    && !reservation.myReservation,
 )
 
 // dialog เลือกรูปแบบการพัก + ยืนยันจอง
 const selectedRoom = ref<Room | null>(null)
 const occupancy = ref<OccupancyMode>('shared')
 const dialogOpen = ref(false)
+const selectedBuilding = computed(() => dorm.buildings.find(building => building.id === selectedRoom.value?.buildingId))
+const selectedDormGroup = computed(() => dorm.dormGroups.find(group => group.id === selectedBuilding.value?.dormGroupId))
+const submittedDormGroup = computed(() => dorm.dormGroups.find(group => group.id === application.submittedDraft?.dormGroupId))
+const submittedRoomTypeLabel = computed(() => {
+  const config = application.submittedDraft?.roomType
+  return config ? roomConfigLabel[config as keyof typeof roomConfigLabel] ?? config : '—'
+})
+const roomSelectionIssue = computed<'missing_application' | 'mismatch' | null>(() => {
+  const room = selectedRoom.value
+  const dormGroupId = selectedBuilding.value?.dormGroupId
+  const userId = session.currentUser?.id
+  if (!application.submittedDraft || !application.submittedReference) return 'missing_application'
+  if (!room || !dormGroupId || !userId) return 'mismatch'
+  return application.submittedRoomMatches(room, dormGroupId, userId) ? null : 'mismatch'
+})
 
 const isLeaderOfAcceptedGroup = computed(
   () =>
@@ -75,6 +94,17 @@ function reserve() {
     router.push('/app/reservation')
   }
 }
+
+function useRoomInApplication() {
+  const room = selectedRoom.value
+  const dormGroupId = selectedBuilding.value?.dormGroupId
+  if (!room || !dormGroupId) return
+  application.hydrateIdentity(session.currentUser)
+  application.reviseForRoom(room, dormGroupId)
+  dialogOpen.value = false
+  toast.info(`ผูกห้อง ${room.number} กับร่างใบสมัครแล้ว กรุณาตรวจสอบและส่งใบสมัคร`)
+  router.push('/app/application')
+}
 </script>
 
 <template>
@@ -94,13 +124,24 @@ function reserve() {
         (1 คนมีได้ 1 การจอง/กลุ่มที่ใช้งานอยู่เท่านั้น)
       </AlertDescription>
     </Alert>
+    <Alert v-else-if="!application.submittedReference" variant="destructive">
+      <FileCheck2Icon aria-hidden="true" />
+      <AlertTitle>ยังไม่มีใบสมัครที่ส่งแล้ว</AlertTitle>
+      <AlertDescription>
+        คุณยังดูห้องได้ตามปกติ เมื่อเลือกห้อง ระบบจะนำหอพัก ประเภทห้อง และเลขห้องไปเติมในใบสมัครให้โดยอัตโนมัติ
+      </AlertDescription>
+    </Alert>
     <Alert v-else-if="!session.currentUser?.profileComplete" variant="destructive">
       <InfoIcon aria-hidden="true" />
-      <AlertTitle>ต้องกรอกโปรไฟล์ให้ครบก่อนจอง</AlertTitle>
-      <AlertDescription>ไปที่เมนู “บัญชี” เพื่อกรอกข้อมูลที่จำเป็นให้ครบถ้วน</AlertDescription>
+      <AlertTitle>ข้อมูลผู้สมัครยังไม่ครบ</AlertTitle>
+      <AlertDescription>กลับไปแก้ใบสมัครและส่งใหม่ก่อนยืนยันจองห้อง</AlertDescription>
     </Alert>
 
-    <RoomBrowser @select="onSelect" />
+    <RoomBrowser
+      :initial-dorm-group-id="application.submittedDraft?.dormGroupId || application.draft.dormGroupId"
+      :initial-config="application.submittedDraft?.roomType || application.draft.roomType"
+      @select="onSelect"
+    />
 
     <!-- Dialog ยืนยันการจอง -->
     <Dialog v-model:open="dialogOpen">
@@ -117,6 +158,25 @@ function reserve() {
         </DialogHeader>
 
         <div class="space-y-4">
+          <Alert v-if="roomSelectionIssue === 'missing_application'" variant="destructive">
+            <FileCheck2Icon aria-hidden="true" />
+            <AlertTitle>ยังจองห้องนี้ไม่ได้</AlertTitle>
+            <AlertDescription>
+              ระบบจะผูกห้อง {{ selectedRoom.number }}, {{ selectedDormGroup?.shortName }} และ {{ roomConfigLabel[selectedRoom.config] }} ลงในร่างใบสมัครก่อน เพื่อป้องกันข้อมูลคนละหอ
+            </AlertDescription>
+          </Alert>
+          <Alert v-else-if="roomSelectionIssue === 'mismatch'" variant="destructive">
+            <AlertTriangleIcon aria-hidden="true" />
+            <AlertTitle>ห้องที่เลือกไม่ตรงกับใบสมัคร</AlertTitle>
+            <AlertDescription>
+              ใบสมัครปัจจุบัน: {{ submittedDormGroup?.shortName }} · {{ submittedRoomTypeLabel }}
+              <template v-if="application.submittedDraft?.preferredRoomNumber">
+                · ห้อง {{ application.submittedDraft.preferredRoomNumber }}
+              </template>
+              แต่คุณกำลังเลือก {{ selectedDormGroup?.shortName }} · {{ roomConfigLabel[selectedRoom.config] }} · ห้อง {{ selectedRoom.number }}
+              ระบบจะไม่อนุญาตให้จองจนกว่าจะแก้และส่งใบสมัครใหม่
+            </AlertDescription>
+          </Alert>
           <HoldCountdown
             v-if="selectedRoom.publicStatus === 'temporarily_held' && selectedRoom.holdExpiresAt"
             :expires-at="selectedRoom.holdExpiresAt"
@@ -181,6 +241,14 @@ function reserve() {
         <DialogFooter>
           <Button variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
           <Button
+            v-if="roomSelectionIssue"
+            @click="useRoomInApplication"
+          >
+            <FileCheck2Icon aria-hidden="true" />
+            {{ roomSelectionIssue === 'missing_application' ? 'ใช้ห้องนี้ในใบสมัคร' : 'แก้ใบสมัครให้ตรงกับห้องนี้' }}
+          </Button>
+          <Button
+            v-else
             :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !canChoose(occupancy)"
             @click="reserve"
           >

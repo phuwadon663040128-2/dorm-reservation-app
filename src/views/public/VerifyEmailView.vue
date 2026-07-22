@@ -1,9 +1,27 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { MailCheckIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useSessionStore } from '@/stores/session'
+
+const route = useRoute()
+const router = useRouter()
+const session = useSessionStore()
+const email = computed(() => String(route.query.email || session.pendingEmailRegistration() || 'อีเมลที่สมัคร'))
+
+function verifyAndContinue() {
+  const user = session.completeEmailRegistration()
+  if (!user) {
+    toast.error('ไม่พบคำขอสมัครบัญชี กรุณากลับไปสมัครใหม่')
+    router.push('/register')
+    return
+  }
+  toast.success('ยืนยันอีเมลสำเร็จ — สร้างบัญชีผู้สมัครแล้ว')
+  router.push('/app/application')
+}
 </script>
 
 <template>
@@ -14,15 +32,13 @@ import { Card, CardContent } from '@/components/ui/card'
           <MailCheckIcon class="size-6" aria-hidden="true" />
         </div>
         <h1 class="text-xl font-bold">ตรวจสอบอีเมลของคุณ</h1>
+        <p class="break-all text-sm font-medium">{{ email }}</p>
         <p class="text-sm text-muted-foreground">
-          เราส่งลิงก์ยืนยันไปที่อีเมลที่คุณสมัครไว้ — ต้องยืนยันอีเมลก่อนจึงจะส่งใบสมัคร
-          เชิญรูมเมท หรือจองห้องได้ (บันทึกร่างข้อมูลไว้ให้ระหว่างรอ)
+          ต้องยืนยันอีเมลก่อนจึงจะส่งใบสมัคร เชิญรูมเมท หรือจองห้องได้ ในต้นแบบนี้กดปุ่มด้านล่างแทนการเปิดลิงก์จากอีเมล
         </p>
         <div class="flex flex-col gap-2">
-          <Button variant="outline" @click="toast('ต้นแบบ: ส่งอีเมลยืนยันใหม่แล้ว')">ส่งอีเมลยืนยันอีกครั้ง</Button>
-          <Button as-child>
-            <RouterLink to="/login">ยืนยันแล้ว — เข้าสู่ระบบ</RouterLink>
-          </Button>
+          <Button variant="outline" @click="toast.success('ส่งอีเมลยืนยันแบบจำลองใหม่แล้ว')">ส่งอีเมลยืนยันอีกครั้ง</Button>
+          <Button @click="verifyAndContinue">จำลองยืนยันอีเมลและเริ่มกรอกใบสมัคร</Button>
         </div>
       </CardContent>
     </Card>

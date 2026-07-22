@@ -57,7 +57,7 @@ const reservationStatusText = computed(() => {
       <AlertTitle>โปรไฟล์ยังไม่ครบถ้วน</AlertTitle>
       <AlertDescription>
         กรอกข้อมูลที่จำเป็นให้ครบก่อน จึงจะเชิญรูมเมทหรือจองห้องได้ —
-        <RouterLink to="/app/account" class="underline">ไปกรอกโปรไฟล์</RouterLink>
+        <RouterLink to="/app/application" class="underline">ไปกรอกข้อมูลใบสมัคร</RouterLink>
       </AlertDescription>
     </Alert>
 

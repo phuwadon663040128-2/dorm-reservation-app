@@ -9,8 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
+const session = useSessionStore()
 
 const email = ref('')
 const password = ref('')
@@ -31,8 +33,9 @@ function submit() {
     error.value = 'กรุณาอ่านและรับทราบประกาศความเป็นส่วนตัวก่อนสมัคร'
     return
   }
-  toast('ต้นแบบ: ระบบจะส่งลิงก์ยืนยันไปที่อีเมลของคุณ')
-  router.push('/verify-email')
+  session.beginEmailRegistration(email.value)
+  toast.success('ส่งลิงก์ยืนยันอีเมลแบบจำลองแล้ว')
+  router.push({ path: '/verify-email', query: { email: email.value.trim().toLowerCase() } })
 }
 </script>
 
