@@ -20,7 +20,7 @@ const primaryAction = computed(() => {
   if (!session.isLoggedIn) {
     return {
       label: 'เข้าสู่ระบบเพื่อสมัคร',
-      to: { path: '/login', query: { redirect: applicationPath.value } },
+      to: { path: route.path, query: { ...route.query, auth: 'login', redirect: applicationPath.value } },
     }
   }
   if (session.isStaff) {

@@ -7,6 +7,8 @@ import { useStaffAccessStore } from './staffAccess'
 const STORAGE_KEY = 'dorm-demo-session-user'
 const CUSTOM_USER_KEY = 'dorm-demo-custom-user'
 const PENDING_EMAIL_KEY = 'dorm-demo-pending-email'
+const PENDING_PASSWORD_KEY = 'dorm-demo-pending-password'
+const CUSTOM_PASSWORD_KEY = 'dorm-demo-custom-password'
 
 function restoreCustomUser(): User | null {
   try {
@@ -61,8 +63,26 @@ export const useSessionStore = defineStore('session', () => {
     return availableUsers.value.find(user => user.email.toLowerCase() === email.trim().toLowerCase())
   }
 
-  function beginEmailRegistration(email: string) {
+  function authenticateApplicant(email: string, password: string): User | null {
+    const normalizedEmail = email.trim().toLowerCase()
+    const fixtureApplicant = users.find(user =>
+      user.role === 'applicant' && user.email.toLowerCase() === normalizedEmail,
+    )
+    if (fixtureApplicant && password === 'demo1234') return login(fixtureApplicant.id)
+
+    if (
+      customUser.value
+      && customUser.value.email.toLowerCase() === normalizedEmail
+      && sessionStorage.getItem(CUSTOM_PASSWORD_KEY) === password
+    ) {
+      return login(customUser.value.id)
+    }
+    return null
+  }
+
+  function beginEmailRegistration(email: string, password: string) {
     sessionStorage.setItem(PENDING_EMAIL_KEY, email.trim().toLowerCase())
+    sessionStorage.setItem(PENDING_PASSWORD_KEY, password)
   }
 
   function pendingEmailRegistration() {
@@ -71,7 +91,8 @@ export const useSessionStore = defineStore('session', () => {
 
   function completeEmailRegistration(): User | null {
     const email = pendingEmailRegistration()
-    if (!email) return null
+    const password = sessionStorage.getItem(PENDING_PASSWORD_KEY)
+    if (!email || !password) return null
     const name = email.split('@')[0]
       .split(/[._-]+/)
       .filter(Boolean)
@@ -90,7 +111,9 @@ export const useSessionStore = defineStore('session', () => {
     currentUser.value = user
     sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(user))
     sessionStorage.setItem(STORAGE_KEY, user.id)
+    sessionStorage.setItem(CUSTOM_PASSWORD_KEY, password)
     sessionStorage.removeItem(PENDING_EMAIL_KEY)
+    sessionStorage.removeItem(PENDING_PASSWORD_KEY)
     return user
   }
 
@@ -132,6 +155,7 @@ export const useSessionStore = defineStore('session', () => {
     canAccessSection,
     login,
     userByEmail,
+    authenticateApplicant,
     beginEmailRegistration,
     pendingEmailRegistration,
     completeEmailRegistration,

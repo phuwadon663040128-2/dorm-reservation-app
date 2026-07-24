@@ -118,7 +118,7 @@ const steps = [
           class="mt-6 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
           @submit.prevent="search"
         >
-          <div class="min-w-0 flex-1 px-4 py-1.5">
+          <div class="min-w-0 flex-1 px-4 py  -1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">หอพัก</span>
             <Select v-model="searchDorm">
               <SelectTrigger aria-label="เลือกหอพัก" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">

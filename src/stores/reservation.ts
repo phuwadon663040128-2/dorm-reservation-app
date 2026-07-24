@@ -58,6 +58,13 @@ export const useReservationStore = defineStore('reservation', () => {
     )
   })
 
+  /** รายการล่าสุด รวม hold ที่หมดอายุหรือถูกปล่อยคืน โดยรายการใหม่ถูกเพิ่มไว้ด้านหน้า */
+  const myLatestReservation = computed(() => {
+    const uid = session.currentUser?.id
+    if (!uid) return undefined
+    return reservationGroups.value.find(r => r.memberIds.includes(uid))
+  })
+
   const myInvitations = computed(() => {
     const uid = session.currentUser?.id
     if (!uid) return []
@@ -326,6 +333,7 @@ export const useReservationStore = defineStore('reservation', () => {
     reservationGroups,
     myRoommateGroup,
     myReservation,
+    myLatestReservation,
     myInvitations,
     myReceivedPendingInvitations,
     reservationById,

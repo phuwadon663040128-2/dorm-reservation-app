@@ -23,10 +23,37 @@ const router = createRouter({
         { path: 'info/floor-plans', name: 'info-floor-plans', component: () => import('@/views/public/FloorPlansView.vue') },
         { path: 'info/units', name: 'info-units', component: () => import('@/views/public/ServiceUnitsView.vue') },
         { path: 'contact', name: 'contact', component: () => import('@/views/public/ContactView.vue') },
-        { path: 'login', name: 'login', component: () => import('@/views/public/LoginView.vue') },
-        { path: 'register', name: 'register', component: () => import('@/views/public/RegisterView.vue') },
-        { path: 'verify-email', name: 'verify-email', component: () => import('@/views/public/VerifyEmailView.vue') },
       ],
+    },
+    {
+      path: '/login',
+      name: 'login',
+      redirect: to => ({
+        path: '/',
+        query: { ...to.query, auth: 'login' },
+      }),
+    },
+    {
+      path: '/register',
+      name: 'register',
+      redirect: to => {
+        const { email, ...query } = to.query
+        return {
+          path: '/',
+          query: { ...query, auth: 'register', ...(email ? { authEmail: email } : {}) },
+        }
+      },
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      redirect: to => {
+        const { email, ...query } = to.query
+        return {
+          path: '/',
+          query: { ...query, auth: 'verify', ...(email ? { authEmail: email } : {}) },
+        }
+      },
     },
     // ---- Applicant portal (เมนูตามเอกสาร 03) ----
     {
@@ -80,12 +107,13 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const session = useSessionStore()
-  // มี session แล้วไม่ควรเห็นหน้าสมัคร/เข้าสู่ระบบซ้ำ แม้เปิดจากลิงก์เดิมหรือกดย้อนกลับ
-  if (session.isLoggedIn && ['login', 'register', 'verify-email'].includes(String(to.name))) {
+  // modal เข้าสู่ระบบอิง URL เพื่อให้ deep link, ปุ่มย้อนกลับ และ route guard ใช้ flow เดียวกัน
+  const authMode = Array.isArray(to.query.auth) ? to.query.auth[0] : to.query.auth
+  if (session.isLoggedIn && ['login', 'register', 'verify'].includes(String(authMode))) {
     return { path: session.isStaff ? '/staff' : '/app' }
   }
   if (to.meta.requiresAuth && !session.isLoggedIn) {
-    return { path: '/login', query: { redirect: to.fullPath } }
+    return { path: '/', query: { auth: 'login', redirect: to.fullPath } }
   }
   // แยกพอร์ทัลตามบทบาท — เจ้าหน้าที่เข้า /app ไม่ได้ และผู้สมัครเข้า /staff ไม่ได้
   if (to.meta.portal === 'staff' && session.isLoggedIn && !session.isStaff) {

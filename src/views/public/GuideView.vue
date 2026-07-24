@@ -21,7 +21,7 @@ import { useSessionStore } from '@/stores/session'
 const session = useSessionStore()
 
 const accountAction = computed(() => {
-  if (!session.isLoggedIn) return { label: 'เข้าสู่ระบบ', to: '/login' }
+  if (!session.isLoggedIn) return { label: 'เข้าสู่ระบบ', to: { path: '/guide', query: { auth: 'login' } } }
   if (session.isStaff) return { label: 'ไปพื้นที่เจ้าหน้าที่', to: '/staff' }
   return { label: 'ไปที่การจองของฉัน', to: '/app' }
 })

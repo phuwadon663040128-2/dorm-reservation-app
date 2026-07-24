@@ -60,7 +60,7 @@ function goReserve() {
   if (session.isLoggedIn && !session.isStaff) {
     router.push('/app/rooms')
   } else {
-    router.push({ path: '/login', query: { redirect: '/app/rooms' } })
+    router.push({ path: route.path, query: { ...route.query, auth: 'login', redirect: '/app/rooms' } })
   }
 }
 </script>
