@@ -52,11 +52,18 @@ const emit = defineEmits<{
   requestLogin: []
 }>()
 
+const props = withDefaults(defineProps<{
+  context?: 'public' | 'applicant'
+}>(), {
+  context: 'public',
+})
+
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
 const mobileOpen = ref(false)
 const profileOpen = ref(false)
+const isApplicantContext = computed(() => props.context === 'applicant')
 
 interface MenuItem {
   label: string
@@ -110,7 +117,12 @@ const mobileSections: { label?: string; items: MenuItem[] }[] = [
 
 const avatarInitials = computed(() => {
   const parts = session.currentUser?.displayName.trim().split(/\s+/).filter(Boolean) ?? []
-  return parts.length > 0 ? parts.slice(0, 2).map(part => part.charAt(0)).join('') : 'ผู้ใช้'
+  const nameInitials = parts.length > 0
+    ? parts.slice(0, 2).map(part => part.charAt(0)).join('')
+    : 'ผู้ใช้'
+  if (session.currentUser?.role !== 'applicant') return nameInitials
+  const studentIdDigits = session.currentUser.studentId?.replace(/\D/g, '') ?? ''
+  return studentIdDigits.length >= 2 ? studentIdDigits.slice(0, 2) : nameInitials
 })
 
 const accountIdentifier = computed(() => {
@@ -161,6 +173,7 @@ function linkKkuAccount() {
 }
 
 function logout() {
+  mobileOpen.value = false
   profileOpen.value = false
   logoutAndResetDemoData()
 }
@@ -168,25 +181,42 @@ function logout() {
 
 <template>
   <header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-    <div class="mx-auto flex h-16 w-full max-w-352 items-center gap-2 px-3 sm:gap-4 sm:px-5">
-      <RouterLink
-        to="/"
-        class="flex min-w-0 items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="กลับหน้าหลักเว็บไซต์หอพักในกำกับ มหาวิทยาลัยขอนแก่น"
-      >
-        <img :src="kkuEmblem" alt="" class="h-9 w-auto shrink-0 sm:h-10" />
-        <span class="hidden min-w-0 leading-tight sm:block xl:hidden min-[1700px]:block">
-          <span class="block truncate text-[15px] font-bold text-kku-red">หอพักในกำกับ มหาวิทยาลัยขอนแก่น</span>
-          <span class="block text-xs text-muted-foreground">ระบบจัดการจองหอพัก</span>
+    <div
+      class="mx-auto flex h-16 w-full max-w-352 items-center gap-2 px-3 sm:gap-4 sm:px-5 min-[1440px]:grid min-[1440px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
+    >
+      <div class="flex min-w-0 flex-1 items-center gap-2 min-[1440px]:flex-none">
+        <RouterLink
+          to="/"
+          class="flex min-w-0 items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="กลับหน้าหลักเว็บไซต์หอพักในกำกับ มหาวิทยาลัยขอนแก่น"
+        >
+          <img :src="kkuEmblem" alt="" class="h-9 w-auto shrink-0 sm:h-10" />
+          <span v-if="!isApplicantContext" class="hidden min-w-0 leading-tight sm:block">
+            <span class="block truncate text-[15px] font-bold text-kku-red">หอพักในกำกับ มหาวิทยาลัยขอนแก่น</span>
+            <span class="block text-xs text-muted-foreground">ระบบจัดการจองหอพัก</span>
+          </span>
+          <span v-else class="hidden min-w-0 leading-tight lg:block">
+            <span class="block truncate text-[15px] font-bold text-kku-red">หอพักในกำกับ มหาวิทยาลัยขอนแก่น</span>
+            <span class="block text-xs text-muted-foreground">ระบบจัดการจองหอพัก</span>
+          </span>
+        </RouterLink>
+        <span
+          v-if="isApplicantContext"
+          class="min-w-0 truncate text-sm font-semibold text-foreground lg:hidden"
+        >
+          การจองของฉัน
         </span>
-      </RouterLink>
+      </div>
 
-      <nav class="mx-auto hidden items-center gap-0.5 text-sm font-medium xl:flex" aria-label="เมนูเว็บไซต์หอพัก">
+      <nav
+        class="hidden items-center gap-0.5 whitespace-nowrap text-[13px] font-medium min-[1440px]:flex min-[1700px]:text-sm"
+        aria-label="เมนูเว็บไซต์หอพัก"
+      >
         <template v-for="menu in topMenus" :key="menu.label">
           <RouterLink
             v-if="menu.to"
             :to="menu.to"
-            class="rounded-md px-3 py-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            class="rounded-md px-2 py-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
             :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
           >
             {{ menu.label }}
@@ -194,7 +224,7 @@ function logout() {
 
           <DropdownMenu v-else>
             <DropdownMenuTrigger
-              class="flex items-center gap-1 rounded-md px-3 py-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              class="flex items-center gap-1 rounded-md px-2 py-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
               :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
             >
               {{ menu.label }}
@@ -217,7 +247,7 @@ function logout() {
         </template>
       </nav>
 
-      <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+      <div class="flex shrink-0 items-center gap-1 sm:gap-1.5 min-[1440px]:justify-self-end">
         <DropdownMenu>
           <DropdownMenuTrigger class="hidden items-center gap-1 rounded-full px-3 py-2 text-sm font-medium hover:bg-muted lg:flex">
             <GlobeIcon class="size-4" aria-hidden="true" /> TH
@@ -239,7 +269,7 @@ function logout() {
           เข้าสู่ระบบ
         </Button>
         <Button
-          v-else
+          v-else-if="!isApplicantContext"
           size="sm"
           variant="outline"
           class="rounded-full px-2.5 text-xs sm:px-3 sm:text-sm"
@@ -252,15 +282,13 @@ function logout() {
           <PopoverTrigger as-child>
             <Button
               variant="ghost"
-              class="h-10 max-w-36 gap-2 rounded-full px-1 sm:px-2"
+              size="icon"
+              class="rounded-full"
               :aria-label="`เปิดเมนูบัญชี ${accountIdentifier}`"
             >
               <Avatar class="size-8 shrink-0">
                 <AvatarFallback class="bg-primary/10 text-xs font-semibold text-primary">{{ avatarInitials }}</AvatarFallback>
               </Avatar>
-              <span class="hidden min-w-0 truncate text-xs font-medium text-muted-foreground sm:block">
-                {{ accountIdentifier }}
-              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" :side-offset="8" class="w-[min(22rem,calc(100vw-1rem))] p-0">
@@ -339,15 +367,25 @@ function logout() {
 
         <Sheet v-model:open="mobileOpen">
           <SheetTrigger as-child>
-            <Button variant="ghost" size="icon" class="xl:hidden" aria-label="เปิดเมนูเว็บไซต์หอพัก">
+            <Button
+              variant="ghost"
+              size="icon"
+              :class="isApplicantContext
+                ? 'hidden min-[1024px]:inline-flex min-[1440px]:hidden'
+                : 'min-[1440px]:hidden'"
+              aria-label="เปิดเมนูเว็บไซต์หอพัก"
+            >
               <MenuIcon aria-hidden="true" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" class="w-80 overflow-y-auto">
+          <SheetContent side="right" class="w-80 gap-0 overflow-hidden p-0">
             <SheetHeader>
               <SheetTitle class="text-left text-kku-red">หอพักในกำกับ มข.</SheetTitle>
             </SheetHeader>
-            <nav class="flex flex-col px-3 pb-6" aria-label="เมนูเว็บไซต์หอพักบนมือถือ">
+            <nav
+              class="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-4"
+              aria-label="เมนูเว็บไซต์หอพักบนมือถือ"
+            >
               <template v-for="(section, index) in mobileSections" :key="section.label ?? `section-${index}`">
                 <div v-if="index > 0" class="my-2 border-t" aria-hidden="true" />
                 <p v-if="section.label" class="px-3 pb-1.5 pt-1 text-[11px] font-semibold text-primary">
@@ -367,13 +405,26 @@ function logout() {
                 </button>
               </template>
 
-              <Button v-if="!session.isLoggedIn" class="mt-4 rounded-full" @click="requestLogin">
-                เข้าสู่ระบบ
-              </Button>
-              <Button v-else class="mt-4 rounded-full" variant="outline" @click="goToPortal">
-                {{ session.isStaff ? 'พื้นที่เจ้าหน้าที่' : 'การจองของฉัน' }}
-              </Button>
+              <template v-if="!isApplicantContext">
+                <Button v-if="!session.isLoggedIn" class="mt-4 rounded-full" @click="requestLogin">
+                  เข้าสู่ระบบ
+                </Button>
+              </template>
             </nav>
+
+            <div
+              v-if="session.isLoggedIn"
+              class="border-t bg-muted/30 p-3 pb-[calc(env(safe-area-inset-bottom)_+_0.75rem)]"
+            >
+              <Button
+                variant="outline"
+                class="min-h-11 w-full justify-start bg-background"
+                @click="logout"
+              >
+                <LogOutIcon aria-hidden="true" />
+                ออกจากระบบ
+              </Button>
+            </div>
           </SheetContent>
         </Sheet>
       </div>

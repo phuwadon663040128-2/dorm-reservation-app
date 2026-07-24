@@ -53,6 +53,7 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
             compact
             class="w-full"
             :class="tileClass(r)"
+            :disabled="isDimmed(r)"
             @click="onSelect"
           />
         </div>
@@ -67,6 +68,7 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
             compact
             class="w-full"
             :class="tileClass(r)"
+            :disabled="isDimmed(r)"
             @click="onSelect"
           />
         </div>
@@ -82,7 +84,15 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
       >
         <template v-for="(col, i) in layout.main" :key="'top-' + i">
           <div class="min-h-16">
-            <RoomTile v-if="col.top" :room="col.top" compact class="h-full w-full" :class="tileClass(col.top)" @click="onSelect" />
+            <RoomTile
+              v-if="col.top"
+              :room="col.top"
+              compact
+              class="h-full w-full"
+              :class="tileClass(col.top)"
+              :disabled="isDimmed(col.top)"
+              @click="onSelect"
+            />
             <div v-else class="h-full rounded-lg border border-dashed border-border/60" aria-hidden="true" />
           </div>
         </template>
@@ -96,7 +106,15 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
 
         <template v-for="(col, i) in layout.main" :key="'bottom-' + i">
           <div class="min-h-16">
-            <RoomTile v-if="col.bottom" :room="col.bottom" compact class="h-full w-full" :class="tileClass(col.bottom)" @click="onSelect" />
+            <RoomTile
+              v-if="col.bottom"
+              :room="col.bottom"
+              compact
+              class="h-full w-full"
+              :class="tileClass(col.bottom)"
+              :disabled="isDimmed(col.bottom)"
+              @click="onSelect"
+            />
             <div v-else class="h-full rounded-lg border border-dashed border-border/60" aria-hidden="true" />
           </div>
         </template>

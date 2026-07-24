@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import { useCountdown } from '@/composables/useCountdown'
 import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
 import type { PlanOverlay } from '@/lib/planOverlays'
@@ -16,12 +17,28 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'select', room: Room): void }>()
 
 const roomByNumber = computed(() => new Map(props.rooms.map(r => [r.number, r])))
+const planContainer = ref<HTMLElement | null>(null)
+const annotationGroup = ref<HTMLElement | null>(null)
+const { width: planWidth, height: planHeight } = useElementSize(planContainer)
+const { width: annotationWidth, height: annotationHeight } = useElementSize(annotationGroup)
 
 interface Spot {
   room: Room
   style: { left: string; top: string; width: string; height: string }
   cls: string
   dimmed: boolean
+}
+
+interface NormalizedRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+interface AnnotationPlacement {
+  x: number
+  y: number
 }
 
 const statusClass: Record<Room['publicStatus'], string> = {
@@ -60,13 +77,137 @@ function label(room: Room) {
   return `ห้อง ${room.number} — ${roomConfigLabel[room.config]} — ${roomPublicStatusLabel[room.publicStatus]}`
 }
 
-// ป้ายประเภทห้องแบบสั้นให้พอดีพื้นที่ในผัง (ฉบับเต็มอยู่ใน tooltip/dialog)
+// จุดบนผังมีพื้นที่น้อย โดยเฉพาะมือถือ จึงใช้รหัสประเภทเป็นป้ายหลักและคงเลขห้องไว้ใน tooltip/หน้ารายละเอียด
 const shortConfigLabel: Record<Room['config'], string> = {
-  normal: 'พัดลม',
+  normal: 'พัด',
   aircon: 'แอร์',
-  hl: 'แอร์ (HL)',
-  special: 'แอร์พิเศษ',
+  hl: 'HL',
+  special: 'พศ.',
 }
+
+const conciseConfigLabel: Record<Room['config'], string> = {
+  normal: 'พัดลม',
+  aircon: 'ปรับอากาศ',
+  hl: 'ปรับอากาศ HL',
+  special: 'ปรับอากาศพิเศษ',
+}
+
+const configOrder: Room['config'][] = ['normal', 'aircon', 'hl', 'special']
+const typeLegendItems = computed(() =>
+  configOrder
+    .filter(config => props.rooms.some(room => room.config === config))
+    .map(config => ({
+      config,
+      short: shortConfigLabel[config],
+      label: conciseConfigLabel[config],
+    })),
+)
+
+function overlapArea(a: NormalizedRect, b: NormalizedRect) {
+  const left = Math.max(a.x, b.x)
+  const right = Math.min(a.x + a.width, b.x + b.width)
+  const top = Math.max(a.y, b.y)
+  const bottom = Math.min(a.y + a.height, b.y + b.height)
+  return Math.max(0, right - left) * Math.max(0, bottom - top)
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function findAnnotationPlacement(
+  occupied: NormalizedRect[],
+  width: number,
+  height: number,
+  insetX: number,
+  insetY: number,
+  gapX: number,
+  gapY: number,
+): AnnotationPlacement {
+  const maxX = 1 - insetX - width
+  const maxY = 1 - insetY - height
+  if (maxX < insetX || maxY < insetY) return { x: insetX, y: insetY }
+
+  const paddedRooms = occupied.map(rect => ({
+    x: rect.x - gapX,
+    y: rect.y - gapY,
+    width: rect.width + gapX * 2,
+    height: rect.height + gapY * 2,
+  }))
+  const xCandidates = new Set<number>([insetX, maxX])
+  const yCandidates = new Set<number>([insetY, maxY])
+  const addX = (value: number) => xCandidates.add(clamp(value, insetX, maxX))
+  const addY = (value: number) => yCandidates.add(clamp(value, insetY, maxY))
+
+  // จุดชิดขอบห้องช่วยให้หา “ช่องว่างพอดี” ได้แม่นกว่าการสุ่มเป็นตารางอย่างเดียว
+  for (const rect of paddedRooms) {
+    addX(rect.x - width)
+    addX(rect.x + rect.width)
+    addY(rect.y - height)
+    addY(rect.y + rect.height)
+  }
+
+  const gridSteps = 32
+  for (let step = 0; step <= gridSteps; step += 1) {
+    addX(insetX + ((maxX - insetX) * step) / gridSteps)
+    addY(insetY + ((maxY - insetY) * step) / gridSteps)
+  }
+
+  let best: { x: number; y: number; overlap: number; position: number } | null = null
+  for (const y of yCandidates) {
+    for (const x of xCandidates) {
+      const candidate = { x, y, width, height }
+      const coveredRoomArea = paddedRooms.reduce((total, rect) => total + overlapArea(candidate, rect), 0)
+      const position = y * 4 + x
+      const hasLessOverlap = !best || coveredRoomArea < best.overlap - 1e-8
+      const hasSameOverlap = best !== null && Math.abs(coveredRoomArea - best.overlap) <= 1e-8
+      if (hasLessOverlap || (best !== null && hasSameOverlap && position < best.position)) {
+        best = { x, y, overlap: coveredRoomArea, position }
+      }
+    }
+  }
+
+  return best ?? { x: insetX, y: insetY }
+}
+
+const annotationReady = computed(
+  () => planWidth.value > 0 && planHeight.value > 0 && annotationWidth.value > 0 && annotationHeight.value > 0,
+)
+
+const annotationPlacement = computed<AnnotationPlacement>(() => {
+  if (!annotationReady.value) return { x: 0, y: 0 }
+
+  const ox = props.overlay.cropX ?? 0
+  const oy = props.overlay.cropY ?? 0
+  const roomRects: NormalizedRect[] = props.overlay.rooms.map(rect => ({
+    x: (rect.x - ox) / props.overlay.cropW,
+    y: (rect.y - oy) / props.overlay.cropH,
+    width: rect.w / props.overlay.cropW,
+    height: rect.h / props.overlay.cropH,
+  }))
+
+  const measuredWidth = annotationWidth.value / planWidth.value
+  const measuredHeight = annotationHeight.value / planHeight.value
+  const insetX = 8 / planWidth.value
+  const insetY = 8 / planHeight.value
+  const gapX = 4 / planWidth.value
+  const gapY = 4 / planHeight.value
+
+  return findAnnotationPlacement(
+    roomRects,
+    measuredWidth,
+    measuredHeight,
+    insetX,
+    insetY,
+    gapX,
+    gapY,
+  )
+})
+
+const annotationStyle = computed(() => ({
+  left: `${annotationPlacement.value.x * 100}%`,
+  top: `${annotationPlacement.value.y * 100}%`,
+}))
 
 // countdown ของห้องที่ถูกจองชั่วคราว (แสดงใน tooltip title ผ่าน label เพียงพอ — จอเล็กไม่มีพื้นที่)
 const heldRoom = computed(() => props.rooms.find(r => r.publicStatus === 'temporarily_held' && r.holdExpiresAt))
@@ -75,7 +216,7 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
 
 <template>
   <div class="space-y-2">
-    <div class="relative overflow-hidden rounded-2xl border bg-white">
+    <div ref="planContainer" class="relative overflow-hidden rounded-2xl border bg-white">
       <!-- แบบแปลนจริง (ฉบับไม่มีเลขห้อง) — เรนเดอร์ผ่าน <svg><image> ให้เหมือนไฟล์ออกแบบต้นฉบับ
            (ไฟล์แปลนมี viewBox เลื่อนจุดเริ่ม การใช้ <img> ตรง ๆ จะทำให้ภาพเพี้ยนไม่ตรงพิกัดห้อง) -->
       <svg
@@ -93,15 +234,18 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
         :key="s.room.number"
         type="button"
         class="absolute flex flex-col items-center justify-center rounded-sm border-2 font-bold leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        :class="[s.cls, s.dimmed ? 'pointer-events-none opacity-20' : '']"
+        :class="[s.cls, s.dimmed ? 'opacity-20' : '']"
         :style="s.style"
-        :aria-label="label(s.room)"
+        :disabled="s.dimmed"
+        :aria-label="`${label(s.room)}${s.dimmed ? ' — ไม่ตรงตัวกรอง' : ''}`"
         :title="label(s.room)"
         @click="emit('select', s.room)"
       >
-        <span class="text-[clamp(8px,1.2vw,13px)] tabular-nums">{{ s.room.number }}</span>
-        <span class="mt-0.5 hidden text-[clamp(6px,0.75vw,10px)] font-medium opacity-80 sm:block">
+        <span class="max-w-full truncate px-px text-[clamp(6px,1.05vw,11px)] font-bold">
           {{ shortConfigLabel[s.room.config] }}
+        </span>
+        <span class="mt-0.5 hidden text-[clamp(6px,0.75vw,10px)] font-medium tabular-nums opacity-80 sm:block">
+          {{ s.room.number }}
         </span>
         <span
           v-if="s.room.publicStatus === 'temporarily_held' && s.room.number === heldRoom?.number"
@@ -111,20 +255,61 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
         </span>
       </button>
 
-      <!-- เข็มทิศ — เข็มหมุนตามมุมทิศเหนือจริงของแบบแปลน (เทียบ Google Maps) -->
+      <!-- รวมเข็มทิศและคำอธิบายไว้เป็นชุดเดียว ผู้ใช้จึงอ่านจากบนลงล่างได้โดยไม่ต้องกวาดตาข้ามผัง -->
       <div
-        class="absolute left-3 top-3 flex flex-col items-center gap-0.5 rounded-xl border bg-background/90 px-2.5 py-2 shadow-sm backdrop-blur"
-        role="img"
-        :aria-label="`เข็มทิศ — ทิศเหนือทำมุม ${overlay.northAngle} องศาจากด้านบนของแบบแปลน`"
+        ref="annotationGroup"
+        class="pointer-events-auto absolute z-10 flex w-28 select-none flex-col gap-0.5 transition-opacity duration-100 sm:w-44 sm:gap-2 lg:w-64 lg:gap-2.5"
+        :class="annotationReady ? 'opacity-100' : 'opacity-0'"
+        :style="annotationStyle"
       >
-        <svg viewBox="0 0 24 24" class="size-7" :style="{ transform: `rotate(${overlay.northAngle}deg)` }" aria-hidden="true">
-          <circle cx="12" cy="12" r="10.5" class="fill-none stroke-border" stroke-width="1.5" />
-          <path d="M12 4 L15 13 L12 11.4 L9 13 Z" class="fill-primary" />
-          <path d="M12 20 L9 13 L12 14.6 L15 13 Z" class="fill-muted-foreground/40" />
-        </svg>
-        <span class="text-[10px] font-bold leading-none text-primary">N · เหนือ</span>
+        <div
+          class="flex h-8 w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-1.5 shadow-sm sm:h-12 sm:gap-2 sm:px-3 lg:h-16 lg:gap-3 lg:px-4"
+          role="img"
+          :aria-label="`เข็มทิศ — ทิศเหนือทำมุม ${overlay.northAngle} องศาจากด้านบนของแบบแปลน`"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            class="size-5 shrink-0 sm:size-7 lg:size-9"
+            :style="{ transform: `rotate(${overlay.northAngle}deg)` }"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10.5" class="fill-none stroke-slate-300" stroke-width="1.5" />
+            <path d="M12 4 L15 13 L12 11.4 L9 13 Z" class="fill-orange-700" />
+            <path d="M12 20 L9 13 L12 14.6 L15 13 Z" class="fill-slate-400" />
+          </svg>
+          <span class="min-w-0 leading-tight">
+            <span class="block text-[8px] font-medium text-slate-600 sm:text-[11px] lg:text-sm">ทิศเหนือ</span>
+            <span class="block text-[10px] font-bold text-orange-800 sm:text-sm lg:text-base">N · เหนือ</span>
+          </span>
+        </div>
+
+        <div
+          class="w-full rounded-lg border border-slate-200 bg-white px-1.5 py-0.5 text-slate-950 shadow-sm sm:px-3 sm:py-2 lg:px-4 lg:py-3"
+          role="group"
+          aria-label="คำอธิบายรหัสประเภทห้องบนแผนผัง"
+        >
+          <p class="mb-px text-[10px] font-semibold leading-3 sm:mb-1 sm:text-sm sm:leading-tight lg:mb-2 lg:text-base">
+            ประเภทห้อง
+          </p>
+          <div class="flex flex-col gap-px sm:gap-1 lg:gap-1.5" role="list">
+            <span
+              v-for="item in typeLegendItems"
+              :key="item.config"
+              class="flex min-h-3 min-w-0 items-center gap-1 text-[9px] leading-3 text-slate-600 sm:min-h-5 sm:gap-2 sm:text-xs sm:leading-tight lg:min-h-6 lg:gap-2.5 lg:text-sm"
+              role="listitem"
+              :aria-label="`${item.short} หมายถึง ${item.label}`"
+            >
+              <b class="grid h-3 min-w-6 shrink-0 place-items-center rounded border border-slate-200 bg-slate-50 px-0.5 text-[8px] font-bold leading-none text-slate-900 sm:h-5 sm:min-w-8 sm:px-1 sm:text-[11px] lg:h-6 lg:min-w-10 lg:px-1.5 lg:text-xs">
+                {{ item.short }}
+              </b>
+              <span class="whitespace-nowrap">{{ item.label }}</span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
-    <p class="text-xs text-muted-foreground">{{ overlay.northNote }} · ขนาดและตำแหน่งห้องตามแบบแปลนสถาปนิกจริง</p>
+    <p class="text-xs leading-relaxed text-muted-foreground">
+      แตะป้ายเพื่อดูเลขห้องและรายละเอียด · {{ overlay.northNote }} · ขนาดและตำแหน่งอ้างอิงตามแบบแปลนจริง
+    </p>
   </div>
 </template>

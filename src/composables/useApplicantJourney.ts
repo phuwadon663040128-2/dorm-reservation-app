@@ -611,14 +611,22 @@ export function useApplicantJourney() {
       {
         id: 'hold',
         title: 'การล็อกห้อง',
-        summary: latest ? holdStatusLabel[latest.holdStatus] : 'ยังไม่มีห้องที่ถูกล็อก',
+        summary: latest
+          ? latest.holdStatus === 'confirmed'
+            ? 'เจ้าหน้าที่ตรวจสอบและยืนยันการจองแล้ว'
+            : holdStatusLabel[latest.holdStatus]
+          : 'ยังไม่มีห้องที่ถูกล็อก',
         description: active?.confirmationDeadline
           ? 'รูมเมทต้องยืนยันภายในเวลาที่กำหนด'
           : active?.paymentDeadline ? 'ใช้กำหนดเวลาชำระร่วมกันทั้งกลุ่ม' : undefined,
         status: lostHold
           ? 'needs_action'
           : active ? active.holdStatus === 'confirmed' ? 'completed' : 'current' : 'upcoming',
-        statusLabel: latest ? holdStatusLabel[latest.holdStatus] : 'ยังไม่เริ่ม',
+        statusLabel: latest
+          ? latest.holdStatus === 'confirmed'
+            ? 'เจ้าหน้าที่ตรวจสอบและยืนยันการจองแล้ว'
+            : holdStatusLabel[latest.holdStatus]
+          : 'ยังไม่เริ่ม',
         detail: active?.confirmationDeadline ?? active?.paymentDeadline,
         to: '/app/reservation',
         ctaLabel: 'ดูสถานะการจอง',

@@ -11,8 +11,8 @@ function openLogin() {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-background text-foreground">
-    <GlobalHeader @request-login="openLogin" />
+  <div class="flex min-h-dvh flex-col overflow-x-clip bg-background text-foreground">
+    <GlobalHeader context="applicant" @request-login="openLogin" />
     <ApplicantNavigation />
 
     <main

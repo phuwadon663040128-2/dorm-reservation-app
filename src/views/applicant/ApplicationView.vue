@@ -3,15 +3,19 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
+import { useEventListener, useMediaQuery } from '@vueuse/core'
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
+import type { DateValue } from '@internationalized/date'
 import {
   ActivityIcon,
   AlertCircleIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
   Building2Icon,
+  CalendarDaysIcon,
   CheckIcon,
+  CheckCircle2Icon,
   ClipboardCheckIcon,
-  FileCheck2Icon,
   GraduationCapIcon,
   HeartPulseIcon,
   InfoIcon,
@@ -24,14 +28,16 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import {
   Stepper,
@@ -58,6 +64,30 @@ const { draft, submittedReference } = storeToRefs(application)
 const currentStep = ref(1)
 const highestStep = ref(1)
 const validationMessage = ref('')
+const birthDatePopoverOpen = ref(false)
+const birthDateClosedByViewportMove = ref(false)
+const desktopApplicantNavigationVisible = useMediaQuery('(min-width: 1024px)')
+
+// Portal ของ dropdown และปฏิทินต้องหลบทั้ง header และ bottom navigation บนมือถือ
+const floatingContentCollisionPadding = computed(() => ({
+  top: desktopApplicantNavigationVisible.value ? 120 : 72,
+  right: 16,
+  bottom: desktopApplicantNavigationVisible.value ? 16 : 80,
+  left: 16,
+}))
+
+const birthDateViewportTarget = computed<EventTarget | null>(() =>
+  birthDatePopoverOpen.value ? document : null,
+)
+
+const currentDate = today(getLocalTimeZone())
+const defaultBirthDate = currentDate.subtract({ years: 18 })
+const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
 
 const steps = [
   {
@@ -109,6 +139,55 @@ const preferredRoom = computed(() => dorm.roomByNumber(draft.value.preferredRoom
 const preferredBuilding = computed(() => dorm.buildings.find(building => building.id === preferredRoom.value?.buildingId))
 const currentStepMeta = computed(() => steps[currentStep.value - 1])
 const progressValue = computed(() => currentStep.value * 25)
+
+function parseDraftBirthDate() {
+  if (!draft.value.dateOfBirth) return null
+  try {
+    return parseDate(draft.value.dateOfBirth)
+  }
+  catch {
+    return null
+  }
+}
+
+// เก็บค่าใน store เป็น ISO เดิมเพื่อไม่เปลี่ยนสัญญาข้อมูล แม้หน้าจอใช้ CalendarDate
+const birthDateValue = computed<DateValue | undefined>({
+  get: () => parseDraftBirthDate() ?? undefined,
+  set: (value) => {
+    draft.value.dateOfBirth = value?.toString() ?? ''
+    if (value) birthDatePopoverOpen.value = false
+  },
+})
+
+const formattedBirthDate = computed(() => {
+  const value = birthDateValue.value
+  if (!value) return ''
+  return thaiDateFormatter.format(new Date(Date.UTC(value.year, value.month - 1, value.day)))
+})
+
+function closeBirthDatePopoverOnViewportMove() {
+  if (!birthDatePopoverOpen.value) return
+  birthDateClosedByViewportMove.value = true
+  birthDatePopoverOpen.value = false
+}
+
+function handleBirthDateCloseAutoFocus(event: Event) {
+  if (!birthDateClosedByViewportMove.value) return
+  event.preventDefault()
+  birthDateClosedByViewportMove.value = false
+}
+
+watch(birthDatePopoverOpen, (open) => {
+  if (open) birthDateClosedByViewportMove.value = false
+})
+
+// ปิดก่อน Floating UI คำนวณตำแหน่งใหม่ระหว่างเลื่อน เพื่อไม่ให้ปฏิทินลอยตามหรือทับแถบนำทาง
+useEventListener(
+  birthDateViewportTarget,
+  ['wheel', 'touchmove', 'scroll'],
+  closeBirthDatePopoverOnViewportMove,
+  { capture: true, passive: true },
+)
 
 const estimatedFees = computed(() => {
   const isInternational = draft.value.dormGroupId === 'dorm-wor-inter'
@@ -173,6 +252,15 @@ function validateStep(step: number) {
     ]
     if (required.some(value => !String(value).trim())) {
       validationMessage.value = 'กรุณากรอกช่องที่มีเครื่องหมาย * ให้ครบก่อนดำเนินการต่อ'
+    }
+    else {
+      const birthDate = parseDraftBirthDate()
+      if (!birthDate) {
+        validationMessage.value = 'กรุณาเลือกวันเดือนปีเกิดจากปฏิทิน'
+      }
+      else if (birthDate.compare(currentDate) > 0) {
+        validationMessage.value = 'วันเดือนปีเกิดต้องไม่เป็นวันที่ในอนาคต'
+      }
     }
   }
 
@@ -261,14 +349,17 @@ onMounted(() => {
       </div>
     </div>
 
-    <Alert v-if="submittedReference" class="border-primary/30 bg-primary/5">
-      <FileCheck2Icon aria-hidden="true" />
+    <Alert
+      v-if="submittedReference"
+      class="border-emerald-600/30 bg-emerald-600/10 text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:text-emerald-100"
+    >
+      <CheckCircle2Icon aria-hidden="true" />
       <AlertTitle>ส่งใบสมัครต้นแบบเรียบร้อยแล้ว</AlertTitle>
-      <AlertDescription>
-        เลขที่ใบสมัคร <strong class="text-foreground">{{ submittedReference }}</strong>
-        ระบบยังต้องตรวจคุณสมบัติ เอกสาร การชำระเงิน และโควตาก่อนยืนยันผล
-        <Button type="button" size="sm" variant="outline" class="mt-3 flex" @click="reopenApplication">
-          แก้ไขหอพักหรือห้องที่สมัคร
+      <AlertDescription class="text-emerald-800 dark:text-emerald-200">
+        เลขที่ใบสมัคร <strong class="text-current">{{ submittedReference }}</strong>
+        ระบบบันทึกใบสมัครแล้ว ขั้นตอนถัดไปคือเลือกและยืนยันห้อง ชำระเงิน และติดตามการยืนยันการจองจากเจ้าหน้าที่
+        <Button type="button" size="sm" variant="outline" class="mt-3 flex text-foreground" @click="reopenApplication">
+          แก้ไขหอพักหรือประเภทห้อง
         </Button>
       </AlertDescription>
     </Alert>
@@ -388,13 +479,26 @@ onMounted(() => {
 
               <Field>
                 <FieldLabel for="room-type">ประเภทห้องที่ต้องการ <span class="text-primary">*</span></FieldLabel>
-                <NativeSelect id="room-type" v-model="draft.roomType" class="h-10 w-full">
-                  <NativeSelectOption value="" disabled>เลือกประเภทห้อง</NativeSelectOption>
-                  <NativeSelectOption v-for="room in roomTypes" :key="room.value" :value="room.value">
-                    {{ room.label }}
-                  </NativeSelectOption>
-                </NativeSelect>
-                <FieldDescription>การจัดสรรขึ้นอยู่กับคุณสมบัติและโควตาคงเหลือของรอบรับสมัคร</FieldDescription>
+                <Select v-model="draft.roomType">
+                  <SelectTrigger
+                    id="room-type"
+                    class="h-10 w-full"
+                    aria-label="เลือกประเภทห้องที่ต้องการ"
+                    :aria-invalid="validationMessage && !draft.roomType ? true : undefined"
+                  >
+                    <SelectValue placeholder="เลือกประเภทห้อง" />
+                  </SelectTrigger>
+                  <SelectContent
+                    :collision-padding="floatingContentCollisionPadding"
+                    :side-flip="true"
+                    class="w-[var(--reka-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                  >
+                    <SelectItem v-for="room in roomTypes" :key="room.value" :value="room.value">
+                      {{ room.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FieldDescription>รายการห้องที่เลือกได้ขึ้นอยู่กับประเภทที่เปิดรับและสถานะว่าง ณ เวลานั้น</FieldDescription>
               </Field>
 
               <Alert v-if="preferredRoom">
@@ -407,8 +511,12 @@ onMounted(() => {
               </Alert>
               <Alert v-else>
                 <InfoIcon aria-hidden="true" />
-                <AlertTitle>ยังไม่ได้ระบุเลขห้อง</AlertTitle>
-                <AlertDescription>หลังส่งใบสมัคร คุณเลือกได้เฉพาะห้องในหอพักและประเภทที่ตรงกับใบสมัคร หรือกลับมาแก้ไขและส่งใบสมัครใหม่</AlertDescription>
+                <AlertTitle>
+                  {{ selectedRoomType ? `ประเภทห้องที่เลือก: ${selectedRoomType.label}` : 'ยังไม่ได้เลือกประเภทห้อง' }}
+                </AlertTitle>
+                <AlertDescription>
+                  ขั้นตอนนี้ใช้ระบุประเภทห้องที่ต้องการ ยังไม่ต้องเลือกเลขห้อง หลังส่งใบสมัครจึงเลือกห้องจริงจากผังตามหอพักและประเภทห้องที่สมัคร
+                </AlertDescription>
               </Alert>
             </CardContent>
           </Card>
@@ -425,13 +533,26 @@ onMounted(() => {
                 <div class="grid gap-4 sm:grid-cols-[10rem_1fr_1fr]">
                   <Field>
                     <FieldLabel for="title">คำนำหน้า <span class="text-primary">*</span></FieldLabel>
-                    <NativeSelect id="title" v-model="draft.title" class="h-10 w-full">
-                      <NativeSelectOption value="" disabled>เลือก</NativeSelectOption>
-                      <NativeSelectOption value="นาย">นาย</NativeSelectOption>
-                      <NativeSelectOption value="นาง">นาง</NativeSelectOption>
-                      <NativeSelectOption value="นางสาว">นางสาว</NativeSelectOption>
-                      <NativeSelectOption value="other">อื่น ๆ</NativeSelectOption>
-                    </NativeSelect>
+                    <Select v-model="draft.title">
+                      <SelectTrigger
+                        id="title"
+                        class="h-10 w-full"
+                        aria-label="เลือกคำนำหน้า"
+                        :aria-invalid="validationMessage && !draft.title ? true : undefined"
+                      >
+                        <SelectValue placeholder="เลือก" />
+                      </SelectTrigger>
+                      <SelectContent
+                        :collision-padding="floatingContentCollisionPadding"
+                        :side-flip="true"
+                        class="w-[var(--reka-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                      >
+                        <SelectItem value="นาย">นาย</SelectItem>
+                        <SelectItem value="นาง">นาง</SelectItem>
+                        <SelectItem value="นางสาว">นางสาว</SelectItem>
+                        <SelectItem value="other">อื่น ๆ</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </Field>
                   <Field>
                     <FieldLabel for="first-name">ชื่อ <span class="text-primary">*</span></FieldLabel>
@@ -449,7 +570,42 @@ onMounted(() => {
                   </Field>
                   <Field>
                     <FieldLabel for="birth-date">วันเดือนปีเกิด <span class="text-primary">*</span></FieldLabel>
-                    <Input id="birth-date" v-model="draft.dateOfBirth" type="date" class="h-10" />
+                    <Popover v-model:open="birthDatePopoverOpen">
+                      <PopoverTrigger as-child>
+                        <Button
+                          id="birth-date"
+                          type="button"
+                          variant="outline"
+                          class="h-10 w-full justify-between px-3 font-normal"
+                          :aria-label="formattedBirthDate ? `วันเดือนปีเกิด ${formattedBirthDate}` : 'เลือกวันเดือนปีเกิด'"
+                        >
+                          <span :class="formattedBirthDate ? 'text-foreground' : 'text-muted-foreground'">
+                            {{ formattedBirthDate || 'เลือกวันเดือนปีเกิด' }}
+                          </span>
+                          <CalendarDaysIcon class="size-4 text-muted-foreground" aria-hidden="true" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        :collision-padding="floatingContentCollisionPadding"
+                        hide-when-detached
+                        align="start"
+                        :side-offset="6"
+                        class="z-20 w-80 max-w-[calc(100vw-2rem)] p-0 data-closed:animate-none data-closed:duration-0"
+                        @close-auto-focus="handleBirthDateCloseAutoFocus"
+                      >
+                        <Calendar
+                          v-model="birthDateValue"
+                          :default-placeholder="defaultBirthDate"
+                          :max-value="currentDate"
+                          fixed-weeks
+                          locale="th-TH"
+                          layout="month-and-year"
+                          initial-focus
+                          class="w-full p-2"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FieldDescription>เลือกวันเกิดตามปฏิทิน ระบบจะแสดงปีพุทธศักราชและบันทึกเป็นวันที่มาตรฐาน</FieldDescription>
                   </Field>
                   <Field>
                     <FieldLabel for="nationality">สัญชาติ</FieldLabel>
@@ -479,18 +635,40 @@ onMounted(() => {
                   </Field>
                   <Field>
                     <FieldLabel for="degree-level">ระดับการศึกษา <span class="text-primary">*</span></FieldLabel>
-                    <NativeSelect id="degree-level" v-model="draft.degreeLevel" class="h-10 w-full">
-                      <NativeSelectOption value="bachelor">ปริญญาตรี</NativeSelectOption>
-                      <NativeSelectOption value="master">ปริญญาโท</NativeSelectOption>
-                      <NativeSelectOption value="doctoral">ปริญญาเอก</NativeSelectOption>
-                    </NativeSelect>
+                    <Select v-model="draft.degreeLevel">
+                      <SelectTrigger id="degree-level" class="h-10 w-full" aria-label="เลือกระดับการศึกษา">
+                        <SelectValue placeholder="เลือกระดับการศึกษา" />
+                      </SelectTrigger>
+                      <SelectContent
+                        :collision-padding="floatingContentCollisionPadding"
+                        :side-flip="true"
+                        class="w-[var(--reka-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                      >
+                        <SelectItem value="bachelor">ปริญญาตรี</SelectItem>
+                        <SelectItem value="master">ปริญญาโท</SelectItem>
+                        <SelectItem value="doctoral">ปริญญาเอก</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </Field>
                   <Field>
                     <FieldLabel for="study-year">ชั้นปี <span class="text-primary">*</span></FieldLabel>
-                    <NativeSelect id="study-year" v-model="draft.studyYear" class="h-10 w-full">
-                      <NativeSelectOption value="" disabled>เลือกชั้นปี</NativeSelectOption>
-                      <NativeSelectOption v-for="year in 8" :key="year" :value="String(year)">ปี {{ year }}</NativeSelectOption>
-                    </NativeSelect>
+                    <Select v-model="draft.studyYear">
+                      <SelectTrigger
+                        id="study-year"
+                        class="h-10 w-full"
+                        aria-label="เลือกชั้นปี"
+                        :aria-invalid="validationMessage && !draft.studyYear ? true : undefined"
+                      >
+                        <SelectValue placeholder="เลือกชั้นปี" />
+                      </SelectTrigger>
+                      <SelectContent
+                        :collision-padding="floatingContentCollisionPadding"
+                        :side-flip="true"
+                        class="w-[var(--reka-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                      >
+                        <SelectItem v-for="year in 8" :key="year" :value="String(year)">ปี {{ year }}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </Field>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -573,14 +751,27 @@ onMounted(() => {
             <CardContent class="space-y-5">
               <Field>
                 <FieldLabel for="blood-group">หมู่เลือด <span class="text-primary">*</span></FieldLabel>
-                <NativeSelect id="blood-group" v-model="draft.bloodGroup" class="h-10 w-full">
-                  <NativeSelectOption value="" disabled>เลือกหมู่เลือด</NativeSelectOption>
-                  <NativeSelectOption value="A">A</NativeSelectOption>
-                  <NativeSelectOption value="B">B</NativeSelectOption>
-                  <NativeSelectOption value="AB">AB</NativeSelectOption>
-                  <NativeSelectOption value="O">O</NativeSelectOption>
-                  <NativeSelectOption value="unknown">ไม่ทราบ</NativeSelectOption>
-                </NativeSelect>
+                <Select v-model="draft.bloodGroup">
+                  <SelectTrigger
+                    id="blood-group"
+                    class="h-10 w-full"
+                    aria-label="เลือกหมู่เลือด"
+                    :aria-invalid="validationMessage && !draft.bloodGroup ? true : undefined"
+                  >
+                    <SelectValue placeholder="เลือกหมู่เลือด" />
+                  </SelectTrigger>
+                  <SelectContent
+                    :collision-padding="floatingContentCollisionPadding"
+                    :side-flip="true"
+                    class="w-[var(--reka-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                  >
+                    <SelectItem value="A">A</SelectItem>
+                    <SelectItem value="B">B</SelectItem>
+                    <SelectItem value="AB">AB</SelectItem>
+                    <SelectItem value="O">O</SelectItem>
+                    <SelectItem value="unknown">ไม่ทราบ</SelectItem>
+                  </SelectContent>
+                </Select>
               </Field>
               <Field>
                 <FieldLabel>มีโรคประจำตัวหรือไม่</FieldLabel>
@@ -727,7 +918,7 @@ onMounted(() => {
                 </span>
                 <div>
                   <CardTitle>ค่าใช้จ่ายที่ต้องเตรียมชำระ</CardTitle>
-                  <CardDescription>ยอดอ้างอิงสำหรับต้นแบบจากประเภทห้องที่เลือก ก่อนเจ้าหน้าที่ตรวจสิทธิ์</CardDescription>
+                  <CardDescription>ยอดอ้างอิงสำหรับต้นแบบจากประเภทห้องที่เลือก ก่อนเลือกและยืนยันห้องจริง</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -752,7 +943,7 @@ onMounted(() => {
               <Alert>
                 <InfoIcon aria-hidden="true" />
                 <AlertTitle>การส่งใบสมัครยังไม่ใช่การยืนยันสิทธิ์ห้องพัก</AlertTitle>
-                <AlertDescription>ต้องผ่านการตรวจข้อมูล หลักฐานการชำระเงิน และการอนุมัติตามโควตาก่อน ระบบจึงจะแจ้งผลอย่างเป็นทางการ</AlertDescription>
+                <AlertDescription>หลังส่งใบสมัคร คุณยังต้องเลือกและยืนยันห้องภายในเวลาที่กำหนด ชำระเงิน และรอเจ้าหน้าที่ตรวจสอบและยืนยันการจอง</AlertDescription>
               </Alert>
             </CardContent>
           </Card>

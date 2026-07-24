@@ -211,35 +211,48 @@ function openView(nextView: DialogView) {
         <aside class="relative isolate hidden min-h-0 overflow-y-auto lg:col-span-3 lg:block">
           <img :src="heroImage" alt="อาคารหอพักในกำกับ มหาวิทยาลัยขอนแก่น" class="absolute inset-0 size-full object-cover object-center" />
           <div class="absolute inset-0 bg-linear-to-br from-black/80 via-black/35 to-black/70" />
-          <div class="relative flex min-h-full flex-col justify-between p-7 text-white">
-            <div class="flex items-center justify-between gap-4">
+          <div class="relative flex min-h-full flex-col p-7 text-white">
+            <div class="flex min-h-10 items-center">
               <Badge class="border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-black/35">
                 <ShieldCheckIcon class="size-3.5" aria-hidden="true" />
                 KKU Affiliated Dormitory
               </Badge>
-              <span class="text-xs font-medium tracking-wide text-white/70">ระบบต้นแบบ</span>
             </div>
-            <div class="mt-10 max-w-2xl">
-              <p class="mb-3 text-sm font-semibold text-primary">สมัคร · เลือกห้อง · ติดตามสถานะ</p>
-              <h2 class="text-4xl font-bold leading-tight tracking-tight xl:text-5xl">วางแผนการเข้าพัก<br />ได้ในบัญชีเดียว</h2>
-              <p class="mt-4 max-w-xl text-sm leading-6 text-white/80 xl:text-base">
-                เลือกห้องจริง จัดการคำเชิญรูมเมท และตรวจสอบกำหนดชำระเงินอย่างเป็นขั้นตอน
+
+            <div class="mt-8 max-w-2xl">
+              <h2 class="text-4xl font-bold leading-[1.18] tracking-tight">
+                <span class="block">บริการของหอพักออนไลน์</span>
+                <span class="mt-1 block text-primary">เลือกห้องพัก ชำระเงิน และทำสัญญา<br />ครบในระบบเดียว</span>
+              </h2>
+              <p class="mt-4 max-w-2xl text-sm leading-6 text-white/80 xl:text-base">
+                ระบบรับสมัครและจองหอพักในกำกับมหาวิทยาลัยขอนแก่น รองรับการเลือกห้องเป็นรายห้อง<br />
+                จับคู่รูมเมท เหมาห้อง ชำระเงินผ่านแบบฟอร์มธนาคารอย่างเป็นทางการ และติดตามสัญญาจนถึงวันรับกุญแจ
               </p>
-              <ol class="mt-6 grid gap-2.5" aria-label="สิ่งที่ทำได้ในระบบ">
+
+            </div>
+
+            <div class="mt-auto pt-8">
+              <ol class="grid grid-cols-3 gap-2.5" aria-label="สิ่งที่ทำได้ในระบบ">
                 <li
                   v-for="(item, index) in journeyHighlights"
                   :key="item.title"
-                  class="flex items-center gap-3 rounded-xl border border-white/15 bg-black/30 px-4 py-3 backdrop-blur-md"
+                  class="flex min-h-32 flex-col rounded-xl border border-white/15 bg-black/35 p-3.5 backdrop-blur-md"
                 >
-                  <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-semibold tabular-nums">0{{ index + 1 }}</span>
-                  <component :is="item.icon" class="size-5 shrink-0 text-primary" aria-hidden="true" />
-                  <span class="min-w-0">
+                  <span class="flex items-center justify-between gap-3">
+                    <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold tabular-nums text-white/80">
+                      0{{ index + 1 }}
+                    </span>
+                    <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <component :is="item.icon" class="size-4.5" aria-hidden="true" />
+                    </span>
+                  </span>
+                  <span class="mt-3 min-w-0">
                     <span class="block text-sm font-semibold">{{ item.title }}</span>
-                    <span class="block text-xs leading-5 text-white/65">{{ item.description }}</span>
+                    <span class="mt-1 block text-xs leading-5 text-white/65">{{ item.description }}</span>
                   </span>
                 </li>
               </ol>
-              <div class="mt-5 flex items-start gap-2.5 rounded-xl border border-white/15 bg-black/35 p-3.5 text-xs leading-5 text-white/75 backdrop-blur-md">
+              <div class="mt-3.5 flex items-start gap-2.5 rounded-xl border border-white/15 bg-black/40 p-3.5 text-xs leading-5 text-white/75 backdrop-blur-md">
                 <InfoIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 <p>การเลือกห้องและส่งข้อมูลยังไม่ถือว่าได้รับสิทธิ์เข้าพัก จนกว่าจะมีการยืนยันอย่างเป็นทางการ</p>
               </div>
@@ -249,7 +262,7 @@ function openView(nextView: DialogView) {
         <div class="min-h-0 lg:col-span-2 lg:h-full lg:overflow-y-auto">
           <div class="mx-auto w-full max-w-lg p-5 sm:p-6 lg:max-w-none lg:p-7">            <template v-if="view === 'login'">
               <DialogHeader class="space-y-3 text-left">
-                <div class="flex items-center justify-between gap-3 pr-7">
+                <div class="flex items-center gap-3 pr-7">
                   <div class="flex items-center gap-3">
                     <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
                       <KeyRoundIcon class="size-5" aria-hidden="true" />
@@ -259,7 +272,6 @@ function openView(nextView: DialogView) {
                       <span class="block text-xs text-muted-foreground">Dormitory account</span>
                     </span>
                   </div>
-                  <Badge variant="secondary" class="font-normal">ต้นแบบ</Badge>
                 </div>
                 <div class="space-y-1.5">
                   <DialogTitle class="text-2xl">เข้าสู่ระบบ</DialogTitle>
@@ -289,49 +301,45 @@ function openView(nextView: DialogView) {
                   />
                 </div>
                 <div class="space-y-1.5">
-                  <div class="flex items-center justify-between gap-3">
-                    <Label for="dialog-login-password">รหัสผ่าน</Label>
-                    <Button type="button" variant="link" class="h-auto px-0 text-xs" @click="requestPasswordReset">ลืมรหัสผ่าน?</Button>
-                  </div>
-                  <div class="flex items-stretch gap-2">
+                  <Label for="dialog-login-password">รหัสผ่าน</Label>
+                  <div class="relative">
                     <Input
                       id="dialog-login-password"
                       v-model="loginPassword"
-                      class="h-11 min-w-0 flex-1"
+                      class="h-11 w-full pr-11"
                       :type="showPassword ? 'text' : 'password'"
                       autocomplete="current-password"
                       :aria-invalid="Boolean(loginError)"
-                      :aria-describedby="loginError ? 'dialog-login-password-hint dialog-login-error' : 'dialog-login-password-hint'"
+                      :aria-describedby="loginError ? 'dialog-login-error' : undefined"
                       @input="loginError = ''"
                     />
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
-                      size="icon"
-                      class="size-11 shrink-0 text-muted-foreground hover:text-foreground"
+                      class="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                       :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
                       @click="showPassword = !showPassword"
                     >
                       <EyeOffIcon v-if="showPassword" class="size-4" aria-hidden="true" />
                       <EyeIcon v-else class="size-4" aria-hidden="true" />
-                    </Button>
+                    </button>
                   </div>
-                  <p id="dialog-login-password-hint" class="text-xs text-muted-foreground">
-                    บัญชีตัวอย่างใช้รหัสผ่าน <span class="font-medium text-foreground">demo1234</span>
-                  </p>
+                  <Button type="button" variant="link" class="h-auto px-0 text-xs" @click="requestPasswordReset">ลืมรหัสผ่าน?</Button>
                 </div>
                 <div v-if="loginError" id="dialog-login-error" class="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive" role="alert">
                   <InfoIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                   <span>{{ loginError }}</span>
                 </div>
-                <Button type="submit" size="lg" class="w-full">เข้าสู่ระบบ <ArrowRightIcon class="ml-auto" aria-hidden="true" /></Button>
+                <Button type="submit" size="lg" class="w-full justify-center">
+                  เข้าสู่ระบบ
+                </Button>
               </form>
 
               <div class="my-5 flex items-center gap-3" aria-hidden="true">
                 <Separator class="flex-1" /><span class="text-xs text-muted-foreground">หรือ</span><Separator class="flex-1" />
               </div>
-              <Button type="button" size="lg" variant="outline" class="w-full" @click="openView('sso')">
-                <GraduationCapIcon aria-hidden="true" /> เข้าสู่ระบบด้วย KKU SSO <ArrowRightIcon class="ml-auto" aria-hidden="true" />
+              <Button type="button" size="lg" variant="outline" class="relative w-full justify-center" @click="openView('sso')">
+                <GraduationCapIcon class="absolute left-3" aria-hidden="true" />
+                <span>เข้าสู่ระบบด้วย KKU SSO</span>
               </Button>
               <p class="mt-2 text-center text-xs leading-5 text-muted-foreground">สำหรับบัญชีที่เชื่อม KKU แล้วและบัญชีเจ้าหน้าที่ · SSO แบบจำลอง</p>
 

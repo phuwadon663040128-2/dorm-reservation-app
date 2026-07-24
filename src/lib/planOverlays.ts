@@ -36,6 +36,9 @@ const overlays: Record<string, PlanOverlay> = {
     image: '/plans/overlay/8lang-101.svg',
     viewW: 953,
     viewH: 593,
+    // SVG ชั้น 1 มีพื้นที่ว่างซ้าย/บนมากกว่าภาพชั้นอื่น จึงเลื่อนกรอบครอบตัดให้ footprint อยู่กึ่งกลางโดยยังใช้พิกัดเดียวกับ hotspot
+    cropX: 40,
+    cropY: 24,
     cropW: 778,
     cropH: 522,
     // อ้างอิง Google Maps: ถ.ประตูเขียวคือทิศเหนือ และปีกหลังตึกของอาคารนี้หันเข้าคอร์ทกลาง (ทิศใต้)

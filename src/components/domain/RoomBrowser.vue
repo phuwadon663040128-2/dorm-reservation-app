@@ -295,8 +295,16 @@ function statusCount(status: RoomPublicStatus) {
         >
           <LayoutGridIcon aria-hidden="true" /> รายการ
         </Button>
-        <Button size="sm" variant="outline" :disabled="!selectedBuilding || selectedFloor === null || viewMode === '3d'" @click="realPlanOpen = true">
-          <MapIcon aria-hidden="true" /> ดูผังจริง
+        <Button
+          size="sm"
+          variant="outline"
+          :disabled="!selectedBuilding || selectedFloor === null || viewMode === '3d'"
+          :aria-label="selectedBuilding && selectedFloor !== null
+            ? `เปิดแผนผังจริง ${selectedBuilding.name} ชั้น ${selectedFloor}`
+            : 'เปิดแผนผังจริง'"
+          @click="realPlanOpen = true"
+        >
+          <MapIcon aria-hidden="true" /> แผนผังจริง
         </Button>
       </div>
       </div>
@@ -379,7 +387,7 @@ function statusCount(status: RoomPublicStatus) {
         <!-- ปุ่มกลับอยู่ติดมุมขวาบนของพื้นที่ผังโดยตรง จึงหาเจอได้ทั้งธีมสว่าง/มืดและไม่หลุดเมื่อสรุปอาคารตัดบรรทัด -->
         <div class="flex min-h-9 flex-wrap items-center justify-between gap-2">
           <h3 class="text-sm font-semibold">
-            {{ viewMode === 'plan' ? 'ผัง' : 'รายการห้อง' }} {{ selectedBuilding.name }} · ชั้น {{ currentFloor.floor }}
+            {{ viewMode === 'plan' ? 'แผนผังประเภทห้อง' : 'รายการห้อง' }} {{ selectedBuilding.name }} · ชั้น {{ currentFloor.floor }}
           </h3>
           <Button
             v-if="has3d && viewMode === 'plan'"
