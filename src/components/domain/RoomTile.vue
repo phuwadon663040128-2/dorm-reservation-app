@@ -2,12 +2,12 @@
 import { computed } from 'vue'
 import { FanIcon, SnowflakeIcon, SparklesIcon, TimerIcon, User2Icon, Users2Icon } from '@lucide/vue'
 import { useCountdown } from '@/composables/useCountdown'
-import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
+import { planRoomTypeLabel, roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
 import type { Room } from '@/types'
 
 // ไทล์ห้องในแผนผังรายชั้น — สถานะสื่อด้วย สี + จุด + ข้อความ เสมอ (ไม่พึ่งสีอย่างเดียว)
 // compact = ขนาดเล็กสำหรับมุมมองผังโครงสร้างที่มีหลายคอลัมน์
-const props = defineProps<{ room: Room; compact?: boolean }>()
+const props = defineProps<{ room: Room; compact?: boolean; planLabels?: boolean }>()
 const emit = defineEmits<{ (e: 'click', room: Room): void }>()
 
 const statusStyle = computed(() => {
@@ -72,6 +72,10 @@ const { display: holdDisplay, expired: holdExpired } = useCountdown(() => (isHel
     </div>
 
     <span v-if="!compact" class="text-xs text-muted-foreground">{{ roomConfigLabel[room.config] }}</span>
+    <span v-else-if="planLabels" class="max-w-full truncate text-[10px] leading-tight text-muted-foreground">
+      <span class="md:hidden">{{ planRoomTypeLabel[room.config].short }}</span>
+      <span class="hidden md:inline">{{ planRoomTypeLabel[room.config].full }}</span>
+    </span>
     <span v-else class="truncate text-[10px] leading-tight text-muted-foreground">{{ roomConfigLabel[room.config] }}</span>
 
     <span class="mt-auto inline-flex items-center gap-1.5 font-medium" :class="[statusStyle.text, compact ? 'text-[10px]' : 'text-xs']">

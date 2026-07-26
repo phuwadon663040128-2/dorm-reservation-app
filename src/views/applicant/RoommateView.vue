@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { MailPlusIcon, UsersIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
@@ -24,15 +24,24 @@ import {
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import { invitationStatusLabel, roommateGroupStatusLabel } from '@/lib/labels'
 import { users } from '@/fixtures'
+import { useApplicationStore } from '@/stores/application'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
+const application = useApplicationStore()
 const reservation = useReservationStore()
+const router = useRouter()
 
 const myGroup = computed(() => reservation.myRoommateGroup)
 const myInvitations = computed(() => reservation.myInvitations)
 const receivedPending = computed(() => reservation.myReceivedPendingInvitations)
+const missingApplicationMembers = computed(() =>
+  (myGroup.value?.memberIds ?? [])
+    .filter(userId => !application.hasSubmittedApplication(userId))
+    .map(userId => users.find(user => user.id === userId)?.displayName ?? userId),
+)
+const allGroupApplicationsSubmitted = computed(() => missingApplicationMembers.value.length === 0)
 
 // การจองที่รอรูมเมทยืนยันห้อง (15 นาที)
 const pendingRoomConfirmation = computed(() => {
@@ -75,7 +84,9 @@ function decline(invId: string) {
 }
 function confirmRoom() {
   if (!pendingRoomConfirmation.value) return
-  toast(reservation.confirmRoomSelection(pendingRoomConfirmation.value.id).message)
+  const result = reservation.confirmRoomSelection(pendingRoomConfirmation.value.id)
+  toast(result.message)
+  if (result.ok) router.push('/app')
 }
 function declineRoom() {
   if (!pendingRoomConfirmation.value) return
@@ -93,7 +104,7 @@ function onConfirmationExpired() {
     <div class="space-y-1">
       <h1 class="text-2xl font-bold">รูมเมท</h1>
       <p class="text-sm text-muted-foreground">
-        กติกา: โปรไฟล์ทั้งคู่ต้องครบ · กลุ่มละไม่เกิน 2 คน · 1 คนมีได้ 1 คำเชิญ/กลุ่มที่ใช้งานอยู่ ·
+        กติกา: สมาชิกทั้งคู่ต้องส่งใบสมัครก่อนยืนยันห้องพักคู่ · กลุ่มละไม่เกิน 2 คน · 1 คนมีได้ 1 คำเชิญ/กลุ่มที่ใช้งานอยู่ ·
         ต้องตอบรับคำเชิญก่อนเลือกห้อง
       </p>
     </div>
@@ -128,19 +139,29 @@ function onConfirmationExpired() {
       </CardHeader>
       <CardContent class="space-y-3">
         <ul class="space-y-1 text-sm">
-          <li v-for="m in myGroup.memberIds" :key="m" class="flex items-center gap-2">
+          <li v-for="m in myGroup.memberIds" :key="m" class="flex flex-wrap items-center gap-2">
             <span class="font-medium">{{ nameOf(m) }}</span>
             <Badge v-if="m === myGroup.leaderId" variant="outline">หัวหน้ากลุ่ม</Badge>
+            <Badge :variant="application.hasSubmittedApplication(m) ? 'secondary' : 'outline'">
+              {{ application.hasSubmittedApplication(m) ? 'ส่งใบสมัครแล้ว' : 'ยังไม่ส่งใบสมัคร' }}
+            </Badge>
           </li>
         </ul>
 
         <!-- กลุ่มพร้อมเลือกห้อง -->
         <div v-if="myGroup.status === 'accepted' && myGroup.leaderId === session.currentUser?.id" class="flex gap-2">
-          <Button as-child>
+          <Button v-if="allGroupApplicationsSubmitted" as-child>
             <RouterLink to="/app/rooms">ไปเลือกห้อง (คุณเป็นหัวหน้ากลุ่ม)</RouterLink>
           </Button>
+          <Button v-else disabled>รอสมาชิกส่งใบสมัคร</Button>
         </div>
-        <p v-else-if="myGroup.status === 'accepted'" class="text-sm text-muted-foreground">
+        <p
+          v-if="myGroup.status === 'accepted' && !allGroupApplicationsSubmitted"
+          class="text-sm text-destructive"
+        >
+          ยังเลือกห้องพักคู่ไม่ได้ — รอ {{ missingApplicationMembers.join(', ') }} ส่งใบสมัครให้เรียบร้อยก่อน
+        </p>
+        <p v-else-if="myGroup.status === 'accepted' && myGroup.leaderId !== session.currentUser?.id" class="text-sm text-muted-foreground">
           รอ {{ nameOf(myGroup.leaderId) }} (หัวหน้ากลุ่ม) เลือกห้อง — คุณจะได้รับแจ้งให้ยืนยันห้องภายใน 15 นาที
         </p>
 
@@ -151,10 +172,17 @@ function onConfirmationExpired() {
             label="ยืนยันห้องภายใน"
             @expired="onConfirmationExpired"
           />
-          <div v-if="iAmInvitee" class="flex flex-wrap gap-2">
-            <Button @click="confirmRoom">ยืนยันห้อง {{ pendingRoomConfirmation.roomNumber }}</Button>
-            <Button variant="outline" @click="declineRoom">ปฏิเสธ (ปล่อยห้องทันที)</Button>
-          </div>
+          <template v-if="iAmInvitee">
+            <div class="flex flex-wrap gap-2">
+              <Button :disabled="!allGroupApplicationsSubmitted" @click="confirmRoom">
+                ยืนยันห้อง {{ pendingRoomConfirmation.roomNumber }}
+              </Button>
+              <Button variant="outline" @click="declineRoom">ปฏิเสธ (ปล่อยห้องทันที)</Button>
+            </div>
+            <p v-if="!allGroupApplicationsSubmitted" class="text-sm text-destructive">
+              ยังยืนยันห้องไม่ได้ — รอ {{ missingApplicationMembers.join(', ') }} ส่งใบสมัครให้เรียบร้อยก่อน
+            </p>
+          </template>
           <p v-else class="text-sm text-muted-foreground">
             รอรูมเมทยืนยันห้อง {{ pendingRoomConfirmation.roomNumber }} — หากหมดเวลา ห้องจะถูกปล่อยคืนอัตโนมัติ
           </p>

@@ -28,6 +28,42 @@ export const roomConfigLabel: Record<RoomConfig, string> = {
   special: 'ห้องแอร์พิเศษ',
 }
 
+export interface PlanRoomTypeLabel {
+  key: 'fan' | 'aircon' | 'special'
+  short: string
+  full: string
+}
+
+/**
+ * คำที่ใช้บนแผนผังเท่านั้น:
+ * - ยังไม่เปิดเผย HL จนกว่าจะยืนยัน room master จึงแสดงเหมือนห้องแอร์
+ * - มือถือใช้ short คู่กับ legend ส่วน desktop ใช้ full บน hotspot โดยตรง
+ */
+export const planRoomTypeLabel: Record<RoomConfig, PlanRoomTypeLabel> = {
+  normal: { key: 'fan', short: 'พัด', full: 'พัดลม' },
+  aircon: { key: 'aircon', short: 'แอร์', full: 'แอร์' },
+  hl: { key: 'aircon', short: 'แอร์', full: 'แอร์' },
+  special: { key: 'special', short: 'พศ.', full: 'แอร์พิเศษ' },
+}
+
+const planRoomTypeOrder: RoomConfig[] = ['normal', 'aircon', 'hl', 'special']
+
+export function planRoomTypeLegendItems(configs: readonly RoomConfig[]): PlanRoomTypeLabel[] {
+  const present = new Set(configs)
+  const seen = new Set<PlanRoomTypeLabel['key']>()
+  const items: PlanRoomTypeLabel[] = []
+
+  for (const config of planRoomTypeOrder) {
+    if (!present.has(config)) continue
+    const item = planRoomTypeLabel[config]
+    if (seen.has(item.key)) continue
+    seen.add(item.key)
+    items.push(item)
+  }
+
+  return items
+}
+
 export const occupancyModeLabel: Record<OccupancyMode, string> = {
   shared: 'พักคู่ (2 คน)',
   whole_room: 'เหมาห้อง (1 คน)',

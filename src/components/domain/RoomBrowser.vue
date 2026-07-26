@@ -116,6 +116,13 @@ const currentOverlay = computed(() =>
     : null,
 )
 
+// อาคาร 2 เป็นทรง L กลับด้าน จึงแยกคำอธิบายไว้ในพื้นที่มุมขวาล่างใต้ canvas ผัง
+const annotationPlacement = computed<'overlay-top-left' | 'detached-bottom-right'>(() =>
+  selectedDormGroupId.value === 'dorm-8-lang' && selectedBuilding.value?.code === '2'
+    ? 'detached-bottom-right'
+    : 'overlay-top-left',
+)
+
 // มุมมอง: ตึก 3D (ค่าเริ่มต้นถ้าหอนี้มีโมเดล) / ผังชั้น / รายการ + modal ผังจริง
 const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
 const viewMode = ref<'3d' | 'plan' | 'list'>(has3d.value ? '3d' : 'plan')
@@ -387,7 +394,7 @@ function statusCount(status: RoomPublicStatus) {
         <!-- ปุ่มกลับอยู่ติดมุมขวาบนของพื้นที่ผังโดยตรง จึงหาเจอได้ทั้งธีมสว่าง/มืดและไม่หลุดเมื่อสรุปอาคารตัดบรรทัด -->
         <div class="flex min-h-9 flex-wrap items-center justify-between gap-2">
           <h3 class="text-sm font-semibold">
-            {{ viewMode === 'plan' ? 'แผนผังประเภทห้อง' : 'รายการห้อง' }} {{ selectedBuilding.name }} · ชั้น {{ currentFloor.floor }}
+            {{ viewMode === 'plan' ? 'แผนผังประเภทห้อง' : 'รายการห้อง' }} {{ selectedBuilding.name }}  ชั้น {{ currentFloor.floor }}
           </h3>
           <Button
             v-if="has3d && viewMode === 'plan'"
@@ -406,6 +413,7 @@ function statusCount(status: RoomPublicStatus) {
           :overlay="currentOverlay"
           :rooms="currentFloor.allRooms"
           :matched-numbers="currentFloor.matchedNumbers"
+          :annotation-placement="annotationPlacement"
           @select="emit('select', $event)"
         />
         <FloorPlanGrid

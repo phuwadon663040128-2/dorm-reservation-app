@@ -7,6 +7,7 @@ import {
   resultStatusLabel,
   roommateGroupStatusLabel,
 } from '@/lib/labels'
+import { users } from '@/fixtures'
 import { useApplicationStore } from '@/stores/application'
 import { useContractsStore } from '@/stores/contracts'
 import { usePaymentsStore } from '@/stores/payments'
@@ -96,15 +97,18 @@ export function useApplicantJourney() {
   const activeReservation = computed(() => reservation.myReservation)
   const latestReservation = computed(() => reservation.myLatestReservation)
   const roommateGroup = computed(() => reservation.myRoommateGroup)
+  const missingGroupApplicationMemberIds = computed(() =>
+    (roommateGroup.value?.memberIds ?? [])
+      .filter(applicantId => !application.hasSubmittedApplication(applicantId)),
+  )
+  const missingGroupApplicationNames = computed(() =>
+    missingGroupApplicationMemberIds.value
+      .map(applicantId => users.find(user => user.id === applicantId)?.displayName ?? applicantId),
+  )
 
   const hasSubmittedApplication = computed(() => {
     if (!userId.value) return false
-    const submittedNow = Boolean(
-      application.submittedReference
-      && application.submittedDraft?.applicantId === userId.value,
-    )
-    // Fixture workflows already passed submission; a reservation is evidence of that step.
-    return submittedNow || Boolean(latestReservation.value)
+    return application.hasSubmittedApplication(userId.value)
   })
   const applicationComplete = computed(() =>
     Boolean(session.currentUser?.profileComplete && hasSubmittedApplication.value),
@@ -185,7 +189,7 @@ export function useApplicantJourney() {
           ? 'ห้อง ' + active.roomNumber + ' ถูกล็อกชั่วคราวจนกว่ารูมเมทจะตอบรับ'
           : 'ตรวจสอบห้อง ' + active.roomNumber + ' และตอบรับก่อนหมดเวลา',
         actorLabel: isLeader ? 'รอรูมเมท' : 'คุณต้องทำ',
-        to: '/app/reservation',
+        to: isLeader ? '/app/reservation' : '/app/roommate',
         ctaLabel: isLeader ? 'ดูสถานะการจอง' : 'ตรวจสอบและยืนยันห้อง',
         deadline: active.confirmationDeadline,
         urgency: isLeader ? 'waiting' : 'urgent',
@@ -277,11 +281,26 @@ export function useApplicantJourney() {
     if (!hasSubmittedApplication.value) {
       return {
         title: 'ตรวจสอบและส่งใบสมัคร',
-        description: 'เลือกหอพัก ประเภทห้อง และกรอกข้อมูลทั้ง 4 ขั้นตอนก่อนเลือกห้องจริง',
+        description: 'กรอกข้อมูลผู้สมัครและตรวจสอบความถูกต้องให้ครบก่อนยืนยันจองห้องจริง',
         actorLabel: 'คุณต้องทำ',
         to: '/app/application',
         ctaLabel: 'ไปที่ใบสมัคร',
         urgency: 'normal',
+      }
+    }
+
+    if (
+      !active
+      && group?.status === 'accepted'
+      && missingGroupApplicationNames.value.length
+    ) {
+      return {
+        title: 'รอสมาชิกส่งใบสมัครให้ครบ',
+        description: missingGroupApplicationNames.value.join(', ') + ' ยังไม่ได้ส่งใบสมัคร จึงยังเลือกห้องแบบพักคู่ไม่ได้',
+        actorLabel: 'รอสมาชิกในกลุ่ม',
+        to: '/app/roommate',
+        ctaLabel: 'ดูสถานะกลุ่ม',
+        urgency: 'waiting',
       }
     }
 
@@ -310,7 +329,7 @@ export function useApplicantJourney() {
       return {
         title: group?.status === 'accepted' ? 'เลือกห้องสำหรับกลุ่ม' : 'เลือกรูปแบบการพักและห้อง',
         description: group?.status === 'accepted'
-          ? 'เลือกห้องว่างที่ตรงกับข้อมูลในใบสมัครเพื่อเริ่มการล็อกห้อง'
+          ? 'เลือกห้องว่างสำหรับกลุ่มเพื่อเริ่มการล็อกห้อง'
           : 'คุณเลือกเหมาห้องได้ หรือจัดการรูมเมทก่อนหากต้องการพักคู่',
         actorLabel: 'คุณต้องทำ',
         to: '/app/rooms',
@@ -404,10 +423,20 @@ export function useApplicantJourney() {
     const handover = currentHandover.value
     const lostHold = Boolean(latest && LOST_HOLD_STATUSES.has(latest.holdStatus))
     const wholeRoom = latest?.occupancyMode === 'whole_room'
+    const waitingForGroupApplications = Boolean(
+      group
+      && ['accepted', 'room_confirmation_pending'].includes(group.status)
+      && missingGroupApplicationMemberIds.value.length,
+    )
+    const currentApplicantHasMissingApplication = Boolean(
+      userId.value && missingGroupApplicationMemberIds.value.includes(userId.value),
+    )
 
     const roommateStatus: JourneyStatus = wholeRoom
       ? 'skipped'
-      : active?.occupancyMode === 'shared' || group?.status === 'accepted' || group?.status === 'confirmed'
+      : waitingForGroupApplications
+        ? currentApplicantHasMissingApplication ? 'needs_action' : 'waiting'
+        : active?.occupancyMode === 'shared' || group?.status === 'accepted' || group?.status === 'confirmed'
         ? 'completed'
         : invitation?.inviteeId === userId.value
           ? 'needs_action'
@@ -417,7 +446,11 @@ export function useApplicantJourney() {
       ? 'completed'
       : active?.holdStatus === 'held_roommate_confirmation'
         ? active.leaderId === userId.value ? 'waiting' : 'needs_action'
-        : lostHold ? 'needs_action' : applicationComplete.value ? 'current' : 'blocked'
+        : lostHold
+          ? 'needs_action'
+          : waitingForGroupApplications
+            ? 'blocked'
+            : applicationComplete.value ? 'current' : 'blocked'
 
     const paymentStatus: JourneyStatus = active?.holdStatus === 'confirmed'
       ? 'completed'
@@ -450,6 +483,8 @@ export function useApplicantJourney() {
         label: 'รูมเมท',
         description: wholeRoom
           ? 'ข้ามขั้นตอนนี้สำหรับการเหมาห้อง'
+          : waitingForGroupApplications
+            ? 'รอ ' + missingGroupApplicationNames.value.join(', ') + ' ส่งใบสมัคร'
           : group ? roommateGroupStatusLabel[group.status] : 'ใช้เฉพาะการสมัครแบบพักคู่',
         status: roommateStatus,
       },
@@ -563,6 +598,10 @@ export function useApplicantJourney() {
     const paidOwn = ownObligations.value.filter(item => payments.isPaid(item)).length
     const invitation = pendingInvitation.value
     const roommatePending = group?.status === 'invitation_pending' || Boolean(invitation)
+    const roommateApplicationPending = Boolean(group && missingGroupApplicationMemberIds.value.length)
+    const currentApplicantHasMissingApplication = Boolean(
+      userId.value && missingGroupApplicationMemberIds.value.includes(userId.value),
+    )
     const currentUserIsInvitee = invitation
       ? invitation.inviteeId === userId.value
       : Boolean(group && group.leaderId !== userId.value)
@@ -574,9 +613,24 @@ export function useApplicantJourney() {
     ].includes(group.status))
     const roommateSectionStatus: JourneyStatus = latest?.occupancyMode === 'whole_room'
       ? 'skipped'
-      : roommatePending
+      : roommateApplicationPending
+        ? currentApplicantHasMissingApplication ? 'needs_action' : 'waiting'
+        : roommatePending
         ? currentUserIsInvitee ? 'needs_action' : 'waiting'
         : roommateReady ? 'completed' : 'current'
+    const roomConfirmationComplete = Boolean(
+      active && ['held_payment', 'confirmed'].includes(active.holdStatus),
+    )
+    const roomConfirmationPending = active?.holdStatus === 'held_roommate_confirmation'
+    const roomSectionStatus: JourneyStatus = lostHold
+      ? 'needs_action'
+      : roomConfirmationComplete
+        ? 'completed'
+        : roomConfirmationPending
+          ? active?.leaderId === userId.value ? 'waiting' : 'needs_action'
+          : roommateApplicationPending
+            ? 'blocked'
+            : applicationComplete.value ? 'current' : 'blocked'
 
     return [
       {
@@ -585,11 +639,31 @@ export function useApplicantJourney() {
         summary: latest
           ? 'ห้อง ' + latest.roomNumber + ' · ' + occupancyModeLabel[latest.occupancyMode]
           : 'ยังไม่ได้เลือกห้อง',
-        description: lostHold ? 'ข้อมูลการจองล่าสุด — ห้องไม่ได้ถูกล็อกอยู่ในขณะนี้' : undefined,
-        status: latest && !lostHold ? 'completed' : applicationComplete.value ? 'current' : 'blocked',
-        statusLabel: latest ? lostHold ? 'ห้องถูกปล่อยคืน' : 'เลือกห้องแล้ว' : 'ยังไม่มีห้อง',
-        to: latest && !lostHold ? '/app/reservation' : '/app/rooms',
-        ctaLabel: latest && !lostHold ? 'ดูการจอง' : 'เลือกห้อง',
+        description: lostHold
+          ? 'ข้อมูลการจองล่าสุด — ห้องไม่ได้ถูกล็อกอยู่ในขณะนี้'
+          : roomConfirmationPending
+            ? active?.leaderId === userId.value
+              ? 'ห้องถูกล็อกชั่วคราวและกำลังรอรูมเมทยืนยัน'
+              : 'ตรวจสอบและยืนยันห้องภายในเวลาที่กำหนด'
+            : roommateApplicationPending
+              ? 'ต้องรอสมาชิกในกลุ่มส่งใบสมัครให้ครบก่อนจึงจะเลือกห้องพักคู่ได้'
+            : undefined,
+        status: roomSectionStatus,
+        statusLabel: lostHold
+          ? 'ห้องถูกปล่อยคืน'
+          : roomConfirmationComplete
+            ? 'ยืนยันห้องครบแล้ว'
+            : roomConfirmationPending
+              ? active?.leaderId === userId.value ? 'รอรูมเมทยืนยัน' : 'ต้องยืนยันห้อง'
+              : roommateApplicationPending
+                ? 'รอใบสมัครสมาชิก'
+              : 'ยังไม่มีห้อง',
+        to: roommateApplicationPending
+          ? '/app/roommate'
+          : latest && !lostHold ? '/app/reservation' : '/app/rooms',
+        ctaLabel: roommateApplicationPending
+          ? 'ดูสถานะกลุ่ม'
+          : latest && !lostHold ? 'ดูการจอง' : 'เลือกห้อง',
       },
       {
         id: 'roommate',
@@ -602,9 +676,16 @@ export function useApplicantJourney() {
         status: roommateSectionStatus,
         statusLabel: latest?.occupancyMode === 'whole_room'
           ? 'ข้ามขั้นตอน'
+          : roommateApplicationPending
+            ? currentApplicantHasMissingApplication
+              ? 'คุณยังไม่ได้ส่งใบสมัคร'
+              : 'รอสมาชิกส่งใบสมัคร'
           : roommatePending
             ? currentUserIsInvitee ? 'มีคำเชิญรอตอบรับ' : 'รอรูมเมทตอบรับ'
             : group ? roommateGroupStatusLabel[group.status] : 'ใช้เฉพาะพักคู่',
+        description: roommateApplicationPending
+          ? 'รอ ' + missingGroupApplicationNames.value.join(', ') + ' ส่งใบสมัครให้เรียบร้อยก่อนเลือกห้องพักคู่'
+          : undefined,
         to: '/app/roommate',
         ctaLabel: 'จัดการรูมเมท',
       },

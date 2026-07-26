@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
 
       <section id="recommended" class="recommended-section page-container" aria-labelledby="recommended-title">
         <div class="section-heading">
-          <h2 id="recommended-title">หอพักแนะนำ</h2>
+          <h2 id="recommended-title">หอพัก</h2>
           <a href="#all-dorms">
             ดูตึกทั้งหมด
             <span aria-hidden="true">→</span>

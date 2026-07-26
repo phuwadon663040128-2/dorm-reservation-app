@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import RoomTile from './RoomTile.vue'
 import { buildFloorLayout } from '@/lib/floorPlan'
+import { planRoomTypeLegendItems } from '@/lib/labels'
 import type { Room } from '@/types'
 
 // ผังโครงสร้างอย่างง่ายตามผังจริง — ตึกเป็นรูปตัว L:
@@ -17,6 +18,7 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'select', room: Room): void }>()
 
 const layout = computed(() => buildFloorLayout(props.dormGroupId, props.rooms))
+const typeLegendItems = computed(() => planRoomTypeLegendItems(props.rooms.map(room => room.config)))
 
 function isDimmed(room: Room) {
   return !props.matchedNumbers.has(room.number)
@@ -33,6 +35,28 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
   <!-- เรียงตามแปลนจริง: ปีกตั้งฉากอยู่บน-ขวา แล้วปีกหลักเต็มความกว้างด้านล่าง
        (ไม่วางคู่กันแนวนอน เพื่อให้ปีกหลักได้พื้นที่เต็มโดยไม่ต้องมี scrollbar) -->
   <div class="space-y-3">
+    <div
+      class="rounded-lg border bg-card px-2.5 py-2 md:hidden"
+      role="group"
+      aria-label="คำอธิบายรหัสประเภทห้องบนแผนผัง"
+    >
+      <p class="mb-1 text-xs font-semibold">ประเภทห้อง</p>
+      <div class="flex flex-wrap gap-x-3 gap-y-1.5" role="list">
+        <span
+          v-for="item in typeLegendItems"
+          :key="item.key"
+          class="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground"
+          role="listitem"
+          :aria-label="`${item.short} หมายถึง ${item.full}`"
+        >
+          <b class="rounded border bg-muted px-1.5 py-0.5 text-[10px] leading-none text-foreground">
+            {{ item.short }}
+          </b>
+          {{ item.full }}
+        </span>
+      </div>
+    </div>
+
     <!-- แถวบน: โถงทางเข้า + ปีกตั้งฉากชิดขวา -->
     <div v-if="layout.wing" class="flex items-stretch justify-end gap-1.5">
       <div
@@ -51,6 +75,7 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
             :key="r.number"
             :room="r"
             compact
+            plan-labels
             class="w-full"
             :class="tileClass(r)"
             :disabled="isDimmed(r)"
@@ -66,6 +91,7 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
             :key="r.number"
             :room="r"
             compact
+            plan-labels
             class="w-full"
             :class="tileClass(r)"
             :disabled="isDimmed(r)"
@@ -88,6 +114,7 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
               v-if="col.top"
               :room="col.top"
               compact
+              plan-labels
               class="h-full w-full"
               :class="tileClass(col.top)"
               :disabled="isDimmed(col.top)"
@@ -110,6 +137,7 @@ const tileClass = (room: Room) => (isDimmed(room) ? 'pointer-events-none opacity
               v-if="col.bottom"
               :room="col.bottom"
               compact
+              plan-labels
               class="h-full w-full"
               :class="tileClass(col.bottom)"
               :disabled="isDimmed(col.bottom)"

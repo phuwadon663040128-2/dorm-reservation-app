@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { useEventListener, useMediaQuery } from '@vueuse/core'
 import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
@@ -19,7 +19,6 @@ import {
   GraduationCapIcon,
   HeartPulseIcon,
   InfoIcon,
-  LandmarkIcon,
   SaveIcon,
   ShieldCheckIcon,
   UploadIcon,
@@ -52,14 +51,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { useApplicationStore } from '@/stores/application'
 import { useDormStore } from '@/stores/dorm'
 import { useSessionStore } from '@/stores/session'
-import { priceLinesFor } from '@/fixtures'
-import type { RoomConfig } from '@/types'
 
 const route = useRoute()
+const router = useRouter()
 const dorm = useDormStore()
 const session = useSessionStore()
 const application = useApplicationStore()
-const { draft, submittedReference } = storeToRefs(application)
+const { currentRecord, draft, isRevising, submittedReference } = storeToRefs(application)
 
 const currentStep = ref(1)
 const highestStep = ref(1)
@@ -92,9 +90,9 @@ const thaiDateFormatter = new Intl.DateTimeFormat('th-TH', {
 const steps = [
   {
     id: 1,
-    title: 'รอบและประเภท',
-    description: 'เลือกสิทธิ์และประเภทห้อง',
-    icon: Building2Icon,
+    title: 'ประเภทผู้สมัคร',
+    description: 'เลือกประเภทผู้สมัครในรอบนี้',
+    icon: GraduationCapIcon,
   },
   {
     id: 2,
@@ -111,7 +109,7 @@ const steps = [
   {
     id: 4,
     title: 'ตรวจสอบและส่ง',
-    description: 'ทบทวนค่าใช้จ่ายและข้อตกลง',
+    description: 'ทบทวนข้อมูลและข้อตกลง',
     icon: ClipboardCheckIcon,
   },
 ]
@@ -124,19 +122,10 @@ const applicantTypes = [
   { value: 'general', label: 'ผู้สมัครทั่วไปตามประกาศ', detail: 'ขึ้นอยู่กับคุณสมบัติของรอบรับสมัครนี้' },
 ]
 
-const roomTypes = [
-  { value: 'normal', label: 'ห้องธรรมดา' },
-  { value: 'aircon', label: 'ห้องปรับอากาศ' },
-  { value: 'hl', label: 'ห้องปรับอากาศ HL' },
-  { value: 'special', label: 'ห้องปรับอากาศพิเศษ' },
-]
-
 const campaign = computed(() => dorm.campaignById(draft.value.campaignId) ?? dorm.openCampaigns[0])
-const selectedDorm = computed(() => dorm.dormGroups.find(group => group.id === draft.value.dormGroupId))
 const selectedApplicantType = computed(() => applicantTypes.find(type => type.value === draft.value.applicantType))
-const selectedRoomType = computed(() => roomTypes.find(type => type.value === draft.value.roomType))
-const preferredRoom = computed(() => dorm.roomByNumber(draft.value.preferredRoomNumber))
-const preferredBuilding = computed(() => dorm.buildings.find(building => building.id === preferredRoom.value?.buildingId))
+const activeAssignment = computed(() => currentRecord.value?.activeAssignment ?? null)
+const isFormLocked = computed(() => Boolean(submittedReference.value) && !isRevising.value)
 const currentStepMeta = computed(() => steps[currentStep.value - 1])
 const progressValue = computed(() => currentStep.value * 25)
 
@@ -189,33 +178,6 @@ useEventListener(
   { capture: true, passive: true },
 )
 
-const estimatedFees = computed(() => {
-  const isInternational = draft.value.dormGroupId === 'dorm-wor-inter'
-  const roomFee = draft.value.roomType
-    ? priceLinesFor(draft.value.roomType as RoomConfig, 'shared').reduce((total, line) => total + line.amount, 0)
-    : 0
-  const deposit = isInternational ? 3000 : 2800
-  return {
-    roomFee,
-    deposit,
-    total: roomFee + deposit,
-  }
-})
-
-function formatBaht(value: number) {
-  return new Intl.NumberFormat('th-TH').format(value)
-}
-
-function preferenceForRoomIsConsistent() {
-  const room = preferredRoom.value
-  const building = preferredBuilding.value
-  if (!draft.value.preferredRoomNumber) return true
-  return !!room
-    && !!building
-    && building.dormGroupId === draft.value.dormGroupId
-    && room.config === draft.value.roomType
-}
-
 function markFile(event: Event, field: 'photoFileName' | 'medicalCertificateFileName') {
   const input = event.target as HTMLInputElement
   draft.value[field] = input.files?.[0]?.name ?? ''
@@ -224,14 +186,8 @@ function markFile(event: Event, field: 'photoFileName' | 'medicalCertificateFile
 function validateStep(step: number) {
   validationMessage.value = ''
 
-  if (step === 1 && (!draft.value.applicantType || !draft.value.dormGroupId || !draft.value.roomType)) {
-    validationMessage.value = 'กรุณาเลือกประเภทผู้สมัคร หอพัก และประเภทห้องให้ครบ'
-  }
-  if (step === 1 && !campaign.value?.dormGroupIds.includes(draft.value.dormGroupId)) {
-    validationMessage.value = 'หอพักที่เลือกไม่อยู่ในรอบรับสมัครนี้ กรุณาเลือกรายการใหม่'
-  }
-  if (step === 1 && !preferenceForRoomIsConsistent()) {
-    validationMessage.value = 'หอพักหรือประเภทห้องไม่ตรงกับห้องที่เลือกจากผัง กรุณาเลือกห้องใหม่'
+  if (step === 1 && !draft.value.applicantType) {
+    validationMessage.value = 'กรุณาเลือกประเภทผู้สมัคร'
   }
 
   if (step === 2) {
@@ -282,8 +238,17 @@ function validateStep(step: number) {
   return true
 }
 
+function validateApplication() {
+  for (const step of steps) {
+    if (validateStep(step.id)) continue
+    currentStep.value = step.id
+    return false
+  }
+  return true
+}
+
 function nextStep() {
-  if (!validateStep(currentStep.value)) return
+  if (!isFormLocked.value && !validateStep(currentStep.value)) return
   currentStep.value = Math.min(currentStep.value + 1, steps.length)
   highestStep.value = Math.max(highestStep.value, currentStep.value)
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -295,38 +260,37 @@ function previousStep() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function submitApplication() {
-  if (!validateStep(4)) return
+async function submitApplication() {
+  if (!validateApplication()) return
   const reference = application.submit()
   session.markCurrentApplicantProfileComplete()
   toast.success(`ส่งใบสมัครต้นแบบแล้ว เลขที่ ${reference}`)
   window.scrollTo({ top: 0, behavior: 'smooth' })
+  await router.push('/app/rooms')
 }
 
-function reopenApplication() {
-  application.reopenForRevision()
-  currentStep.value = 1
-  highestStep.value = Math.max(highestStep.value, 1)
-  toast.info('เปิดใบสมัครให้แก้ไขแล้ว ต้องตรวจสอบและส่งใหม่ก่อนจองห้อง')
+function beginRevision() {
+  application.beginRevision()
+  draft.value.confirmsAccuracy = false
+  currentStep.value = 2
+  highestStep.value = steps.length
+  validationMessage.value = ''
+  toast.info('เปิดข้อมูลส่วนตัวให้แก้ไขแล้ว กรุณาตรวจสอบและยืนยันความถูกต้องอีกครั้ง')
 }
 
-watch(
-  () => [draft.value.dormGroupId, draft.value.roomType],
-  () => {
-    if (!draft.value.preferredRoomNumber || preferenceForRoomIsConsistent()) return
-    const previousRoom = draft.value.preferredRoomNumber
-    draft.value.preferredRoomNumber = ''
-    toast.info(`ยกเลิกห้องที่สนใจ ${previousRoom} เพราะคุณเปลี่ยนหอพักหรือประเภทห้องในใบสมัคร`)
-  },
-)
+function saveRevision() {
+  if (!validateApplication()) return
+  const reference = application.saveRevision()
+  toast.success(`บันทึกการแก้ไขใบสมัคร ${reference} เรียบร้อยแล้ว`)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 onMounted(() => {
   application.hydrateIdentity(session.currentUser)
-  // รองรับ draft จากต้นแบบรุ่นก่อนที่ใช้ค่า air
-  if (draft.value.roomType === 'air') draft.value.roomType = 'aircon'
   const campaignId = typeof route.params.campaignId === 'string' ? route.params.campaignId : ''
-  if (campaignId && dorm.campaignById(campaignId)) draft.value.campaignId = campaignId
+  if (!submittedReference.value && campaignId && dorm.campaignById(campaignId)) draft.value.campaignId = campaignId
   if (!draft.value.campaignId && dorm.openCampaigns[0]) draft.value.campaignId = dorm.openCampaigns[0].id
+  if (submittedReference.value) highestStep.value = steps.length
 })
 </script>
 
@@ -357,12 +321,70 @@ onMounted(() => {
       <AlertTitle>ส่งใบสมัครต้นแบบเรียบร้อยแล้ว</AlertTitle>
       <AlertDescription class="text-emerald-800 dark:text-emerald-200">
         เลขที่ใบสมัคร <strong class="text-current">{{ submittedReference }}</strong>
-        ระบบบันทึกใบสมัครแล้ว ขั้นตอนถัดไปคือเลือกและยืนยันห้อง ชำระเงิน และติดตามการยืนยันการจองจากเจ้าหน้าที่
-        <Button type="button" size="sm" variant="outline" class="mt-3 flex text-foreground" @click="reopenApplication">
-          แก้ไขหอพักหรือประเภทห้อง
+        <span v-if="currentRecord" class="ml-1">เวอร์ชัน {{ currentRecord.revision }}</span>
+        ระบบบันทึกใบสมัครแล้ว ข้อมูลห้องจะถูกเติมให้อัตโนมัติหลังเลือกและยืนยันห้องครบ
+        <Button
+          v-if="!isRevising"
+          type="button"
+          size="sm"
+          variant="outline"
+          class="mt-3 flex text-foreground"
+          @click="beginRevision"
+        >
+          แก้ไขข้อมูลใบสมัคร
         </Button>
       </AlertDescription>
     </Alert>
+
+    <Card v-if="activeAssignment">
+      <CardHeader>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex items-start gap-3">
+            <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
+              <Building2Icon class="size-5 text-primary" aria-hidden="true" />
+            </span>
+            <div>
+              <CardTitle>ข้อมูลห้องที่ระบบเติมให้</CardTitle>
+              <CardDescription>ข้อมูลนี้อ้างอิงจากห้องที่ยืนยันการเลือกครบแล้ว และไม่สามารถแก้ไขจากใบสมัครได้</CardDescription>
+            </div>
+          </div>
+          <Badge :variant="activeAssignment.status === 'confirmed' ? 'success' : 'warning'">
+            {{ activeAssignment.status === 'confirmed' ? 'ยืนยันการจองแล้ว' : 'อยู่ระหว่างรอชำระเงิน' }}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+          <div class="rounded-lg border p-4">
+            <dt class="text-xs text-muted-foreground">ชื่อหอพัก</dt>
+            <dd class="mt-1 font-semibold">{{ activeAssignment.dormName }}</dd>
+            <dd v-if="activeAssignment.dormCode" class="text-xs text-muted-foreground">{{ activeAssignment.dormCode }}</dd>
+          </div>
+          <div class="rounded-lg border p-4">
+            <dt class="text-xs text-muted-foreground">อาคาร</dt>
+            <dd class="mt-1 font-semibold">{{ activeAssignment.buildingName }}</dd>
+          </div>
+          <div class="rounded-lg border p-4">
+            <dt class="text-xs text-muted-foreground">ชั้น</dt>
+            <dd class="mt-1 font-semibold tabular-nums">ชั้น {{ activeAssignment.floor }}</dd>
+          </div>
+          <div class="rounded-lg border p-4">
+            <dt class="text-xs text-muted-foreground">ประเภทห้อง</dt>
+            <dd class="mt-1 font-semibold">{{ activeAssignment.roomTypeLabel }}</dd>
+          </div>
+          <div class="rounded-lg border p-4">
+            <dt class="text-xs text-muted-foreground">เลขห้อง</dt>
+            <dd class="mt-1 font-semibold tabular-nums">{{ activeAssignment.roomNumber }}</dd>
+          </div>
+          <div class="rounded-lg border p-4">
+            <dt class="text-xs text-muted-foreground">รูปแบบการพัก</dt>
+            <dd class="mt-1 font-semibold">
+              {{ activeAssignment.occupancyMode === 'whole_room' ? 'เหมาห้อง' : 'พักคู่' }}
+            </dd>
+          </div>
+        </dl>
+      </CardContent>
+    </Card>
 
     <Card class="overflow-hidden">
       <CardContent class="p-4 sm:p-6">
@@ -409,9 +431,9 @@ onMounted(() => {
       </CardContent>
     </Card>
 
-    <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+    <div>
       <form class="min-w-0" @submit.prevent>
-        <fieldset :disabled="Boolean(submittedReference)" class="min-w-0 space-y-5 disabled:opacity-75">
+        <fieldset :disabled="isFormLocked" class="min-w-0 space-y-5 disabled:opacity-75">
         <Alert v-if="validationMessage" variant="destructive">
           <AlertCircleIcon aria-hidden="true" />
           <AlertTitle>ข้อมูลยังไม่ครบ</AlertTitle>
@@ -432,7 +454,11 @@ onMounted(() => {
               </div>
             </CardHeader>
             <CardContent>
-              <RadioGroup v-model="draft.applicantType" class="grid gap-3 sm:grid-cols-2">
+              <RadioGroup
+                v-model="draft.applicantType"
+                :disabled="Boolean(submittedReference)"
+                class="grid gap-3 sm:grid-cols-2"
+              >
                 <FieldLabel
                   v-for="type in applicantTypes"
                   :key="type.value"
@@ -445,79 +471,9 @@ onMounted(() => {
                   </span>
                 </FieldLabel>
               </RadioGroup>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div class="flex items-start gap-3">
-                <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
-                  <Building2Icon class="size-5 text-primary" aria-hidden="true" />
-                </span>
-                <div>
-                  <CardTitle>หอพักและประเภทห้อง</CardTitle>
-                  <CardDescription>หากเลือกห้องจากผังมาก่อน ระบบจะผูกหอพักและประเภทห้องให้ตรงกันอัตโนมัติ</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent class="space-y-5">
-              <RadioGroup v-model="draft.dormGroupId" class="grid gap-3 sm:grid-cols-2">
-                <FieldLabel
-                  v-for="group in dorm.dormGroups"
-                  :key="group.id"
-                  class="cursor-pointer flex-row items-start gap-3 p-4"
-                >
-                  <RadioGroupItem :value="group.id" class="mt-0.5" />
-                  <span class="min-w-0">
-                    <span class="block font-medium">{{ group.shortName }}</span>
-                    <span class="mt-1 block text-xs font-normal text-muted-foreground">
-                      {{ group.buildingCount }} อาคาร · {{ group.contractLabel }}
-                    </span>
-                  </span>
-                </FieldLabel>
-              </RadioGroup>
-
-              <Field>
-                <FieldLabel for="room-type">ประเภทห้องที่ต้องการ <span class="text-primary">*</span></FieldLabel>
-                <Select v-model="draft.roomType">
-                  <SelectTrigger
-                    id="room-type"
-                    class="h-10 w-full"
-                    aria-label="เลือกประเภทห้องที่ต้องการ"
-                    :aria-invalid="validationMessage && !draft.roomType ? true : undefined"
-                  >
-                    <SelectValue placeholder="เลือกประเภทห้อง" />
-                  </SelectTrigger>
-                  <SelectContent
-                    :collision-padding="floatingContentCollisionPadding"
-                    :side-flip="true"
-                    class="w-[var(--reka-select-trigger-width)] max-w-[calc(100vw-2rem)]"
-                  >
-                    <SelectItem v-for="room in roomTypes" :key="room.value" :value="room.value">
-                      {{ room.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>รายการห้องที่เลือกได้ขึ้นอยู่กับประเภทที่เปิดรับและสถานะว่าง ณ เวลานั้น</FieldDescription>
-              </Field>
-
-              <Alert v-if="preferredRoom">
-                <Building2Icon aria-hidden="true" />
-                <AlertTitle>ห้องที่สนใจ: {{ preferredRoom.number }}</AlertTitle>
-                <AlertDescription>
-                  {{ selectedDorm?.shortName }} · {{ preferredBuilding?.name }} · {{ selectedRoomType?.label }}
-                  ห้องนี้ยังไม่ถูก hold จนกว่าจะส่งใบสมัครและกดยืนยันจอง หากเปลี่ยนหอหรือประเภทห้อง ระบบจะยกเลิกห้องที่สนใจนี้
-                </AlertDescription>
-              </Alert>
-              <Alert v-else>
-                <InfoIcon aria-hidden="true" />
-                <AlertTitle>
-                  {{ selectedRoomType ? `ประเภทห้องที่เลือก: ${selectedRoomType.label}` : 'ยังไม่ได้เลือกประเภทห้อง' }}
-                </AlertTitle>
-                <AlertDescription>
-                  ขั้นตอนนี้ใช้ระบุประเภทห้องที่ต้องการ ยังไม่ต้องเลือกเลขห้อง หลังส่งใบสมัครจึงเลือกห้องจริงจากผังตามหอพักและประเภทห้องที่สมัคร
-                </AlertDescription>
-              </Alert>
+              <p v-if="submittedReference" class="mt-3 text-xs text-muted-foreground">
+                ประเภทผู้สมัครและรอบรับสมัครถูกล็อกหลังส่งใบสมัครครั้งแรก
+              </p>
             </CardContent>
           </Card>
         </template>
@@ -900,9 +856,7 @@ onMounted(() => {
                   <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">รายการที่สมัคร</p>
                   <dl class="space-y-2 text-sm">
                     <div class="flex justify-between gap-4"><dt class="text-muted-foreground">ประเภทผู้สมัคร</dt><dd class="text-right font-medium">{{ selectedApplicantType?.label }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted-foreground">หอพัก</dt><dd class="text-right font-medium">{{ selectedDorm?.shortName }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted-foreground">ประเภทห้อง</dt><dd class="font-medium">{{ selectedRoomType?.label }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted-foreground">ห้องที่สนใจ</dt><dd class="font-medium">{{ draft.preferredRoomNumber || 'เลือกภายหลัง' }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted-foreground">รอบรับสมัคร</dt><dd class="text-right font-medium">{{ campaign?.name }}</dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-muted-foreground">หมู่เลือด</dt><dd class="font-medium">{{ draft.bloodGroup === 'unknown' ? 'ไม่ทราบ' : draft.bloodGroup }}</dd></div>
                   </dl>
                 </div>
@@ -914,36 +868,22 @@ onMounted(() => {
             <CardHeader>
               <div class="flex items-start gap-3">
                 <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
-                  <LandmarkIcon class="size-5 text-primary" aria-hidden="true" />
+                  <InfoIcon class="size-5 text-primary" aria-hidden="true" />
                 </span>
                 <div>
-                  <CardTitle>ค่าใช้จ่ายที่ต้องเตรียมชำระ</CardTitle>
-                  <CardDescription>ยอดอ้างอิงสำหรับต้นแบบจากประเภทห้องที่เลือก ก่อนเลือกและยืนยันห้องจริง</CardDescription>
+                  <CardTitle>เลือกห้องหลังส่งใบสมัคร</CardTitle>
+                  <CardDescription>ระบบยังไม่คำนวณค่าใช้จ่ายในขั้นตอนการกรอกใบสมัคร</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent class="space-y-4">
-              <div class="overflow-hidden rounded-lg border">
-                <div class="flex items-center justify-between gap-4 border-b px-4 py-3 text-sm">
-                  <span>ค่าหอพัก {{ selectedRoomType?.label }}</span>
-                  <span class="font-semibold">{{ formatBaht(estimatedFees.roomFee) }} บาท</span>
-                </div>
-                <div class="flex items-center justify-between gap-4 border-b px-4 py-3 text-sm">
-                  <span>ค่าประกันห้องพัก</span>
-                  <span class="font-semibold">{{ formatBaht(estimatedFees.deposit) }} บาท</span>
-                </div>
-                <div class="flex items-center justify-between gap-4 bg-muted/50 px-4 py-3">
-                  <span class="font-semibold">รวมยอดอ้างอิง</span>
-                  <span class="text-lg font-bold text-primary">{{ formatBaht(estimatedFees.total) }} บาท</span>
-                </div>
-              </div>
-              <p class="text-xs leading-relaxed text-muted-foreground">
-                ยอดและกำหนดชำระจริงขึ้นอยู่กับห้องที่จองและเงื่อนไขรอบรับสมัคร ระบบจะแสดงแบบฟอร์ม QR จาก SCB แยกตามรายการเมื่อเจ้าหน้าที่นำเอกสารกลับเข้าระบบแล้ว
-              </p>
+            <CardContent>
               <Alert>
                 <InfoIcon aria-hidden="true" />
                 <AlertTitle>การส่งใบสมัครยังไม่ใช่การยืนยันสิทธิ์ห้องพัก</AlertTitle>
-                <AlertDescription>หลังส่งใบสมัคร คุณยังต้องเลือกและยืนยันห้องภายในเวลาที่กำหนด ชำระเงิน และรอเจ้าหน้าที่ตรวจสอบและยืนยันการจอง</AlertDescription>
+                <AlertDescription>
+                  หลังส่งใบสมัคร ระบบจะพาไปเลือกหอ อาคาร ชั้น ประเภทห้อง เลขห้อง และรูปแบบพักคู่หรือเหมาห้อง
+                  ยอดที่ต้องชำระจะแสดงหลังยืนยันห้องครบและเข้าสู่ช่วงรอชำระเงิน
+                </AlertDescription>
               </Alert>
             </CardContent>
           </Card>
@@ -979,7 +919,9 @@ onMounted(() => {
           </Card>
         </template>
 
-        <div class="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+        </fieldset>
+
+        <div class="mt-5 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
           <Button v-if="currentStep > 1" type="button" variant="outline" class="sm:min-w-28" @click="previousStep">
             <ArrowLeftIcon aria-hidden="true" /> ย้อนกลับ
           </Button>
@@ -987,54 +929,18 @@ onMounted(() => {
           <Button v-if="currentStep < steps.length" type="button" class="sm:min-w-36" @click="nextStep">
             บันทึกและถัดไป <ArrowRightIcon aria-hidden="true" />
           </Button>
-          <Button v-else type="button" class="sm:min-w-40" :disabled="Boolean(submittedReference)" @click="submitApplication">
-            <CheckIcon aria-hidden="true" /> {{ submittedReference ? 'ส่งใบสมัครแล้ว' : 'ยืนยันส่งใบสมัคร' }}
+          <Button
+            v-else
+            type="button"
+            class="sm:min-w-40"
+            :disabled="Boolean(submittedReference) && !isRevising"
+            @click="isRevising ? saveRevision() : submitApplication()"
+          >
+            <CheckIcon aria-hidden="true" />
+            {{ isRevising ? 'ยืนยันบันทึกการแก้ไข' : submittedReference ? 'ส่งใบสมัครแล้ว' : 'ยืนยันส่งใบสมัคร' }}
           </Button>
         </div>
-        </fieldset>
       </form>
-
-      <aside class="space-y-4 lg:sticky lg:top-40">
-        <Card>
-          <CardHeader>
-            <CardTitle class="text-base">รอบรับสมัคร</CardTitle>
-            <CardDescription>{{ campaign?.name }}</CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-3 text-sm">
-            <div class="flex items-center justify-between gap-3">
-              <span class="text-muted-foreground">สถานะ</span>
-              <Badge :variant="campaign?.status === 'open' ? 'default' : 'outline'">{{ campaign?.status === 'open' ? 'เปิดรับสมัคร' : 'ตรวจสอบรอบ' }}</Badge>
-            </div>
-            <div>
-              <p class="text-muted-foreground">ระยะเวลารับสมัคร</p>
-              <p class="mt-1 font-medium">{{ campaign?.openDate }} – {{ campaign?.closeDate }}</p>
-            </div>
-            <Separator />
-            <div>
-              <p class="text-muted-foreground">ผู้สมัครปัจจุบัน</p>
-              <p class="mt-1 font-medium">{{ session.currentUser?.displayName }}</p>
-              <p class="text-xs text-muted-foreground">{{ session.currentUser?.studentId }}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle class="text-base">ความคืบหน้า</CardTitle>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <Progress :model-value="progressValue" class="h-2" />
-            <p class="text-sm font-medium">ขั้นตอน {{ currentStep }} จาก {{ steps.length }}</p>
-            <p class="text-xs leading-relaxed text-muted-foreground">คุณสามารถกลับมาแก้ไขขั้นตอนที่ทำเสร็จแล้วก่อนส่งใบสมัคร</p>
-          </CardContent>
-        </Card>
-
-        <Alert>
-          <InfoIcon aria-hidden="true" />
-          <AlertTitle>ต้องการความช่วยเหลือ?</AlertTitle>
-          <AlertDescription>{{ campaign?.contact }}</AlertDescription>
-        </Alert>
-      </aside>
     </div>
   </div>
 </template>

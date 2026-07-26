@@ -17,7 +17,7 @@ import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
-import { priceLinesFor } from '@/fixtures'
+import { priceLinesFor, users } from '@/fixtures'
 import { useApplicationStore } from '@/stores/application'
 import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
@@ -30,31 +30,23 @@ const reservation = useReservationStore()
 const dorm = useDormStore()
 const router = useRouter()
 
+const hasSubmittedApplication = computed(() => {
+  const userId = session.currentUser?.id
+  return Boolean(userId && application.hasSubmittedApplication(userId))
+})
+
 const canReserve = computed(
   () => session.currentUser?.profileComplete === true
-    && !!application.submittedDraft
+    && hasSubmittedApplication.value
     && !reservation.myReservation,
 )
 
 // dialog เลือกรูปแบบการพัก + ยืนยันจอง
 const selectedRoom = ref<Room | null>(null)
-const occupancy = ref<OccupancyMode>('shared')
+const occupancy = ref<OccupancyMode | null>(null)
 const dialogOpen = ref(false)
 const selectedBuilding = computed(() => dorm.buildings.find(building => building.id === selectedRoom.value?.buildingId))
 const selectedDormGroup = computed(() => dorm.dormGroups.find(group => group.id === selectedBuilding.value?.dormGroupId))
-const submittedDormGroup = computed(() => dorm.dormGroups.find(group => group.id === application.submittedDraft?.dormGroupId))
-const submittedRoomTypeLabel = computed(() => {
-  const config = application.submittedDraft?.roomType
-  return config ? roomConfigLabel[config as keyof typeof roomConfigLabel] ?? config : '—'
-})
-const roomSelectionIssue = computed<'missing_application' | 'mismatch' | null>(() => {
-  const room = selectedRoom.value
-  const dormGroupId = selectedBuilding.value?.dormGroupId
-  const userId = session.currentUser?.id
-  if (!application.submittedDraft || !application.submittedReference) return 'missing_application'
-  if (!room || !dormGroupId || !userId) return 'mismatch'
-  return application.submittedRoomMatches(room, dormGroupId, userId) ? null : 'mismatch'
-})
 
 const isLeaderOfAcceptedGroup = computed(
   () =>
@@ -62,48 +54,43 @@ const isLeaderOfAcceptedGroup = computed(
     && reservation.myRoommateGroup.leaderId === session.currentUser?.id,
 )
 const hasActiveGroup = computed(() => !!reservation.myRoommateGroup)
+const missingSharedApplicationMembers = computed(() =>
+  (reservation.myRoommateGroup?.memberIds ?? [])
+    .filter(userId => !application.hasSubmittedApplication(userId))
+    .map(userId => users.find(user => user.id === userId)?.displayName ?? userId),
+)
 
 function canChoose(mode: OccupancyMode) {
   if (!selectedRoom.value?.occupancyCapability.includes(mode)) return false
-  if (mode === 'shared') return isLeaderOfAcceptedGroup.value
+  if (mode === 'shared') {
+    return isLeaderOfAcceptedGroup.value && missingSharedApplicationMembers.value.length === 0
+  }
   return !hasActiveGroup.value
 }
 
 function onSelect(room: Room) {
   selectedRoom.value = room
-  // ตั้งค่าเริ่มต้นเป็นโหมดที่เลือกได้จริง
-  occupancy.value = room.occupancyCapability.includes('shared') && isLeaderOfAcceptedGroup.value
-    ? 'shared'
-    : 'whole_room'
+  occupancy.value = room.occupancyCapability.find(mode => canChoose(mode)) ?? null
   dialogOpen.value = true
 }
 
 const priceLines = computed(() =>
-  selectedRoom.value ? priceLinesFor(selectedRoom.value.config, occupancy.value) : [],
+  selectedRoom.value && occupancy.value
+    ? priceLinesFor(selectedRoom.value.config, occupancy.value)
+    : [],
 )
 const totalPerResident = computed(() => priceLines.value.reduce((s, l) => s + l.amount, 0))
 
 const campaign = computed(() => dorm.openCampaigns[0])
 
 function reserve() {
-  if (!selectedRoom.value) return
+  if (!selectedRoom.value || !occupancy.value) return
   const result = reservation.reserveRoom(selectedRoom.value.number, occupancy.value)
   toast(result.message)
   if (result.ok) {
     dialogOpen.value = false
-    router.push('/app/reservation')
+    router.push('/app')
   }
-}
-
-function useRoomInApplication() {
-  const room = selectedRoom.value
-  const dormGroupId = selectedBuilding.value?.dormGroupId
-  if (!room || !dormGroupId) return
-  application.hydrateIdentity(session.currentUser)
-  application.reviseForRoom(room, dormGroupId)
-  dialogOpen.value = false
-  toast.info(`ผูกห้อง ${room.number} กับร่างใบสมัครแล้ว กรุณาตรวจสอบและส่งใบสมัคร`)
-  router.push('/app/application')
 }
 </script>
 
@@ -124,11 +111,12 @@ function useRoomInApplication() {
         (1 คนมีได้ 1 การจอง/กลุ่มที่ใช้งานอยู่เท่านั้น)
       </AlertDescription>
     </Alert>
-    <Alert v-else-if="!application.submittedReference" variant="destructive">
+    <Alert v-else-if="!hasSubmittedApplication" variant="destructive">
       <FileCheck2Icon aria-hidden="true" />
       <AlertTitle>ยังไม่มีใบสมัครที่ส่งแล้ว</AlertTitle>
       <AlertDescription>
-        คุณยังดูห้องได้ตามปกติ เมื่อเลือกห้อง ระบบจะนำหอพัก ประเภทห้อง และเลขห้องไปเติมในใบสมัครให้โดยอัตโนมัติ
+        คุณยังดูผังและรายละเอียดห้องได้ตามปกติ แต่ต้องส่งใบสมัครก่อนจึงจะยืนยันจองห้องได้
+        เมื่อยืนยันห้องครบ ระบบจะเติมข้อมูลห้องในใบสมัครให้อัตโนมัติ
       </AlertDescription>
     </Alert>
     <Alert v-else-if="!session.currentUser?.profileComplete" variant="destructive">
@@ -137,17 +125,16 @@ function useRoomInApplication() {
       <AlertDescription>กลับไปแก้ใบสมัครและส่งใหม่ก่อนยืนยันจองห้อง</AlertDescription>
     </Alert>
 
-    <RoomBrowser
-      :initial-dorm-group-id="application.submittedDraft?.dormGroupId || application.draft.dormGroupId"
-      :initial-config="application.submittedDraft?.roomType || application.draft.roomType"
-      @select="onSelect"
-    />
+    <RoomBrowser @select="onSelect" />
 
     <!-- Dialog ยืนยันการจอง -->
     <Dialog v-model:open="dialogOpen">
-      <DialogContent v-if="selectedRoom" class="sm:max-w-lg">
-        <DialogHeader>
-          <div class="flex items-center justify-between gap-2 pr-6">
+      <DialogContent
+        v-if="selectedRoom"
+        class="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg"
+      >
+        <DialogHeader class="shrink-0 px-4 pb-3 pr-12 pt-4">
+          <div class="flex items-center justify-between gap-2">
             <DialogTitle>จองห้อง {{ selectedRoom.number }}</DialogTitle>
             <RoomStatusBadge :status="selectedRoom.publicStatus" />
           </div>
@@ -157,24 +144,22 @@ function useRoomInApplication() {
           </DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4">
-          <Alert v-if="roomSelectionIssue === 'missing_application'" variant="destructive">
+        <div class="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-y px-4 py-3">
+          <Alert v-if="!hasSubmittedApplication" variant="destructive">
             <FileCheck2Icon aria-hidden="true" />
             <AlertTitle>ยังจองห้องนี้ไม่ได้</AlertTitle>
             <AlertDescription>
-              ระบบจะผูกห้อง {{ selectedRoom.number }}, {{ selectedDormGroup?.shortName }} และ {{ roomConfigLabel[selectedRoom.config] }} ลงในร่างใบสมัครก่อน เพื่อป้องกันข้อมูลคนละหอ
+              กรุณากรอกและส่งใบสมัครก่อน ระบบจึงจะเปิดให้ยืนยันจองห้องนี้
             </AlertDescription>
           </Alert>
-          <Alert v-else-if="roomSelectionIssue === 'mismatch'" variant="destructive">
+          <Alert
+            v-if="isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared') && missingSharedApplicationMembers.length"
+            variant="destructive"
+          >
             <AlertTriangleIcon aria-hidden="true" />
-            <AlertTitle>ห้องที่เลือกไม่ตรงกับใบสมัคร</AlertTitle>
+            <AlertTitle>สมาชิกในกลุ่มยังส่งใบสมัครไม่ครบ</AlertTitle>
             <AlertDescription>
-              ใบสมัครปัจจุบัน: {{ submittedDormGroup?.shortName }} · {{ submittedRoomTypeLabel }}
-              <template v-if="application.submittedDraft?.preferredRoomNumber">
-                · ห้อง {{ application.submittedDraft.preferredRoomNumber }}
-              </template>
-              แต่คุณกำลังเลือก {{ selectedDormGroup?.shortName }} · {{ roomConfigLabel[selectedRoom.config] }} · ห้อง {{ selectedRoom.number }}
-              ระบบจะไม่อนุญาตให้จองจนกว่าจะแก้และส่งใบสมัครใหม่
+              {{ missingSharedApplicationMembers.join(', ') }} ต้องส่งใบสมัครก่อน หัวหน้ากลุ่มจึงจะยืนยันห้องแบบพักคู่ได้
             </AlertDescription>
           </Alert>
           <HoldCountdown
@@ -182,16 +167,53 @@ function useRoomInApplication() {
             :expires-at="selectedRoom.holdExpiresAt"
             label="ห้องนี้ถูกจองชั่วคราว เหลือ"
           />
+          <dl class="grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg border p-3 text-sm sm:grid-cols-3">
+            <div>
+              <dt class="text-xs text-muted-foreground">หอพัก</dt>
+              <dd class="font-medium">{{ selectedDormGroup?.name ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-muted-foreground">อาคาร</dt>
+              <dd class="font-medium">{{ selectedBuilding?.name ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-muted-foreground">ชั้น</dt>
+              <dd class="font-medium tabular-nums">{{ selectedRoom.floor }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-muted-foreground">ประเภทห้อง</dt>
+              <dd class="font-medium">{{ roomConfigLabel[selectedRoom.config] }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-muted-foreground">เลขห้อง</dt>
+              <dd class="font-medium tabular-nums">{{ selectedRoom.number }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-muted-foreground">รูปแบบการพัก</dt>
+              <dd class="font-medium">
+                {{ occupancy ? occupancyModeLabel[occupancy] : 'ยังไม่มีรูปแบบที่จองได้' }}
+              </dd>
+            </div>
+          </dl>
+          <p v-if="occupancy" class="rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+            <template v-if="occupancy === 'shared'">
+              ระบบจะเติมข้อมูลห้องนี้ในใบสมัครของสมาชิกทั้งสองคนเมื่อรูมเมทยืนยันห้องครบ
+            </template>
+            <template v-else>
+              ระบบจะเติมข้อมูลห้องนี้ในใบสมัครทันทีเมื่อยืนยันจองและเข้าสู่ช่วงรอชำระเงิน
+            </template>
+          </p>
           <!-- เลือกรูปแบบการพัก -->
           <div class="space-y-2">
-            <p class="text-sm font-semibold">รูปแบบการพัก</p>
-            <div class="grid gap-2 sm:grid-cols-2">
+            <p id="occupancy-mode-label" class="text-sm font-semibold">รูปแบบการพัก</p>
+            <div class="grid gap-2 sm:grid-cols-2" role="group" aria-labelledby="occupancy-mode-label">
               <Button
                 v-for="mode in selectedRoom.occupancyCapability"
                 :key="mode"
                 type="button"
                 :variant="occupancy === mode ? 'default' : 'outline'"
                 :disabled="!canChoose(mode)"
+                :aria-pressed="occupancy === mode"
                 class="h-auto flex-col items-start gap-0.5 py-2.5"
                 @click="occupancy = mode"
               >
@@ -204,13 +226,19 @@ function useRoomInApplication() {
             <p v-if="!isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared')" class="text-xs text-muted-foreground">
               พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม — จัดการได้ที่เมนู “รูมเมท”
             </p>
+            <p
+              v-if="isLeaderOfAcceptedGroup && missingSharedApplicationMembers.length && selectedRoom.occupancyCapability.includes('shared')"
+              class="text-xs text-destructive"
+            >
+              ยังเลือกพักคู่ไม่ได้ — รอ {{ missingSharedApplicationMembers.join(', ') }} ส่งใบสมัครให้เรียบร้อยก่อน
+            </p>
             <p v-if="hasActiveGroup && selectedRoom.occupancyCapability.includes('whole_room')" class="text-xs text-muted-foreground">
               ต้องการเหมาห้อง? ต้องยกเลิกกลุ่มรูมเมทปัจจุบันก่อน
             </p>
           </div>
 
           <!-- ประมาณการค่าใช้จ่าย (แยก ROOM/HL เสมอ) -->
-          <div class="space-y-1.5 rounded-lg border p-3">
+          <div v-if="occupancy" class="space-y-1.5 rounded-lg border p-3">
             <p class="text-sm font-semibold">ประมาณการค่าใช้จ่ายต่อคน (ปีการศึกษา 2569)</p>
             <div v-for="line in priceLines" :key="line.action" class="flex items-center justify-between text-sm">
               <span class="text-muted-foreground">{{ line.ref2 }} — {{ line.title }}</span>
@@ -226,7 +254,7 @@ function useRoomInApplication() {
           </div>
 
           <!-- กติกา hold -->
-          <p v-if="campaign" class="flex items-start gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+          <p v-if="campaign && occupancy" class="flex items-start gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
             <TimerIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>
               เมื่อกดจอง ห้องถูกล็อกให้ทันที
@@ -238,21 +266,18 @@ function useRoomInApplication() {
           </p>
         </div>
 
-        <DialogFooter>
+        <DialogFooter
+          class="mx-0 mb-0 grid shrink-0 grid-cols-2 rounded-none bg-popover p-3 [&>button]:w-full sm:flex sm:[&>button]:w-auto"
+        >
           <Button variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
           <Button
-            v-if="roomSelectionIssue"
-            @click="useRoomInApplication"
-          >
-            <FileCheck2Icon aria-hidden="true" />
-            {{ roomSelectionIssue === 'missing_application' ? 'ใช้ห้องนี้ในใบสมัคร' : 'แก้ใบสมัครให้ตรงกับห้องนี้' }}
-          </Button>
-          <Button
-            v-else
-            :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !canChoose(occupancy)"
+            :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !occupancy || !canChoose(occupancy)"
             @click="reserve"
           >
-            {{ selectedRoom.publicStatus === 'available' ? 'จองห้องนี้ — ล็อกทันที' : 'ห้องนี้ไม่ว่าง' }}
+            <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
+            <template v-else-if="!hasSubmittedApplication">ส่งใบสมัครก่อนจองห้อง</template>
+            <template v-else-if="!occupancy">ยังไม่มีรูปแบบการพักที่จองได้</template>
+            <template v-else>จองห้องนี้ — ล็อกทันที</template>
           </Button>
         </DialogFooter>
       </DialogContent>

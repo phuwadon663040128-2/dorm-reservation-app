@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { ArrowLeftIcon, Building2Icon, MousePointerClickIcon, Rotate3dIcon } from '@lucide/vue'
+import { ArrowLeftIcon, Building2Icon, Rotate3dIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/composables/useTheme'
 import { CAMPUS_PALETTES, campusArea } from '@/lib/campus3d'
@@ -2253,21 +2253,10 @@ const headerLabel = computed(() =>
 
     <!-- มือถือเรียงข้อมูล ปุ่ม และเข็มทิศใน flow เดียวกัน เพื่อไม่ให้ control ลอยทับกัน -->
     <div class="pointer-events-none absolute inset-x-2 top-2 z-20 flex flex-col gap-2 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-      <!-- แถบสถานะ/คำแนะนำ ซ้ายบน -->
-      <div class="flex min-w-0 flex-col gap-1.5 sm:max-w-[70%] sm:gap-2">
-        <div class="pointer-events-auto flex w-fit max-w-full items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
-          <Building2Icon class="size-4 shrink-0 text-primary" aria-hidden="true" />
-          <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
-        </div>
-        <p class="w-fit max-w-full rounded-lg border bg-background/92 px-2.5 py-1.5 text-xs leading-relaxed text-foreground shadow-sm backdrop-blur sm:border-0 sm:bg-background/75 sm:py-1 sm:text-muted-foreground sm:shadow-none">
-          <template v-if="mode === 'campus'">
-            <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ตึกเพื่อเลือกอาคาร · ลากหมุนดูรอบ · ตึกจางคืออีกหอ กดเพื่อสลับ
-          </template>
-          <template v-else-if="mode === 'building'">
-            <MousePointerClickIcon class="mb-0.5 mr-1 inline size-3" aria-hidden="true" />กดที่ "ชั้น" บนตึกเพื่อเปิดแผนผังห้องของชั้นนั้น
-          </template>
-          <template v-else>กำลังเข้าสู่แผนผังห้อง…</template>
-        </p>
+      <!-- แถบสถานะซ้ายบน -->
+      <div class="pointer-events-auto flex w-fit max-w-full min-w-0 items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:max-w-[70%]">
+        <Building2Icon class="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
       </div>
 
       <!-- ปุ่มมุมมอง + เข็มทิศ: เต็ม 2 คอลัมน์บนมือถือ, ชิดขวาบนบนจอใหญ่ -->

@@ -170,12 +170,12 @@ const steps = [
       </div>
     </section>
 
-    <!-- หอพักแนะนำ + ขั้นตอนการจอง -->
+    <!-- หอพัก + ขั้นตอนการจอง -->
     <section class="mx-auto w-full max-w-352 px-3 py-10 sm:px-5">
       <div class="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div class="space-y-5">
           <div class="flex items-end justify-between gap-3">
-            <h2 class="text-xl font-bold tracking-tight sm:text-2xl">หอพักแนะนำ</h2>
+            <h2 class="text-xl font-bold tracking-tight sm:text-2xl">หอพัก</h2>
             <RouterLink to="/rooms" class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               ดูตึกทั้งหมด →
             </RouterLink>

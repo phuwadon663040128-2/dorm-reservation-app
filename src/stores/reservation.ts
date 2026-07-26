@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { OccupancyMode, ReservationGroup, RoommateGroup, RoommateInvitation } from '@/types'
 import { reservationGroups as resvFixtures, roommateGroups as groupFixtures, roommateInvitations as invitationFixtures, users } from '@/fixtures'
+import { roomConfigLabel } from '@/lib/labels'
 import { useApplicationStore } from './application'
 import { useContractsStore } from './contracts'
 import { useDormStore } from './dorm'
@@ -45,6 +46,12 @@ export const useReservationStore = defineStore('reservation', () => {
     )
   }
 
+  function activeReservationOf(userId: string) {
+    return reservationGroups.value.find(
+      r => r.memberIds.includes(userId) && ACTIVE_HOLD_STATUSES.includes(r.holdStatus),
+    )
+  }
+
   const myRoommateGroup = computed(() => {
     const uid = session.currentUser?.id
     return uid ? activeGroupOf(uid) : undefined
@@ -52,10 +59,7 @@ export const useReservationStore = defineStore('reservation', () => {
 
   const myReservation = computed(() => {
     const uid = session.currentUser?.id
-    if (!uid) return undefined
-    return reservationGroups.value.find(
-      r => r.memberIds.includes(uid) && ACTIVE_HOLD_STATUSES.includes(r.holdStatus),
-    )
+    return uid ? activeReservationOf(uid) : undefined
   })
 
   /** รายการล่าสุด รวม hold ที่หมดอายุหรือถูกปล่อยคืน โดยรายการใหม่ถูกเพิ่มไว้ด้านหน้า */
@@ -157,9 +161,49 @@ export const useReservationStore = defineStore('reservation', () => {
     return { ok: true, message: 'ปฏิเสธคำเชิญแล้ว — ทั้งสองฝ่ายเชิญ/รับคำเชิญใหม่ได้' }
   }
 
-  /** เข้าสู่ payment hold 72 ชม. + สร้าง obligations (ใช้ร่วมทั้ง flow ยืนยันและไม่ต้องยืนยัน) */
-  function enterPaymentHold(resv: ReservationGroup) {
+  /** เข้าสู่ payment hold หลังสมาชิกที่เกี่ยวข้องยืนยันห้องครบ แล้วเติมข้อมูลห้องในใบสมัครทุกคนพร้อมกัน */
+  function enterPaymentHold(resv: ReservationGroup): ActionResult {
     const campaign = dorm.campaignById(resv.campaignId)
+    const room = dorm.roomByNumber(resv.roomNumber)
+    if (!room) return { ok: false, message: 'ไม่พบข้อมูลห้องสำหรับสร้าง payment hold' }
+    const building = dorm.buildings.find(item => item.id === room.buildingId)
+    if (!building) return { ok: false, message: 'ไม่พบข้อมูลอาคารสำหรับเติมในใบสมัคร' }
+    const dormGroup = dorm.dormGroups.find(item => item.id === building.dormGroupId)
+    if (!dormGroup) return { ok: false, message: 'ไม่พบข้อมูลหอพักสำหรับเติมในใบสมัคร' }
+
+    const assignmentResult = application.assignRoomForPaymentHold(resv.memberIds, {
+      reservationId: resv.id,
+      dormGroupId: dormGroup.id,
+      dormName: dormGroup.name,
+      dormCode: dormGroup.shortName,
+      buildingId: building.id,
+      buildingName: building.name,
+      buildingCode: building.code,
+      floor: room.floor,
+      roomType: room.config,
+      roomTypeLabel: roomConfigLabel[room.config],
+      roomNumber: room.number,
+      occupancyMode: resv.occupancyMode,
+    })
+    if (!assignmentResult.ok) {
+      const affectedIds = 'missingApplicantIds' in assignmentResult
+        ? assignmentResult.missingApplicantIds
+        : assignmentResult.conflictingApplicantIds
+      const affectedNames = affectedIds
+        .map(id => users.find(user => user.id === id)?.displayName ?? id)
+
+      if ('conflictingApplicantIds' in assignmentResult) {
+        return {
+          ok: false,
+          message: `ยังเติมข้อมูลห้องไม่ได้ — ${affectedNames.join(', ')} มีการจองห้องที่ใช้งานอยู่แล้ว`,
+        }
+      }
+      return {
+        ok: false,
+        message: `ยังเติมข้อมูลห้องไม่ได้ — ${affectedNames.join(', ')} ต้องส่งใบสมัครก่อน`,
+      }
+    }
+
     const deadline = inMs((campaign?.paymentHoldHours ?? 72) * 3_600_000)
     resv.holdStatus = 'held_payment'
     resv.confirmationDeadline = undefined
@@ -167,8 +211,14 @@ export const useReservationStore = defineStore('reservation', () => {
     dorm.setRoomStatus(resv.roomNumber, 'temporarily_held', deadline)
     const group = roommateGroups.value.find(g => g.id === resv.roommateGroupId)
     if (group) group.status = 'ready_for_payment'
-    const room = dorm.roomByNumber(resv.roomNumber)
-    if (room) payments.generateObligationsForGroup(resv, room.config, deadline)
+    payments.generateObligationsForGroup(resv, room.config, deadline)
+    contractsStore.addAudit({
+      actor: session.currentUser?.id ?? 'system',
+      action: 'application.room_assignment',
+      relatedIds: [resv.id, resv.roomNumber, ...resv.memberIds],
+      detail: `เติมข้อมูล ${dormGroup.shortName} ${building.name} ชั้น ${room.floor} ห้อง ${room.number} ลงในใบสมัครของสมาชิก ${resv.memberIds.length} คน`,
+    })
+    return { ok: true, message: 'สร้าง payment hold และเติมข้อมูลห้องในใบสมัครแล้ว' }
   }
 
   /**
@@ -185,11 +235,8 @@ export const useReservationStore = defineStore('reservation', () => {
     if (!room) return { ok: false, message: 'ไม่พบห้องนี้' }
     const building = dorm.buildings.find(item => item.id === room.buildingId)
     if (!building) return { ok: false, message: 'ไม่พบข้อมูลอาคารของห้องนี้' }
-    if (!application.submittedDraft || !application.submittedReference) {
+    if (!application.hasSubmittedApplication(me.id)) {
       return { ok: false, message: 'ต้องส่งใบสมัครก่อนจึงจะยืนยันจองห้องได้' }
-    }
-    if (!application.submittedRoomMatches(room, building.dormGroupId, me.id)) {
-      return { ok: false, message: 'ห้องที่เลือกไม่ตรงกับหอพัก ประเภทห้อง หรือเลขห้องในใบสมัคร กรุณาแก้และส่งใบสมัครใหม่' }
     }
     if (room.publicStatus !== 'available')
       return { ok: false, message: `ห้อง ${roomNumber} ไม่ว่างแล้ว (ROOM_NOT_AVAILABLE) — เลือกห้องอื่น` }
@@ -202,6 +249,28 @@ export const useReservationStore = defineStore('reservation', () => {
         return { ok: false, message: 'พักคู่ต้องมีกลุ่มรูมเมทที่ตอบรับแล้วก่อนเลือกห้อง (GROUP-007)' }
       if (group.leaderId !== me.id)
         return { ok: false, message: 'เฉพาะหัวหน้ากลุ่มเท่านั้นที่กดจองห้องได้ (GROUP-008)' }
+      const membersWithActiveReservations = group.memberIds.filter(
+        applicantId => Boolean(activeReservationOf(applicantId)),
+      )
+      if (membersWithActiveReservations.length) {
+        const memberNames = membersWithActiveReservations
+          .map(id => users.find(user => user.id === id)?.displayName ?? id)
+        return {
+          ok: false,
+          message: `พักคู่ไม่ได้ — ${memberNames.join(', ')} มีการจองที่ใช้งานอยู่แล้ว (1 คน 1 การจอง)`,
+        }
+      }
+      const missingApplicantIds = group.memberIds.filter(
+        applicantId => !application.hasSubmittedApplication(applicantId),
+      )
+      if (missingApplicantIds.length) {
+        const missingNames = missingApplicantIds
+          .map(id => users.find(user => user.id === id)?.displayName ?? id)
+        return {
+          ok: false,
+          message: `พักคู่ต้องส่งใบสมัครครบทั้งสองคน — รอ ${missingNames.join(', ')} ส่งใบสมัคร`,
+        }
+      }
     } else if (group) {
       return { ok: false, message: 'คุณอยู่ในกลุ่มรูมเมท — ยกเลิกกลุ่มก่อนจึงจะเหมาห้องคนเดียวได้' }
     }
@@ -221,25 +290,34 @@ export const useReservationStore = defineStore('reservation', () => {
     }
     reservationGroups.value.unshift(resv)
 
-    contractsStore.addAudit({
-      actor: me.id,
-      action: 'reservation.reserve',
-      relatedIds: [resv.id, roomNumber],
-      detail: `หัวหน้ากลุ่มจองห้อง ${roomNumber} (${occupancyMode === 'shared' ? 'พักคู่' : 'เหมาห้อง'}) — ล็อกห้องทันที`,
-    })
-
     if (occupancyMode === 'shared' && campaign.roommateRoomConfirmationRequired) {
       const deadline = inMs(campaign.roomConfirmationMinutes * 60_000)
       resv.confirmationDeadline = deadline
       dorm.setRoomStatus(roomNumber, 'temporarily_held', deadline)
       if (group) group.status = 'room_confirmation_pending'
+      contractsStore.addAudit({
+        actor: me.id,
+        action: 'reservation.reserve',
+        relatedIds: [resv.id, roomNumber],
+        detail: `หัวหน้ากลุ่มจองห้อง ${roomNumber} (พักคู่) — ล็อกห้องทันทีและรอรูมเมทยืนยัน`,
+      })
       return {
         ok: true,
         message: `ล็อกห้อง ${roomNumber} แล้ว — รูมเมทต้องยืนยันห้องภายใน ${campaign.roomConfirmationMinutes} นาที`,
       }
     }
 
-    enterPaymentHold(resv)
+    const paymentHoldResult = enterPaymentHold(resv)
+    if (!paymentHoldResult.ok) {
+      reservationGroups.value = reservationGroups.value.filter(item => item.id !== resv.id)
+      return paymentHoldResult
+    }
+    contractsStore.addAudit({
+      actor: me.id,
+      action: 'reservation.reserve',
+      relatedIds: [resv.id, roomNumber],
+      detail: `จองห้อง ${roomNumber} (${occupancyMode === 'shared' ? 'พักคู่' : 'เหมาห้อง'}) — ล็อกห้องและเข้าสู่ payment hold`,
+    })
     return {
       ok: true,
       message: `ล็อกห้อง ${roomNumber} แล้ว — ชำระเงินภายใน ${campaign.paymentHoldHours} ชั่วโมง`,
@@ -248,14 +326,21 @@ export const useReservationStore = defineStore('reservation', () => {
 
   /** รูมเมทยืนยันห้องที่หัวหน้ากลุ่มเลือก → เข้าสู่ payment hold (HOLD-003) */
   function confirmRoomSelection(resvId: string): ActionResult {
+    const me = session.currentUser
+    if (!me) return { ok: false, message: 'กรุณาเข้าสู่ระบบก่อน' }
     const resv = reservationById(resvId)
     if (!resv || resv.holdStatus !== 'held_roommate_confirmation')
       return { ok: false, message: 'การจองนี้ไม่อยู่ในขั้นรอยืนยันห้องแล้ว' }
+    if (!resv.memberIds.includes(me.id))
+      return { ok: false, message: 'คุณไม่ใช่สมาชิกของการจองนี้' }
+    if (resv.leaderId === me.id)
+      return { ok: false, message: 'หัวหน้ากลุ่มไม่สามารถยืนยันแทนรูมเมทได้' }
     if (resv.confirmationDeadline && new Date(resv.confirmationDeadline).getTime() < Date.now()) {
       expireHold(resvId)
       return { ok: false, message: 'หมดเวลายืนยัน — ห้องถูกปล่อยคืนแล้ว' }
     }
-    enterPaymentHold(resv)
+    const paymentHoldResult = enterPaymentHold(resv)
+    if (!paymentHoldResult.ok) return paymentHoldResult
     contractsStore.addAudit({
       actor: session.currentUser?.id ?? 'unknown',
       action: 'reservation.confirm_room',
@@ -267,9 +352,15 @@ export const useReservationStore = defineStore('reservation', () => {
 
   /** รูมเมทปฏิเสธห้อง → ปล่อยห้องทันที กลุ่มกลับสถานะ accepted (HOLD-005) */
   function declineRoomSelection(resvId: string): ActionResult {
+    const me = session.currentUser
+    if (!me) return { ok: false, message: 'กรุณาเข้าสู่ระบบก่อน' }
     const resv = reservationById(resvId)
     if (!resv || resv.holdStatus !== 'held_roommate_confirmation')
       return { ok: false, message: 'การจองนี้ไม่อยู่ในขั้นรอยืนยันห้องแล้ว' }
+    if (!resv.memberIds.includes(me.id))
+      return { ok: false, message: 'คุณไม่ใช่สมาชิกของการจองนี้' }
+    if (resv.leaderId === me.id)
+      return { ok: false, message: 'หัวหน้ากลุ่มไม่สามารถปฏิเสธแทนรูมเมทได้' }
     resv.holdStatus = 'released'
     dorm.setRoomStatus(resv.roomNumber, 'available')
     const group = roommateGroups.value.find(g => g.id === resv.roommateGroupId)
@@ -291,6 +382,12 @@ export const useReservationStore = defineStore('reservation', () => {
     const wasConfirmationStage = resv.holdStatus === 'held_roommate_confirmation'
     resv.holdStatus = 'expired'
     dorm.setRoomStatus(resv.roomNumber, 'available')
+    if (!wasConfirmationStage) {
+      application.releaseRoomAssignmentForReservation(
+        resv.id,
+        'หมดเวลา payment hold 72 ชั่วโมงและห้องถูกปล่อยคืน',
+      )
+    }
     const group = roommateGroups.value.find(g => g.id === resv.roommateGroupId)
     if (group) group.status = wasConfirmationStage ? 'accepted' : 'cancelled'
     contractsStore.addAudit({
@@ -312,6 +409,9 @@ export const useReservationStore = defineStore('reservation', () => {
     }
     if (!payments.groupPaymentComplete(resv.id)) {
       return { ok: false, message: `ยืนยันห้อง ${resv.roomNumber} ไม่ได้ — สมาชิกทุกคนต้องชำระครบทุกรายการ` }
+    }
+    if (!application.confirmRoomAssignmentForReservation(resv.id, resv.memberIds)) {
+      return { ok: false, message: 'ไม่พบข้อมูลห้องในใบสมัคร กรุณาตรวจสอบข้อมูลการจองก่อนยืนยัน' }
     }
     resv.holdStatus = 'confirmed'
     resv.paymentDeadline = undefined
