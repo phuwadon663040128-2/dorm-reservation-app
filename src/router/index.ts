@@ -1,4 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { toast } from 'vue-sonner'
+import { useApplicationStore } from '@/stores/application'
+import { usePaymentsStore } from '@/stores/payments'
+import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
 import type { StaffSection } from '@/types'
 
@@ -61,7 +65,7 @@ const router = createRouter({
       component: () => import('@/layouts/ApplicantLayout.vue'),
       meta: { requiresAuth: true, portal: 'applicant' },
       children: [
-        { path: '', name: 'app-home', component: () => import('@/views/applicant/HomeView.vue') },
+        { path: '', name: 'app-home', redirect: { name: 'app-rooms' } },
         { path: 'campaigns', name: 'app-campaigns', component: () => import('@/views/applicant/CampaignsView.vue') },
         { path: 'application/:campaignId?', name: 'app-application', component: () => import('@/views/applicant/ApplicationView.vue') },
         { path: 'rooms', name: 'app-rooms', component: () => import('@/views/applicant/RoomsView.vue') },
@@ -121,6 +125,42 @@ router.beforeEach((to) => {
   }
   if (to.meta.portal === 'applicant' && session.isLoggedIn && session.isStaff) {
     return { path: '/staff' }
+  }
+  // Workflow ผู้สมัคร: เลือกห้องและชำระรายการของตนเองก่อนเปิดใบสมัครครั้งแรก
+  if (to.name === 'app-application' && session.currentUser?.role === 'applicant') {
+    const application = useApplicationStore()
+    if (!application.hasSubmittedApplication(session.currentUser.id)) {
+      const reservation = useReservationStore()
+      const active = reservation.myReservation
+      if (!active) {
+        toast.info('ยังเปิดใบสมัครไม่ได้ กรุณาเลือกหอพักและห้องก่อน')
+        return { name: 'app-rooms' }
+      }
+      if (active.holdStatus === 'held_roommate_confirmation') {
+        toast.info('ยังเปิดใบสมัครไม่ได้ กรุณาดำเนินการยืนยันห้องกับรูมเมทให้เรียบร้อยก่อน')
+        return { name: 'app-roommate' }
+      }
+      if (
+        active.holdStatus === 'held_payment'
+        && active.paymentDeadline
+        && new Date(active.paymentDeadline).getTime() <= Date.now()
+      ) {
+        reservation.expireHold(active.id)
+        toast.error('หมดเวลาชำระเงินแล้ว กรุณาเลือกห้องใหม่ก่อนกรอกใบสมัคร')
+        return { name: 'app-rooms' }
+      }
+
+      const payments = usePaymentsStore()
+      const ownObligations = payments.myObligations.filter(
+        obligation => obligation.reservationGroupId === active.id,
+      )
+      const ownPaymentComplete = ownObligations.length > 0
+        && ownObligations.every(obligation => payments.isPaid(obligation))
+      if (!ownPaymentComplete) {
+        toast.info('ยังเปิดใบสมัครไม่ได้ กรุณาชำระรายการของคุณให้ครบก่อน')
+        return { name: 'app-payments' }
+      }
+    }
   }
   // หน้าเฉพาะผู้ดูแลระบบ
   if (to.meta.adminOnly && !session.isAdmin) {

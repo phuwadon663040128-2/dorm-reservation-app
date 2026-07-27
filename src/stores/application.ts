@@ -83,9 +83,13 @@ export interface ApplicationRecord {
   releasedAssignments: ApplicationRoomAssignment[]
 }
 
+interface DeferredRoomAssignmentState {
+  activeAssignment: ApplicationRoomAssignment | null
+  releasedAssignments: ApplicationRoomAssignment[]
+}
+
 export type AssignRoomForPaymentHoldResult =
   | { ok: true }
-  | { ok: false, missingApplicantIds: string[] }
   | { ok: false, conflictingApplicantIds: string[] }
 
 export function emptyApplicationDraft(): ApplicationDraft {
@@ -155,6 +159,8 @@ function freshFixtureRecords() {
 export const useApplicationStore = defineStore('application', () => {
   const draft = ref<ApplicationDraft>(emptyApplicationDraft())
   const recordsByApplicantId = ref<Record<string, ApplicationRecord>>(freshFixtureRecords())
+  // การจองเกิดก่อนใบสมัครได้ จึงพัก assignment ไว้แยกต่างหากจนกว่าจะส่งใบสมัครครั้งแรก
+  const deferredRoomAssignmentsByApplicantId = ref<Record<string, DeferredRoomAssignmentState>>({})
   const isRevising = ref(false)
   let nextReferenceNumber = 100001
 
@@ -171,6 +177,30 @@ export const useApplicationStore = defineStore('application', () => {
 
   function hasSubmittedApplication(applicantId: string) {
     return Boolean(recordForApplicant(applicantId))
+  }
+
+  function deferredStateFor(applicantId: string) {
+    return deferredRoomAssignmentsByApplicantId.value[applicantId] ?? null
+  }
+
+  function roomAssignmentForApplicant(applicantId: string) {
+    return recordForApplicant(applicantId)?.activeAssignment
+      ?? deferredStateFor(applicantId)?.activeAssignment
+      ?? null
+  }
+
+  function releasedRoomAssignmentsForApplicant(applicantId: string) {
+    return recordForApplicant(applicantId)?.releasedAssignments
+      ?? deferredStateFor(applicantId)?.releasedAssignments
+      ?? []
+  }
+
+  function ensureDeferredState(applicantId: string) {
+    deferredRoomAssignmentsByApplicantId.value[applicantId] ??= {
+      activeAssignment: null,
+      releasedAssignments: [],
+    }
+    return deferredRoomAssignmentsByApplicantId.value[applicantId]!
   }
 
   function hydrateIdentity(user: User | null) {
@@ -230,11 +260,14 @@ export const useApplicationStore = defineStore('application', () => {
           submittedAt: now,
           updatedAt: now,
           submittedData,
-          activeAssignment: null,
-          releasedAssignments: [],
+          activeAssignment: deferredStateFor(applicantId)?.activeAssignment ?? null,
+          releasedAssignments: [
+            ...(deferredStateFor(applicantId)?.releasedAssignments ?? []),
+          ],
         }
 
     recordsByApplicantId.value[applicantId] = record
+    delete deferredRoomAssignmentsByApplicantId.value[applicantId]
     isRevising.value = false
     draft.value = cloneDraft(submittedData)
     return record.reference
@@ -264,11 +297,9 @@ export const useApplicationStore = defineStore('application', () => {
     assignment: ApplicationRoomAssignmentInput,
   ): AssignRoomForPaymentHoldResult {
     const uniqueApplicantIds = [...new Set(applicantIds)]
-    const missingApplicantIds = uniqueApplicantIds.filter(id => !hasSubmittedApplication(id))
-    if (missingApplicantIds.length) return { ok: false, missingApplicantIds }
 
     const conflictingApplicantIds = uniqueApplicantIds.filter((applicantId) => {
-      const activeAssignment = recordForApplicant(applicantId)?.activeAssignment
+      const activeAssignment = roomAssignmentForApplicant(applicantId)
       return Boolean(
         activeAssignment
         && activeAssignment.reservationId !== assignment.reservationId,
@@ -278,26 +309,30 @@ export const useApplicationStore = defineStore('application', () => {
 
     const assignedAt = new Date().toISOString()
     uniqueApplicantIds.forEach((applicantId) => {
-      const record = recordsByApplicantId.value[applicantId]!
-      const current = record.activeAssignment
+      const record = recordForApplicant(applicantId)
+      const deferred = record ? null : ensureDeferredState(applicantId)
+      const current = record?.activeAssignment ?? deferred?.activeAssignment ?? null
+      const nextAssignment: ApplicationRoomAssignment = current?.reservationId === assignment.reservationId
+        ? {
+            ...current,
+            ...assignment,
+            status: 'payment_hold',
+            releasedAt: undefined,
+            releaseReason: undefined,
+          }
+        : {
+            ...assignment,
+            assignedAt,
+            status: 'payment_hold',
+          }
 
-      if (current?.reservationId === assignment.reservationId) {
-        record.activeAssignment = {
-          ...current,
-          ...assignment,
-          status: 'payment_hold',
-          releasedAt: undefined,
-          releaseReason: undefined,
-        }
+      if (record) {
+        record.activeAssignment = nextAssignment
+        record.updatedAt = assignedAt
       }
       else {
-        record.activeAssignment = {
-          ...assignment,
-          assignedAt,
-          status: 'payment_hold',
-        }
+        deferred!.activeAssignment = nextAssignment
       }
-      record.updatedAt = assignedAt
     })
 
     return { ok: true }
@@ -321,6 +356,19 @@ export const useApplicationStore = defineStore('application', () => {
       changed = true
     })
 
+    Object.values(deferredRoomAssignmentsByApplicantId.value).forEach((state) => {
+      if (state.activeAssignment?.reservationId !== reservationId) return
+
+      state.releasedAssignments.push({
+        ...state.activeAssignment,
+        status: 'released',
+        releasedAt,
+        releaseReason: reason,
+      })
+      state.activeAssignment = null
+      changed = true
+    })
+
     return changed
   }
 
@@ -330,20 +378,22 @@ export const useApplicationStore = defineStore('application', () => {
   ) {
     const uniqueApplicantIds = [...new Set(applicantIds)]
     if (!uniqueApplicantIds.length) return false
-    const records = uniqueApplicantIds
-      .map(applicantId => recordForApplicant(applicantId))
-
-    if (
-      records.some(record => !record)
-      || records.some(record => record?.activeAssignment?.reservationId !== reservationId)
-    ) {
+    if (uniqueApplicantIds.some(
+      applicantId => roomAssignmentForApplicant(applicantId)?.reservationId !== reservationId,
+    )) {
       return false
     }
 
     const confirmedAt = new Date().toISOString()
-    records.forEach((record) => {
-      record!.activeAssignment!.status = 'confirmed'
-      record.updatedAt = confirmedAt
+    uniqueApplicantIds.forEach((applicantId) => {
+      const record = recordForApplicant(applicantId)
+      if (record?.activeAssignment) {
+        record.activeAssignment.status = 'confirmed'
+        record.updatedAt = confirmedAt
+        return
+      }
+      const deferred = deferredStateFor(applicantId)
+      if (deferred?.activeAssignment) deferred.activeAssignment.status = 'confirmed'
     })
 
     return true
@@ -352,6 +402,7 @@ export const useApplicationStore = defineStore('application', () => {
   function reset() {
     draft.value = emptyApplicationDraft()
     recordsByApplicantId.value = freshFixtureRecords()
+    deferredRoomAssignmentsByApplicantId.value = {}
     isRevising.value = false
     nextReferenceNumber = 100001
   }
@@ -359,11 +410,14 @@ export const useApplicationStore = defineStore('application', () => {
   return {
     draft,
     recordsByApplicantId,
+    deferredRoomAssignmentsByApplicantId,
     currentRecord,
     submittedReference,
     isRevising,
     recordForApplicant,
     hasSubmittedApplication,
+    roomAssignmentForApplicant,
+    releasedRoomAssignmentsForApplicant,
     hydrateIdentity,
     submit,
     beginRevision,

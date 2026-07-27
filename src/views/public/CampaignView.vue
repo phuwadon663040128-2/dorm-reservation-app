@@ -13,13 +13,13 @@ const route = useRoute()
 const dorm = useDormStore()
 const session = useSessionStore()
 const campaign = computed(() => dorm.campaignById(String(route.params.id)))
-const applicationPath = computed(() => `/app/application/${String(route.params.id)}`)
+const applicationPath = computed(() => '/app/rooms')
 
 // ผู้ที่มี session แล้วต้องไปต่อใน portal เดิมทันที ไม่ถูกส่งกลับไปสมัคร/เข้าสู่ระบบซ้ำ
 const primaryAction = computed(() => {
   if (!session.isLoggedIn) {
     return {
-      label: 'เข้าสู่ระบบเพื่อสมัคร',
+      label: 'เข้าสู่ระบบเพื่อเลือกห้อง',
       to: { path: route.path, query: { ...route.query, auth: 'login', redirect: applicationPath.value } },
     }
   }
@@ -29,8 +29,8 @@ const primaryAction = computed(() => {
       : { label: 'ไปพื้นที่เจ้าหน้าที่', to: '/staff' }
   }
   return {
-    label: 'เริ่ม / ทำใบสมัครต่อ',
-    to: { name: 'app-application', params: { campaignId: String(route.params.id) } },
+    label: 'เลือกหอและห้องพัก',
+    to: applicationPath.value,
   }
 })
 </script>

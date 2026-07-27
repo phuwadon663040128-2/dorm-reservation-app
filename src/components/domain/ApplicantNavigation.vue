@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import {
   ArrowLeftIcon,
   BedDoubleIcon,
@@ -14,10 +15,9 @@ import {
   FilePenLineIcon,
   FileSignatureIcon,
   KeyRoundIcon,
-  LayoutDashboardIcon,
+  LockIcon,
   RefreshCwIcon,
   UsersRoundIcon,
-  WalletCardsIcon,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,6 +34,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { useApplicationStore } from '@/stores/application'
+import { usePaymentsStore } from '@/stores/payments'
+import { useReservationStore } from '@/stores/reservation'
+import { useSessionStore } from '@/stores/session'
 
 interface ApplicantNavItem {
   label: string
@@ -51,17 +55,19 @@ interface ApplicantNavGroup {
 
 const route = useRoute()
 const router = useRouter()
+const application = useApplicationStore()
+const payments = usePaymentsStore()
+const reservation = useReservationStore()
+const session = useSessionStore()
 const moreOpen = ref(false)
 
-const overviewItem: ApplicantNavItem = { label: 'ภาพรวมการสมัคร', to: '/app', exact: true }
+const overviewItem: ApplicantNavItem = { label: 'หอพักและห้องว่าง', to: '/app/rooms' }
 
 const navGroups: ApplicantNavGroup[] = [
   {
-    label: 'สมัครและเลือกห้อง',
+    label: 'รอบและรูมเมท',
     items: [
       { label: 'รอบรับสมัคร', to: '/app/campaigns' },
-      { label: 'ใบสมัคร', to: '/app/application' },
-      { label: 'เลือกห้องพัก', to: '/app/rooms' },
       { label: 'รูมเมท', to: '/app/roommate' },
     ],
   },
@@ -70,6 +76,7 @@ const navGroups: ApplicantNavGroup[] = [
     items: [
       { label: 'สถานะการจอง', to: '/app/reservation' },
       { label: 'ชำระเงิน', to: '/app/payments' },
+      { label: 'ใบสมัคร', to: '/app/application' },
     ],
   },
   {
@@ -84,21 +91,20 @@ const navGroups: ApplicantNavGroup[] = [
 
 const mobileMoreGroups: ApplicantNavGroup[] = [
   {
-    label: 'สมัครและเลือกห้อง',
-    description: 'รอบที่เปิดรับ ห้องพัก และรูมเมท',
+    label: 'รอบและรูมเมท',
+    description: 'ดูรอบที่เปิดรับและจัดการสมาชิกก่อนเลือกห้องพักคู่',
     icon: ClipboardPenLineIcon,
     items: [
       { label: 'รอบรับสมัคร', to: '/app/campaigns', icon: CalendarDaysIcon },
-      { label: 'เลือกห้องพัก', to: '/app/rooms', icon: BedDoubleIcon },
       { label: 'รูมเมท', to: '/app/roommate', icon: UsersRoundIcon },
     ],
   },
   {
-    label: 'การจองและชำระเงิน',
-    description: 'รายการค่าใช้จ่ายและกำหนดชำระ',
-    icon: WalletCardsIcon,
+    label: 'สถานะการจอง',
+    description: 'ติดตามห้องที่ล็อก กำหนดยืนยัน และสถานะของสมาชิก',
+    icon: ClipboardCheckIcon,
     items: [
-      { label: 'ชำระเงิน', to: '/app/payments', icon: CreditCardIcon },
+      { label: 'สถานะการจอง', to: '/app/reservation', icon: ClipboardCheckIcon },
     ],
   },
   {
@@ -113,13 +119,46 @@ const mobileMoreGroups: ApplicantNavGroup[] = [
   },
 ]
 
-const applyPrefixes = navGroups[0].items.map(item => item.to)
-const statusPrefixes = navGroups[1].items.map(item => item.to)
-const morePrefixes = navGroups[2].items.map(item => item.to)
+const isApplicationActive = computed(() => pathMatches('/app/application'))
+const isMoreActive = computed(() => mobileMoreGroups.some(group => group.items.some(isItemActive)))
 
-const isApplyActive = computed(() => applyPrefixes.some(prefix => pathMatches(prefix)))
-const isStatusActive = computed(() => statusPrefixes.some(prefix => pathMatches(prefix)))
-const isMoreActive = computed(() => morePrefixes.some(prefix => pathMatches(prefix)))
+const applicationAccessBlock = computed(() => {
+  const applicantId = session.currentUser?.id
+  if (!applicantId || application.hasSubmittedApplication(applicantId)) return null
+
+  const activeReservation = reservation.myReservation
+  if (!activeReservation) {
+    return {
+      shortLabel: 'เลือกห้องก่อน',
+      message: 'ยังเปิดใบสมัครไม่ได้ กรุณาเลือกหอพักและห้องก่อน',
+      to: '/app/rooms',
+    }
+  }
+
+  if (activeReservation.holdStatus === 'held_roommate_confirmation') {
+    return {
+      shortLabel: 'รอยืนยันห้อง',
+      message: 'ยังเปิดใบสมัครไม่ได้ กรุณาดำเนินการยืนยันห้องกับรูมเมทให้เรียบร้อยก่อน',
+      to: '/app/roommate',
+    }
+  }
+
+  const ownObligations = payments.myObligations.filter(
+    obligation => obligation.reservationGroupId === activeReservation.id,
+  )
+  const ownPaymentComplete = ownObligations.length > 0
+    && ownObligations.every(obligation => payments.isPaid(obligation))
+
+  if (!ownPaymentComplete) {
+    return {
+      shortLabel: 'ชำระก่อน',
+      message: 'ยังเปิดใบสมัครไม่ได้ กรุณาชำระรายการของคุณให้ครบก่อน',
+      to: '/app/payments',
+    }
+  }
+
+  return null
+})
 
 function pathMatches(prefix: string, exact = false) {
   if (exact) return route.path === prefix
@@ -136,6 +175,11 @@ function isGroupActive(group: ApplicantNavGroup) {
 
 function navigate(to: string) {
   moreOpen.value = false
+  if (to === '/app/application' && applicationAccessBlock.value) {
+    toast.info(applicationAccessBlock.value.message)
+    router.push(applicationAccessBlock.value.to)
+    return
+  }
   router.push(to)
 }
 </script>
@@ -176,7 +220,18 @@ function navigate(to: string) {
             :class="isItemActive(item) ? 'bg-accent font-semibold text-primary' : ''"
             @click="navigate(item.to)"
           >
-            {{ item.label }}
+            <LockIcon
+              v-if="item.to === '/app/application' && applicationAccessBlock"
+              class="size-3.5 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <span>{{ item.label }}</span>
+            <span
+              v-if="item.to === '/app/application' && applicationAccessBlock"
+              class="ml-auto text-[11px] text-muted-foreground"
+            >
+              {{ applicationAccessBlock.shortLabel }}
+            </span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -189,37 +244,43 @@ function navigate(to: string) {
   >
     <div class="mx-auto grid h-16 max-w-lg grid-cols-4 px-1">
       <RouterLink
-        to="/app"
+        to="/app/rooms"
         class="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        :class="route.path === '/app' ? 'text-primary' : 'text-muted-foreground'"
-        aria-label="ภาพรวมการสมัคร"
-        :aria-current="route.path === '/app' ? 'page' : undefined"
+        :class="pathMatches('/app/rooms') ? 'text-primary' : 'text-muted-foreground'"
+        aria-label="เลือกหอพักและห้องว่าง"
+        :aria-current="pathMatches('/app/rooms') ? 'page' : undefined"
       >
-        <LayoutDashboardIcon class="size-5" aria-hidden="true" />
-        <span>ภาพรวม</span>
+        <BedDoubleIcon class="size-5" aria-hidden="true" />
+        <span>ห้องพัก</span>
       </RouterLink>
 
       <RouterLink
-        to="/app/application"
+        to="/app/payments"
         class="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        :class="isApplyActive ? 'text-primary' : 'text-muted-foreground'"
-        aria-label="สมัครและเลือกห้อง"
-        :aria-current="isApplyActive ? 'location' : undefined"
+        :class="pathMatches('/app/payments') ? 'text-primary' : 'text-muted-foreground'"
+        aria-label="ชำระเงิน"
+        :aria-current="pathMatches('/app/payments') ? 'page' : undefined"
       >
-        <FilePenLineIcon class="size-5" aria-hidden="true" />
-        <span>สมัคร</span>
+        <CreditCardIcon class="size-5" aria-hidden="true" />
+        <span>ชำระเงิน</span>
       </RouterLink>
 
-      <RouterLink
-        to="/app/reservation"
+      <button
+        type="button"
         class="flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        :class="isStatusActive ? 'text-primary' : 'text-muted-foreground'"
-        aria-label="สถานะการจองและชำระเงิน"
-        :aria-current="isStatusActive ? 'location' : undefined"
+        :class="isApplicationActive
+          ? 'text-primary'
+          : applicationAccessBlock ? 'text-muted-foreground/60' : 'text-muted-foreground'"
+        :aria-label="applicationAccessBlock
+          ? `ใบสมัครยังไม่พร้อม: ${applicationAccessBlock.shortLabel}`
+          : 'กรอกใบสมัคร'"
+        :aria-current="isApplicationActive ? 'page' : undefined"
+        @click="navigate('/app/application')"
       >
-        <ClipboardCheckIcon class="size-5" aria-hidden="true" />
-        <span>สถานะ</span>
-      </RouterLink>
+        <LockIcon v-if="applicationAccessBlock" class="size-5" aria-hidden="true" />
+        <FilePenLineIcon v-else class="size-5" aria-hidden="true" />
+        <span>ใบสมัคร</span>
+      </button>
 
       <Sheet v-model:open="moreOpen">
         <SheetTrigger as-child>
@@ -241,7 +302,7 @@ function navigate(to: string) {
           <SheetHeader class="border-b px-5 py-5 pr-12 text-left">
             <SheetTitle class="text-lg">เมนูการจองเพิ่มเติม</SheetTitle>
             <SheetDescription>
-              เมนูสำหรับขั้นตอนถัดจากการสมัครและติดตามสถานะ
+              ดูรอบ จัดการรูมเมท ติดตามการจอง และขั้นตอนก่อนเข้าพัก
             </SheetDescription>
           </SheetHeader>
 

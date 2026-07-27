@@ -2,9 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { ArrowLeftIcon, Building2Icon, Rotate3dIcon } from '@lucide/vue'
+import { ArrowLeftIcon, Building2Icon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/composables/useTheme'
+import Campus3DLoading from './Campus3DLoading.vue'
 import { CAMPUS_PALETTES, campusArea } from '@/lib/campus3d'
 import type { Building3DConfig, CampusPalette, RoadKind } from '@/lib/campus3d'
 
@@ -34,6 +35,8 @@ const hoverLabel = ref<{ x: number; y: number; text: string; sub: string } | nul
 const viewMode = ref<'perspective' | 'top'>('perspective')
 // มุมหมุนการ์ดเข็มทิศ (องศา CSS) — อัปเดตทุกเฟรมตามทิศกล้อง แบบ updateCompass ใน test.html
 const compassAngle = ref(0)
+const sceneBusyLabel = ref<string | null>(null)
+const sceneBusyVariant = ref<'skeleton' | 'spinner'>('skeleton')
 // ป้ายชั้น F1..Fn ข้างตึกตอนชั้นแยกออก (ตำแหน่งคำนวณจากการ project จุด 3D ลงจอทุกเฟรม)
 // dot: จุดสถานะหน้าป้าย — เขียว = ยังมีห้องว่าง · แดง = เต็ม · เทา = ไม่มีข้อมูล
 interface FloorMarker {
@@ -53,6 +56,10 @@ let scene: THREE.Scene | null = null
 let camera: THREE.PerspectiveCamera | null = null
 let controls: OrbitControls | null = null
 let raf = 0
+let sceneSkeletonFrame = 0
+let sceneRebuildFrame = 0
+let sceneReleaseFrame = 0
+let sceneRebuildVersion = 0
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 let pickables: THREE.Mesh[] = []
@@ -2069,6 +2076,7 @@ function tick(now = performance.now()) {
   raf = requestAnimationFrame(tick)
   if (!renderer || !scene || !camera || !controls) return
   if (document.hidden || !sceneInViewport) return
+  if (sceneBusyLabel.value) return
 
   if (renderProfile.maxFps < 60) {
     const frameInterval = 1000 / renderProfile.maxFps
@@ -2207,8 +2215,39 @@ onMounted(() => {
   }
 })
 
-// เปลี่ยนหอ = โฟกัสกล้องใหม่ + สลับตึกจาง/เต็ม (สร้างฉากใหม่ให้ริบบิ้นหน้าต่างย้ายหอ)
-watch(() => props.dormGroupId, () => {
+function rebuildSceneWithLoading(label: string, variant: 'skeleton' | 'spinner') {
+  const rebuildVersion = ++sceneRebuildVersion
+  sceneBusyLabel.value = label
+  sceneBusyVariant.value = variant
+  cancelAnimationFrame(sceneSkeletonFrame)
+  cancelAnimationFrame(sceneRebuildFrame)
+  cancelAnimationFrame(sceneReleaseFrame)
+
+  // เว้นให้ Vue วาดสถานะโหลดก่อน เพราะการสร้าง geometry/material ใหม่จะยึด main thread ชั่วครู่
+  sceneSkeletonFrame = requestAnimationFrame(() => {
+    sceneRebuildFrame = requestAnimationFrame(() => {
+      if (rebuildVersion !== sceneRebuildVersion) return
+      if (!renderer || !camera) {
+        sceneBusyLabel.value = null
+        return
+      }
+
+      buildScene()
+      controls?.update()
+      updateAdaptiveLabels()
+      updateFloorMarkers()
+      if (scene) renderer.render(scene, camera)
+
+      // คงสถานะโหลดอีกหนึ่งเฟรมจน canvas ใหม่ถูกนำขึ้นจอจริง แล้วจึงเปิดให้โต้ตอบอีกครั้ง
+      sceneReleaseFrame = requestAnimationFrame(() => {
+        if (rebuildVersion === sceneRebuildVersion) sceneBusyLabel.value = null
+      })
+    })
+  })
+}
+
+// เปลี่ยนหอใช้ spinner ทับผังเดิม เพื่อรักษาบริบทและไม่ทำให้ layout ดูเหมือนเริ่มโหลดหน้าใหม่
+watch(() => props.dormGroupId, (dormGroupId) => {
   diveTarget = null
   diveEmitted = false
   diveResolveAt = 0
@@ -2218,13 +2257,24 @@ watch(() => props.dormGroupId, () => {
   hoverLabel.value = null
   separation = 0
   separationTarget = 0
-  buildScene()
+  rebuildSceneWithLoading(
+    `กำลังเปิดผัง 3 มิติของ${area.dormNames[dormGroupId] ?? 'หอพักที่เลือก'}`,
+    'spinner',
+  )
 })
 
-watch(theme, () => buildScene())
+function rebuildSceneForTheme() {
+  rebuildSceneWithLoading('กำลังปรับผัง 3 มิติให้เข้ากับธีมใหม่', 'skeleton')
+}
+
+watch(theme, rebuildSceneForTheme)
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
+  sceneRebuildVersion++
+  cancelAnimationFrame(sceneSkeletonFrame)
+  cancelAnimationFrame(sceneRebuildFrame)
+  cancelAnimationFrame(sceneReleaseFrame)
   ro?.disconnect()
   visibilityObserver?.disconnect()
   renderer?.domElement.removeEventListener('pointerdown', onPointerDown)
@@ -2251,10 +2301,17 @@ const headerLabel = computed(() =>
   <div class="relative overflow-hidden rounded-2xl border bg-card">
     <div ref="host" class="h-[58svh] min-h-105 w-full sm:h-[62vh]" />
 
-    <!-- มือถือเรียงข้อมูล ปุ่ม และเข็มทิศใน flow เดียวกัน เพื่อไม่ให้ control ลอยทับกัน -->
-    <div class="pointer-events-none absolute inset-x-2 top-2 z-20 flex flex-col gap-2 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-      <!-- แถบสถานะซ้ายบน -->
-      <div class="pointer-events-auto flex w-fit max-w-full min-w-0 items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:max-w-[70%]">
+    <Campus3DLoading
+      v-if="sceneBusyLabel"
+      overlay
+      :label="sceneBusyLabel"
+      :variant="sceneBusyVariant"
+    />
+
+    <!-- มือถือให้ปุ่มมุมมองอยู่บนสุด ส่วนชื่ออาคารย้ายไปมุมซ้ายล่างเพื่อเปิดพื้นที่ดูผัง -->
+    <div class="pointer-events-none absolute inset-x-2 top-2 z-20 flex justify-end sm:inset-x-3 sm:top-3 sm:items-start sm:justify-between sm:gap-3">
+      <!-- แถบสถานะซ้ายบนสำหรับจอใหญ่ -->
+      <div class="pointer-events-auto hidden w-fit max-w-[70%] min-w-0 items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:flex">
         <Building2Icon class="size-4 shrink-0 text-primary" aria-hidden="true" />
         <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
       </div>
@@ -2316,6 +2373,12 @@ const headerLabel = computed(() =>
       </div>
     </div>
 
+    <!-- ชื่อหอ/อาคารบนมือถืออยู่ซ้ายล่าง ไม่แย่งพื้นที่กับปุ่มควบคุมด้านบน -->
+    <div class="pointer-events-none absolute bottom-2 left-2 z-20 flex max-w-[calc(100%-10rem)] min-w-0 items-center gap-1.5 rounded-xl border bg-background/95 px-2.5 py-1.5 shadow-sm backdrop-blur sm:hidden">
+      <Building2Icon class="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+      <span class="truncate text-xs font-semibold">{{ headerLabel }}</span>
+    </div>
+
     <!-- ป้ายชั้น F1..Fn ข้างชั้นที่แยกออก (ตำแหน่ง project จาก 3D ทุกเฟรม แบบ floor-marker ใน test.html) -->
     <button
       v-for="m in floorMarkers"
@@ -2356,8 +2419,5 @@ const headerLabel = computed(() =>
       </p>
     </div>
 
-    <div class="pointer-events-none absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full border bg-background/90 px-2.5 py-1 text-[11px] text-foreground shadow-sm backdrop-blur sm:bottom-3 sm:right-3 sm:border-0 sm:bg-background/70 sm:text-muted-foreground sm:shadow-none">
-      <Rotate3dIcon class="size-3.5" aria-hidden="true" /> มุมมอง 3 มิติ · ผังอิงแผนที่จริง
-    </div>
   </div>
 </template>

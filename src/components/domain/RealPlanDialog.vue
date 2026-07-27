@@ -8,6 +8,7 @@ import {
   PlusIcon,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ const MAX_ZOOM = 4
 const ZOOM_STEP = 0.5
 
 const imageFailed = ref(false)
+const imageLoaded = ref(false)
 const viewer = ref<HTMLElement | null>(null)
 const zoom = ref(MIN_ZOOM)
 const pan = ref({ x: 0, y: 0 })
@@ -58,6 +60,11 @@ function resetViewer() {
   activePointerCount.value = 0
   lastPanPoint.value = null
   pinch.value = null
+}
+
+function onImageError() {
+  imageLoaded.value = true
+  imageFailed.value = true
 }
 
 function clampPan(next: { x: number; y: number }, scale = zoom.value) {
@@ -249,10 +256,14 @@ function onViewerKeydown(event: KeyboardEvent) {
 // เปลี่ยนอาคาร/ชั้นหรือเปิด dialog ใหม่ต้องกลับมาเห็นแบบแปลนครบก่อนเสมอ
 watch(planUrl, () => {
   imageFailed.value = false
+  imageLoaded.value = false
   resetViewer()
 })
 watch(open, (isOpen) => {
-  if (isOpen) resetViewer()
+  if (isOpen) {
+    imageLoaded.value = false
+    resetViewer()
+  }
 })
 </script>
 
@@ -315,6 +326,7 @@ watch(open, (isOpen) => {
           :class="isPanning ? 'cursor-grabbing' : zoom > MIN_ZOOM ? 'cursor-grab' : 'cursor-zoom-in'"
           role="region"
           :aria-label="`ตัวดูแผนผังจริง ${building?.name} ชั้น ${floor} ขยาย ${zoomPercent}`"
+          :aria-busy="!imageLoaded"
           tabindex="0"
           @pointerdown="onPointerDown"
           @pointermove="onPointerMove"
@@ -324,14 +336,22 @@ watch(open, (isOpen) => {
           @dblclick="onDoubleClick"
           @keydown="onViewerKeydown"
         >
+          <Skeleton
+            v-if="!imageLoaded"
+            class="absolute inset-3 rounded-md"
+            aria-hidden="true"
+          />
           <img
             :src="planUrl"
             :alt="`แผนผังจริง ${building?.name} ชั้น ${floor}`"
-            class="pointer-events-none block size-full object-contain will-change-transform"
+            class="pointer-events-none block size-full object-contain transition-opacity will-change-transform motion-reduce:transition-none"
+            :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
             :style="transformStyle"
             draggable="false"
-            @error="imageFailed = true"
+            @load="imageLoaded = true"
+            @error="onImageError"
           />
+          <span v-if="!imageLoaded" class="sr-only" role="status">กำลังโหลดภาพแผนผังจริง</span>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p class="text-xs leading-relaxed text-muted-foreground">

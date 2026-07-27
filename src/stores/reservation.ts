@@ -14,6 +14,23 @@ export interface ActionResult {
   message: string
 }
 
+export interface RoommateSearchCandidate {
+  id: string
+  displayName: string
+  email: string
+  studentId?: string
+  available: boolean
+  unavailableReason?: string
+}
+
+export interface RoommateCandidateSearchResult {
+  items: RoommateSearchCandidate[]
+  hasMore: boolean
+}
+
+export const ROOMMATE_SEARCH_MIN_STUDENT_DIGITS = 6
+export const ROOMMATE_SEARCH_RESULT_LIMIT = 5
+
 const ACTIVE_GROUP_STATUSES = ['invitation_pending', 'accepted', 'room_confirmation_pending', 'ready_for_payment', 'confirmed']
 const ACTIVE_HOLD_STATUSES = ['held_roommate_confirmation', 'held_payment', 'confirmed']
 
@@ -98,18 +115,77 @@ export const useReservationStore = defineStore('reservation', () => {
 
   // ---------- P3 actions (จำลอง domain service ฝั่ง server) ----------
 
+  function roommateInviteEligibility(inviteeId: string): ActionResult {
+    const invitee = users.find(u => u.id === inviteeId)
+    if (!invitee || invitee.role !== 'applicant' || !invitee.emailVerified) {
+      return { ok: false, message: 'ไม่พบบัญชีผู้สมัครที่พร้อมรับคำเชิญ' }
+    }
+    if (activeGroupOf(inviteeId) || pendingInvitationOf(inviteeId)) {
+      return { ok: false, message: `${invitee.displayName} มีกลุ่มหรือคำเชิญที่ใช้งานอยู่แล้ว` }
+    }
+    return { ok: true, message: 'พร้อมรับคำเชิญ' }
+  }
+
+  /**
+   * Mock ของ server-side candidate search: ไม่ค้นหาคำสั้น ไม่คืนข้อมูลทั้งหมด และหยุดทันทีเมื่อเกิน limit
+   * ระบบจริงเปลี่ยน implementation นี้เป็น indexed API ได้โดยไม่ต้องเปลี่ยน UI
+   */
+  function searchRoommateCandidates(
+    query: string,
+    limit = ROOMMATE_SEARCH_RESULT_LIMIT,
+  ): RoommateCandidateSearchResult {
+    const normalized = query.trim().toLocaleLowerCase('th-TH')
+    const studentDigits = normalized.replace(/\D/g, '')
+    const isStudentIdSearch = /^[\d\s-]+$/.test(normalized)
+      && studentDigits.length >= ROOMMATE_SEARCH_MIN_STUDENT_DIGITS
+    const isExactEmailSearch = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)
+
+    if (!isStudentIdSearch && !isExactEmailSearch) return { items: [], hasMore: false }
+
+    const safeLimit = Math.max(1, Math.min(10, Math.floor(limit)))
+    const items: RoommateSearchCandidate[] = []
+    let hasMore = false
+
+    for (const user of users) {
+      if (user.role !== 'applicant' || !user.emailVerified || user.id === session.currentUser?.id) continue
+
+      const matches = isExactEmailSearch
+        ? user.email.toLocaleLowerCase('th-TH') === normalized
+        : (user.studentId ?? '').replace(/\D/g, '').startsWith(studentDigits)
+      if (!matches) continue
+
+      if (items.length >= safeLimit) {
+        hasMore = true
+        break
+      }
+
+      const eligibility = roommateInviteEligibility(user.id)
+      items.push({
+        id: user.id,
+        displayName: user.displayName,
+        email: user.email,
+        studentId: user.studentId,
+        available: eligibility.ok,
+        unavailableReason: eligibility.ok ? undefined : eligibility.message,
+      })
+    }
+
+    return { items, hasMore }
+  }
+
   /** ส่งคำเชิญรูมเมท — อายุ 48 ชม. และ 1 คนมีได้ 1 คำเชิญ/กลุ่มที่ใช้งานอยู่ (GROUP-001/002) */
   function sendInvitation(inviteeId: string): ActionResult {
     const me = session.currentUser
     if (!me) return { ok: false, message: 'กรุณาเข้าสู่ระบบก่อน' }
-    if (!me.profileComplete) return { ok: false, message: 'โปรไฟล์ของคุณยังไม่ครบถ้วน — กรอกให้ครบก่อนส่งคำเชิญ' }
+    if (me.role !== 'applicant') return { ok: false, message: 'เฉพาะผู้สมัครเท่านั้นที่ส่งคำเชิญรูมเมทได้' }
+    if (inviteeId === me.id) return { ok: false, message: 'ไม่สามารถส่งคำเชิญให้บัญชีของตนเองได้' }
     const invitee = users.find(u => u.id === inviteeId)
-    if (!invitee) return { ok: false, message: 'ไม่พบผู้ใช้ที่ต้องการเชิญ' }
-    if (!invitee.profileComplete) return { ok: false, message: `${invitee.displayName} ยังกรอกโปรไฟล์ไม่ครบ จึงรับคำเชิญไม่ได้` }
+    if (!invitee || invitee.role !== 'applicant' || !invitee.emailVerified)
+      return { ok: false, message: 'ไม่พบผู้ใช้ที่ต้องการเชิญ' }
     if (activeGroupOf(me.id) || pendingInvitationOf(me.id))
       return { ok: false, message: 'คุณมีกลุ่มหรือคำเชิญที่ใช้งานอยู่แล้ว (1 คนมีได้ 1 รายการ)' }
-    if (activeGroupOf(inviteeId) || pendingInvitationOf(inviteeId))
-      return { ok: false, message: `${invitee.displayName} มีกลุ่มหรือคำเชิญที่ใช้งานอยู่แล้ว` }
+    const inviteeEligibility = roommateInviteEligibility(inviteeId)
+    if (!inviteeEligibility.ok) return inviteeEligibility
 
     const campaignId = dorm.openCampaigns[0]?.id ?? 'camp-2569'
     invitations.value.unshift({
@@ -161,15 +237,15 @@ export const useReservationStore = defineStore('reservation', () => {
     return { ok: true, message: 'ปฏิเสธคำเชิญแล้ว — ทั้งสองฝ่ายเชิญ/รับคำเชิญใหม่ได้' }
   }
 
-  /** เข้าสู่ payment hold หลังสมาชิกที่เกี่ยวข้องยืนยันห้องครบ แล้วเติมข้อมูลห้องในใบสมัครทุกคนพร้อมกัน */
+  /** เข้าสู่ payment hold หลังสมาชิกยืนยันห้องครบ และเก็บ assignment ไว้เชื่อมกับใบสมัครของทุกคน */
   function enterPaymentHold(resv: ReservationGroup): ActionResult {
     const campaign = dorm.campaignById(resv.campaignId)
     const room = dorm.roomByNumber(resv.roomNumber)
     if (!room) return { ok: false, message: 'ไม่พบข้อมูลห้องสำหรับสร้าง payment hold' }
     const building = dorm.buildings.find(item => item.id === room.buildingId)
-    if (!building) return { ok: false, message: 'ไม่พบข้อมูลอาคารสำหรับเติมในใบสมัคร' }
+    if (!building) return { ok: false, message: 'ไม่พบข้อมูลอาคารสำหรับบันทึกรายการจอง' }
     const dormGroup = dorm.dormGroups.find(item => item.id === building.dormGroupId)
-    if (!dormGroup) return { ok: false, message: 'ไม่พบข้อมูลหอพักสำหรับเติมในใบสมัคร' }
+    if (!dormGroup) return { ok: false, message: 'ไม่พบข้อมูลหอพักสำหรับบันทึกรายการจอง' }
 
     const assignmentResult = application.assignRoomForPaymentHold(resv.memberIds, {
       reservationId: resv.id,
@@ -186,21 +262,11 @@ export const useReservationStore = defineStore('reservation', () => {
       occupancyMode: resv.occupancyMode,
     })
     if (!assignmentResult.ok) {
-      const affectedIds = 'missingApplicantIds' in assignmentResult
-        ? assignmentResult.missingApplicantIds
-        : assignmentResult.conflictingApplicantIds
-      const affectedNames = affectedIds
+      const affectedNames = assignmentResult.conflictingApplicantIds
         .map(id => users.find(user => user.id === id)?.displayName ?? id)
-
-      if ('conflictingApplicantIds' in assignmentResult) {
-        return {
-          ok: false,
-          message: `ยังเติมข้อมูลห้องไม่ได้ — ${affectedNames.join(', ')} มีการจองห้องที่ใช้งานอยู่แล้ว`,
-        }
-      }
       return {
         ok: false,
-        message: `ยังเติมข้อมูลห้องไม่ได้ — ${affectedNames.join(', ')} ต้องส่งใบสมัครก่อน`,
+        message: `ยังเก็บข้อมูลห้องไม่ได้ — ${affectedNames.join(', ')} มีการจองห้องที่ใช้งานอยู่แล้ว`,
       }
     }
 
@@ -211,14 +277,14 @@ export const useReservationStore = defineStore('reservation', () => {
     dorm.setRoomStatus(resv.roomNumber, 'temporarily_held', deadline)
     const group = roommateGroups.value.find(g => g.id === resv.roommateGroupId)
     if (group) group.status = 'ready_for_payment'
-    payments.generateObligationsForGroup(resv, room.config, deadline)
+    payments.generateObligationsForGroup(resv, room.config, deadline, { demoPaymentReady: true })
     contractsStore.addAudit({
       actor: session.currentUser?.id ?? 'system',
       action: 'application.room_assignment',
       relatedIds: [resv.id, resv.roomNumber, ...resv.memberIds],
-      detail: `เติมข้อมูล ${dormGroup.shortName} ${building.name} ชั้น ${room.floor} ห้อง ${room.number} ลงในใบสมัครของสมาชิก ${resv.memberIds.length} คน`,
+      detail: `เก็บข้อมูล ${dormGroup.shortName} ${building.name} ชั้น ${room.floor} ห้อง ${room.number} สำหรับเติมในใบสมัครของสมาชิก ${resv.memberIds.length} คน`,
     })
-    return { ok: true, message: 'สร้าง payment hold และเติมข้อมูลห้องในใบสมัครแล้ว' }
+    return { ok: true, message: 'เข้าสู่ขั้นชำระเงินและเก็บข้อมูลห้องสำหรับใบสมัครแล้ว' }
   }
 
   /**
@@ -228,16 +294,12 @@ export const useReservationStore = defineStore('reservation', () => {
   function reserveRoom(roomNumber: string, occupancyMode: OccupancyMode): ActionResult {
     const me = session.currentUser
     if (!me) return { ok: false, message: 'กรุณาเข้าสู่ระบบก่อน' }
-    if (!me.profileComplete) return { ok: false, message: 'โปรไฟล์ยังไม่ครบถ้วน — กรอกให้ครบก่อนจอง' }
     if (myReservation.value) return { ok: false, message: 'คุณมีการจองที่ใช้งานอยู่แล้ว (1 คน 1 การจอง)' }
 
     const room = dorm.roomByNumber(roomNumber)
     if (!room) return { ok: false, message: 'ไม่พบห้องนี้' }
     const building = dorm.buildings.find(item => item.id === room.buildingId)
     if (!building) return { ok: false, message: 'ไม่พบข้อมูลอาคารของห้องนี้' }
-    if (!application.hasSubmittedApplication(me.id)) {
-      return { ok: false, message: 'ต้องส่งใบสมัครก่อนจึงจะยืนยันจองห้องได้' }
-    }
     if (room.publicStatus !== 'available')
       return { ok: false, message: `ห้อง ${roomNumber} ไม่ว่างแล้ว (ROOM_NOT_AVAILABLE) — เลือกห้องอื่น` }
     if (!room.occupancyCapability.includes(occupancyMode))
@@ -258,17 +320,6 @@ export const useReservationStore = defineStore('reservation', () => {
         return {
           ok: false,
           message: `พักคู่ไม่ได้ — ${memberNames.join(', ')} มีการจองที่ใช้งานอยู่แล้ว (1 คน 1 การจอง)`,
-        }
-      }
-      const missingApplicantIds = group.memberIds.filter(
-        applicantId => !application.hasSubmittedApplication(applicantId),
-      )
-      if (missingApplicantIds.length) {
-        const missingNames = missingApplicantIds
-          .map(id => users.find(user => user.id === id)?.displayName ?? id)
-        return {
-          ok: false,
-          message: `พักคู่ต้องส่งใบสมัครครบทั้งสองคน — รอ ${missingNames.join(', ')} ส่งใบสมัคร`,
         }
       }
     } else if (group) {
@@ -387,6 +438,7 @@ export const useReservationStore = defineStore('reservation', () => {
         resv.id,
         'หมดเวลา payment hold 72 ชั่วโมงและห้องถูกปล่อยคืน',
       )
+      payments.cancelObligationsForReservation(resv.id)
     }
     const group = roommateGroups.value.find(g => g.id === resv.roommateGroupId)
     if (group) group.status = wasConfirmationStage ? 'accepted' : 'cancelled'
@@ -411,7 +463,7 @@ export const useReservationStore = defineStore('reservation', () => {
       return { ok: false, message: `ยืนยันห้อง ${resv.roomNumber} ไม่ได้ — สมาชิกทุกคนต้องชำระครบทุกรายการ` }
     }
     if (!application.confirmRoomAssignmentForReservation(resv.id, resv.memberIds)) {
-      return { ok: false, message: 'ไม่พบข้อมูลห้องในใบสมัคร กรุณาตรวจสอบข้อมูลการจองก่อนยืนยัน' }
+      return { ok: false, message: 'ไม่พบข้อมูลห้องที่เชื่อมกับการจอง กรุณาตรวจสอบก่อนยืนยัน' }
     }
     resv.holdStatus = 'confirmed'
     resv.paymentDeadline = undefined
@@ -439,6 +491,7 @@ export const useReservationStore = defineStore('reservation', () => {
     reservationById,
     activeHolds,
     confirmedReservations,
+    searchRoommateCandidates,
     sendInvitation,
     acceptInvitation,
     declineInvitation,

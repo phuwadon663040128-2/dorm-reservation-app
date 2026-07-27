@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import FloorPlanGrid from './FloorPlanGrid.vue'
+import Campus3DLoading from './Campus3DLoading.vue'
 import RealPlanDialog from './RealPlanDialog.vue'
 import RealPlanOverlay from './RealPlanOverlay.vue'
 import RoomTile from './RoomTile.vue'
@@ -25,7 +26,11 @@ import { useDormStore } from '@/stores/dorm'
 import type { Room, RoomConfig, RoomPublicStatus } from '@/types'
 
 // โหลด Three.js เฉพาะตอนเปิดมุมมองตึก 3D — ไม่ถ่วง bundle หน้าอื่น
-const Campus3D = defineAsyncComponent(() => import('./Campus3D.vue'))
+const Campus3D = defineAsyncComponent({
+  loader: () => import('./Campus3D.vue'),
+  loadingComponent: Campus3DLoading,
+  delay: 120,
+})
 
 // แผนผังห้องรายชั้นตามเอกสาร 03: กลุ่มหอ → อาคาร → ชั้น → ห้องจริง
 // ตัวกรองทั้งหมดเป็น toolbar ด้านบน — พื้นที่ผังเต็มความกว้าง แสดงทีละชั้นตามแท็บที่เลือก

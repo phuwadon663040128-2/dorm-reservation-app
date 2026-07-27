@@ -172,7 +172,6 @@ export const campusArea: CampusArea = {
   extras: [
     { kind: 'clinic', label: 'หน่วยบริการปฐมภูมิ 123', w: 14, d: 10, h: 4, x: -52.5, z: -50.5, colorLight: 0xb8d8e8, colorDark: 0x38576a },
     { kind: 'office', label: 'สำนักงานหอ 8 หลัง', w: 19.5, d: 10, h: 4.5, x: -23.25, z: -50.5, colorLight: 0xa6a598, colorDark: 0x4a4942 },
-    { kind: 'court', label: 'สนาม', w: 45, d: 21, h: 0.3, x: -35.5, z: -22, colorLight: 0xbbb9b1, colorDark: 0x54524e, flat: true },
     { kind: 'cafeteria', label: 'โรงอาหารหอ 8 หลัง', w: 35, d: 15, h: 5.5, x: -35.5, z: 16, colorLight: 0xa6a598, colorDark: 0x4a4942 },
     { kind: 'market', label: 'ตลาดหอพัก 8 หลัง', w: 29.5, d: 7, h: 3.5, x: -35.25, z: 32, colorLight: 0x4caa7e, colorDark: 0x2f6d52 },
   ],

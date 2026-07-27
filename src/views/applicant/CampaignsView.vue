@@ -31,8 +31,8 @@ const statusLabel = { open: 'เปิดรับสมัคร', upcoming: '�
               <RouterLink :to="`/campaigns/${c.id}`">รายละเอียด</RouterLink>
             </Button>
             <Button v-if="c.status === 'open'" as-child size="sm">
-              <RouterLink :to="{ name: 'app-application', params: { campaignId: c.id } }">
-                เริ่ม / ทำใบสมัครต่อ
+              <RouterLink to="/app/rooms">
+                เลือกหอและห้องพัก
               </RouterLink>
             </Button>
           </div>

@@ -129,7 +129,7 @@ export interface User {
   displayName: string
   email: string
   emailVerified: boolean
-  /** โปรไฟล์ครบตามที่แคมเปญกำหนดหรือยัง — เงื่อนไขก่อนเชิญรูมเมท/จอง (AUTH-007) */
+  /** กรอกและส่งข้อมูลใบสมัครครบแล้วหรือยัง — ไม่ใช่เงื่อนไขก่อนเชิญรูมเมทหรือจองห้อง */
   profileComplete: boolean
   /** ผูก KKU SSO แล้วหรือยัง — optional ไม่ gate ขั้นตอนใด (AUTH-004) */
   kkuSsoLinked: boolean

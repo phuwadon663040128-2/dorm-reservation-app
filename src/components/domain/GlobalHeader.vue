@@ -204,7 +204,7 @@ function logout() {
           v-if="isApplicantContext"
           class="min-w-0 truncate text-sm font-semibold text-foreground lg:hidden"
         >
-          การจองของฉัน
+          หอพักและการจอง
         </span>
       </div>
 
@@ -275,7 +275,7 @@ function logout() {
           class="rounded-full px-2.5 text-xs sm:px-3 sm:text-sm"
           @click="goToPortal"
         >
-          {{ session.isStaff ? 'พื้นที่เจ้าหน้าที่' : 'การจองของฉัน' }}
+          {{ session.isStaff ? 'พื้นที่เจ้าหน้าที่' : 'ไปเลือกห้องพัก' }}
         </Button>
 
         <Popover v-if="session.isLoggedIn" v-model:open="profileOpen">
@@ -291,10 +291,14 @@ function logout() {
               </Avatar>
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" :side-offset="8" class="w-[min(22rem,calc(100vw-1rem))] p-0">
-            <div class="space-y-3 p-4">
-              <div class="flex items-start gap-3">
-                <Avatar class="size-10 shrink-0">
+          <PopoverContent
+            align="end"
+            :side-offset="8"
+            class="max-h-[calc(100dvh-5rem)] w-[min(17.5rem,calc(100vw-1rem))] overflow-y-auto p-0 sm:w-[min(22rem,calc(100vw-1rem))]"
+          >
+            <div class="space-y-2 p-3 sm:space-y-3 sm:p-4">
+              <div class="flex items-start gap-2.5 sm:gap-3">
+                <Avatar class="size-9 shrink-0 sm:size-10">
                   <AvatarFallback class="bg-primary/10 font-semibold text-primary">{{ avatarInitials }}</AvatarFallback>
                 </Avatar>
                 <div class="min-w-0 flex-1">
@@ -304,7 +308,7 @@ function logout() {
                 </div>
               </div>
 
-              <div v-if="!session.isStaff" class="grid gap-2 rounded-lg bg-muted p-3 text-xs">
+              <div v-if="!session.isStaff" class="grid gap-1.5 rounded-lg bg-muted p-2.5 text-xs sm:gap-2 sm:p-3">
                 <div class="flex items-center justify-between gap-3">
                   <span class="inline-flex items-center gap-1.5 text-muted-foreground">
                     <MailCheckIcon class="size-3.5" aria-hidden="true" /> อีเมลส่วนตัว
@@ -338,7 +342,7 @@ function logout() {
               </p>
             </div>
             <Separator />
-            <div class="grid gap-1 p-2">
+            <div class="grid gap-0.5 p-1.5 sm:gap-1 sm:p-2">
               <AlertDialog>
                 <AlertDialogTrigger as-child>
                   <Button variant="ghost" class="justify-start">

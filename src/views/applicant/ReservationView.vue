@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { toast } from 'vue-sonner'
+import { CheckCircle2Icon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +16,15 @@ const reservation = useReservationStore()
 const payments = usePaymentsStore()
 
 const myResv = computed(() => reservation.myReservation)
+const paymentCompleteAwaitingReview = computed(() => Boolean(
+  myResv.value?.holdStatus === 'held_payment'
+  && payments.groupPaymentComplete(myResv.value.id),
+))
+const displayedReservationStatus = computed(() => {
+  if (!myResv.value) return ''
+  if (paymentCompleteAwaitingReview.value) return 'ชำระเงินครบแล้ว · รอตรวจสอบ'
+  return holdStatusLabel[myResv.value.holdStatus]
+})
 
 function nameOf(userId: string) {
   return users.find(u => u.id === userId)?.displayName ?? userId
@@ -48,7 +58,9 @@ function onHoldExpired() {
         <CardHeader>
           <div class="flex flex-wrap items-center justify-between gap-2">
             <CardTitle class="text-lg">ห้อง {{ myResv.roomNumber }}</CardTitle>
-            <Badge>{{ holdStatusLabel[myResv.holdStatus] }}</Badge>
+            <Badge :variant="paymentCompleteAwaitingReview ? 'success' : 'default'">
+              {{ displayedReservationStatus }}
+            </Badge>
           </div>
           <CardDescription>
             {{ occupancyModeLabel[myResv.occupancyMode] }}
@@ -63,11 +75,23 @@ function onHoldExpired() {
             @expired="onHoldExpired"
           />
           <HoldCountdown
-            v-else-if="myResv.holdStatus === 'held_payment' && myResv.paymentDeadline"
+            v-else-if="myResv.holdStatus === 'held_payment' && myResv.paymentDeadline && !paymentCompleteAwaitingReview"
             :expires-at="myResv.paymentDeadline"
             label="deadline ชำระเงินร่วมของกลุ่ม เหลือ"
             @expired="onHoldExpired"
           />
+          <div
+            v-else-if="paymentCompleteAwaitingReview"
+            class="flex items-start gap-3 rounded-lg border border-emerald-600/30 bg-emerald-600/10 p-3 text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:text-emerald-100"
+          >
+            <CheckCircle2Icon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <div class="space-y-0.5 text-sm">
+              <p class="font-semibold">ชำระเงินของกลุ่มครบแล้ว</p>
+              <p class="text-xs leading-relaxed text-emerald-800 dark:text-emerald-200">
+                ระบบหยุดนับเวลาชำระเงินแล้ว และกำลังรอเจ้าหน้าที่ตรวจสอบเพื่อยืนยันการจองอย่างเป็นทางการ
+              </p>
+            </div>
+          </div>
 
           <!-- ความครบของการชำระรายสมาชิก — กลุ่ม shared ใช้ deadline เดียว (doc 08) -->
           <div class="space-y-2">
@@ -82,7 +106,10 @@ function onHoldExpired() {
                 ชำระแล้ว {{ s.paid }} / {{ s.total }} รายการ
               </Badge>
             </div>
-            <p class="text-xs text-muted-foreground">
+            <p v-if="paymentCompleteAwaitingReview" class="text-xs text-muted-foreground">
+              สมาชิกชำระครบทุกรายการแล้ว ขั้นตอนถัดไปคือรอเจ้าหน้าที่ตรวจสอบและยืนยันการจองอย่างเป็นทางการ
+            </p>
+            <p v-else class="text-xs text-muted-foreground">
               การจองจะยืนยันถาวรเมื่อสมาชิกทุกคนชำระครบทุกรายการ และเจ้าหน้าที่กดยืนยัน —
               หากพ้น deadline โดยมีคนชำระไม่ครบ ห้องจะถูกปล่อยคืนตามกติกา (Provisional) และยอดที่ชำระแล้วเข้าสู่การตรวจสอบ/คืนเงิน
             </p>

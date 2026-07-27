@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -18,10 +18,8 @@ import {
   ClipboardCheckIcon,
   GraduationCapIcon,
   HeartPulseIcon,
-  InfoIcon,
   SaveIcon,
   ShieldCheckIcon,
-  UploadIcon,
   UserRoundIcon,
 } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -30,6 +28,14 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -48,6 +54,7 @@ import {
   StepperTrigger,
 } from '@/components/ui/stepper'
 import { Textarea } from '@/components/ui/textarea'
+import ApplicationAttachmentField from '@/components/domain/ApplicationAttachmentField.vue'
 import { useApplicationStore } from '@/stores/application'
 import { useDormStore } from '@/stores/dorm'
 import { useSessionStore } from '@/stores/session'
@@ -62,8 +69,11 @@ const { currentRecord, draft, isRevising, submittedReference } = storeToRefs(app
 const currentStep = ref(1)
 const highestStep = ref(1)
 const validationMessage = ref('')
+const submissionSuccessOpen = ref(false)
 const birthDatePopoverOpen = ref(false)
 const birthDateClosedByViewportMove = ref(false)
+const photoUploadFile = shallowRef<File | null>(null)
+const medicalCertificateUploadFile = shallowRef<File | null>(null)
 const desktopApplicantNavigationVisible = useMediaQuery('(min-width: 1024px)')
 
 // Portal ของ dropdown และปฏิทินต้องหลบทั้ง header และ bottom navigation บนมือถือ
@@ -124,9 +134,16 @@ const applicantTypes = [
 
 const campaign = computed(() => dorm.campaignById(draft.value.campaignId) ?? dorm.openCampaigns[0])
 const selectedApplicantType = computed(() => applicantTypes.find(type => type.value === draft.value.applicantType))
-const activeAssignment = computed(() => currentRecord.value?.activeAssignment ?? null)
+const activeAssignment = computed(() =>
+  application.roomAssignmentForApplicant(session.currentUser?.id ?? ''),
+)
+const roomAssignmentDisplayStep = computed(() =>
+  desktopApplicantNavigationVisible.value ? 1 : steps.length,
+)
 const isFormLocked = computed(() => Boolean(submittedReference.value) && !isRevising.value)
-const currentStepMeta = computed(() => steps[currentStep.value - 1])
+const submissionConfirmationsComplete = computed(() =>
+  Boolean(draft.value.acceptsRules && draft.value.confirmsAccuracy),
+)
 const progressValue = computed(() => currentStep.value * 25)
 
 function parseDraftBirthDate() {
@@ -178,11 +195,6 @@ useEventListener(
   { capture: true, passive: true },
 )
 
-function markFile(event: Event, field: 'photoFileName' | 'medicalCertificateFileName') {
-  const input = event.target as HTMLInputElement
-  draft.value[field] = input.files?.[0]?.name ?? ''
-}
-
 function validateStep(step: number) {
   validationMessage.value = ''
 
@@ -232,7 +244,6 @@ function validateStep(step: number) {
   }
 
   if (validationMessage.value) {
-    toast.error(validationMessage.value)
     return false
   }
   return true
@@ -260,13 +271,17 @@ function previousStep() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-async function submitApplication() {
+function submitApplication() {
   if (!validateApplication()) return
-  const reference = application.submit()
+  application.submit()
   session.markCurrentApplicantProfileComplete()
-  toast.success(`ส่งใบสมัครต้นแบบแล้ว เลขที่ ${reference}`)
+  submissionSuccessOpen.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
-  await router.push('/app/rooms')
+}
+
+async function goToOverviewAfterSubmission() {
+  submissionSuccessOpen.value = false
+  await router.push('/app')
 }
 
 function beginRevision() {
@@ -285,6 +300,41 @@ function saveRevision() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+function stepDisplayState(stepId: number) {
+  if (stepId === currentStep.value) return 'active'
+  if (isFormLocked.value || stepId < currentStep.value) return 'completed'
+  if (stepId <= highestStep.value) return 'available'
+  return 'locked'
+}
+
+function stepStatusLabel(stepId: number) {
+  const state = stepDisplayState(stepId)
+  if (state === 'active') return isFormLocked.value ? 'กำลังดู' : 'กำลังกรอก'
+  if (state === 'completed') return isFormLocked.value ? 'ส่งแล้ว' : 'เสร็จแล้ว'
+  if (state === 'available') return 'เปิดดูได้'
+  return 'ยังไม่เริ่ม'
+}
+
+function stepStatusClass(stepId: number) {
+  const state = stepDisplayState(stepId)
+  if (state === 'completed') return 'bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300'
+  if (state === 'active') return 'bg-primary/10 text-primary'
+  return 'bg-muted text-muted-foreground'
+}
+
+function selectStep(stepId: number | undefined) {
+  if (!stepId || stepId === currentStep.value || stepId > highestStep.value) return
+  if (
+    !isFormLocked.value
+    && stepId > currentStep.value
+    && !validateStep(currentStep.value)
+  ) return
+
+  currentStep.value = stepId
+  validationMessage.value = ''
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 onMounted(() => {
   application.hydrateIdentity(session.currentUser)
   const campaignId = typeof route.params.campaignId === 'string' ? route.params.campaignId : ''
@@ -295,7 +345,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-6 pb-10">
+  <div class="mx-auto w-full max-w-[1408px] space-y-6 pb-10">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div class="space-y-1">
         <div class="flex flex-wrap items-center gap-2">
@@ -303,8 +353,8 @@ onMounted(() => {
           <Badge v-if="campaign?.status === 'open'">เปิดรับสมัคร</Badge>
         </div>
         <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">กรอกใบสมัครเข้าหอพัก</h1>
-        <p class="max-w-2xl text-sm text-muted-foreground sm:text-base">
-          แบบฟอร์มออนไลน์อ้างอิงจากใบสมัครหอพักวรเรสซิเดนซ์และวรอินเตอร์ กรุณาตรวจสอบข้อมูลก่อนส่ง
+        <p class="max-w-3xl text-sm text-muted-foreground sm:text-base">
+          ระบบเติมข้อมูลหอพักและห้องจากรายการจองของคุณให้อัตโนมัติ กรุณากรอกข้อมูลส่วนตัวให้ครบและตรวจสอบก่อนส่ง
         </p>
       </div>
       <div class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -313,133 +363,203 @@ onMounted(() => {
       </div>
     </div>
 
-    <Alert
-      v-if="submittedReference"
-      class="border-emerald-600/30 bg-emerald-600/10 text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:text-emerald-100"
-    >
-      <CheckCircle2Icon aria-hidden="true" />
-      <AlertTitle>ส่งใบสมัครต้นแบบเรียบร้อยแล้ว</AlertTitle>
-      <AlertDescription class="text-emerald-800 dark:text-emerald-200">
-        เลขที่ใบสมัคร <strong class="text-current">{{ submittedReference }}</strong>
-        <span v-if="currentRecord" class="ml-1">เวอร์ชัน {{ currentRecord.revision }}</span>
-        ระบบบันทึกใบสมัครแล้ว ข้อมูลห้องจะถูกเติมให้อัตโนมัติหลังเลือกและยืนยันห้องครบ
-        <Button
-          v-if="!isRevising"
-          type="button"
-          size="sm"
-          variant="outline"
-          class="mt-3 flex text-foreground"
-          @click="beginRevision"
-        >
-          แก้ไขข้อมูลใบสมัคร
-        </Button>
-      </AlertDescription>
-    </Alert>
-
-    <Card v-if="activeAssignment">
-      <CardHeader>
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div class="flex items-start gap-3">
-            <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
-              <Building2Icon class="size-5 text-primary" aria-hidden="true" />
-            </span>
+    <div class="grid items-start gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <aside class="hidden lg:sticky lg:top-[7.5rem] lg:block">
+        <Card class="overflow-hidden">
+          <CardHeader class="space-y-3 pb-4">
             <div>
-              <CardTitle>ข้อมูลห้องที่ระบบเติมให้</CardTitle>
-              <CardDescription>ข้อมูลนี้อ้างอิงจากห้องที่ยืนยันการเลือกครบแล้ว และไม่สามารถแก้ไขจากใบสมัครได้</CardDescription>
+              <CardTitle>ขั้นตอนการกรอกใบสมัคร</CardTitle>
+              <CardDescription class="mt-1">กรอกข้อมูลทั้งหมด 4 ขั้นตอน สามารถย้อนกลับไปตรวจสอบขั้นที่เปิดแล้วได้</CardDescription>
             </div>
-          </div>
-          <Badge :variant="activeAssignment.status === 'confirmed' ? 'success' : 'warning'">
-            {{ activeAssignment.status === 'confirmed' ? 'ยืนยันการจองแล้ว' : 'อยู่ระหว่างรอชำระเงิน' }}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <div class="rounded-lg border p-4">
-            <dt class="text-xs text-muted-foreground">ชื่อหอพัก</dt>
-            <dd class="mt-1 font-semibold">{{ activeAssignment.dormName }}</dd>
-            <dd v-if="activeAssignment.dormCode" class="text-xs text-muted-foreground">{{ activeAssignment.dormCode }}</dd>
-          </div>
-          <div class="rounded-lg border p-4">
-            <dt class="text-xs text-muted-foreground">อาคาร</dt>
-            <dd class="mt-1 font-semibold">{{ activeAssignment.buildingName }}</dd>
-          </div>
-          <div class="rounded-lg border p-4">
-            <dt class="text-xs text-muted-foreground">ชั้น</dt>
-            <dd class="mt-1 font-semibold tabular-nums">ชั้น {{ activeAssignment.floor }}</dd>
-          </div>
-          <div class="rounded-lg border p-4">
-            <dt class="text-xs text-muted-foreground">ประเภทห้อง</dt>
-            <dd class="mt-1 font-semibold">{{ activeAssignment.roomTypeLabel }}</dd>
-          </div>
-          <div class="rounded-lg border p-4">
-            <dt class="text-xs text-muted-foreground">เลขห้อง</dt>
-            <dd class="mt-1 font-semibold tabular-nums">{{ activeAssignment.roomNumber }}</dd>
-          </div>
-          <div class="rounded-lg border p-4">
-            <dt class="text-xs text-muted-foreground">รูปแบบการพัก</dt>
-            <dd class="mt-1 font-semibold">
-              {{ activeAssignment.occupancyMode === 'whole_room' ? 'เหมาห้อง' : 'พักคู่' }}
-            </dd>
-          </div>
-        </dl>
-      </CardContent>
-    </Card>
-
-    <Card class="overflow-hidden">
-      <CardContent class="p-4 sm:p-6">
-        <div class="space-y-3 md:hidden">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <p class="text-xs font-medium text-muted-foreground">ขั้นตอน {{ currentStep }} จาก {{ steps.length }}</p>
-              <p class="font-semibold">{{ currentStepMeta.title }}</p>
-            </div>
-            <span class="grid size-10 place-items-center rounded-full bg-primary text-primary-foreground">
-              <component :is="currentStepMeta.icon" class="size-5" aria-hidden="true" />
-            </span>
-          </div>
-          <Progress :model-value="progressValue" class="h-2" />
-          <p class="text-xs text-muted-foreground">{{ currentStepMeta.description }}</p>
-        </div>
-
-        <Stepper v-model="currentStep" linear class="hidden w-full items-start gap-0 md:flex">
-          <StepperItem
-            v-for="step in steps"
-            :key="step.id"
-            :step="step.id"
-            :disabled="step.id > highestStep"
-            class="relative flex flex-1 flex-col items-center gap-0"
-          >
-            <StepperSeparator
-              v-if="step.id < steps.length"
-              class="absolute left-[calc(50%+1.75rem)] right-[calc(-50%+1.75rem)] top-5 h-px group-data-[state=completed]:bg-primary"
-            />
-            <StepperTrigger class="relative z-10 w-full gap-2 p-0">
-              <StepperIndicator
-                class="size-10 border bg-card group-data-[state=active]:border-primary group-data-[state=completed]:border-primary group-data-[state=completed]:bg-primary group-data-[state=completed]:text-primary-foreground"
-              >
-                <CheckIcon v-if="step.id < currentStep" class="size-5" aria-hidden="true" />
-                <component :is="step.icon" v-else class="size-5" aria-hidden="true" />
-              </StepperIndicator>
-              <div class="space-y-0.5 px-2">
-                <StepperTitle class="text-sm">{{ step.title }}</StepperTitle>
-                <StepperDescription class="hidden lg:block">{{ step.description }}</StepperDescription>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-3 text-xs">
+                <span class="font-medium text-foreground">ขั้นตอน {{ currentStep }} จาก {{ steps.length }}</span>
+                <span class="tabular-nums text-muted-foreground">{{ progressValue }}%</span>
               </div>
-            </StepperTrigger>
-          </StepperItem>
-        </Stepper>
-      </CardContent>
-    </Card>
+              <Progress :model-value="progressValue" class="h-2" />
+            </div>
+          </CardHeader>
+          <CardContent class="pt-0">
+            <Stepper
+              :model-value="currentStep"
+              orientation="vertical"
+              linear
+              class="flex w-full flex-col gap-0"
+              @update:model-value="selectStep"
+            >
+              <StepperItem
+                v-for="step in steps"
+                :key="step.id"
+                :step="step.id"
+                :disabled="step.id > highestStep"
+                class="relative flex w-full items-start gap-0 pb-3 last:pb-0"
+              >
+                <StepperSeparator
+                  v-if="step.id < steps.length"
+                  :class="[
+                    'absolute bottom-0 left-7 top-12 w-px',
+                    stepDisplayState(step.id) === 'completed' ? 'bg-primary' : 'bg-muted',
+                  ]"
+                />
+                <StepperTrigger
+                  class="relative z-10 w-full flex-row items-start gap-3 rounded-lg border border-transparent p-2.5 text-left transition-colors hover:bg-muted/50 group-data-[state=active]:border-primary/30 group-data-[state=active]:bg-primary/5"
+                >
+                  <StepperIndicator
+                    :class="[
+                      'size-10 shrink-0 border bg-card',
+                      stepDisplayState(step.id) === 'completed' && 'border-primary bg-primary text-primary-foreground',
+                      stepDisplayState(step.id) === 'active' && 'border-primary text-primary',
+                    ]"
+                  >
+                    <CheckIcon v-if="stepDisplayState(step.id) === 'completed'" class="size-5" aria-hidden="true" />
+                    <component :is="step.icon" v-else class="size-5" aria-hidden="true" />
+                  </StepperIndicator>
+                  <div class="min-w-0 flex-1 space-y-1">
+                    <div class="flex items-start justify-between gap-2">
+                      <StepperTitle class="text-left text-sm leading-5">{{ step.title }}</StepperTitle>
+                      <span :class="['shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium', stepStatusClass(step.id)]">
+                        {{ stepStatusLabel(step.id) }}
+                      </span>
+                    </div>
+                    <StepperDescription class="text-left text-xs leading-relaxed">{{ step.description }}</StepperDescription>
+                  </div>
+                </StepperTrigger>
+              </StepperItem>
+            </Stepper>
+          </CardContent>
+        </Card>
+      </aside>
 
-    <div>
-      <form class="min-w-0" @submit.prevent>
-        <fieldset :disabled="isFormLocked" class="min-w-0 space-y-5 disabled:opacity-75">
-        <Alert v-if="validationMessage" variant="destructive">
-          <AlertCircleIcon aria-hidden="true" />
-          <AlertTitle>ข้อมูลยังไม่ครบ</AlertTitle>
-          <AlertDescription>{{ validationMessage }}</AlertDescription>
+      <div class="min-w-0 space-y-5">
+        <Card class="overflow-hidden lg:hidden">
+          <CardHeader class="space-y-3 pb-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle>ขั้นตอนการกรอกใบสมัคร</CardTitle>
+                <CardDescription class="mt-1">แตะขั้นตอนที่เปิดแล้วเพื่อกลับไปตรวจสอบข้อมูล</CardDescription>
+              </div>
+              <Badge variant="outline" class="shrink-0 tabular-nums">{{ currentStep }} / {{ steps.length }}</Badge>
+            </div>
+            <Progress :model-value="progressValue" class="h-2" />
+          </CardHeader>
+          <CardContent class="pt-0">
+            <Stepper
+              :model-value="currentStep"
+              linear
+              class="grid w-full gap-2 sm:grid-cols-2"
+              @update:model-value="selectStep"
+            >
+              <StepperItem
+                v-for="step in steps"
+                :key="step.id"
+                :step="step.id"
+                :disabled="step.id > highestStep"
+                class="w-full"
+              >
+                <StepperTrigger
+                  class="w-full flex-row items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 group-data-[state=active]:border-primary group-data-[state=active]:bg-primary/5"
+                >
+                  <StepperIndicator
+                    :class="[
+                      'size-9 shrink-0 border bg-card',
+                      stepDisplayState(step.id) === 'completed' && 'border-primary bg-primary text-primary-foreground',
+                      stepDisplayState(step.id) === 'active' && 'border-primary text-primary',
+                    ]"
+                  >
+                    <CheckIcon v-if="stepDisplayState(step.id) === 'completed'" class="size-4" aria-hidden="true" />
+                    <component :is="step.icon" v-else class="size-4" aria-hidden="true" />
+                  </StepperIndicator>
+                  <div class="min-w-0 flex-1 space-y-1">
+                    <div class="flex flex-wrap items-start justify-between gap-1.5">
+                      <StepperTitle class="text-left text-sm leading-5">{{ step.id }}. {{ step.title }}</StepperTitle>
+                      <span :class="['shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium', stepStatusClass(step.id)]">
+                        {{ stepStatusLabel(step.id) }}
+                      </span>
+                    </div>
+                    <StepperDescription class="text-left text-xs leading-relaxed">{{ step.description }}</StepperDescription>
+                  </div>
+                </StepperTrigger>
+              </StepperItem>
+            </Stepper>
+          </CardContent>
+        </Card>
+
+        <Alert
+          v-if="submittedReference"
+          class="border-emerald-600/30 bg-emerald-600/10 text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/15 dark:text-emerald-100"
+        >
+          <CheckCircle2Icon aria-hidden="true" />
+          <AlertTitle>ส่งใบสมัครต้นแบบเรียบร้อยแล้ว</AlertTitle>
+          <AlertDescription class="text-emerald-800 dark:text-emerald-200">
+            เลขที่ใบสมัคร <strong class="text-current">{{ submittedReference }}</strong>
+            <span v-if="currentRecord" class="ml-1">เวอร์ชัน {{ currentRecord.revision }}</span>
+            ระบบบันทึกใบสมัครพร้อมเชื่อมข้อมูลห้องจากรายการจองของคุณแล้ว
+            <Button
+              v-if="!isRevising"
+              type="button"
+              size="sm"
+              variant="outline"
+              class="mt-3 flex text-foreground"
+              @click="beginRevision"
+            >
+              แก้ไขข้อมูลใบสมัคร
+            </Button>
+          </AlertDescription>
         </Alert>
 
+        <Card v-if="activeAssignment && currentStep === roomAssignmentDisplayStep">
+          <CardHeader>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="flex items-start gap-3">
+                <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
+                  <Building2Icon class="size-5 text-primary" aria-hidden="true" />
+                </span>
+                <div>
+                  <CardTitle>ข้อมูลห้องที่ระบบเติมให้</CardTitle>
+                  <CardDescription>อ้างอิงจากรายการจองและการชำระเงินของคุณโดยอัตโนมัติ ข้อมูลส่วนนี้จึงแก้ไขจากใบสมัครไม่ได้</CardDescription>
+                </div>
+              </div>
+              <Badge :variant="activeAssignment.status === 'confirmed' ? 'success' : 'warning'">
+                {{ activeAssignment.status === 'confirmed' ? 'ยืนยันการจองแล้ว' : 'บันทึกจากการจองแล้ว' }}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <dl class="grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">
+              <div class="rounded-lg border p-4">
+                <dt class="text-xs text-muted-foreground">ชื่อหอพัก</dt>
+                <dd class="mt-1 font-semibold">{{ activeAssignment.dormName }}</dd>
+                <dd v-if="activeAssignment.dormCode" class="text-xs text-muted-foreground">{{ activeAssignment.dormCode }}</dd>
+              </div>
+              <div class="rounded-lg border p-4">
+                <dt class="text-xs text-muted-foreground">อาคาร</dt>
+                <dd class="mt-1 font-semibold">{{ activeAssignment.buildingName }}</dd>
+              </div>
+              <div class="rounded-lg border p-4">
+                <dt class="text-xs text-muted-foreground">ชั้น</dt>
+                <dd class="mt-1 font-semibold tabular-nums">ชั้น {{ activeAssignment.floor }}</dd>
+              </div>
+              <div class="rounded-lg border p-4">
+                <dt class="text-xs text-muted-foreground">ประเภทห้อง</dt>
+                <dd class="mt-1 font-semibold">{{ activeAssignment.roomTypeLabel }}</dd>
+              </div>
+              <div class="rounded-lg border p-4">
+                <dt class="text-xs text-muted-foreground">เลขห้อง</dt>
+                <dd class="mt-1 font-semibold tabular-nums">{{ activeAssignment.roomNumber }}</dd>
+              </div>
+              <div class="rounded-lg border p-4">
+                <dt class="text-xs text-muted-foreground">รูปแบบการพัก</dt>
+                <dd class="mt-1 font-semibold">
+                  {{ activeAssignment.occupancyMode === 'whole_room' ? 'เหมาห้อง' : 'พักคู่' }}
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+
+        <div>
+      <form class="min-w-0" @submit.prevent>
+        <fieldset :disabled="isFormLocked" class="min-w-0 space-y-5 disabled:opacity-75">
         <template v-if="currentStep === 1">
           <Card>
             <CardHeader>
@@ -803,27 +923,28 @@ onMounted(() => {
               <CardTitle>เอกสารประกอบ</CardTitle>
               <CardDescription>รายการด้านล่างเป็นตัวอย่างจากแบบฟอร์มกระดาษ รายการจริงขึ้นอยู่กับประกาศของรอบรับสมัคร</CardDescription>
             </CardHeader>
-            <CardContent class="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel for="photo-upload">รูปถ่ายผู้สมัคร</FieldLabel>
-                <label class="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted/30 p-4 text-center hover:bg-muted/50" for="photo-upload">
-                  <UploadIcon class="size-5 text-muted-foreground" aria-hidden="true" />
-                  <span class="text-sm font-medium">เลือกไฟล์รูปถ่าย</span>
-                  <span class="text-xs text-muted-foreground">JPG หรือ PNG</span>
-                  <span v-if="draft.photoFileName" class="max-w-full truncate text-xs text-primary">{{ draft.photoFileName }}</span>
-                </label>
-                <Input id="photo-upload" type="file" accept="image/png,image/jpeg" class="sr-only" @change="markFile($event, 'photoFileName')" />
-              </Field>
-              <Field>
-                <FieldLabel for="medical-upload">ใบรับรองแพทย์ (ถ้ามี)</FieldLabel>
-                <label class="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-muted/30 p-4 text-center hover:bg-muted/50" for="medical-upload">
-                  <UploadIcon class="size-5 text-muted-foreground" aria-hidden="true" />
-                  <span class="text-sm font-medium">เลือกไฟล์เอกสาร</span>
-                  <span class="text-xs text-muted-foreground">PDF, JPG หรือ PNG</span>
-                  <span v-if="draft.medicalCertificateFileName" class="max-w-full truncate text-xs text-primary">{{ draft.medicalCertificateFileName }}</span>
-                </label>
-                <Input id="medical-upload" type="file" accept="application/pdf,image/png,image/jpeg" class="sr-only" @change="markFile($event, 'medicalCertificateFileName')" />
-              </Field>
+            <CardContent class="grid items-start gap-4 sm:grid-cols-2">
+              <ApplicationAttachmentField
+                v-model="draft.photoFileName"
+                v-model:file="photoUploadFile"
+                input-id="photo-upload"
+                label="รูปถ่ายผู้สมัคร"
+                select-label="เลือกไฟล์รูปถ่าย"
+                hint="JPG หรือ PNG"
+                accept="image/png,image/jpeg"
+                kind="image"
+                :state="isFormLocked ? 'done' : 'idle'"
+              />
+              <ApplicationAttachmentField
+                v-model="draft.medicalCertificateFileName"
+                v-model:file="medicalCertificateUploadFile"
+                input-id="medical-upload"
+                label="ใบรับรองแพทย์ (ถ้ามี)"
+                select-label="เลือกไฟล์เอกสาร"
+                hint="PDF, JPG หรือ PNG"
+                accept="application/pdf,image/png,image/jpeg"
+                :state="isFormLocked ? 'done' : 'idle'"
+              />
             </CardContent>
           </Card>
         </template>
@@ -837,7 +958,7 @@ onMounted(() => {
                 </span>
                 <div>
                   <CardTitle>ตรวจสอบข้อมูลใบสมัคร</CardTitle>
-                  <CardDescription>หากต้องการแก้ไข ให้กด “ย้อนกลับ” หรือเลือกขั้นตอนที่ทำเสร็จแล้วด้านบน</CardDescription>
+                  <CardDescription>หากต้องการแก้ไข ให้กด “ย้อนกลับ” หรือเลือกขั้นตอนที่เปิดไว้จากรายการขั้นตอน</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -861,30 +982,6 @@ onMounted(() => {
                   </dl>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div class="flex items-start gap-3">
-                <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-muted">
-                  <InfoIcon class="size-5 text-primary" aria-hidden="true" />
-                </span>
-                <div>
-                  <CardTitle>เลือกห้องหลังส่งใบสมัคร</CardTitle>
-                  <CardDescription>ระบบยังไม่คำนวณค่าใช้จ่ายในขั้นตอนการกรอกใบสมัคร</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Alert>
-                <InfoIcon aria-hidden="true" />
-                <AlertTitle>การส่งใบสมัครยังไม่ใช่การยืนยันสิทธิ์ห้องพัก</AlertTitle>
-                <AlertDescription>
-                  หลังส่งใบสมัคร ระบบจะพาไปเลือกหอ อาคาร ชั้น ประเภทห้อง เลขห้อง และรูปแบบพักคู่หรือเหมาห้อง
-                  ยอดที่ต้องชำระจะแสดงหลังยืนยันห้องครบและเข้าสู่ช่วงรอชำระเงิน
-                </AlertDescription>
-              </Alert>
             </CardContent>
           </Card>
 
@@ -919,9 +1016,15 @@ onMounted(() => {
           </Card>
         </template>
 
+        <Alert v-if="validationMessage" variant="destructive">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertTitle>ข้อมูลยังไม่ครบ</AlertTitle>
+          <AlertDescription>{{ validationMessage }}</AlertDescription>
+        </Alert>
+
         </fieldset>
 
-        <div class="mt-5 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <div class="mt-5 flex flex-row items-center justify-between gap-3 border-t pt-5">
           <Button v-if="currentStep > 1" type="button" variant="outline" class="sm:min-w-28" @click="previousStep">
             <ArrowLeftIcon aria-hidden="true" /> ย้อนกลับ
           </Button>
@@ -933,7 +1036,7 @@ onMounted(() => {
             v-else
             type="button"
             class="sm:min-w-40"
-            :disabled="Boolean(submittedReference) && !isRevising"
+            :disabled="(Boolean(submittedReference) && !isRevising) || !submissionConfirmationsComplete"
             @click="isRevising ? saveRevision() : submitApplication()"
           >
             <CheckIcon aria-hidden="true" />
@@ -941,6 +1044,33 @@ onMounted(() => {
           </Button>
         </div>
       </form>
+        </div>
+      </div>
     </div>
+
+    <Dialog v-model:open="submissionSuccessOpen">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader class="pr-7 text-left">
+          <span class="mb-1 grid size-11 place-items-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+            <CheckCircle2Icon class="size-6" aria-hidden="true" />
+          </span>
+          <DialogTitle>ส่งใบสมัครเรียบร้อยแล้ว</DialogTitle>
+          <DialogDescription class="leading-relaxed">
+            ระบบบันทึกใบสมัครเลขที่
+            <strong class="font-semibold text-foreground">{{ submittedReference }}</strong>
+            พร้อมเชื่อมข้อมูลห้องจากรายการจองของคุณแล้ว
+          </DialogDescription>
+        </DialogHeader>
+        <div class="rounded-lg border bg-muted/50 p-3 text-sm leading-relaxed text-muted-foreground">
+          ใบสมัครถูกส่งเข้าสู่ขั้นตอนตรวจสอบแล้ว คุณสามารถกลับมาเปิดดูหรือแก้ไขข้อมูลที่อนุญาตได้จากเมนูใบสมัคร
+        </div>
+        <DialogFooter>
+          <Button type="button" class="w-full sm:w-auto" @click="goToOverviewAfterSubmission">
+            ไปหน้าภาพรวม
+            <ArrowRightIcon aria-hidden="true" />
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import {
   CheckCircle2Icon,
@@ -21,14 +21,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Spinner } from '@/components/ui/spinner'
 import DemoQrCode from '@/components/domain/DemoQrCode.vue'
 import { documentStatusLabel, formatBaht, formatDate, resultStatusLabel } from '@/lib/labels'
 import { usePaymentsStore } from '@/stores/payments'
 import type { PaymentObligation } from '@/types'
 
 const props = defineProps<{ obligation: PaymentObligation }>()
+const emit = defineEmits<{ (e: 'payment-flow-finished'): void }>()
 const payments = usePaymentsStore()
 const formOpen = ref(false)
+const statusOpen = ref(false)
+const paymentPhase = ref<'idle' | 'processing' | 'succeeded'>('idle')
+const PAYMENT_PROCESSING_DELAY_MS = 900
+let paymentTimer: number | undefined
 
 const paid = computed(() =>
   ['paid', 'manual_recorded', 'confirmed'].includes(props.obligation.resultStatus),
@@ -45,14 +51,48 @@ const paymentPayload = computed(() => [
   props.obligation.pdfPageId,
 ].join('|'))
 
-function simulatePayment() {
-  if (!payments.simulateBankPayment(props.obligation.id)) {
-    toast.error('ยังไม่สามารถจำลองการชำระรายการนี้ได้')
-    return
-  }
-  formOpen.value = false
-  toast.success('จำลองรับผลชำระสำเร็จจาก SCB แล้ว')
+function openPaymentForm() {
+  paymentPhase.value = 'idle'
+  statusOpen.value = false
+  formOpen.value = true
 }
+
+function preventStatusDialogDismiss(event: Event) {
+  event.preventDefault()
+}
+
+function simulatePayment() {
+  if (paymentPhase.value === 'processing' || paid.value) return
+  formOpen.value = false
+  paymentPhase.value = 'processing'
+  statusOpen.value = true
+  window.clearTimeout(paymentTimer)
+
+  // เว้นช่วงสั้น ๆ ให้ผู้ใช้เห็นว่าระบบกำลังตรวจผลจากธนาคารก่อนเปลี่ยนสถานะรายการ
+  paymentTimer = window.setTimeout(() => {
+    paymentTimer = undefined
+    if (!payments.simulateBankPayment(props.obligation.id)) {
+      paymentPhase.value = 'idle'
+      statusOpen.value = false
+      formOpen.value = true
+      toast.error('ยังไม่สามารถจำลองการชำระรายการนี้ได้')
+      return
+    }
+    paymentPhase.value = 'succeeded'
+  }, PAYMENT_PROCESSING_DELAY_MS)
+}
+
+function finishPaymentFlow() {
+  statusOpen.value = false
+  paymentPhase.value = 'idle'
+  emit('payment-flow-finished')
+}
+
+onBeforeUnmount(() => {
+  if (paymentTimer !== undefined) {
+    window.clearTimeout(paymentTimer)
+  }
+})
 </script>
 
 <template>
@@ -98,7 +138,7 @@ function simulatePayment() {
           </span>
           <span class="text-muted-foreground">· เอกสาร: {{ documentStatusLabel[obligation.documentStatus] }}</span>
         </div>
-        <Button v-if="formReady" size="sm" variant="outline" @click="formOpen = true">
+        <Button v-if="formReady" size="sm" variant="outline" @click="openPaymentForm">
           <FileTextIcon aria-hidden="true" />
           {{ paid ? 'ดูแบบฟอร์ม QR' : 'เปิด QR เพื่อชำระเงิน' }}
         </Button>
@@ -181,6 +221,59 @@ function simulatePayment() {
         <Button class="w-full sm:w-auto" @click="simulatePayment">
           <ScanLineIcon aria-hidden="true" />
           จำลองชำระผ่าน SCB สำเร็จ
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="statusOpen">
+    <DialogContent
+      class="sm:max-w-sm"
+      :show-close-button="false"
+      @escape-key-down="preventStatusDialogDismiss"
+      @interact-outside="preventStatusDialogDismiss"
+    >
+      <div class="flex flex-col items-center pt-2 text-center" role="status" aria-live="polite">
+        <span
+          v-if="paymentPhase === 'processing'"
+          class="mb-4 grid size-14 place-items-center rounded-full bg-primary/10 text-primary"
+        >
+          <Spinner class="size-7" aria-hidden="true" />
+        </span>
+        <span
+          v-else
+          class="mb-4 grid size-14 place-items-center rounded-full bg-emerald-600 text-white dark:bg-emerald-400 dark:text-emerald-950"
+        >
+          <CheckCircle2Icon class="size-8" aria-hidden="true" />
+        </span>
+
+        <DialogHeader class="items-center text-center">
+          <DialogTitle>
+            {{ paymentPhase === 'processing' ? 'กำลังประมวลผลการชำระเงิน' : 'ชำระเงินสำเร็จ' }}
+          </DialogTitle>
+          <DialogDescription class="max-w-xs text-center leading-relaxed">
+            {{ paymentPhase === 'processing'
+              ? 'กรุณารอสักครู่และอย่าปิดหน้าต่างนี้ ระบบกำลังตรวจสอบผลรายการ'
+              : 'ระบบจำลองได้รับผลจาก SCB และบันทึกสถานะรายการนี้เรียบร้อยแล้ว' }}
+          </DialogDescription>
+        </DialogHeader>
+      </div>
+
+      <div class="grid gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
+        <div class="flex items-start justify-between gap-3">
+          <span class="text-muted-foreground">รายการ</span>
+          <span class="text-right font-medium">{{ obligation.title }}</span>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-muted-foreground">ยอดชำระ</span>
+          <span class="font-semibold tabular-nums">{{ formatBaht(obligation.amount) }}</span>
+        </div>
+      </div>
+
+      <DialogFooter v-if="paymentPhase === 'succeeded'">
+        <Button class="w-full" @click="finishPaymentFlow">
+          <CheckCircle2Icon aria-hidden="true" />
+          เสร็จสิ้น
         </Button>
       </DialogFooter>
     </DialogContent>

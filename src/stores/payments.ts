@@ -55,17 +55,35 @@ export const usePaymentsStore = defineStore('payments', () => {
     return list.length > 0 && list.every(isPaid)
   }
 
+  /** ปิดรายการของ hold ที่หมดอายุ เพื่อไม่ให้ QR เดิมถูกนำกลับมาชำระซ้ำ */
+  function cancelObligationsForReservation(reservationGroupId: string) {
+    let changed = 0
+    obligationsForGroup(reservationGroupId).forEach((obligation) => {
+      if (obligation.documentStatus === 'cancelled') return
+      obligation.documentStatus = 'cancelled'
+      obligation.resultStatus = isPaid(obligation) ? 'refund_status' : 'cancelled'
+      changed += 1
+    })
+    return changed
+  }
+
   /**
    * สร้าง obligations เมื่อกลุ่มเข้าสู่ payment hold (จำลอง PRICE-001..003)
    * 1 รายการ = ผู้พัก 1 คน × 1 action; ห้อง HL ได้ ROOM + HL แยกกัน; idempotent ต่อกลุ่ม
    */
-  function generateObligationsForGroup(resv: ReservationGroup, roomConfig: RoomConfig, deadline: string) {
+  function generateObligationsForGroup(
+    resv: ReservationGroup,
+    roomConfig: RoomConfig,
+    deadline: string,
+    options: { demoPaymentReady?: boolean } = {},
+  ) {
     if (obligations.value.some(o => o.reservationGroupId === resv.id)) return
     const today = new Date().toISOString().slice(0, 10)
     for (const memberId of resv.memberIds) {
       for (const line of priceLinesFor(roomConfig, resv.occupancyMode)) {
+        const id = `ob-${resv.id}-${memberId}-${line.action}`
         obligations.value.push({
-          id: `ob-${resv.id}-${memberId}-${line.action}`,
+          id,
           residentId: memberId,
           reservationGroupId: resv.id,
           roomNumber: resv.roomNumber,
@@ -76,8 +94,9 @@ export const usePaymentsStore = defineStore('payments', () => {
           billIssueDate: today,
           paymentDeadline: deadline,
           academicYear: CURRENT_ACADEMIC_YEAR,
-          documentStatus: 'ready_for_export',
+          documentStatus: options.demoPaymentReady ? 'payment_form_ready' : 'ready_for_export',
           resultStatus: 'awaiting_payment',
+          pdfPageId: options.demoPaymentReady ? `pdf-demo-${id}` : undefined,
         })
       }
     }
@@ -170,6 +189,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     const obligation = obligations.value.find(item => item.id === obligationId)
     if (!obligation || obligation.documentStatus !== 'payment_form_ready') return false
     if (PAID_STATUSES.has(obligation.resultStatus)) return true
+    if (new Date(obligation.paymentDeadline).getTime() <= Date.now()) return false
 
     const now = new Date().toISOString()
     obligation.resultStatus = 'paid'
@@ -218,6 +238,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     obligationsForGroup,
     isPaid,
     groupPaymentComplete,
+    cancelObligationsForReservation,
     generateObligationsForGroup,
     createExportBatch,
     markBatchExported,

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { AlertTriangleIcon, FileCheck2Icon, InfoIcon, TimerIcon } from '@lucide/vue'
+import { InfoIcon, TimerIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,28 +17,19 @@ import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
-import { priceLinesFor, users } from '@/fixtures'
-import { useApplicationStore } from '@/stores/application'
+import { priceLinesFor } from '@/fixtures'
 import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
 import type { OccupancyMode, Room } from '@/types'
 
 const session = useSessionStore()
-const application = useApplicationStore()
 const reservation = useReservationStore()
 const dorm = useDormStore()
 const router = useRouter()
 
-const hasSubmittedApplication = computed(() => {
-  const userId = session.currentUser?.id
-  return Boolean(userId && application.hasSubmittedApplication(userId))
-})
-
 const canReserve = computed(
-  () => session.currentUser?.profileComplete === true
-    && hasSubmittedApplication.value
-    && !reservation.myReservation,
+  () => Boolean(session.currentUser) && !reservation.myReservation,
 )
 
 // dialog เลือกรูปแบบการพัก + ยืนยันจอง
@@ -54,16 +45,11 @@ const isLeaderOfAcceptedGroup = computed(
     && reservation.myRoommateGroup.leaderId === session.currentUser?.id,
 )
 const hasActiveGroup = computed(() => !!reservation.myRoommateGroup)
-const missingSharedApplicationMembers = computed(() =>
-  (reservation.myRoommateGroup?.memberIds ?? [])
-    .filter(userId => !application.hasSubmittedApplication(userId))
-    .map(userId => users.find(user => user.id === userId)?.displayName ?? userId),
-)
 
 function canChoose(mode: OccupancyMode) {
   if (!selectedRoom.value?.occupancyCapability.includes(mode)) return false
   if (mode === 'shared') {
-    return isLeaderOfAcceptedGroup.value && missingSharedApplicationMembers.value.length === 0
+    return isLeaderOfAcceptedGroup.value
   }
   return !hasActiveGroup.value
 }
@@ -89,7 +75,11 @@ function reserve() {
   toast(result.message)
   if (result.ok) {
     dialogOpen.value = false
-    router.push('/app')
+    router.push(
+      reservation.myReservation?.holdStatus === 'held_payment'
+        ? '/app/payments'
+        : '/app/roommate',
+    )
   }
 }
 </script>
@@ -99,7 +89,7 @@ function reserve() {
     <div class="space-y-1">
       <h1 class="text-2xl font-bold">เลือกห้องพัก</h1>
       <p class="text-sm text-muted-foreground">
-        เลือกจากอาคาร → ชั้น → ห้องจริง เมื่อกดจอง ห้องจะถูกล็อกให้ทันทีระหว่างรอยืนยันและชำระเงิน
+        เลือกหอ อาคาร ชั้น และห้องจริงได้ทันที หลังยืนยันห้องระบบจะพาไปจำลองการชำระเงิน แล้วจึงกรอกใบสมัครภายหลัง
       </p>
     </div>
 
@@ -107,22 +97,9 @@ function reserve() {
       <InfoIcon aria-hidden="true" />
       <AlertTitle>คุณมีการจองอยู่แล้ว</AlertTitle>
       <AlertDescription>
-        ห้อง {{ reservation.myReservation.roomNumber }} — ดูสถานะได้ที่เมนู “การจองของฉัน”
+        ห้อง {{ reservation.myReservation.roomNumber }} — ดูรายละเอียดได้ที่เมนู “สถานะการจอง”
         (1 คนมีได้ 1 การจอง/กลุ่มที่ใช้งานอยู่เท่านั้น)
       </AlertDescription>
-    </Alert>
-    <Alert v-else-if="!hasSubmittedApplication" variant="destructive">
-      <FileCheck2Icon aria-hidden="true" />
-      <AlertTitle>ยังไม่มีใบสมัครที่ส่งแล้ว</AlertTitle>
-      <AlertDescription>
-        คุณยังดูผังและรายละเอียดห้องได้ตามปกติ แต่ต้องส่งใบสมัครก่อนจึงจะยืนยันจองห้องได้
-        เมื่อยืนยันห้องครบ ระบบจะเติมข้อมูลห้องในใบสมัครให้อัตโนมัติ
-      </AlertDescription>
-    </Alert>
-    <Alert v-else-if="!session.currentUser?.profileComplete" variant="destructive">
-      <InfoIcon aria-hidden="true" />
-      <AlertTitle>ข้อมูลผู้สมัครยังไม่ครบ</AlertTitle>
-      <AlertDescription>กลับไปแก้ใบสมัครและส่งใหม่ก่อนยืนยันจองห้อง</AlertDescription>
     </Alert>
 
     <RoomBrowser @select="onSelect" />
@@ -145,23 +122,6 @@ function reserve() {
         </DialogHeader>
 
         <div class="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-y px-4 py-3">
-          <Alert v-if="!hasSubmittedApplication" variant="destructive">
-            <FileCheck2Icon aria-hidden="true" />
-            <AlertTitle>ยังจองห้องนี้ไม่ได้</AlertTitle>
-            <AlertDescription>
-              กรุณากรอกและส่งใบสมัครก่อน ระบบจึงจะเปิดให้ยืนยันจองห้องนี้
-            </AlertDescription>
-          </Alert>
-          <Alert
-            v-if="isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared') && missingSharedApplicationMembers.length"
-            variant="destructive"
-          >
-            <AlertTriangleIcon aria-hidden="true" />
-            <AlertTitle>สมาชิกในกลุ่มยังส่งใบสมัครไม่ครบ</AlertTitle>
-            <AlertDescription>
-              {{ missingSharedApplicationMembers.join(', ') }} ต้องส่งใบสมัครก่อน หัวหน้ากลุ่มจึงจะยืนยันห้องแบบพักคู่ได้
-            </AlertDescription>
-          </Alert>
           <HoldCountdown
             v-if="selectedRoom.publicStatus === 'temporarily_held' && selectedRoom.holdExpiresAt"
             :expires-at="selectedRoom.holdExpiresAt"
@@ -197,10 +157,10 @@ function reserve() {
           </dl>
           <p v-if="occupancy" class="rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground">
             <template v-if="occupancy === 'shared'">
-              ระบบจะเติมข้อมูลห้องนี้ในใบสมัครของสมาชิกทั้งสองคนเมื่อรูมเมทยืนยันห้องครบ
+              ระบบจะเก็บข้อมูลห้องนี้ไว้ให้สมาชิกทั้งสองคนเมื่อรูมเมทยืนยันห้องครบ และเติมในใบสมัครภายหลังโดยอัตโนมัติ
             </template>
             <template v-else>
-              ระบบจะเติมข้อมูลห้องนี้ในใบสมัครทันทีเมื่อยืนยันจองและเข้าสู่ช่วงรอชำระเงิน
+              ระบบจะเก็บข้อมูลห้องนี้ทันทีเมื่อยืนยันจอง และเติมในใบสมัครภายหลังโดยอัตโนมัติ
             </template>
           </p>
           <!-- เลือกรูปแบบการพัก -->
@@ -225,12 +185,6 @@ function reserve() {
             </div>
             <p v-if="!isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared')" class="text-xs text-muted-foreground">
               พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม — จัดการได้ที่เมนู “รูมเมท”
-            </p>
-            <p
-              v-if="isLeaderOfAcceptedGroup && missingSharedApplicationMembers.length && selectedRoom.occupancyCapability.includes('shared')"
-              class="text-xs text-destructive"
-            >
-              ยังเลือกพักคู่ไม่ได้ — รอ {{ missingSharedApplicationMembers.join(', ') }} ส่งใบสมัครให้เรียบร้อยก่อน
             </p>
             <p v-if="hasActiveGroup && selectedRoom.occupancyCapability.includes('whole_room')" class="text-xs text-muted-foreground">
               ต้องการเหมาห้อง? ต้องยกเลิกกลุ่มรูมเมทปัจจุบันก่อน
@@ -275,7 +229,6 @@ function reserve() {
             @click="reserve"
           >
             <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
-            <template v-else-if="!hasSubmittedApplication">ส่งใบสมัครก่อนจองห้อง</template>
             <template v-else-if="!occupancy">ยังไม่มีรูปแบบการพักที่จองได้</template>
             <template v-else>จองห้องนี้ — ล็อกทันที</template>
           </Button>

@@ -4,7 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import {
   ArrowRightIcon,
   CalendarDaysIcon,
-  FileSignatureIcon,
+  FilePenLineIcon,
   UsersIcon,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
@@ -64,9 +64,9 @@ const steps = [
     detail: 'เลือกหอพัก → ชั้น → ห้อง เห็นสถานะว่าง/ถูกจองชั่วคราวแบบเรียลไทม์',
   },
   {
-    icon: FileSignatureIcon,
-    title: 'ชำระเงินและลงนามสัญญา',
-    detail: 'ชำระผ่านแบบฟอร์ม QR ทางการของธนาคารภายใน 72 ชม. แล้วลงนามสัญญาประจำปี',
+    icon: FilePenLineIcon,
+    title: 'ชำระเงินแล้วกรอกใบสมัคร',
+    detail: 'ชำระผ่านแบบฟอร์ม QR ภายใน 72 ชม. จากนั้นระบบเติมข้อมูลห้องให้ในใบสมัคร ก่อนดำเนินการยืนยันและสัญญา',
   },
 ]
 </script>
@@ -115,7 +115,7 @@ const steps = [
 
         <!-- Search bar -->
         <form
-          class="mt-6 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
+          class="mt-6 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 transition-[border-color,box-shadow] duration-300 dark:border-primary/20 dark:shadow-[0_0_16px_-11px_var(--primary)] dark:ring-1 dark:ring-primary/5 dark:focus-within:border-primary/30 dark:focus-within:shadow-[0_0_20px_-11px_var(--primary)] dark:focus-within:ring-primary/10 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
           @submit.prevent="search"
         >
           <div class="min-w-0 flex-1 px-4 py  -1.5">

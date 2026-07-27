@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { MailPlusIcon, UsersIcon } from '@lucide/vue'
+import { CheckIcon, MailPlusIcon, UserRoundIcon, UsersIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Combobox,
+  ComboboxAnchor,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxItemIndicator,
+  ComboboxList,
+  ComboboxViewport,
+} from '@/components/ui/combobox'
 import {
   Dialog,
   DialogContent,
@@ -14,34 +24,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import { invitationStatusLabel, roommateGroupStatusLabel } from '@/lib/labels'
 import { users } from '@/fixtures'
-import { useApplicationStore } from '@/stores/application'
-import { useReservationStore } from '@/stores/reservation'
+import {
+  ROOMMATE_SEARCH_MIN_STUDENT_DIGITS,
+  ROOMMATE_SEARCH_RESULT_LIMIT,
+  useReservationStore,
+} from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
-const application = useApplicationStore()
 const reservation = useReservationStore()
 const router = useRouter()
 
 const myGroup = computed(() => reservation.myRoommateGroup)
 const myInvitations = computed(() => reservation.myInvitations)
 const receivedPending = computed(() => reservation.myReceivedPendingInvitations)
-const missingApplicationMembers = computed(() =>
-  (myGroup.value?.memberIds ?? [])
-    .filter(userId => !application.hasSubmittedApplication(userId))
-    .map(userId => users.find(user => user.id === userId)?.displayName ?? userId),
-)
-const allGroupApplicationsSubmitted = computed(() => missingApplicationMembers.value.length === 0)
 
 // การจองที่รอรูมเมทยืนยันห้อง (15 นาที)
 const pendingRoomConfirmation = computed(() => {
@@ -59,12 +60,87 @@ function nameOf(userId: string) {
 // ---- dialog ส่งคำเชิญ ----
 const inviteDialogOpen = ref(false)
 const inviteeId = ref('')
+const inviteSearchOpen = ref(false)
+const inviteSearchInput = ref('')
+const debouncedInviteSearch = ref('')
+const INVITE_SEARCH_DEBOUNCE_MS = 300
 
-const invitableUsers = computed(() =>
-  users.filter(
-    u => u.role === 'applicant' && u.id !== session.currentUser?.id && u.profileComplete,
-  ),
+const normalizedInviteSearch = computed(() => inviteSearchInput.value.trim().toLocaleLowerCase('th-TH'))
+const inviteStudentDigits = computed(() => normalizedInviteSearch.value.replace(/\D/g, ''))
+const isStudentIdSearch = computed(() => /^[\d\s-]+$/.test(normalizedInviteSearch.value))
+const isCompleteEmailSearch = computed(() =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInviteSearch.value),
 )
+const canSearchInvitees = computed(() =>
+  isCompleteEmailSearch.value
+  || (isStudentIdSearch.value && inviteStudentDigits.value.length >= ROOMMATE_SEARCH_MIN_STUDENT_DIGITS),
+)
+const inviteSearchPending = computed(() =>
+  canSearchInvitees.value
+  && debouncedInviteSearch.value.trim().toLocaleLowerCase('th-TH') !== normalizedInviteSearch.value,
+)
+const candidateSearch = computed(() =>
+  canSearchInvitees.value && !inviteSearchPending.value
+    ? reservation.searchRoommateCandidates(debouncedInviteSearch.value, ROOMMATE_SEARCH_RESULT_LIMIT)
+    : { items: [], hasMore: false },
+)
+const selectedInvitee = computed(() => users.find(user => user.id === inviteeId.value))
+const searchGuidance = computed(() => {
+  const query = normalizedInviteSearch.value
+  if (!query) return `กรอกรหัสนักศึกษาอย่างน้อย ${ROOMMATE_SEARCH_MIN_STUDENT_DIGITS} หลัก หรืออีเมลเต็ม`
+  if (query.includes('@')) {
+    return isCompleteEmailSearch.value
+      ? ''
+      : 'กรอกอีเมลให้ครบ เช่น name@example.com'
+  }
+  if (!isStudentIdSearch.value) return 'ค้นหาได้ด้วยรหัสนักศึกษา หรืออีเมลเต็มเท่านั้น'
+
+  const remaining = Math.max(0, ROOMMATE_SEARCH_MIN_STUDENT_DIGITS - inviteStudentDigits.value.length)
+  return remaining > 0 ? `กรอกรหัสนักศึกษาเพิ่มอีก ${remaining} หลักเพื่อเริ่มค้นหา` : ''
+})
+
+watch(inviteSearchInput, (value, _previous, onCleanup) => {
+  if (!value.trim()) {
+    debouncedInviteSearch.value = ''
+    return
+  }
+
+  const timer = window.setTimeout(() => {
+    debouncedInviteSearch.value = value.trim()
+  }, INVITE_SEARCH_DEBOUNCE_MS)
+  onCleanup(() => window.clearTimeout(timer))
+})
+
+watch(inviteeId, (id) => {
+  if (!id) return
+  inviteSearchOpen.value = false
+  inviteSearchInput.value = ''
+  debouncedInviteSearch.value = ''
+})
+
+watch(inviteDialogOpen, (open) => {
+  if (open) return
+  resetInviteSearch()
+})
+
+function updateInviteSearchInput(value: string) {
+  inviteSearchInput.value = value
+  if (value.trim() && inviteeId.value) inviteeId.value = ''
+}
+
+function clearInviteSelection() {
+  inviteeId.value = ''
+  inviteSearchInput.value = ''
+  debouncedInviteSearch.value = ''
+  inviteSearchOpen.value = true
+}
+
+function resetInviteSearch() {
+  inviteeId.value = ''
+  inviteSearchOpen.value = false
+  inviteSearchInput.value = ''
+  debouncedInviteSearch.value = ''
+}
 
 function sendInvitation() {
   if (!inviteeId.value) return
@@ -72,7 +148,7 @@ function sendInvitation() {
   toast(result.message)
   if (result.ok) {
     inviteDialogOpen.value = false
-    inviteeId.value = ''
+    resetInviteSearch()
   }
 }
 
@@ -86,7 +162,7 @@ function confirmRoom() {
   if (!pendingRoomConfirmation.value) return
   const result = reservation.confirmRoomSelection(pendingRoomConfirmation.value.id)
   toast(result.message)
-  if (result.ok) router.push('/app')
+  if (result.ok) router.push('/app/payments')
 }
 function declineRoom() {
   if (!pendingRoomConfirmation.value) return
@@ -104,8 +180,8 @@ function onConfirmationExpired() {
     <div class="space-y-1">
       <h1 class="text-2xl font-bold">รูมเมท</h1>
       <p class="text-sm text-muted-foreground">
-        กติกา: สมาชิกทั้งคู่ต้องส่งใบสมัครก่อนยืนยันห้องพักคู่ · กลุ่มละไม่เกิน 2 คน · 1 คนมีได้ 1 คำเชิญ/กลุ่มที่ใช้งานอยู่ ·
-        ต้องตอบรับคำเชิญก่อนเลือกห้อง
+        กติกา: กลุ่มละไม่เกิน 2 คน · 1 คนมีได้ 1 คำเชิญ/กลุ่มที่ใช้งานอยู่ · ต้องตอบรับคำเชิญก่อนเลือกห้อง
+        และกรอกใบสมัครได้ภายหลังเมื่อชำระเงินของตนเองเรียบร้อยแล้ว
       </p>
     </div>
 
@@ -142,25 +218,16 @@ function onConfirmationExpired() {
           <li v-for="m in myGroup.memberIds" :key="m" class="flex flex-wrap items-center gap-2">
             <span class="font-medium">{{ nameOf(m) }}</span>
             <Badge v-if="m === myGroup.leaderId" variant="outline">หัวหน้ากลุ่ม</Badge>
-            <Badge :variant="application.hasSubmittedApplication(m) ? 'secondary' : 'outline'">
-              {{ application.hasSubmittedApplication(m) ? 'ส่งใบสมัครแล้ว' : 'ยังไม่ส่งใบสมัคร' }}
-            </Badge>
+            <Badge variant="outline">สมาชิกกลุ่ม</Badge>
           </li>
         </ul>
 
         <!-- กลุ่มพร้อมเลือกห้อง -->
         <div v-if="myGroup.status === 'accepted' && myGroup.leaderId === session.currentUser?.id" class="flex gap-2">
-          <Button v-if="allGroupApplicationsSubmitted" as-child>
+          <Button as-child>
             <RouterLink to="/app/rooms">ไปเลือกห้อง (คุณเป็นหัวหน้ากลุ่ม)</RouterLink>
           </Button>
-          <Button v-else disabled>รอสมาชิกส่งใบสมัคร</Button>
         </div>
-        <p
-          v-if="myGroup.status === 'accepted' && !allGroupApplicationsSubmitted"
-          class="text-sm text-destructive"
-        >
-          ยังเลือกห้องพักคู่ไม่ได้ — รอ {{ missingApplicationMembers.join(', ') }} ส่งใบสมัครให้เรียบร้อยก่อน
-        </p>
         <p v-else-if="myGroup.status === 'accepted' && myGroup.leaderId !== session.currentUser?.id" class="text-sm text-muted-foreground">
           รอ {{ nameOf(myGroup.leaderId) }} (หัวหน้ากลุ่ม) เลือกห้อง — คุณจะได้รับแจ้งให้ยืนยันห้องภายใน 15 นาที
         </p>
@@ -174,14 +241,11 @@ function onConfirmationExpired() {
           />
           <template v-if="iAmInvitee">
             <div class="flex flex-wrap gap-2">
-              <Button :disabled="!allGroupApplicationsSubmitted" @click="confirmRoom">
+              <Button @click="confirmRoom">
                 ยืนยันห้อง {{ pendingRoomConfirmation.roomNumber }}
               </Button>
               <Button variant="outline" @click="declineRoom">ปฏิเสธ (ปล่อยห้องทันที)</Button>
             </div>
-            <p v-if="!allGroupApplicationsSubmitted" class="text-sm text-destructive">
-              ยังยืนยันห้องไม่ได้ — รอ {{ missingApplicationMembers.join(', ') }} ส่งใบสมัครให้เรียบร้อยก่อน
-            </p>
           </template>
           <p v-else class="text-sm text-muted-foreground">
             รอรูมเมทยืนยันห้อง {{ pendingRoomConfirmation.roomNumber }} — หากหมดเวลา ห้องจะถูกปล่อยคืนอัตโนมัติ
@@ -198,16 +262,13 @@ function onConfirmationExpired() {
           ส่งคำเชิญถึงเพื่อนเพื่อพักคู่ หรือข้ามขั้นตอนนี้หากต้องการเหมาห้องพักคนเดียว
         </p>
         <div class="flex flex-wrap justify-center gap-2">
-          <Button :disabled="!session.currentUser?.profileComplete" @click="inviteDialogOpen = true">
+          <Button @click="inviteDialogOpen = true">
             <MailPlusIcon aria-hidden="true" /> ส่งคำเชิญรูมเมท
           </Button>
           <Button as-child variant="outline">
             <RouterLink to="/app/rooms">เหมาห้อง — ไปเลือกห้องเลย</RouterLink>
           </Button>
         </div>
-        <p v-if="!session.currentUser?.profileComplete" class="text-xs text-destructive">
-          ต้องกรอกโปรไฟล์ให้ครบก่อนส่งคำเชิญ
-        </p>
       </CardContent>
     </Card>
 
@@ -230,26 +291,148 @@ function onConfirmationExpired() {
 
     <!-- Dialog ส่งคำเชิญ -->
     <Dialog v-model:open="inviteDialogOpen">
-      <DialogContent class="sm:max-w-md">
+      <DialogContent class="w-[calc(100vw-1rem)] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>ส่งคำเชิญรูมเมท</DialogTitle>
           <DialogDescription>
-            เลือกเพื่อนที่โปรไฟล์ครบถ้วนแล้ว — คำเชิญมีอายุ 48 ชั่วโมง และแต่ละคนมีได้ 1 คำเชิญ/กลุ่มที่ใช้งานอยู่
+            ค้นหาด้วยรหัสนักศึกษาหรืออีเมล แล้วเลือกเพื่อนที่ต้องการพักด้วย คำเชิญมีอายุ 48 ชั่วโมง
           </DialogDescription>
         </DialogHeader>
-        <Select v-model="inviteeId">
-          <SelectTrigger class="w-full" aria-label="เลือกเพื่อนที่จะเชิญ">
-            <SelectValue placeholder="เลือกเพื่อน…" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="u in invitableUsers" :key="u.id" :value="u.id">
-              {{ u.displayName }} ({{ u.studentId ?? 'ไม่มีรหัส นศ.' }})
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <DialogFooter>
-          <Button variant="outline" @click="inviteDialogOpen = false">ยกเลิก</Button>
-          <Button :disabled="!inviteeId" @click="sendInvitation">ส่งคำเชิญ</Button>
+
+        <div class="space-y-2">
+          <Label for="roommate-search">ค้นหาเพื่อน</Label>
+          <Combobox
+            v-model="inviteeId"
+            v-model:open="inviteSearchOpen"
+            ignore-filter
+            open-on-click
+            open-on-focus
+            :reset-search-term-on-blur="false"
+            :reset-search-term-on-select="false"
+          >
+            <ComboboxAnchor class="w-full">
+              <ComboboxInput
+                id="roommate-search"
+                :model-value="inviteSearchInput"
+                class="h-11 text-sm"
+                placeholder="เช่น 673010 หรือ name@example.com"
+                autocomplete="off"
+                inputmode="search"
+                enterkeyhint="search"
+                aria-describedby="roommate-search-help"
+                @update:model-value="updateInviteSearchInput"
+              />
+            </ComboboxAnchor>
+
+            <ComboboxList
+              align="start"
+              :collision-padding="12"
+              class="z-[60] max-w-[calc(100vw-2rem)]"
+            >
+              <ComboboxViewport class="max-h-[min(16rem,40dvh)] p-1 data-empty:p-1">
+                <div
+                  v-if="!canSearchInvitees"
+                  class="px-3 py-5 text-center text-sm text-muted-foreground"
+                  aria-live="polite"
+                >
+                  {{ searchGuidance }}
+                </div>
+
+                <div
+                  v-else-if="inviteSearchPending"
+                  class="space-y-2 p-2"
+                  role="status"
+                  aria-label="กำลังค้นหาผู้สมัคร"
+                >
+                  <Skeleton v-for="index in 3" :key="index" class="h-12 w-full rounded-lg" />
+                  <span class="sr-only">กำลังค้นหา กรุณารอสักครู่</span>
+                </div>
+
+                <div
+                  v-else-if="candidateSearch.items.length === 0"
+                  class="px-3 py-5 text-center text-sm text-muted-foreground"
+                  aria-live="polite"
+                >
+                  ไม่พบบัญชีผู้สมัครที่ตรงกับข้อมูลนี้
+                </div>
+
+                <template v-else>
+                  <ComboboxGroup
+                    :heading="candidateSearch.hasMore
+                      ? `แสดง ${ROOMMATE_SEARCH_RESULT_LIMIT} รายการแรก`
+                      : `ผลการค้นหา ${candidateSearch.items.length} รายการ`"
+                  >
+                    <ComboboxItem
+                      v-for="candidate in candidateSearch.items"
+                      :key="candidate.id"
+                      :value="candidate.id"
+                      :text-value="`${candidate.displayName} ${candidate.studentId ?? candidate.email}`"
+                      :disabled="!candidate.available"
+                      class="min-h-12 items-start px-2.5 py-2.5 pr-9"
+                    >
+                      <span class="grid size-8 shrink-0 place-items-center rounded-full bg-muted">
+                        <UserRoundIcon class="size-4 text-muted-foreground" aria-hidden="true" />
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="flex flex-wrap items-center gap-1.5 font-medium">
+                          {{ candidate.displayName }}
+                          <Badge v-if="!candidate.available" variant="outline" class="text-[10px]">
+                            รับคำเชิญไม่ได้
+                          </Badge>
+                        </span>
+                        <span class="block truncate text-xs text-muted-foreground">
+                          {{ candidate.studentId ?? candidate.email }}
+                        </span>
+                        <span
+                          v-if="candidate.unavailableReason"
+                          class="mt-0.5 block text-xs text-muted-foreground"
+                        >
+                          {{ candidate.unavailableReason }}
+                        </span>
+                      </span>
+                      <ComboboxItemIndicator>
+                        <CheckIcon aria-hidden="true" />
+                      </ComboboxItemIndicator>
+                    </ComboboxItem>
+                  </ComboboxGroup>
+
+                  <p
+                    v-if="candidateSearch.hasMore"
+                    class="border-t px-3 py-2 text-xs leading-relaxed text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    พบมากกว่า {{ ROOMMATE_SEARCH_RESULT_LIMIT }} คน กรุณาพิมพ์รหัสให้ละเอียดขึ้น
+                  </p>
+                </template>
+              </ComboboxViewport>
+            </ComboboxList>
+          </Combobox>
+
+          <p id="roommate-search-help" class="text-xs leading-relaxed text-muted-foreground">
+            ระบบเริ่มค้นหาเมื่อกรอกรหัสอย่างน้อย {{ ROOMMATE_SEARCH_MIN_STUDENT_DIGITS }} หลัก และแสดงไม่เกิน
+            {{ ROOMMATE_SEARCH_RESULT_LIMIT }} คนต่อครั้ง
+          </p>
+        </div>
+
+        <div v-if="selectedInvitee" class="flex items-start justify-between gap-3 rounded-lg border bg-muted/40 p-3">
+          <div class="flex min-w-0 items-start gap-3">
+            <span class="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+              <CheckIcon class="size-4" aria-hidden="true" />
+            </span>
+            <div class="min-w-0">
+              <p class="text-xs text-muted-foreground">ผู้ที่จะได้รับคำเชิญ</p>
+              <p class="font-semibold">{{ selectedInvitee.displayName }}</p>
+              <p class="truncate text-xs text-muted-foreground">{{ selectedInvitee.studentId ?? selectedInvitee.email }}</p>
+            </div>
+          </div>
+          <Button type="button" variant="ghost" size="sm" class="shrink-0" @click="clearInviteSelection">
+            เปลี่ยนคน
+          </Button>
+        </div>
+
+        <DialogFooter class="gap-2 sm:gap-2">
+          <Button type="button" variant="outline" class="w-full sm:w-auto" @click="inviteDialogOpen = false">ยกเลิก</Button>
+          <Button type="button" class="w-full sm:w-auto" :disabled="!inviteeId" @click="sendInvitation">ส่งคำเชิญ</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
