@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import {
   ArrowLeftIcon, CheckCircle2Icon, ChevronDownIcon, EyeIcon, EyeOffIcon,
@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTheme } from '@/composables/useTheme'
@@ -60,6 +60,7 @@ const registerEmail = ref('')
 const registerPassword = ref('')
 const acceptedNotice = ref(false)
 const registrationError = ref('')
+const dialogInitialFocus = ref<HTMLElement | null>(null)
 
 const heroImage = computed(() => (theme.value === 'dark' ? heroNight : heroDay))
 const verificationEmail = computed(() => session.pendingEmailRegistration() || 'อีเมลที่สมัคร')
@@ -198,12 +199,18 @@ function openView(nextView: DialogView) {
   loginError.value = ''
   registrationError.value = ''
 }
+
+function handleOpenAutoFocus(event: Event) {
+  event.preventDefault()
+  void nextTick(() => dialogInitialFocus.value?.focus({ preventScroll: true }))
+}
 </script>
 
 <template>
   <Dialog :open="props.open" @update:open="emit('update:open', $event)">
     <DialogContent
       class="h-auto max-h-[calc(100svh-1rem)] w-[calc(100vw-1rem)] max-w-[32rem]! grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden rounded-xl bg-card p-0 min-[1100px]:h-[calc(100svh-2rem)] min-[1100px]:max-h-[42rem] min-[1100px]:max-w-[72rem]! min-[1100px]:grid min-[1100px]:grid-cols-[minmax(0,29fr)_minmax(26rem,21fr)] [&_[data-slot=dialog-close]]:right-3 [&_[data-slot=dialog-close]]:top-3 [&_[data-slot=dialog-close]]:z-30 [&_[data-slot=dialog-close]]:bg-card/80 [&_[data-slot=dialog-close]]:backdrop-blur-sm"
+      @open-auto-focus="handleOpenAutoFocus"
     >
       <aside class="relative isolate hidden min-h-0 overflow-hidden bg-background min-[1100px]:block" aria-label="บริการของหอพักออนไลน์">
         <template v-if="view === 'register'">
@@ -247,7 +254,12 @@ function openView(nextView: DialogView) {
         </template>
       </aside>
 
-      <section class="flex min-h-0 min-w-0 flex-col overflow-y-auto bg-card px-5 py-6 sm:px-8 sm:py-8" aria-label="เข้าสู่ระบบและสร้างบัญชี">
+      <section
+        ref="dialogInitialFocus"
+        tabindex="-1"
+        class="flex min-h-0 min-w-0 flex-col overflow-y-auto bg-card px-5 py-6 focus:outline-none sm:px-8 sm:py-8"
+        aria-label="เข้าสู่ระบบและสร้างบัญชี"
+      >
         <div class="mx-auto flex min-h-0 min-w-0 w-full max-w-[31.5rem] flex-1 flex-col">
           <div v-if="view === 'login' || view === 'register'" class="flex h-10 items-center gap-2.5 pr-10">
             <img :src="kkuEmblem" alt="ตรามหาวิทยาลัยขอนแก่น" class="h-10 w-auto shrink-0" />
@@ -272,8 +284,8 @@ function openView(nextView: DialogView) {
               </Alert>
 
               <form class="mt-5 space-y-4" @submit.prevent="signInByEmail">
-                <div class="space-y-1.5">
-                  <Label for="dialog-login-email" class="text-sm font-semibold">อีเมล</Label>
+                <Field>
+                  <FieldLabel for="dialog-login-email" class="text-sm font-semibold">อีเมล</FieldLabel>
                   <Input
                     id="dialog-login-email"
                     v-model="loginEmail"
@@ -285,10 +297,10 @@ function openView(nextView: DialogView) {
                     :aria-describedby="loginError ? 'dialog-login-error' : undefined"
                     @input="loginError = ''"
                   />
-                </div>
+                </Field>
 
-                <div class="space-y-1.5">
-                  <Label for="dialog-login-password" class="text-sm font-semibold">รหัสผ่าน</Label>
+                <Field>
+                  <FieldLabel for="dialog-login-password" class="text-sm font-semibold">รหัสผ่าน</FieldLabel>
                   <div class="relative">
                     <Input
                       id="dialog-login-password"
@@ -315,17 +327,16 @@ function openView(nextView: DialogView) {
                       ลืมรหัสผ่าน?
                     </Button>
                   </div>
-                </div>
+                </Field>
 
-                <div
+                <FieldError
                   v-if="loginError"
                   id="dialog-login-error"
                   class="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
-                  role="alert"
                 >
                   <InfoIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                   <span>{{ loginError }}</span>
-                </div>
+                </FieldError>
 
                 <Button type="submit" size="lg" class="h-11 w-full justify-center rounded-xl font-semibold">
                   เข้าสู่ระบบ
@@ -361,8 +372,8 @@ function openView(nextView: DialogView) {
             </DialogHeader>
 
             <form class="mt-5 space-y-4" @submit.prevent="submitRegistration">
-              <div class="space-y-1.5">
-                <Label for="dialog-register-email" class="text-sm font-semibold">อีเมล</Label>
+              <Field>
+                <FieldLabel for="dialog-register-email" class="text-sm font-semibold">อีเมล</FieldLabel>
                 <Input
                   id="dialog-register-email"
                   v-model="registerEmail"
@@ -374,10 +385,10 @@ function openView(nextView: DialogView) {
                   :aria-describedby="registrationError ? 'dialog-register-error' : undefined"
                   @input="registrationError = ''"
                 />
-              </div>
+              </Field>
 
-              <div class="space-y-1.5">
-                <Label for="dialog-register-password" class="text-sm font-semibold">รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)</Label>
+              <Field>
+                <FieldLabel for="dialog-register-password" class="text-sm font-semibold">รหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร)</FieldLabel>
                 <div class="relative">
                   <Input
                     id="dialog-register-password"
@@ -400,7 +411,7 @@ function openView(nextView: DialogView) {
                     <EyeIcon v-else class="size-4" aria-hidden="true" />
                   </button>
                 </div>
-              </div>
+              </Field>
 
               <div class="flex min-w-0 items-start gap-2.5 rounded-xl border bg-background/40 p-3">
                 <ShieldCheckIcon class="mt-0.5 size-4.5 shrink-0" aria-hidden="true" />
@@ -412,16 +423,16 @@ function openView(nextView: DialogView) {
                 </div>
               </div>
 
-              <div class="flex items-start gap-2.5">
+              <Field orientation="horizontal" class="items-start gap-2.5">
                 <Checkbox id="dialog-register-notice" v-model="acceptedNotice" class="mt-0.5" :aria-invalid="Boolean(registrationError)" />
-                <Label for="dialog-register-notice" class="text-xs font-normal leading-5 sm:text-sm">
+                <FieldLabel for="dialog-register-notice" class="text-xs font-normal leading-5 sm:text-sm">
                   ข้าพเจ้าได้อ่านและรับทราบประกาศความเป็นส่วนตัวแล้ว
-                </Label>
-              </div>
+                </FieldLabel>
+              </Field>
 
-              <p v-if="registrationError" id="dialog-register-error" class="text-sm text-destructive" role="alert">
+              <FieldError v-if="registrationError" id="dialog-register-error">
                 {{ registrationError }}
-              </p>
+              </FieldError>
 
               <Button type="submit" size="lg" class="h-11 w-full rounded-xl font-semibold">สร้างบัญชี</Button>
             </form>

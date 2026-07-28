@@ -34,6 +34,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/components/ui/item'
 import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
@@ -297,32 +305,35 @@ function logout() {
             class="max-h-[calc(100dvh-5rem)] w-[min(17.5rem,calc(100vw-1rem))] overflow-y-auto p-0 sm:w-[min(22rem,calc(100vw-1rem))]"
           >
             <div class="space-y-2 p-3 sm:space-y-3 sm:p-4">
-              <div class="flex items-start gap-2.5 sm:gap-3">
-                <Avatar class="size-9 shrink-0 sm:size-10">
-                  <AvatarFallback class="bg-primary/10 font-semibold text-primary">{{ avatarInitials }}</AvatarFallback>
-                </Avatar>
-                <div class="min-w-0 flex-1">
-                  <p class="truncate font-semibold">{{ session.currentUser?.displayName }}</p>
-                  <p class="truncate text-xs text-muted-foreground">{{ session.currentUser?.email }}</p>
-                  <p class="mt-0.5 text-xs text-muted-foreground">{{ accountIdentifier }}</p>
-                </div>
-              </div>
+              <Item size="sm" class="flex-nowrap border-0 p-0">
+                <ItemMedia>
+                  <Avatar class="size-9 shrink-0 sm:size-10">
+                    <AvatarFallback class="bg-primary/10 font-semibold text-primary">{{ avatarInitials }}</AvatarFallback>
+                  </Avatar>
+                </ItemMedia>
+                <ItemContent class="min-w-0">
+                  <ItemTitle class="max-w-full truncate font-semibold">{{ session.currentUser?.displayName }}</ItemTitle>
+                  <ItemDescription class="line-clamp-none break-all text-xs">
+                    {{ session.currentUser?.email }}<br>{{ accountIdentifier }}
+                  </ItemDescription>
+                </ItemContent>
+              </Item>
 
-              <div v-if="!session.isStaff" class="grid gap-1.5 rounded-lg bg-muted p-2.5 text-xs sm:gap-2 sm:p-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <MailCheckIcon class="size-3.5" aria-hidden="true" /> อีเมลส่วนตัว
-                  </span>
-                  <Badge variant="success">ยืนยันแล้ว</Badge>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span class="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <LinkIcon class="size-3.5" aria-hidden="true" /> KKU SSO
-                  </span>
-                  <Badge :variant="session.currentUser?.kkuSsoLinked ? 'success' : 'outline'">
-                    {{ session.currentUser?.kkuSsoLinked ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม' }}
-                  </Badge>
-                </div>
+              <div v-if="!session.isStaff" class="grid gap-1">
+                <Item size="xs" variant="muted" class="flex-nowrap">
+                  <ItemMedia variant="icon"><MailCheckIcon aria-hidden="true" /></ItemMedia>
+                  <ItemContent><ItemTitle class="text-xs text-muted-foreground">อีเมลส่วนตัว</ItemTitle></ItemContent>
+                  <ItemActions><Badge variant="success">ยืนยันแล้ว</Badge></ItemActions>
+                </Item>
+                <Item size="xs" variant="muted" class="flex-nowrap">
+                  <ItemMedia variant="icon"><LinkIcon aria-hidden="true" /></ItemMedia>
+                  <ItemContent><ItemTitle class="text-xs text-muted-foreground">KKU SSO</ItemTitle></ItemContent>
+                  <ItemActions>
+                    <Badge :variant="session.currentUser?.kkuSsoLinked ? 'success' : 'outline'">
+                      {{ session.currentUser?.kkuSsoLinked ? 'เชื่อมแล้ว' : 'ยังไม่เชื่อม' }}
+                    </Badge>
+                  </ItemActions>
+                </Item>
               </div>
 
               <Button

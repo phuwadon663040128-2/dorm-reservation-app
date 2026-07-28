@@ -13,6 +13,7 @@ export const contracts: Contract[] = [
     contractPeriod: 'ปีการศึกษา 2569 (ส.ค. 2569 – พ.ค. 2570)',
     status: 'signed_received',
     signedScanUploaded: true,
+    signedScanFileName: 'contract-A201-applicant-f-signed.pdf',
     printHistory: [{ at: agoHours(240), by: 'applicant-f' }],
   },
   {
@@ -38,6 +39,7 @@ export const contracts: Contract[] = [
     contractPeriod: 'ปีการศึกษา 2569 (ส.ค. 2569 – พ.ค. 2570)',
     status: 'signed_received',
     signedScanUploaded: true,
+    signedScanFileName: 'contract-3105-applicant-e-signed.pdf',
     printHistory: [
       { at: agoHours(290), by: 'applicant-e' },
       { at: agoHours(270), by: 'staff-contract', reason: 'พิมพ์ซ้ำ — ฉบับแรกข้อมูลเบอร์ติดต่อผิด' },

@@ -22,6 +22,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import {
   Table,
   TableBody,
   TableCell,
@@ -240,18 +248,20 @@ function receiveReturnedPdf(batch: ScbExportBatch) {
           </div>
         </div>
 
-        <div v-else class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center">
-          <InboxIcon class="size-9 text-muted-foreground" aria-hidden="true" />
-          <div class="space-y-1">
-            <p class="font-medium">ยังไม่มีรายการที่พร้อมสร้าง batch</p>
-            <p class="max-w-md text-sm text-muted-foreground">
+        <Empty v-else class="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon"><InboxIcon aria-hidden="true" /></EmptyMedia>
+            <EmptyTitle>ยังไม่มีรายการที่พร้อมสร้าง batch</EmptyTitle>
+            <EmptyDescription>
               ให้ผู้สมัครหรือรูมเมทยืนยันห้องก่อน ระบบจะสร้าง obligation สถานะ ready_for_export อัตโนมัติ แล้วกลับมาที่หน้านี้
-            </p>
-          </div>
-          <Button as-child variant="outline">
-            <RouterLink to="/staff/holds">ไปดูคิวห้องที่ถูก hold</RouterLink>
-          </Button>
-        </div>
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button as-child variant="outline">
+              <RouterLink to="/staff/holds">ไปดูคิวห้องที่ถูก hold</RouterLink>
+            </Button>
+          </EmptyContent>
+        </Empty>
 
         <DialogFooter>
           <Button variant="outline" @click="createOpen = false">ยกเลิก</Button>

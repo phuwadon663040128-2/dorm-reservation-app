@@ -2,10 +2,18 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { CheckCircle2Icon } from '@lucide/vue'
+import { BedDoubleIcon, CheckCircle2Icon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import { holdStatusLabel, occupancyModeLabel } from '@/lib/labels'
 import { users } from '@/fixtures'
@@ -127,15 +135,18 @@ function onHoldExpired() {
       </Card>
     </template>
 
-    <Card v-else>
-      <CardContent class="space-y-3 p-8 text-center">
-        <p class="font-medium">ยังไม่มีการจอง</p>
-        <p class="text-sm text-muted-foreground">เริ่มจากจับคู่รูมเมท (หรือเลือกเหมาห้อง) แล้วเลือกห้องจริงที่ต้องการ</p>
-        <div class="flex justify-center gap-2">
+    <Empty v-else class="border bg-card shadow-sm">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><BedDoubleIcon aria-hidden="true" /></EmptyMedia>
+        <EmptyTitle>ยังไม่มีการจอง</EmptyTitle>
+        <EmptyDescription>เริ่มจากจับคู่รูมเมท หรือเลือกเหมาห้อง แล้วเลือกห้องจริงที่ต้องการ</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <div class="flex flex-wrap justify-center gap-2">
           <Button as-child><RouterLink to="/app/roommate">จับคู่รูมเมท</RouterLink></Button>
           <Button as-child variant="outline"><RouterLink to="/app/rooms">ดูห้องว่าง</RouterLink></Button>
         </div>
-      </CardContent>
-    </Card>
+      </EmptyContent>
+    </Empty>
   </div>
 </template>

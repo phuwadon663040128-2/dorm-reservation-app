@@ -8,6 +8,7 @@ import {
   PlusIcon,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
@@ -279,7 +280,7 @@ watch(open, (isOpen) => {
 
       <div v-if="planUrl && !imageFailed" class="min-w-0 space-y-2.5">
         <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 p-2">
-          <div class="inline-flex items-center gap-1" role="group" aria-label="ควบคุมการซูมแผนผัง">
+          <ButtonGroup aria-label="ควบคุมการซูมแผนผัง">
             <Button
               type="button"
               variant="outline"
@@ -290,9 +291,9 @@ watch(open, (isOpen) => {
             >
               <MinusIcon aria-hidden="true" />
             </Button>
-            <span class="min-w-12 text-center text-xs font-semibold tabular-nums" aria-live="polite">
+            <ButtonGroupText as="span" class="min-w-12 justify-center bg-background text-center text-xs font-semibold tabular-nums" aria-live="polite">
               {{ zoomPercent }}
-            </span>
+            </ButtonGroupText>
             <Button
               type="button"
               variant="outline"
@@ -313,7 +314,7 @@ watch(open, (isOpen) => {
             >
               <Maximize2Icon aria-hidden="true" />
             </Button>
-          </div>
+          </ButtonGroup>
           <p class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <MoveIcon class="size-3.5" aria-hidden="true" />
             บีบนิ้วหรือใช้ปุ่มเพื่อซูม · ลากเพื่อเลื่อน

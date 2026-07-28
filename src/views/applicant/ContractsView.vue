@@ -1,10 +1,28 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { FileTextIcon, PrinterIcon, UploadIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import FileAttachmentField from '@/components/domain/FileAttachmentField.vue'
 import { contractStatusLabel, occupancyModeLabel } from '@/lib/labels'
 import { useContractsStore } from '@/stores/contracts'
 import { useReservationStore } from '@/stores/reservation'
@@ -17,6 +35,35 @@ const groupProgress = computed(() => {
   const resv = reservation.myReservation
   return resv ? contractsStore.groupContractProgress(resv.id) : null
 })
+
+const uploadDialogOpen = ref(false)
+const selectedContractId = ref('')
+const signedFileName = ref('')
+const signedFile = ref<File | null>(null)
+const selectedContract = computed(() => myContracts.value.find(item => item.id === selectedContractId.value))
+
+function openUploadDialog(contractId: string) {
+  selectedContractId.value = contractId
+  signedFileName.value = ''
+  signedFile.value = null
+  uploadDialogOpen.value = true
+}
+
+function uploadSignedContract() {
+  if (!selectedContract.value || !signedFile.value) {
+    toast.error('กรุณาเลือกไฟล์สแกนหรือรูปถ่ายสัญญาที่ลงนามแล้ว')
+    return
+  }
+
+  const uploaded = contractsStore.uploadSignedContractScan(selectedContract.value.id, signedFile.value.name)
+  if (!uploaded) {
+    toast.error('ไม่สามารถบันทึกไฟล์สัญญานี้ได้ กรุณาตรวจสอบสถานะล่าสุด')
+    return
+  }
+
+  toast.success('อัปโหลดสัญญาที่ลงนามแล้วสำเร็จ ไฟล์ถูกเก็บแบบ private และรอเจ้าหน้าที่ตรวจรับ')
+  uploadDialogOpen.value = false
+}
 </script>
 
 <template>
@@ -53,6 +100,19 @@ const groupProgress = computed(() => {
           </CardDescription>
         </CardHeader>
         <CardContent class="space-y-3">
+          <div
+            v-if="ct.signedScanUploaded"
+            class="flex min-w-0 items-center gap-3 rounded-lg border bg-muted/30 p-3"
+          >
+            <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-background text-muted-foreground">
+              <FileTextIcon class="size-4" aria-hidden="true" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium">{{ ct.signedScanFileName ?? 'ไฟล์สแกนสัญญาที่ลงนามแล้ว' }}</p>
+              <p class="text-xs text-muted-foreground">ไฟล์ส่วนตัว · รอหรือผ่านการตรวจรับตามสถานะสัญญา</p>
+            </div>
+            <Badge variant="success" class="shrink-0">อัปโหลดแล้ว</Badge>
+          </div>
           <div class="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" @click="toast('ต้นแบบ: เปิดตัวอย่างสัญญา (PDF snapshot ไม่แก้ไขย้อนหลัง)')">
               ดูตัวอย่าง
@@ -63,7 +123,7 @@ const groupProgress = computed(() => {
             <Button
               v-if="!ct.signedScanUploaded && ct.status === 'printed'"
               size="sm"
-              @click="toast('ต้นแบบ: อัปโหลดสแกน/รูปสัญญาที่ลงนามแล้ว — ไฟล์เก็บแบบ private (เฟส P6)')"
+              @click="openUploadDialog(ct.id)"
             >
               <UploadIcon aria-hidden="true" /> อัปโหลดสัญญาที่ลงนาม
             </Button>
@@ -77,10 +137,48 @@ const groupProgress = computed(() => {
         </CardContent>
       </Card>
     </div>
-    <Card v-else>
-      <CardContent class="p-8 text-center text-sm text-muted-foreground">
-        ยังไม่มีสัญญา — สัญญาจะสร้างได้หลังการจองได้รับการยืนยัน (ชำระครบ + เจ้าหน้าที่ยืนยัน)
-      </CardContent>
-    </Card>
+    <Empty v-else class="border bg-card shadow-sm">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><FileTextIcon aria-hidden="true" /></EmptyMedia>
+        <EmptyTitle>ยังไม่มีสัญญา</EmptyTitle>
+        <EmptyDescription>
+          สัญญาจะสร้างได้หลังชำระครบและเจ้าหน้าที่ยืนยันการจองอย่างเป็นทางการ
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button as-child variant="outline" size="sm">
+          <RouterLink to="/app/reservation">ตรวจสอบสถานะการจอง</RouterLink>
+        </Button>
+      </EmptyContent>
+    </Empty>
+
+    <Dialog v-model:open="uploadDialogOpen">
+      <DialogContent class="w-[calc(100vw-1rem)] sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>อัปโหลดสัญญาที่ลงนามแล้ว</DialogTitle>
+          <DialogDescription>
+            สัญญาห้อง {{ selectedContract?.roomNumber }} · รองรับ PDF, JPG และ PNG ไฟล์นี้เป็นข้อมูลส่วนบุคคลและจัดเก็บแบบ private
+          </DialogDescription>
+        </DialogHeader>
+
+        <FileAttachmentField
+          v-model="signedFileName"
+          v-model:file="signedFile"
+          input-id="signed-contract-file"
+          label="ไฟล์สัญญาที่ลงนามแล้ว"
+          select-label="เลือกไฟล์สัญญา"
+          hint="PDF, JPG หรือ PNG · สูงสุดตามข้อกำหนดของระบบจริง"
+          accept="application/pdf,image/jpeg,image/png"
+          status-text="พร้อมอัปโหลดแบบ private"
+        />
+
+        <DialogFooter>
+          <Button variant="outline" @click="uploadDialogOpen = false">ยกเลิก</Button>
+          <Button :disabled="!signedFile" @click="uploadSignedContract">
+            <UploadIcon aria-hidden="true" /> ยืนยันอัปโหลด
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

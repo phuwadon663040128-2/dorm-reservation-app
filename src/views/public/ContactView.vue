@@ -11,8 +11,8 @@ import {
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import PageHeader from '@/components/domain/PageHeader.vue'
 import { dormOfficeContact } from '@/fixtures/personnel'
@@ -114,26 +114,28 @@ function submit() {
             <h2 class="font-bold">ส่งเรื่องถึงเจ้าหน้าที่</h2>
             <p class="text-sm text-muted-foreground">เจ้าหน้าที่ตอบกลับทางอีเมลภายใน 1–2 วันทำการ</p>
           </div>
-          <form class="space-y-3" @submit.prevent="submit">
-            <div class="space-y-1.5">
-              <Label for="ct-name">ชื่อ–นามสกุล</Label>
-              <Input id="ct-name" v-model="form.name" placeholder="เช่น ศุภกร ใจดี" required />
-            </div>
-            <div class="space-y-1.5">
-              <Label for="ct-email">อีเมลสำหรับติดต่อกลับ</Label>
-              <Input id="ct-email" v-model="form.email" type="email" placeholder="name@example.com" />
-            </div>
-            <div class="space-y-1.5">
-              <Label for="ct-subject">หัวข้อเรื่อง</Label>
-              <Input id="ct-subject" v-model="form.subject" placeholder="เช่น สอบถามการย้ายห้อง" required />
-            </div>
-            <div class="space-y-1.5">
-              <Label for="ct-message">รายละเอียด</Label>
-              <Textarea id="ct-message" v-model="form.message" rows="4" placeholder="อธิบายรายละเอียดที่ต้องการสอบถาม" />
-            </div>
-            <Button type="submit" class="w-full rounded-full">
-              <SendIcon aria-hidden="true" /> ส่งเรื่อง
-            </Button>
+          <form @submit.prevent="submit">
+            <FieldGroup class="gap-3">
+              <Field>
+                <FieldLabel for="ct-name">ชื่อ–นามสกุล</FieldLabel>
+                <Input id="ct-name" v-model="form.name" placeholder="เช่น ศุภกร ใจดี" required />
+              </Field>
+              <Field>
+                <FieldLabel for="ct-email">อีเมลสำหรับติดต่อกลับ</FieldLabel>
+                <Input id="ct-email" v-model="form.email" type="email" placeholder="name@example.com" />
+              </Field>
+              <Field>
+                <FieldLabel for="ct-subject">หัวข้อเรื่อง</FieldLabel>
+                <Input id="ct-subject" v-model="form.subject" placeholder="เช่น สอบถามการย้ายห้อง" required />
+              </Field>
+              <Field>
+                <FieldLabel for="ct-message">รายละเอียด</FieldLabel>
+                <Textarea id="ct-message" v-model="form.message" rows="4" placeholder="อธิบายรายละเอียดที่ต้องการสอบถาม" />
+              </Field>
+              <Button type="submit" class="w-full rounded-full">
+                <SendIcon aria-hidden="true" /> ส่งเรื่อง
+              </Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

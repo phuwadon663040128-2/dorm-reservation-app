@@ -24,6 +24,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
@@ -255,12 +263,15 @@ function onConfirmationExpired() {
     </Card>
 
     <!-- ยังไม่มีกลุ่ม -->
-    <Card v-else>
-      <CardContent class="space-y-3 p-6 text-center">
-        <p class="font-medium">ยังไม่มีกลุ่มรูมเมท</p>
-        <p class="text-sm text-muted-foreground">
+    <Empty v-else class="border bg-card shadow-sm">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><UsersIcon aria-hidden="true" /></EmptyMedia>
+        <EmptyTitle>ยังไม่มีกลุ่มรูมเมท</EmptyTitle>
+        <EmptyDescription>
           ส่งคำเชิญถึงเพื่อนเพื่อพักคู่ หรือข้ามขั้นตอนนี้หากต้องการเหมาห้องพักคนเดียว
-        </p>
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
         <div class="flex flex-wrap justify-center gap-2">
           <Button @click="inviteDialogOpen = true">
             <MailPlusIcon aria-hidden="true" /> ส่งคำเชิญรูมเมท
@@ -269,8 +280,8 @@ function onConfirmationExpired() {
             <RouterLink to="/app/rooms">เหมาห้อง — ไปเลือกห้องเลย</RouterLink>
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </EmptyContent>
+    </Empty>
 
     <!-- ประวัติคำเชิญ -->
     <Card v-if="myInvitations.length">

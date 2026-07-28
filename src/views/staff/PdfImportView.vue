@@ -1,8 +1,17 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { FileUpIcon, UploadIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -12,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import PermissionGate from '@/components/domain/PermissionGate.vue'
+import FileAttachmentField from '@/components/domain/FileAttachmentField.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { users } from '@/fixtures'
@@ -19,6 +29,9 @@ import { usePaymentsStore } from '@/stores/payments'
 
 const payments = usePaymentsStore()
 const { can } = usePermissions()
+const uploadDialogOpen = ref(false)
+const returnedPdfName = ref('')
+const returnedPdfFile = ref<File | null>(null)
 
 const matchLabel: Record<string, string> = {
   matched: 'จับคู่แล้ว',
@@ -47,13 +60,25 @@ function rematch(pageId: string) {
 }
 
 function uploadReturnedPdf() {
+  if (!returnedPdfFile.value) {
+    toast.error('กรุณาเลือกไฟล์ PDF รวมที่ธนาคารส่งกลับมา')
+    return
+  }
+  if (returnedPdfFile.value.type !== 'application/pdf' && !returnedPdfFile.value.name.toLowerCase().endsWith('.pdf')) {
+    toast.error('ไฟล์ที่เลือกต้องเป็น PDF เท่านั้น')
+    return
+  }
+
   const batch = payments.batches.find(item => item.status === 'awaiting_returned_pdf' || item.status === 'exported')
   if (!batch) {
     toast.info('ไม่มี batch ที่รอ PDF — ดาวน์โหลด batch จากหน้า SCB Export ก่อน')
     return
   }
   const count = payments.importReturnedPdf(batch.id)
-  toast.success(`นำเข้า ${batch.id} และจับคู่แบบฟอร์มสำเร็จ ${count} หน้า`)
+  toast.success(`นำเข้า ${returnedPdfFile.value.name} สำหรับ ${batch.id} และจับคู่แบบฟอร์มสำเร็จ ${count} หน้า`)
+  uploadDialogOpen.value = false
+  returnedPdfName.value = ''
+  returnedPdfFile.value = null
 }
 </script>
 
@@ -66,8 +91,8 @@ function uploadReturnedPdf() {
     >
       <template #actions>
         <PermissionGate permission="payment_document.import">
-          <Button @click="uploadReturnedPdf">
-            <UploadIcon aria-hidden="true" /> จำลองอัปโหลด PDF รวม
+          <Button @click="uploadDialogOpen = true">
+            <UploadIcon aria-hidden="true" /> อัปโหลด PDF รวม
           </Button>
         </PermissionGate>
       </template>
@@ -121,5 +146,34 @@ function uploadReturnedPdf() {
         เคสนี้คือเหตุผลที่ระบบห้าม auto-match จาก Ref อย่างเดียว
       </p>
     </PermissionGate>
+
+    <Dialog v-model:open="uploadDialogOpen">
+      <DialogContent class="w-[calc(100vw-1rem)] sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>อัปโหลด PDF รวมจากธนาคาร</DialogTitle>
+          <DialogDescription>
+            ระบบจำลองการเก็บไฟล์ต้นฉบับและ checksum ก่อนแยกหน้า แล้วจับคู่ด้วยข้อความเฉพาะของผู้พัก ไม่ใช้ลำดับหน้าหรือ Ref. เพียงอย่างเดียว
+          </DialogDescription>
+        </DialogHeader>
+
+        <FileAttachmentField
+          v-model="returnedPdfName"
+          v-model:file="returnedPdfFile"
+          input-id="returned-scb-pdf"
+          label="ไฟล์ PDF รวม"
+          select-label="เลือกไฟล์ PDF จากธนาคาร"
+          hint="รองรับ PDF หนึ่งไฟล์ต่อ batch"
+          accept="application/pdf,.pdf"
+          status-text="พร้อมตรวจ checksum และแยกหน้า"
+        />
+
+        <DialogFooter>
+          <Button variant="outline" @click="uploadDialogOpen = false">ยกเลิก</Button>
+          <Button :disabled="!returnedPdfFile" @click="uploadReturnedPdf">
+            <UploadIcon aria-hidden="true" /> นำเข้าและจับคู่
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

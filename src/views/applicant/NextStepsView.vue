@@ -3,6 +3,13 @@ import { computed } from 'vue'
 import { KeyRoundIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import { keyHandoverStatusLabel } from '@/lib/labels'
 import { useContractsStore } from '@/stores/contracts'
 
@@ -39,10 +46,12 @@ const myHandovers = computed(() => contractsStore.myKeyHandovers)
         </CardContent>
       </Card>
     </div>
-    <Card v-else>
-      <CardContent class="p-8 text-center text-sm text-muted-foreground">
-        ยังไม่มีรายการรับกุญแจ — จะปรากฏหลังการจองได้รับการยืนยันและสัญญาเรียบร้อย
-      </CardContent>
-    </Card>
+    <Empty v-else class="border bg-card shadow-sm">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><KeyRoundIcon aria-hidden="true" /></EmptyMedia>
+        <EmptyTitle>ยังไม่มีรายการรับกุญแจ</EmptyTitle>
+        <EmptyDescription>รายการจะปรากฏหลังการจองได้รับการยืนยันและสัญญาเรียบร้อย</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   </div>
 </template>

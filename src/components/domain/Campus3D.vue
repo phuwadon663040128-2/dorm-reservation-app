@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { ArrowLeftIcon, Building2Icon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useTheme } from '@/composables/useTheme'
 import Campus3DLoading from './Campus3DLoading.vue'
 import { CAMPUS_PALETTES, campusArea } from '@/lib/campus3d'
@@ -2246,6 +2247,10 @@ function rebuildSceneWithLoading(label: string, variant: 'skeleton' | 'spinner')
   })
 }
 
+function selectCameraView(value: unknown) {
+  if (value === 'perspective' || value === 'top') setView(value)
+}
+
 // เปลี่ยนหอใช้ spinner ทับผังเดิม เพื่อรักษาบริบทและไม่ทำให้ layout ดูเหมือนเริ่มโหลดหน้าใหม่
 watch(() => props.dormGroupId, (dormGroupId) => {
   diveTarget = null
@@ -2319,24 +2324,28 @@ const headerLabel = computed(() =>
       <!-- ปุ่มมุมมอง + เข็มทิศ: เต็ม 2 คอลัมน์บนมือถือ, ชิดขวาบนบนจอใหญ่ -->
       <div class="flex w-full shrink-0 flex-col items-end gap-2 sm:w-auto">
         <div class="pointer-events-auto grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-          <Button
+          <ToggleGroup
+            type="single"
             size="sm"
-            :variant="viewMode === 'perspective' ? 'default' : 'secondary'"
-            class="w-full min-w-0 shadow-sm sm:w-auto"
-            :aria-pressed="viewMode === 'perspective'"
-            @click="setView('perspective')"
+            :spacing="2"
+            :model-value="viewMode"
+            class="col-span-2 grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"
+            aria-label="เลือกมุมกล้องของผังสามมิติ"
+            @update:model-value="selectCameraView"
           >
-            มุมมองเฉียง
-          </Button>
-          <Button
-            size="sm"
-            :variant="viewMode === 'top' ? 'default' : 'secondary'"
-            class="w-full min-w-0 shadow-sm sm:w-auto"
-            :aria-pressed="viewMode === 'top'"
-            @click="setView('top')"
-          >
-            มุมมองด้านบน
-          </Button>
+            <ToggleGroupItem
+              value="perspective"
+              class="h-8 w-full min-w-0 bg-secondary text-secondary-foreground shadow-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
+            >
+              มุมมองเฉียง
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="top"
+              class="h-8 w-full min-w-0 bg-secondary text-secondary-foreground shadow-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
+            >
+              มุมมองด้านบน
+            </ToggleGroupItem>
+          </ToggleGroup>
           <Button
             v-if="mode !== 'campus'"
             size="sm"

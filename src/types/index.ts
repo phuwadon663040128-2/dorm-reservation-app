@@ -355,6 +355,7 @@ export interface Contract {
   contractPeriod: string
   status: ContractStatus
   signedScanUploaded: boolean
+  signedScanFileName?: string
   printHistory: { at: string; by: string; reason?: string }[]
 }
 

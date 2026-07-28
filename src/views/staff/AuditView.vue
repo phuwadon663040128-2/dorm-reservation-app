@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { BracesIcon, CopyIcon, ScrollTextIcon, SearchIcon, XIcon } from '@lucide/vue'
+import { computed, ref, watch } from 'vue'
+import { BracesIcon, ChevronLeftIcon, ChevronRightIcon, CopyIcon, ScrollTextIcon, SearchIcon, XIcon } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,8 +12,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import {
   Select,
   SelectContent,
@@ -38,6 +51,8 @@ import type { AuditEvent } from '@/types'
 type TimeRange = 'all' | '24h' | '7d' | '30d'
 type AuditSort = 'newest' | 'oldest'
 
+const PAGE_SIZE = 25
+
 const contractsStore = useContractsStore()
 
 const searchQuery = ref('')
@@ -45,6 +60,7 @@ const actionGroupFilter = ref('all')
 const actorFilter = ref('all')
 const timeRange = ref<TimeRange>('all')
 const sortBy = ref<AuditSort>('newest')
+const currentPage = ref(1)
 const jsonOpen = ref(false)
 const selectedEvent = ref<AuditEvent | null>(null)
 
@@ -117,6 +133,19 @@ const filteredEvents = computed(() => {
   })
 })
 
+const paginatedEvents = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filteredEvents.value.slice(start, start + PAGE_SIZE)
+})
+
+const visibleRangeStart = computed(() =>
+  filteredEvents.value.length ? (currentPage.value - 1) * PAGE_SIZE + 1 : 0,
+)
+
+const visibleRangeEnd = computed(() =>
+  Math.min(currentPage.value * PAGE_SIZE, filteredEvents.value.length),
+)
+
 const hasActiveFilters = computed(() =>
   searchQuery.value !== ''
   || actionGroupFilter.value !== 'all'
@@ -126,6 +155,10 @@ const hasActiveFilters = computed(() =>
 )
 
 const formattedJson = computed(() => JSON.stringify(selectedEvent.value, null, 2))
+
+watch([searchQuery, actionGroupFilter, actorFilter, timeRange, sortBy], () => {
+  currentPage.value = 1
+})
 
 function clearFilters() {
   searchQuery.value = ''
@@ -170,15 +203,27 @@ async function copyJson() {
           <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
             <div class="space-y-1.5 md:col-span-2 xl:col-span-4">
               <Label for="audit-search">ค้นหา Audit Log</Label>
-              <div class="relative">
-                <SearchIcon class="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <Input
+              <InputGroup>
+                <InputGroupAddon>
+                  <SearchIcon aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupInput
                   id="audit-search"
                   v-model="searchQuery"
-                  class="pl-8"
                   placeholder="Action, ผู้กระทำ, รายละเอียด, เหตุผล หรือรหัสอ้างอิง"
+                  aria-label="ค้นหา Audit Log"
                 />
-              </div>
+                <InputGroupAddon v-if="searchQuery" align="inline-end">
+                  <InputGroupButton
+                    size="icon-xs"
+                    aria-label="ล้างคำค้นหา Audit Log"
+                    title="ล้างคำค้นหา"
+                    @click="searchQuery = ''"
+                  >
+                    <XIcon aria-hidden="true" />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
             </div>
 
             <div class="space-y-1.5 xl:col-span-2">
@@ -232,8 +277,14 @@ async function copyJson() {
 
           <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
             <p class="text-sm text-muted-foreground" aria-live="polite">
-              แสดง <b class="tabular-nums text-foreground">{{ filteredEvents.length.toLocaleString('th-TH') }}</b>
-              จาก {{ contractsStore.auditEvents.length.toLocaleString('th-TH') }} เหตุการณ์
+              แสดง
+              <b class="tabular-nums text-foreground">{{ visibleRangeStart }}–{{ visibleRangeEnd }}</b>
+              จาก
+              <b class="tabular-nums text-foreground">{{ filteredEvents.length.toLocaleString('th-TH') }}</b>
+              เหตุการณ์
+              <span v-if="filteredEvents.length !== contractsStore.auditEvents.length">
+                (ทั้งหมด {{ contractsStore.auditEvents.length.toLocaleString('th-TH') }} เหตุการณ์)
+              </span>
             </p>
             <Button v-if="hasActiveFilters" variant="ghost" size="sm" @click="clearFilters">
               <XIcon aria-hidden="true" /> ล้างตัวกรอง
@@ -254,7 +305,7 @@ async function copyJson() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="event in filteredEvents" :key="event.id">
+              <TableRow v-for="event in paginatedEvents" :key="event.id">
                 <TableCell class="whitespace-nowrap align-top text-xs text-muted-foreground">
                   {{ formatDateTime(event.timestamp) }}
                 </TableCell>
@@ -286,6 +337,43 @@ async function copyJson() {
               </TableRow>
             </TableBody>
           </Table>
+
+          <div v-if="filteredEvents.length > PAGE_SIZE" class="border-t px-3 py-3 sm:px-4">
+            <Pagination
+              v-slot="{ page }"
+              v-model:page="currentPage"
+              :items-per-page="PAGE_SIZE"
+              :total="filteredEvents.length"
+              :sibling-count="1"
+              show-edges
+              aria-label="แบ่งหน้า Audit Log"
+            >
+              <PaginationContent v-slot="{ items }">
+                <PaginationPrevious aria-label="หน้าก่อนหน้า">
+                  <ChevronLeftIcon aria-hidden="true" />
+                  <span class="hidden sm:inline">ก่อนหน้า</span>
+                </PaginationPrevious>
+                <template v-for="(item, index) in items" :key="index">
+                  <PaginationItem
+                    v-if="item.type === 'page'"
+                    :value="item.value"
+                    :is-active="item.value === page"
+                    :aria-label="`หน้าที่ ${item.value}`"
+                  >
+                    {{ item.value.toLocaleString('th-TH') }}
+                  </PaginationItem>
+                  <PaginationEllipsis v-else :index="index">
+                    <span aria-hidden="true">…</span>
+                    <span class="sr-only">มีหน้าที่ซ่อนอยู่</span>
+                  </PaginationEllipsis>
+                </template>
+                <PaginationNext aria-label="หน้าถัดไป">
+                  <span class="hidden sm:inline">ถัดไป</span>
+                  <ChevronRightIcon aria-hidden="true" />
+                </PaginationNext>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       </div>
     </PermissionGate>

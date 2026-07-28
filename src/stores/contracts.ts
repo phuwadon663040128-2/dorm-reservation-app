@@ -46,6 +46,22 @@ export const useContractsStore = defineStore('contracts', () => {
     })
   }
 
+  /** เก็บไฟล์สแกนแบบ private โดยยังรอเจ้าหน้าที่ตรวจรับสัญญาตาม workflow เดิม */
+  function uploadSignedContractScan(contractId: string, fileName: string) {
+    const contract = contracts.value.find(item => item.id === contractId)
+    if (!contract || contract.signedScanUploaded || contract.status !== 'printed') return false
+
+    contract.signedScanUploaded = true
+    contract.signedScanFileName = fileName
+    addAudit({
+      actor: session.currentUser?.id ?? 'unknown-applicant',
+      action: 'contract.signed_scan_upload',
+      relatedIds: [contract.id, contract.reservationGroupId],
+      detail: `อัปโหลดไฟล์สแกนสัญญาที่ลงนามแล้ว ${fileName} (private) และรอเจ้าหน้าที่ตรวจรับ`,
+    })
+    return true
+  }
+
   return {
     contracts,
     keyHandovers,
@@ -56,5 +72,6 @@ export const useContractsStore = defineStore('contracts', () => {
     myKeyHandovers,
     groupContractProgress,
     addAudit,
+    uploadSignedContractScan,
   }
 })

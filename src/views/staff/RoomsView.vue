@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ArrowUpDownIcon, Building2Icon, ImportIcon, SearchIcon, XIcon } from '@lucide/vue'
+import { ArrowUpDownIcon, Building2Icon, ChevronLeftIcon, ChevronRightIcon, ImportIcon, SearchIcon, XIcon } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import {
   Select,
   SelectContent,
@@ -28,6 +41,8 @@ import { useDormStore } from '@/stores/dorm'
 
 type RoomSort = 'room-asc' | 'room-desc' | 'building-asc' | 'floor-asc' | 'status-asc'
 
+const PAGE_SIZE = 25
+
 const dorm = useDormStore()
 
 const searchQuery = ref('')
@@ -37,6 +52,7 @@ const floorFilter = ref('all')
 const configFilter = ref('all')
 const statusFilter = ref('all')
 const sortBy = ref<RoomSort>('room-asc')
+const currentPage = ref(1)
 
 const roomRows = computed(() =>
   dorm.rooms.map((room) => {
@@ -114,6 +130,19 @@ const filteredRows = computed(() => {
   })
 })
 
+const paginatedRows = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filteredRows.value.slice(start, start + PAGE_SIZE)
+})
+
+const visibleRangeStart = computed(() =>
+  filteredRows.value.length ? (currentPage.value - 1) * PAGE_SIZE + 1 : 0,
+)
+
+const visibleRangeEnd = computed(() =>
+  Math.min(currentPage.value * PAGE_SIZE, filteredRows.value.length),
+)
+
 const hasActiveFilters = computed(() =>
   searchQuery.value !== ''
   || dormFilter.value !== 'all'
@@ -123,6 +152,10 @@ const hasActiveFilters = computed(() =>
   || statusFilter.value !== 'all'
   || sortBy.value !== 'room-asc',
 )
+
+watch([searchQuery, dormFilter, buildingFilter, floorFilter, configFilter, statusFilter, sortBy], () => {
+  currentPage.value = 1
+})
 
 function clearFilters() {
   searchQuery.value = ''
@@ -161,15 +194,27 @@ function blockRoom(number: string) {
           <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
             <div class="space-y-1.5 md:col-span-2 xl:col-span-3">
               <Label for="room-search">ค้นหาห้อง</Label>
-              <div class="relative">
-                <SearchIcon class="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <Input
+              <InputGroup>
+                <InputGroupAddon>
+                  <SearchIcon aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupInput
                   id="room-search"
                   v-model="searchQuery"
-                  class="pl-8"
                   placeholder="เลขห้อง อาคาร ประเภท หรือเหตุผล block"
+                  aria-label="ค้นหาห้อง"
                 />
-              </div>
+                <InputGroupAddon v-if="searchQuery" align="inline-end">
+                  <InputGroupButton
+                    size="icon-xs"
+                    aria-label="ล้างคำค้นหาห้อง"
+                    title="ล้างคำค้นหา"
+                    @click="searchQuery = ''"
+                  >
+                    <XIcon aria-hidden="true" />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
             </div>
 
             <div class="space-y-1.5 xl:col-span-2">
@@ -236,8 +281,14 @@ function blockRoom(number: string) {
 
           <div class="mt-3 flex flex-wrap items-end justify-between gap-3 border-t pt-3">
             <p class="text-sm text-muted-foreground" aria-live="polite">
-              พบ <b class="tabular-nums text-foreground">{{ filteredRows.length.toLocaleString('th-TH') }}</b>
-              จาก {{ roomRows.length.toLocaleString('th-TH') }} ห้อง
+              แสดง
+              <b class="tabular-nums text-foreground">{{ visibleRangeStart }}–{{ visibleRangeEnd }}</b>
+              จาก
+              <b class="tabular-nums text-foreground">{{ filteredRows.length.toLocaleString('th-TH') }}</b>
+              ห้อง
+              <span v-if="filteredRows.length !== roomRows.length">
+                (ทั้งหมด {{ roomRows.length.toLocaleString('th-TH') }} ห้อง)
+              </span>
             </p>
             <div class="flex flex-wrap items-end gap-2">
               <div class="space-y-1.5">
@@ -276,7 +327,7 @@ function blockRoom(number: string) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="room in filteredRows" :key="room.number">
+              <TableRow v-for="room in paginatedRows" :key="room.number">
                 <TableCell class="font-semibold tabular-nums">{{ room.number }}</TableCell>
                 <TableCell class="text-sm">
                   <span class="font-medium">{{ room.buildingName }}</span>
@@ -303,6 +354,43 @@ function blockRoom(number: string) {
               </TableRow>
             </TableBody>
           </Table>
+
+          <div v-if="filteredRows.length > PAGE_SIZE" class="border-t px-3 py-3 sm:px-4">
+            <Pagination
+              v-slot="{ page }"
+              v-model:page="currentPage"
+              :items-per-page="PAGE_SIZE"
+              :total="filteredRows.length"
+              :sibling-count="1"
+              show-edges
+              aria-label="แบ่งหน้ารายการห้อง"
+            >
+              <PaginationContent v-slot="{ items }">
+                <PaginationPrevious aria-label="หน้าก่อนหน้า">
+                  <ChevronLeftIcon aria-hidden="true" />
+                  <span class="hidden sm:inline">ก่อนหน้า</span>
+                </PaginationPrevious>
+                <template v-for="(item, index) in items" :key="index">
+                  <PaginationItem
+                    v-if="item.type === 'page'"
+                    :value="item.value"
+                    :is-active="item.value === page"
+                    :aria-label="`หน้าที่ ${item.value}`"
+                  >
+                    {{ item.value.toLocaleString('th-TH') }}
+                  </PaginationItem>
+                  <PaginationEllipsis v-else :index="index">
+                    <span aria-hidden="true">…</span>
+                    <span class="sr-only">มีหน้าที่ซ่อนอยู่</span>
+                  </PaginationEllipsis>
+                </template>
+                <PaginationNext aria-label="หน้าถัดไป">
+                  <span class="hidden sm:inline">ถัดไป</span>
+                  <ChevronRightIcon aria-hidden="true" />
+                </PaginationNext>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       </div>
     </PermissionGate>

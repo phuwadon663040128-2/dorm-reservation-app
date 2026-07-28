@@ -397,7 +397,7 @@ onMounted(() => {
                 <StepperSeparator
                   v-if="step.id < steps.length"
                   :class="[
-                    'absolute bottom-0 left-7 top-12 w-px',
+                    'absolute -bottom-2.5 left-[1.875rem] top-[3.125rem] w-px -translate-x-1/2',
                     stepDisplayState(step.id) === 'completed' ? 'bg-primary' : 'bg-muted',
                   ]"
                 />

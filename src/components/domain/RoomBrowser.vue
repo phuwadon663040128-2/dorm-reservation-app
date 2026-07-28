@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Select,
   SelectContent,
@@ -133,6 +134,11 @@ const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
 const viewMode = ref<'3d' | 'plan' | 'list'>(has3d.value ? '3d' : 'plan')
 const realPlanOpen = ref(false)
 const campusRef = ref<{ focusBuilding: (code: string) => void } | null>(null)
+
+function selectViewMode(value: unknown) {
+  if (value === '3d' && has3d.value) viewMode.value = value
+  if (value === 'plan' || value === 'list') viewMode.value = value
+}
 
 // ในมุมมอง 3D — เลือกอาคารจาก dropdown ด้านบน = โฟกัสตึกนั้นในฉาก 3D
 watch(selectedBuildingId, (id) => {
@@ -279,34 +285,37 @@ function statusCount(status: RoomPublicStatus) {
       <!-- สลับมุมมอง + ผังจริง — มือถือ: ปุ่ม 2×2 เต็มความกว้าง · จอใหญ่: ชิดขวาแถวเดียว -->
       <div
         class="col-span-2 grid grid-cols-2 gap-1.5 sm:ms-auto sm:flex sm:items-center sm:gap-1 sm:self-end sm:pb-0.5"
-        role="group"
-        aria-label="เลือกมุมมองห้อง"
       >
-        <Button
-          v-if="has3d"
+        <ToggleGroup
+          type="single"
+          variant="outline"
           size="sm"
-          :variant="viewMode === '3d' ? 'default' : 'outline'"
-          :aria-pressed="viewMode === '3d'"
-          @click="viewMode = '3d'"
+          :spacing="1"
+          :model-value="viewMode"
+          class="contents sm:flex sm:w-auto sm:items-center sm:gap-1"
+          aria-label="เลือกมุมมองห้อง"
+          @update:model-value="selectViewMode"
         >
-          <Building2Icon aria-hidden="true" /> ตึก 3 มิติ
-        </Button>
-        <Button
-          size="sm"
-          :variant="viewMode === 'plan' ? 'default' : 'outline'"
-          :aria-pressed="viewMode === 'plan'"
-          @click="viewMode = 'plan'"
-        >
-          <MapIcon aria-hidden="true" /> ผังชั้น
-        </Button>
-        <Button
-          size="sm"
-          :variant="viewMode === 'list' ? 'default' : 'outline'"
-          :aria-pressed="viewMode === 'list'"
-          @click="viewMode = 'list'"
-        >
-          <LayoutGridIcon aria-hidden="true" /> รายการ
-        </Button>
+          <ToggleGroupItem
+            v-if="has3d"
+            value="3d"
+            class="h-8 w-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
+          >
+            <Building2Icon aria-hidden="true" /> ตึก 3 มิติ
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="plan"
+            class="h-8 w-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
+          >
+            <MapIcon aria-hidden="true" /> ผังชั้น
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="list"
+            class="h-8 w-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
+          >
+            <LayoutGridIcon aria-hidden="true" /> รายการ
+          </ToggleGroupItem>
+        </ToggleGroup>
         <Button
           size="sm"
           variant="outline"

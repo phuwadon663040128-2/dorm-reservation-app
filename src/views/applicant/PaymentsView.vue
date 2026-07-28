@@ -5,7 +5,14 @@ import { toast } from 'vue-sonner'
 import { CheckCircle2Icon, Clock3Icon, QrCodeIcon, WalletCardsIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import ObligationCard from '@/components/domain/ObligationCard.vue'
 import { useApplicationStore } from '@/stores/application'
@@ -112,21 +119,17 @@ async function onPaymentHoldExpired() {
         @payment-flow-finished="onPaymentFlowFinished"
       />
     </div>
-    <Card v-else>
-      <CardContent class="flex flex-col items-center gap-4 p-8 text-center">
-        <div class="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <WalletCardsIcon class="size-5" aria-hidden="true" />
-        </div>
-        <div class="space-y-1">
-          <p class="font-medium">ยังไม่มีรายการชำระเงิน</p>
-          <p class="text-sm text-muted-foreground">
-            รายการจะถูกสร้างหลังเลือกห้องและยืนยันห้องเรียบร้อยแล้ว
-          </p>
-        </div>
+    <Empty v-else class="border bg-card shadow-sm">
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><WalletCardsIcon aria-hidden="true" /></EmptyMedia>
+        <EmptyTitle>ยังไม่มีรายการชำระเงิน</EmptyTitle>
+        <EmptyDescription>รายการจะถูกสร้างหลังเลือกและยืนยันห้องเรียบร้อยแล้ว</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
         <Button as-child variant="outline">
           <RouterLink to="/app/rooms">ไปเลือกห้องพัก</RouterLink>
         </Button>
-      </CardContent>
-    </Card>
+      </EmptyContent>
+    </Empty>
   </div>
 </template>
