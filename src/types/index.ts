@@ -102,6 +102,7 @@ export type Permission =
   | 'reservation.manual_create'
   | 'reservation.assign_room'
   | 'reservation.confirm'
+  | 'reservation.cancel.review'
   | 'pricing_rule.manage'
   | 'payment_obligation.override'
   | 'payment_export.create'
@@ -201,6 +202,25 @@ export interface ReservationGroup {
   manual?: boolean
 }
 
+export type CancellationRequestKind = 'group_cancellation' | 'member_withdrawal'
+export type CancellationRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export interface CancellationRequest {
+  id: string
+  reservationGroupId: string
+  kind: CancellationRequestKind
+  status: CancellationRequestStatus
+  requestedBy: string
+  reason: string
+  requestedAt: string
+  previousHoldStatus: Extract<ReservationHoldStatus, 'held_roommate_confirmation' | 'held_payment' | 'confirmed'>
+  remainingConfirmationMs?: number
+  remainingPaymentMs?: number
+  reviewedBy?: string
+  reviewedAt?: string
+  reviewReason?: string
+}
+
 // ---------------------------------------------------------------------------
 // Payment obligations + SCB file exchange (doc 08, 12)
 // ---------------------------------------------------------------------------
@@ -250,6 +270,31 @@ export interface PaymentObligation {
   /** override ครั้งเดียวโดยการเงิน — ต้องมีเหตุผล (PRICE-005) */
   override?: { originalAmount: number; reason: string; actor: string }
   supersededById?: string
+  /** ระงับการชำระชั่วคราวระหว่างรอตรวจคำขอยกเลิก โดยไม่ลบเอกสารหรือผลเดิม */
+  suspendedAt?: string
+  suspensionReason?: string
+}
+
+export type PaymentRefundStatus = 'pending_review' | 'approved' | 'rejected' | 'processing' | 'completed'
+
+export interface PaymentRefundRecord {
+  id: string
+  cancellationRequestId: string
+  reservationGroupId: string
+  obligationId: string
+  residentId: string
+  action: PaymentAction
+  paidAmount: number
+  requestedAmount: number
+  approvedAmount?: number
+  responsibleEntity: string
+  status: PaymentRefundStatus
+  externalReference?: string
+  completedAt?: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+  updatedBy?: string
 }
 
 export interface ScbExportRow {

@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { OccupancyMode, RoomConfig, User } from '@/types'
 import { applicationRecordFixtures } from '@/fixtures/applications'
+import { normalizeApplicationData, validateApplicationData } from '@/lib/validation'
 
 export interface ApplicationDraft {
   applicantId: string
@@ -234,9 +235,14 @@ export const useApplicationStore = defineStore('application', () => {
     const applicantId = draft.value.applicantId
     if (!applicantId) return null
 
+    const normalizedDraft = normalizeApplicationData(draft.value)
+    const validation = validateApplicationData(normalizedDraft)
+    if (!validation.ok) return null
+    draft.value = normalizedDraft
+
     const existing = recordForApplicant(applicantId)
     const now = new Date().toISOString()
-    const submittedData = cloneDraft(draft.value)
+    const submittedData = cloneDraft(normalizedDraft)
 
     // รอบและประเภทผู้สมัครมีผลต่อสิทธิ์/ราคา จึงล็อกไว้เมื่อบันทึก revision
     if (existing) {

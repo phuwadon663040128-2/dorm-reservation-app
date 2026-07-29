@@ -45,16 +45,35 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'select', room: Room): void }>()
 
 const dorm = useDormStore()
+const ALL_BUILDINGS = 'all'
 
 const selectedDormGroupId = ref(
   dorm.dormGroups.some(g => g.id === props.initialDormGroupId)
     ? props.initialDormGroupId!
     : dorm.dormGroups[0]!.id,
 )
+
+watch(() => props.initialDormGroupId, (dormGroupId) => {
+  if (
+    dormGroupId
+    && dormGroupId !== selectedDormGroupId.value
+    && dorm.dormGroups.some(group => group.id === dormGroupId)
+  ) {
+    selectedDormGroupId.value = dormGroupId
+  }
+})
 const configFilter = ref(props.initialConfig && props.initialConfig in roomConfigLabel ? props.initialConfig : 'all')
 const genderFilter = ref(
   props.initialGender === 'male' || props.initialGender === 'female' ? props.initialGender : 'all',
 )
+
+watch(() => props.initialConfig, (config) => {
+  configFilter.value = config && config in roomConfigLabel ? config : 'all'
+})
+
+watch(() => props.initialGender, (gender) => {
+  genderFilter.value = gender === 'male' || gender === 'female' ? gender : 'all'
+})
 const onlyAvailable = ref(false)
 
 // อาคารที่มองเห็น กรองตามเพศของอาคาร
@@ -64,16 +83,23 @@ const visibleBuildings = computed(() =>
     .filter(b => genderFilter.value === 'all' || b.gender === genderFilter.value),
 )
 
-const selectedBuildingId = ref(visibleBuildings.value[0]?.id ?? '')
+const selectedBuildingId = ref(
+  campusFor(selectedDormGroupId.value)
+    ? ALL_BUILDINGS
+    : visibleBuildings.value[0]?.id ?? '',
+)
 
 watch(visibleBuildings, (list) => {
+  if (selectedBuildingId.value === ALL_BUILDINGS) return
   if (!list.some(b => b.id === selectedBuildingId.value)) {
     selectedBuildingId.value = list[0]?.id ?? ''
   }
 })
 
 const selectedBuilding = computed(() =>
-  dorm.buildings.find(b => b.id === selectedBuildingId.value),
+  dorm.buildings.find(b =>
+    b.id === selectedBuildingId.value && b.dormGroupId === selectedDormGroupId.value,
+  ),
 )
 
 function matchesFilter(room: Room) {
@@ -133,18 +159,38 @@ const annotationPlacement = computed<'overlay-top-left' | 'detached-bottom-right
 const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
 const viewMode = ref<'3d' | 'plan' | 'list'>(has3d.value ? '3d' : 'plan')
 const realPlanOpen = ref(false)
-const campusRef = ref<{ focusBuilding: (code: string) => void } | null>(null)
+const campusRef = ref<{
+  focusBuilding: (code: string) => boolean
+  showAllBuildings: () => void
+} | null>(null)
 
 function selectViewMode(value: unknown) {
   if (value === '3d' && has3d.value) viewMode.value = value
-  if (value === 'plan' || value === 'list') viewMode.value = value
+  if (value === 'plan' || value === 'list') {
+    if (selectedBuildingId.value === ALL_BUILDINGS) {
+      selectedBuildingId.value = visibleBuildings.value[0]?.id ?? ''
+    }
+    viewMode.value = value
+  }
 }
 
 // ในมุมมอง 3D — เลือกอาคารจาก dropdown ด้านบน = โฟกัสตึกนั้นในฉาก 3D
-watch(selectedBuildingId, (id) => {
-  if (viewMode.value !== '3d' || !campusRef.value) return
-  const b = dorm.buildings.find(x => x.id === id)
-  if (b) campusRef.value.focusBuilding(b.code)
+watch([selectedBuildingId, viewMode, campusRef], ([id, currentView, campus]) => {
+  if (currentView !== '3d' || !campus) return
+  if (id === ALL_BUILDINGS) {
+    campus.showAllBuildings()
+    return
+  }
+  const building = dorm.buildings.find(item =>
+    item.id === id && item.dormGroupId === selectedDormGroupId.value,
+  )
+  if (building) campus.focusBuilding(building.code)
+}, { flush: 'post' })
+
+watch(selectedDormGroupId, () => {
+  selectedBuildingId.value = viewMode.value === '3d' && has3d.value
+    ? ALL_BUILDINGS
+    : visibleBuildings.value[0]?.id ?? ''
 })
 
 // เปลี่ยนหอแล้วถ้าหอใหม่ไม่มีโมเดล 3D ให้เด้งไปมุมมองผัง
@@ -176,6 +222,17 @@ function onSelectFloorFrom3d(payload: { buildingCode: string; floor: number }) {
   selectedBuildingId.value = building.id
   selectedFloor.value = payload.floor
   viewMode.value = 'plan'
+}
+
+function onSelectBuildingFrom3d(buildingCode: string | null) {
+  if (buildingCode === null) {
+    selectedBuildingId.value = ALL_BUILDINGS
+    return
+  }
+  const building = dorm.buildingsOf(selectedDormGroupId.value).find(item => item.code === buildingCode)
+  if (!building) return
+  if (!visibleBuildings.value.some(item => item.id === building.id)) genderFilter.value = 'all'
+  selectedBuildingId.value = building.id
 }
 
 // สรุปภาพรวมอาคารที่เลือก: จำนวนห้อง/ว่าง + ประเภทห้องพร้อมราคาเริ่มต้นต่อคน (พักคู่) ต่อปีการศึกษา
@@ -243,6 +300,9 @@ function statusCount(status: RoomPublicStatus) {
             <SelectValue :placeholder="visibleBuildings.length ? 'เลือกอาคาร' : 'ไม่มีอาคารตามตัวกรอง'" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem v-if="has3d && viewMode === '3d'" :value="ALL_BUILDINGS">
+              ทุกอาคาร
+            </SelectItem>
             <SelectItem v-for="b in visibleBuildings" :key="b.id" :value="b.id">
               {{ b.name }} · ว่าง {{ dorm.roomsOf(b.id).filter(r => r.publicStatus === 'available').length }}
             </SelectItem>
@@ -334,8 +394,10 @@ function statusCount(status: RoomPublicStatus) {
     <!-- มุมมองตึก 3 มิติ — เต็มความกว้าง (แยกจากแท็บชั้น) -->
     <Campus3D
       v-if="viewMode === '3d'"
+      ref="campusRef"
       :dorm-group-id="selectedDormGroupId"
       :availability="availabilityByCode"
+      @select-building="onSelectBuildingFrom3d"
       @select-floor="onSelectFloorFrom3d"
       @switch-dorm="selectedDormGroupId = $event"
     />

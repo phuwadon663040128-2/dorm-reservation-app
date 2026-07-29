@@ -111,6 +111,32 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const session = useSessionStore()
+  // หลังเข้าสู่ระบบให้การเลือกห้องมี source of truth เดียว เพื่อคงหอ/ห้องที่เลือกและไม่เปิด flow public ซ้ำอีกชั้น
+  if (to.name === 'public-rooms' && session.currentUser?.role === 'applicant') {
+    const redirect = Array.isArray(to.query.redirect) ? to.query.redirect[0] : to.query.redirect
+    if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
+      const resolvedRedirect = router.resolve(redirect)
+      if (resolvedRedirect.name === 'app-rooms') {
+        return {
+          name: 'app-rooms',
+          query: resolvedRedirect.query,
+          hash: resolvedRedirect.hash,
+          replace: true,
+        }
+      }
+    }
+    const roomQuery = { ...to.query }
+    delete roomQuery.auth
+    delete roomQuery.redirect
+    delete roomQuery.reset
+    delete roomQuery.authEmail
+    return {
+      name: 'app-rooms',
+      query: roomQuery,
+      hash: to.hash,
+      replace: true,
+    }
+  }
   // modal เข้าสู่ระบบอิง URL เพื่อให้ deep link, ปุ่มย้อนกลับ และ route guard ใช้ flow เดียวกัน
   const authMode = Array.isArray(to.query.auth) ? to.query.auth[0] : to.query.auth
   if (session.isLoggedIn && ['login', 'register', 'verify'].includes(String(authMode))) {

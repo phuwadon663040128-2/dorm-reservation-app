@@ -11,7 +11,8 @@ import {
   AttachmentTitle,
   AttachmentTrigger,
 } from '@/components/ui/attachment'
-import { Field, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldLabel } from '@/components/ui/field'
+import { validateUploadFile } from '@/lib/validation'
 
 const props = withDefaults(defineProps<{
   inputId: string
@@ -21,15 +22,18 @@ const props = withDefaults(defineProps<{
   accept: string
   kind?: 'image' | 'document'
   state?: 'idle' | 'done'
+  maxSizeMb?: number
 }>(), {
   kind: 'document',
   state: 'idle',
+  maxSizeMb: 10,
 })
 
 const fileName = defineModel<string>({ default: '' })
 const selectedFile = defineModel<File | null>('file', { default: null })
 const fileInput = ref<HTMLInputElement | null>(null)
 const imagePreviewUrl = ref('')
+const fileError = ref('')
 
 watch(
   selectedFile,
@@ -73,17 +77,38 @@ function selectFile(event: Event) {
   const file = input.files?.[0] ?? null
   if (!file) return
 
+  const allowedMimeTypes = props.accept.split(',').map(item => item.trim()).filter(Boolean)
+  const allowedExtensions = allowedMimeTypes.flatMap((type) => {
+    if (type === 'image/jpeg') return ['jpg', 'jpeg']
+    if (type === 'image/png') return ['png']
+    if (type === 'application/pdf') return ['pdf']
+    return []
+  })
+  const validationMessage = validateUploadFile(file, {
+    maxSizeMb: props.maxSizeMb,
+    allowedMimeTypes,
+    allowedExtensions,
+  })
+  if (validationMessage) {
+    fileError.value = validationMessage
+    input.value = ''
+    return
+  }
+
+  fileError.value = ''
   selectedFile.value = file
   fileName.value = file.name
 }
 
 function openFileDialog() {
   if (!fileInput.value) return
+  fileError.value = ''
   fileInput.value.value = ''
   fileInput.value.click()
 }
 
 function removeFile() {
+  fileError.value = ''
   selectedFile.value = null
   fileName.value = ''
   if (fileInput.value) fileInput.value.value = ''
@@ -102,7 +127,7 @@ function removeFile() {
       >
         <UploadIcon class="size-5 text-muted-foreground" aria-hidden="true" />
         <span class="text-sm font-medium">{{ selectLabel }}</span>
-        <span class="text-xs text-muted-foreground">{{ hint }}</span>
+        <span class="text-xs text-muted-foreground">{{ hint }} · ไม่เกิน {{ maxSizeMb }} MB</span>
       </button>
 
       <Attachment v-else :state="state" size="sm" class="w-full flex-nowrap">
@@ -144,6 +169,7 @@ function removeFile() {
           ? 'ไฟล์นี้ถูกแนบในใบสมัครแล้ว หากต้องการเปลี่ยนไฟล์ให้เปิดแก้ไขใบสมัครก่อน'
           : 'กดที่รายการไฟล์เพื่อเลือกไฟล์ใหม่ หรือกดปุ่มกากบาทเพื่อนำไฟล์ออก' }}
       </p>
+      <FieldError :errors="[fileError]" />
 
       <input
         :id="inputId"

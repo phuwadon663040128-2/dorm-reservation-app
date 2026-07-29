@@ -15,6 +15,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
+import ReservationCancellationControl from '@/components/domain/ReservationCancellationControl.vue'
 import { holdStatusLabel, occupancyModeLabel } from '@/lib/labels'
 import { users } from '@/fixtures'
 import { usePaymentsStore } from '@/stores/payments'
@@ -28,6 +29,16 @@ const paymentCompleteAwaitingReview = computed(() => Boolean(
   myResv.value?.holdStatus === 'held_payment'
   && payments.groupPaymentComplete(myResv.value.id),
 ))
+const pendingCancellation = computed(() => myResv.value
+  ? reservation.pendingCancellationForReservation(myResv.value.id)
+  : undefined,
+)
+const isSharedReservation = computed(() => myResv.value?.occupancyMode === 'shared')
+const paymentDeadlineLabel = computed(() =>
+  isSharedReservation.value
+    ? 'deadline ชำระเงินร่วมของกลุ่ม เหลือ'
+    : 'เวลาชำระเงินของคุณ เหลือ',
+)
 const displayedReservationStatus = computed(() => {
   if (!myResv.value) return ''
   if (paymentCompleteAwaitingReview.value) return 'ชำระเงินครบแล้ว · รอตรวจสอบ'
@@ -85,7 +96,7 @@ function onHoldExpired() {
           <HoldCountdown
             v-else-if="myResv.holdStatus === 'held_payment' && myResv.paymentDeadline && !paymentCompleteAwaitingReview"
             :expires-at="myResv.paymentDeadline"
-            label="deadline ชำระเงินร่วมของกลุ่ม เหลือ"
+            :label="paymentDeadlineLabel"
             @expired="onHoldExpired"
           />
           <div
@@ -94,16 +105,22 @@ function onHoldExpired() {
           >
             <CheckCircle2Icon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <div class="space-y-0.5 text-sm">
-              <p class="font-semibold">ชำระเงินของกลุ่มครบแล้ว</p>
+              <p class="font-semibold">
+                {{ isSharedReservation ? 'ชำระเงินของกลุ่มครบแล้ว' : 'ชำระเงินครบทุกรายการแล้ว' }}
+              </p>
               <p class="text-xs leading-relaxed text-emerald-800 dark:text-emerald-200">
-                ระบบหยุดนับเวลาชำระเงินแล้ว และกำลังรอเจ้าหน้าที่ตรวจสอบเพื่อยืนยันการจองอย่างเป็นทางการ
+                {{ isSharedReservation
+                  ? 'ระบบหยุดนับเวลาชำระเงินของกลุ่มแล้ว และกำลังรอเจ้าหน้าที่ตรวจสอบเพื่อยืนยันการจองอย่างเป็นทางการ'
+                  : 'ระบบหยุดนับเวลาชำระเงินของคุณแล้ว และกำลังรอเจ้าหน้าที่ตรวจสอบเพื่อยืนยันการจองอย่างเป็นทางการ' }}
               </p>
             </div>
           </div>
 
           <!-- ความครบของการชำระรายสมาชิก — กลุ่ม shared ใช้ deadline เดียว (doc 08) -->
           <div class="space-y-2">
-            <p class="text-sm font-semibold">การชำระเงินของสมาชิก</p>
+            <p class="text-sm font-semibold">
+              {{ isSharedReservation ? 'การชำระเงินของสมาชิก' : 'การชำระเงินของคุณ' }}
+            </p>
             <div
               v-for="s in memberPaymentStates"
               :key="s.memberId"
@@ -115,15 +132,21 @@ function onHoldExpired() {
               </Badge>
             </div>
             <p v-if="paymentCompleteAwaitingReview" class="text-xs text-muted-foreground">
-              สมาชิกชำระครบทุกรายการแล้ว ขั้นตอนถัดไปคือรอเจ้าหน้าที่ตรวจสอบและยืนยันการจองอย่างเป็นทางการ
+              {{ isSharedReservation
+                ? 'สมาชิกชำระครบทุกรายการแล้ว ขั้นตอนถัดไปคือรอเจ้าหน้าที่ตรวจสอบและยืนยันการจองอย่างเป็นทางการ'
+                : 'คุณชำระครบทุกรายการแล้ว ขั้นตอนถัดไปคือรอเจ้าหน้าที่ตรวจสอบและยืนยันการจองอย่างเป็นทางการ' }}
             </p>
-            <p v-else class="text-xs text-muted-foreground">
+            <p v-else-if="isSharedReservation" class="text-xs text-muted-foreground">
               การจองจะยืนยันถาวรเมื่อสมาชิกทุกคนชำระครบทุกรายการ และเจ้าหน้าที่กดยืนยัน —
               หากพ้น deadline โดยมีคนชำระไม่ครบ ห้องจะถูกปล่อยคืนตามกติกา (Provisional) และยอดที่ชำระแล้วเข้าสู่การตรวจสอบ/คืนเงิน
             </p>
+            <p v-else class="text-xs text-muted-foreground">
+              การจองจะยืนยันอย่างเป็นทางการเมื่อคุณชำระครบทุกรายการและเจ้าหน้าที่ตรวจสอบแล้ว —
+              หากพ้นเวลาชำระ ห้องจะถูกปล่อยคืนตามกติกา (Provisional) และยอดที่ชำระแล้วเข้าสู่การตรวจสอบ/คืนเงิน
+            </p>
           </div>
 
-          <div class="flex flex-wrap gap-2">
+          <div v-if="!pendingCancellation" class="flex w-full flex-wrap justify-end gap-2">
             <Button as-child variant="outline" size="sm">
               <RouterLink to="/app/payments">ไปหน้าชำระเงิน</RouterLink>
             </Button>
@@ -131,6 +154,7 @@ function onHoldExpired() {
               <RouterLink to="/app/contracts">ไปหน้าสัญญา</RouterLink>
             </Button>
           </div>
+          <ReservationCancellationControl :reservation="myResv" />
         </CardContent>
       </Card>
     </template>

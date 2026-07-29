@@ -4,6 +4,8 @@ import type {
   ManualPaymentRecord,
   PaymentException,
   PaymentObligation,
+  PaymentRefundRecord,
+  PaymentRefundStatus,
   PaymentResultRow,
   ReservationGroup,
   ReturnedPdfPage,
@@ -22,6 +24,8 @@ import {
   users,
 } from '@/fixtures'
 import { useSessionStore } from './session'
+import { useContractsStore } from './contracts'
+import { INPUT_LIMITS } from '@/lib/validation'
 
 const PAID_STATUSES = new Set(['paid', 'manual_recorded', 'confirmed'])
 
@@ -32,8 +36,10 @@ export const usePaymentsStore = defineStore('payments', () => {
   const resultRows = ref<PaymentResultRow[]>(resultFixtures)
   const exceptions = ref<PaymentException[]>(exceptionFixtures)
   const manualRecords = ref<ManualPaymentRecord[]>(manualFixtures)
+  const refundRecords = ref<PaymentRefundRecord[]>([])
 
   const session = useSessionStore()
+  const contractsStore = useContractsStore()
 
   const myObligations = computed(() => {
     const uid = session.currentUser?.id
@@ -55,6 +61,97 @@ export const usePaymentsStore = defineStore('payments', () => {
     return list.length > 0 && list.every(isPaid)
   }
 
+  function hasPaidObligationsForReservation(reservationGroupId: string) {
+    return obligationsForGroup(reservationGroupId).some(isPaid)
+  }
+
+  function pausePaymentForCancellation(reservationGroupId: string, requestId: string) {
+    const suspendedAt = new Date().toISOString()
+    let changed = 0
+    obligationsForGroup(reservationGroupId).forEach((obligation) => {
+      if (isPaid(obligation) || obligation.documentStatus === 'cancelled') return
+      if (!obligation.suspendedAt) changed += 1
+      obligation.suspendedAt = suspendedAt
+      obligation.suspensionReason = `รอตรวจคำขอยกเลิก ${requestId}`
+    })
+    return changed
+  }
+
+  function resumePaymentForCancellation(reservationGroupId: string, deadline?: string) {
+    let changed = 0
+    obligationsForGroup(reservationGroupId).forEach((obligation) => {
+      if (!obligation.suspendedAt) return
+      obligation.suspendedAt = undefined
+      obligation.suspensionReason = undefined
+      if (deadline && !isPaid(obligation)) obligation.paymentDeadline = deadline
+      changed += 1
+    })
+    return changed
+  }
+
+  function createRefundRecordsForReservation(reservationGroupId: string, cancellationRequestId: string) {
+    const now = new Date().toISOString()
+    const created: PaymentRefundRecord[] = []
+    obligationsForGroup(reservationGroupId).filter(isPaid).forEach((obligation) => {
+      const existing = refundRecords.value.find(record => record.obligationId === obligation.id)
+      if (existing) return
+      const record: PaymentRefundRecord = {
+        id: `refund-${obligation.id}`,
+        cancellationRequestId,
+        reservationGroupId,
+        obligationId: obligation.id,
+        residentId: obligation.residentId,
+        action: obligation.action,
+        paidAmount: obligation.amount,
+        requestedAmount: obligation.amount,
+        responsibleEntity: obligation.action === 'HL' ? 'หน่วยงานผู้รับเงิน HL' : 'หอพักผู้รับเงิน ROOM',
+        status: 'pending_review',
+        createdAt: now,
+        updatedAt: now,
+      }
+      refundRecords.value.unshift(record)
+      created.push(record)
+    })
+    return created
+  }
+
+  function updateRefundRecord(
+    refundId: string,
+    update: {
+      status: PaymentRefundStatus
+      approvedAmount?: number
+      externalReference?: string
+      notes?: string
+    },
+  ) {
+    if (!session.can('payment.refund_status.manage')) return false
+    const record = refundRecords.value.find(item => item.id === refundId)
+    if (!record) return false
+    const notes = update.notes?.trim() ?? ''
+    const externalReference = update.externalReference?.trim() ?? ''
+    if (notes.length > INPUT_LIMITS.refundNotes || externalReference.length > INPUT_LIMITS.refundReference) return false
+    if (['approved', 'processing', 'completed'].includes(update.status)) {
+      if (update.approvedAmount === undefined || update.approvedAmount < 0 || update.approvedAmount > record.paidAmount) return false
+    }
+    if (update.status === 'rejected' && !notes) return false
+    if (update.status === 'completed' && !externalReference) return false
+
+    record.status = update.status
+    record.approvedAmount = update.approvedAmount
+    record.externalReference = externalReference || undefined
+    record.notes = notes || undefined
+    record.completedAt = update.status === 'completed' ? new Date().toISOString() : undefined
+    record.updatedAt = new Date().toISOString()
+    record.updatedBy = session.currentUser?.id ?? 'staff-demo'
+    contractsStore.addAudit({
+      actor: record.updatedBy,
+      action: 'payment.refund_status.update',
+      relatedIds: [record.id, record.obligationId, record.reservationGroupId],
+      detail: `อัปเดตสถานะคืนเงิน ${record.action} เป็น ${update.status}${record.externalReference ? ` อ้างอิง ${record.externalReference}` : ''}`,
+    })
+    return true
+  }
+
   /** ปิดรายการของ hold ที่หมดอายุ เพื่อไม่ให้ QR เดิมถูกนำกลับมาชำระซ้ำ */
   function cancelObligationsForReservation(reservationGroupId: string) {
     let changed = 0
@@ -62,6 +159,8 @@ export const usePaymentsStore = defineStore('payments', () => {
       if (obligation.documentStatus === 'cancelled') return
       obligation.documentStatus = 'cancelled'
       obligation.resultStatus = isPaid(obligation) ? 'refund_status' : 'cancelled'
+      obligation.suspendedAt = undefined
+      obligation.suspensionReason = undefined
       changed += 1
     })
     return changed
@@ -187,7 +286,7 @@ export const usePaymentsStore = defineStore('payments', () => {
   /** ปุ่มนี้แทนเหตุการณ์ภายนอก: ผู้สมัครจ่ายแล้วและ SCB ส่งผลกลับเข้าระบบ */
   function simulateBankPayment(obligationId: string) {
     const obligation = obligations.value.find(item => item.id === obligationId)
-    if (!obligation || obligation.documentStatus !== 'payment_form_ready') return false
+    if (!obligation || obligation.documentStatus !== 'payment_form_ready' || obligation.suspendedAt) return false
     if (PAID_STATUSES.has(obligation.resultStatus)) return true
     if (new Date(obligation.paymentDeadline).getTime() <= Date.now()) return false
 
@@ -210,7 +309,8 @@ export const usePaymentsStore = defineStore('payments', () => {
   function importDemoPaymentResults() {
     const payable = obligations.value.filter(
       obligation => obligation.documentStatus === 'payment_form_ready'
-        && obligation.resultStatus === 'awaiting_payment',
+        && obligation.resultStatus === 'awaiting_payment'
+        && !obligation.suspendedAt,
     )
     let imported = 0
     for (const obligation of payable) {
@@ -234,10 +334,16 @@ export const usePaymentsStore = defineStore('payments', () => {
     resultRows,
     exceptions,
     manualRecords,
+    refundRecords,
     myObligations,
     obligationsForGroup,
     isPaid,
     groupPaymentComplete,
+    hasPaidObligationsForReservation,
+    pausePaymentForCancellation,
+    resumePaymentForCancellation,
+    createRefundRecordsForReservation,
+    updateRefundRecord,
     cancelObligationsForReservation,
     generateObligationsForGroup,
     createExportBatch,

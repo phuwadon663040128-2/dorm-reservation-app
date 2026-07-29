@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { FileTextIcon, PrinterIcon, UploadIcon } from '@lucide/vue'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,6 +36,10 @@ const groupProgress = computed(() => {
   const resv = reservation.myReservation
   return resv ? contractsStore.groupContractProgress(resv.id) : null
 })
+const pendingCancellation = computed(() => {
+  const resv = reservation.myReservation
+  return resv ? reservation.pendingCancellationForReservation(resv.id) : undefined
+})
 
 const uploadDialogOpen = ref(false)
 const selectedContractId = ref('')
@@ -43,6 +48,11 @@ const signedFile = ref<File | null>(null)
 const selectedContract = computed(() => myContracts.value.find(item => item.id === selectedContractId.value))
 
 function openUploadDialog(contractId: string) {
+  const contract = myContracts.value.find(item => item.id === contractId)
+  if (contract && contractsStore.blockedReservationIds.includes(contract.reservationGroupId)) {
+    toast.info('ขั้นตอนสัญญาถูกพักระหว่างรอพิจารณาคำขอยกเลิก')
+    return
+  }
   selectedContractId.value = contractId
   signedFileName.value = ''
   signedFile.value = null
@@ -74,6 +84,12 @@ function uploadSignedContract() {
         สัญญาเป็นกระดาษลงนามจริง — พิมพ์ ลงนาม แล้วอัปโหลดสแกน/ถ่ายรูปเก็บไว้เป็นหลักฐาน (เก็บแบบ private)
       </p>
     </div>
+
+    <Alert v-if="pendingCancellation" class="border-primary/30 bg-primary/5">
+      <FileTextIcon aria-hidden="true" />
+      <AlertTitle>พักขั้นตอนสัญญาชั่วคราว</AlertTitle>
+      <AlertDescription>ยังไม่สามารถพิมพ์หรือส่งสัญญาเพิ่มได้จนกว่าเจ้าหน้าที่จะแจ้งผลคำขอยกเลิก</AlertDescription>
+    </Alert>
 
     <Card v-if="groupProgress && groupProgress.total > 1">
       <CardContent class="flex items-center justify-between gap-2 p-4">
@@ -117,12 +133,18 @@ function uploadSignedContract() {
             <Button size="sm" variant="outline" @click="toast('ต้นแบบ: เปิดตัวอย่างสัญญา (PDF snapshot ไม่แก้ไขย้อนหลัง)')">
               ดูตัวอย่าง
             </Button>
-            <Button size="sm" variant="outline" @click="toast('ต้นแบบ: พิมพ์สัญญา — ระบบบันทึกประวัติการพิมพ์ทุกครั้ง')">
+            <Button
+              size="sm"
+              variant="outline"
+              :disabled="contractsStore.blockedReservationIds.includes(ct.reservationGroupId)"
+              @click="toast('ต้นแบบ: พิมพ์สัญญา — ระบบบันทึกประวัติการพิมพ์ทุกครั้ง')"
+            >
               <PrinterIcon aria-hidden="true" /> พิมพ์
             </Button>
             <Button
               v-if="!ct.signedScanUploaded && ct.status === 'printed'"
               size="sm"
+              :disabled="contractsStore.blockedReservationIds.includes(ct.reservationGroupId)"
               @click="openUploadDialog(ct.id)"
             >
               <UploadIcon aria-hidden="true" /> อัปโหลดสัญญาที่ลงนาม

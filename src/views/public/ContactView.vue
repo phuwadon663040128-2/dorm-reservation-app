@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import {
   ClockIcon,
@@ -11,25 +11,42 @@ import {
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import PageHeader from '@/components/domain/PageHeader.vue'
 import { dormOfficeContact } from '@/fixtures/personnel'
 import { feeGroups } from '@/fixtures/fees'
+import { contactFormSchema, errorsFromZod, INPUT_LIMITS } from '@/lib/validation'
 
 // ช่องทางติดต่อ — ที่อยู่/เวลาทำการจากข้อมูลจริงของกองบริการหอพัก + เบอร์รายหอจากประกาศค่าธรรมเนียม
 const mapUrl = 'https://maps.google.com/?q=กองบริการหอพักนักศึกษา+มหาวิทยาลัยขอนแก่น'
 
 const form = ref({ name: '', email: '', subject: '', message: '' })
+const fieldErrors = ref<Record<string, string>>({})
 
-function submit() {
-  if (!form.value.name || !form.value.subject) {
-    toast('กรุณากรอกชื่อและหัวข้อเรื่องให้ครบถ้วน')
+async function submit() {
+  const validation = contactFormSchema.safeParse(form.value)
+  if (!validation.success) {
+    fieldErrors.value = errorsFromZod(validation.error)
+    toast.error(validation.error.issues[0]?.message ?? 'กรุณาตรวจสอบข้อมูลอีกครั้ง')
+    await nextTick()
+    const element = document.querySelector<HTMLElement>('#contact-form [aria-invalid="true"]')
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    element?.focus({ preventScroll: true })
     return
   }
-  toast(`ส่งเรื่อง "${form.value.subject}" ถึงกองบริการหอพักแล้ว — เจ้าหน้าที่จะติดต่อกลับทางอีเมล (ต้นแบบระบบ)`)
+  fieldErrors.value = {}
+  form.value = validation.data
+  toast(`ส่งเรื่อง "${validation.data.subject}" ถึงกองบริการหอพักแล้ว — เจ้าหน้าที่จะติดต่อกลับทางอีเมล (ต้นแบบระบบ)`)
   form.value = { name: '', email: '', subject: '', message: '' }
+}
+
+function clearError(field: string) {
+  if (!fieldErrors.value[field]) return
+  const next = { ...fieldErrors.value }
+  delete next[field]
+  fieldErrors.value = next
 }
 </script>
 
@@ -114,23 +131,30 @@ function submit() {
             <h2 class="font-bold">ส่งเรื่องถึงเจ้าหน้าที่</h2>
             <p class="text-sm text-muted-foreground">เจ้าหน้าที่ตอบกลับทางอีเมลภายใน 1–2 วันทำการ</p>
           </div>
-          <form @submit.prevent="submit">
+          <form id="contact-form" @submit.prevent="submit">
             <FieldGroup class="gap-3">
               <Field>
                 <FieldLabel for="ct-name">ชื่อ–นามสกุล</FieldLabel>
-                <Input id="ct-name" v-model="form.name" placeholder="เช่น ศุภกร ใจดี" required />
+                <Input id="ct-name" v-model="form.name" placeholder="เช่น ศุภกร ใจดี" required :maxlength="INPUT_LIMITS.contactName" :aria-invalid="Boolean(fieldErrors.name)" @input="clearError('name')" />
+                <FieldError :errors="[fieldErrors.name]" />
               </Field>
               <Field>
                 <FieldLabel for="ct-email">อีเมลสำหรับติดต่อกลับ</FieldLabel>
-                <Input id="ct-email" v-model="form.email" type="email" placeholder="name@example.com" />
+                <Input id="ct-email" v-model="form.email" type="email" placeholder="name@example.com" :maxlength="INPUT_LIMITS.email" :aria-invalid="Boolean(fieldErrors.email)" @input="clearError('email')" />
+                <FieldError :errors="[fieldErrors.email]" />
               </Field>
               <Field>
                 <FieldLabel for="ct-subject">หัวข้อเรื่อง</FieldLabel>
-                <Input id="ct-subject" v-model="form.subject" placeholder="เช่น สอบถามการย้ายห้อง" required />
+                <Input id="ct-subject" v-model="form.subject" placeholder="เช่น สอบถามการย้ายห้อง" required :maxlength="INPUT_LIMITS.contactSubject" :aria-invalid="Boolean(fieldErrors.subject)" @input="clearError('subject')" />
+                <FieldError :errors="[fieldErrors.subject]" />
               </Field>
               <Field>
                 <FieldLabel for="ct-message">รายละเอียด</FieldLabel>
-                <Textarea id="ct-message" v-model="form.message" rows="4" placeholder="อธิบายรายละเอียดที่ต้องการสอบถาม" />
+                <Textarea id="ct-message" v-model="form.message" rows="4" placeholder="อธิบายรายละเอียดที่ต้องการสอบถาม" :maxlength="INPUT_LIMITS.contactMessage" :aria-invalid="Boolean(fieldErrors.message)" @input="clearError('message')" />
+                <div class="flex items-start justify-between gap-3">
+                  <FieldError :errors="[fieldErrors.message]" />
+                  <span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ form.message.length.toLocaleString('th-TH') }}/{{ INPUT_LIMITS.contactMessage.toLocaleString('th-TH') }}</span>
+                </div>
               </Field>
               <Button type="submit" class="w-full rounded-full">
                 <SendIcon aria-hidden="true" /> ส่งเรื่อง

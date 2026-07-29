@@ -152,6 +152,13 @@ export function useApplicantJourney() {
     const item = activeReservation.value
     return Boolean(item && payments.groupPaymentComplete(item.id))
   })
+  const pendingCancellation = computed(() => {
+    const item = activeReservation.value
+    return item ? reservation.pendingCancellationForReservation(item.id) : undefined
+  })
+  const ownRefunds = computed(() =>
+    payments.refundRecords.filter(item => item.residentId === userId.value),
+  )
 
   const nextAction = computed<NextAction>(() => {
     const user = session.currentUser
@@ -167,6 +174,17 @@ export function useApplicantJourney() {
         to: '/',
         ctaLabel: 'กลับหน้าหลัก',
         urgency: 'normal',
+      }
+    }
+
+    if (pendingCancellation.value) {
+      return {
+        title: 'กำลังพิจารณาคำขอยกเลิก',
+        description: 'ห้องยังไม่ถูกปล่อย ระบบพักเวลาชำระเงินและปิดการดำเนินการสัญญาระหว่างรอเจ้าหน้าที่ตรวจคำขอ',
+        actorLabel: 'รอเจ้าหน้าที่',
+        to: '/app/reservation',
+        ctaLabel: 'ดูคำขอยกเลิก',
+        urgency: 'waiting',
       }
     }
 
@@ -442,7 +460,9 @@ export function useApplicantJourney() {
           ? 'needs_action'
           : invitation ? 'waiting' : applicationComplete.value ? 'current' : 'upcoming'
 
-    const roomStatus: JourneyStatus = active?.holdStatus === 'confirmed' || active?.holdStatus === 'held_payment'
+    const roomStatus: JourneyStatus = pendingCancellation.value
+      ? 'waiting'
+      : active?.holdStatus === 'confirmed' || active?.holdStatus === 'held_payment'
       ? 'completed'
       : active?.holdStatus === 'held_roommate_confirmation'
         ? active.leaderId === userId.value ? 'waiting' : 'needs_action'
@@ -452,14 +472,17 @@ export function useApplicantJourney() {
             ? 'blocked'
             : applicationComplete.value ? 'current' : 'blocked'
 
-    const paymentStatus: JourneyStatus = active?.holdStatus === 'confirmed'
+    const paymentStatus: JourneyStatus = pendingCancellation.value
+      ? 'waiting'
+      : active?.holdStatus === 'confirmed'
       ? 'completed'
       : active?.holdStatus === 'held_payment'
         ? groupPaymentComplete.value ? 'waiting' : unpaidOwnObligations.value.length ? 'needs_action' : 'waiting'
         : lostHold ? 'blocked' : 'upcoming'
 
-    const applicantContractStatus: JourneyStatus =
-      contract?.status === 'signed_received' && progress?.complete
+    const applicantContractStatus: JourneyStatus = pendingCancellation.value
+      ? 'blocked'
+      : contract?.status === 'signed_received' && progress?.complete
         ? 'completed'
         : contract && ACTIONABLE_CONTRACT_STATUSES.has(contract.status)
           ? 'needs_action'
@@ -526,6 +549,25 @@ export function useApplicantJourney() {
     const active = activeReservation.value
     const latest = latestReservation.value
     const contract = currentContract.value
+
+    if (pendingCancellation.value) {
+      items.push({
+        id: 'cancellation_pending',
+        title: 'กำลังพิจารณาคำขอยกเลิก',
+        description: 'ห้องยังไม่ถูกปล่อย การชำระเงินและขั้นตอนสัญญาถูกพักไว้จนกว่าเจ้าหน้าที่จะแจ้งผล',
+        to: '/app/reservation',
+        ctaLabel: 'ดูรายละเอียด',
+      })
+    }
+    if (ownRefunds.value.some(item => item.status !== 'completed')) {
+      items.push({
+        id: 'refund_pending',
+        title: 'มีรายการคืนเงินที่กำลังดำเนินการ',
+        description: 'ติดตามสถานะแยกตามบิล ROOM/HL ได้จากหน้าชำระเงิน',
+        to: '/app/payments',
+        ctaLabel: 'ติดตามการคืนเงิน',
+      })
+    }
 
     if (session.currentUser?.role === 'applicant' && !session.currentUser.profileComplete) {
       items.push({
@@ -622,7 +664,9 @@ export function useApplicantJourney() {
       active && ['held_payment', 'confirmed'].includes(active.holdStatus),
     )
     const roomConfirmationPending = active?.holdStatus === 'held_roommate_confirmation'
-    const roomSectionStatus: JourneyStatus = lostHold
+    const roomSectionStatus: JourneyStatus = pendingCancellation.value
+      ? 'waiting'
+      : lostHold
       ? 'needs_action'
       : roomConfirmationComplete
         ? 'completed'
@@ -639,7 +683,9 @@ export function useApplicantJourney() {
         summary: latest
           ? 'ห้อง ' + latest.roomNumber + ' · ' + occupancyModeLabel[latest.occupancyMode]
           : 'ยังไม่ได้เลือกห้อง',
-        description: lostHold
+        description: pendingCancellation.value
+          ? 'ห้องยังคงถูกล็อกไว้ระหว่างเจ้าหน้าที่พิจารณาคำขอยกเลิก'
+          : lostHold
           ? 'ข้อมูลการจองล่าสุด — ห้องไม่ได้ถูกล็อกอยู่ในขณะนี้'
           : roomConfirmationPending
             ? active?.leaderId === userId.value
@@ -649,7 +695,9 @@ export function useApplicantJourney() {
               ? 'ต้องรอสมาชิกในกลุ่มส่งใบสมัครให้ครบก่อนจึงจะเลือกห้องพักคู่ได้'
             : undefined,
         status: roomSectionStatus,
-        statusLabel: lostHold
+        statusLabel: pendingCancellation.value
+          ? 'กำลังพิจารณายกเลิก'
+          : lostHold
           ? 'ห้องถูกปล่อยคืน'
           : roomConfirmationComplete
             ? 'ยืนยันห้องครบแล้ว'

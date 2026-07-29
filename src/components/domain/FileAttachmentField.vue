@@ -11,7 +11,8 @@ import {
   AttachmentTitle,
   AttachmentTrigger,
 } from '@/components/ui/attachment'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
+import { validateUploadFile } from '@/lib/validation'
 
 const props = withDefaults(defineProps<{
   inputId: string
@@ -24,18 +25,21 @@ const props = withDefaults(defineProps<{
   statusText?: string
   selectedHelp?: string
   disabled?: boolean
+  maxSizeMb?: number
 }>(), {
   kind: 'document',
   state: 'idle',
   statusText: 'พร้อมอัปโหลด',
   selectedHelp: 'กดที่รายการไฟล์เพื่อเลือกไฟล์ใหม่ หรือกดปุ่มกากบาทเพื่อนำไฟล์ออก',
   disabled: false,
+  maxSizeMb: 10,
 })
 
 const fileName = defineModel<string>({ default: '' })
 const selectedFile = defineModel<File | null>('file', { default: null })
 const fileInput = ref<HTMLInputElement | null>(null)
 const imagePreviewUrl = ref('')
+const fileError = ref('')
 
 watch(
   selectedFile,
@@ -78,18 +82,39 @@ function selectFile(event: Event) {
   const file = input.files?.[0] ?? null
   if (!file) return
 
+  const allowedMimeTypes = props.accept.split(',').map(item => item.trim()).filter(Boolean)
+  const allowedExtensions = allowedMimeTypes.flatMap((type) => {
+    if (type === 'image/jpeg') return ['jpg', 'jpeg']
+    if (type === 'image/png') return ['png']
+    if (type === 'application/pdf') return ['pdf']
+    return []
+  })
+  const validationMessage = validateUploadFile(file, {
+    maxSizeMb: props.maxSizeMb,
+    allowedMimeTypes,
+    allowedExtensions,
+  })
+  if (validationMessage) {
+    fileError.value = validationMessage
+    input.value = ''
+    return
+  }
+
+  fileError.value = ''
   selectedFile.value = file
   fileName.value = file.name
 }
 
 function openFileDialog() {
   if (props.disabled || !fileInput.value) return
+  fileError.value = ''
   fileInput.value.value = ''
   fileInput.value.click()
 }
 
 function removeFile() {
   if (props.disabled) return
+  fileError.value = ''
   selectedFile.value = null
   fileName.value = ''
   if (fileInput.value) fileInput.value.value = ''
@@ -109,7 +134,7 @@ function removeFile() {
       >
         <UploadIcon class="size-5 text-muted-foreground" aria-hidden="true" />
         <span class="text-sm font-medium">{{ selectLabel }}</span>
-        <span class="text-xs text-muted-foreground">{{ hint }}</span>
+        <span class="text-xs text-muted-foreground">{{ hint }} · ไม่เกิน {{ maxSizeMb }} MB</span>
       </button>
 
       <Attachment v-else :state="state" size="sm" class="w-full flex-nowrap">
@@ -148,6 +173,7 @@ function removeFile() {
       </Attachment>
 
       <FieldDescription v-if="fileName">{{ selectedHelp }}</FieldDescription>
+      <FieldError :errors="[fileError]" />
 
       <input
         :id="inputId"

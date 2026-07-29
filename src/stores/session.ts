@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Permission, StaffSection, User } from '@/types'
 import { permissionsForSections, users } from '@/fixtures'
+import { loginCredentialsSchema, registrationSchema } from '@/lib/validation'
 import { useStaffAccessStore } from './staffAccess'
 
 const STORAGE_KEY = 'dorm-demo-session-user'
@@ -64,6 +65,8 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function authenticateApplicant(email: string, password: string): User | null {
+    const validation = loginCredentialsSchema.safeParse({ email, password })
+    if (!validation.success) return null
     const normalizedEmail = email.trim().toLowerCase()
     const fixtureApplicant = users.find(user =>
       user.role === 'applicant' && user.email.toLowerCase() === normalizedEmail,
@@ -81,8 +84,11 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function beginEmailRegistration(email: string, password: string) {
-    sessionStorage.setItem(PENDING_EMAIL_KEY, email.trim().toLowerCase())
-    sessionStorage.setItem(PENDING_PASSWORD_KEY, password)
+    const validation = registrationSchema.safeParse({ email, password, acceptedNotice: true })
+    if (!validation.success) return false
+    sessionStorage.setItem(PENDING_EMAIL_KEY, validation.data.email.trim().toLowerCase())
+    sessionStorage.setItem(PENDING_PASSWORD_KEY, validation.data.password)
+    return true
   }
 
   function pendingEmailRegistration() {

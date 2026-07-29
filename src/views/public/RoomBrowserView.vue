@@ -28,9 +28,15 @@ const summary = dorm.availabilitySummary
 
 // รับตัวกรองจาก search bar หน้าแรก (/rooms?dorm=&config=&gender=)
 const route = useRoute()
-const initialDorm = typeof route.query.dorm === 'string' ? route.query.dorm : undefined
-const initialConfig = typeof route.query.config === 'string' ? route.query.config : undefined
-const initialGender = typeof route.query.gender === 'string' ? route.query.gender : undefined
+const initialDorm = computed(() =>
+  typeof route.query.dorm === 'string' ? route.query.dorm : undefined,
+)
+const initialConfig = computed(() =>
+  typeof route.query.config === 'string' ? route.query.config : undefined,
+)
+const initialGender = computed(() =>
+  typeof route.query.gender === 'string' ? route.query.gender : undefined,
+)
 
 // dialog รายละเอียดห้อง (โหมดสาธารณะ — ดูข้อมูล + ชวนเข้าสู่ระบบเพื่อจอง)
 const selectedRoom = ref<Room | null>(null)
@@ -57,10 +63,24 @@ const priceByMode = computed(() => {
 
 function goReserve() {
   dialogOpen.value = false
+  const reservationTarget = {
+    path: '/app/rooms',
+    query: {
+      ...(buildingOfSelected.value?.dormGroupId ? { dorm: buildingOfSelected.value.dormGroupId } : {}),
+      ...(selectedRoom.value ? { room: selectedRoom.value.number } : {}),
+    },
+  }
   if (session.isLoggedIn && !session.isStaff) {
-    router.push('/app/rooms')
+    router.push(reservationTarget)
   } else {
-    router.push({ path: route.path, query: { ...route.query, auth: 'login', redirect: '/app/rooms' } })
+    router.push({
+      path: route.path,
+      query: {
+        ...route.query,
+        auth: 'login',
+        redirect: router.resolve(reservationTarget).fullPath,
+      },
+    })
   }
 }
 </script>

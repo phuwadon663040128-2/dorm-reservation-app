@@ -76,6 +76,7 @@ function nameOf(userId: string) {
                   v-if="ct.status === 'printed' && can('contract.receive')"
                   size="sm"
                   variant="outline"
+                  :disabled="contractsStore.blockedReservationIds.includes(ct.reservationGroupId)"
                   @click="toast(`ต้นแบบ: บันทึกรับสัญญาที่ลงนาม + แนบสแกน (private) ของ ${nameOf(ct.residentId)} (เฟส P6)`)"
                 >
                   รับสัญญา
@@ -83,6 +84,7 @@ function nameOf(userId: string) {
                 <Button
                   size="sm"
                   variant="ghost"
+                  :disabled="contractsStore.blockedReservationIds.includes(ct.reservationGroupId)"
                   @click="toast('ต้นแบบ: พิมพ์ซ้ำต้องกรอกเหตุผล และเก็บประวัติฉบับเดิม (CONTRACT-006)')"
                 >
                   พิมพ์ซ้ำ

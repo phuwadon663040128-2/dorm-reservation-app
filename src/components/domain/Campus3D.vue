@@ -22,6 +22,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'select-floor', payload: { buildingCode: string; floor: number }): void
+  (e: 'select-building', buildingCode: string | null): void
   (e: 'switch-dorm', dormGroupId: string): void
 }>()
 
@@ -1944,18 +1945,10 @@ function activatePickedObject() {
     return
   }
   if (mode.value === 'campus') {
-    selectedCode.value = hit.buildingCode
-    mode.value = 'building'
-    hoverLabel.value = null
-    separationTarget = 1 // เริ่มอนิเมชันแยกชั้นแบบ test.html
-    viewMode.value = 'perspective'
-    applyHighlight()
-    setCameraForMode('building')
+    focusBuilding(hit.buildingCode, true)
   } else if (mode.value === 'building') {
     if (hit.buildingCode !== selectedCode.value) {
-      selectedCode.value = hit.buildingCode
-      applyHighlight()
-      setCameraForMode('building')
+      focusBuilding(hit.buildingCode, true)
       return
     }
     if (!props.availability[hit.buildingCode]?.[hit.floor]) return
@@ -1999,7 +1992,28 @@ function onControlsStart() {
   transitioning = false
 }
 
-function backToCampus() {
+function focusBuilding(code: string, notifyParent = false) {
+  const building = area.buildings.find(item =>
+    item.code === code && item.dormGroupId === props.dormGroupId,
+  )
+  if (!building) return false
+
+  diveTarget = null
+  diveEmitted = false
+  diveResolveAt = 0
+  if (controls) controls.enabled = true
+  selectedCode.value = code
+  mode.value = 'building'
+  hoverLabel.value = null
+  separationTarget = 1
+  viewMode.value = 'perspective'
+  applyHighlight()
+  setCameraForMode('building')
+  if (notifyParent) emit('select-building', code)
+  return true
+}
+
+function backToCampus(notifyParent = true) {
   diveTarget = null
   diveEmitted = false
   diveResolveAt = 0
@@ -2011,7 +2025,14 @@ function backToCampus() {
   viewMode.value = 'perspective'
   applyHighlight()
   setCameraForMode('campus')
+  if (notifyParent) emit('select-building', null)
 }
+
+function showAllBuildings() {
+  backToCampus(false)
+}
+
+defineExpose({ focusBuilding, showAllBuildings })
 
 // ---------- ป้ายชั้น F1..Fn ข้างตึกตอนชั้นแยกออก ----------
 function markerAvailability(code: string, floor: number) {
@@ -2313,7 +2334,7 @@ const headerLabel = computed(() =>
       :variant="sceneBusyVariant"
     />
 
-    <!-- มือถือให้ปุ่มมุมมองอยู่บนสุด ส่วนชื่ออาคารย้ายไปมุมซ้ายล่างเพื่อเปิดพื้นที่ดูผัง -->
+    <!-- ปุ่มมุมมองอยู่ด้านบน ส่วนชื่ออาคารและเข็มทิศแยกไปมุมล่างเพื่อเปิดพื้นที่ดูผัง -->
     <div class="pointer-events-none absolute inset-x-2 top-2 z-20 flex justify-end sm:inset-x-3 sm:top-3 sm:items-start sm:justify-between sm:gap-3">
       <!-- แถบสถานะซ้ายบนสำหรับจอใหญ่ -->
       <div class="pointer-events-auto hidden w-fit max-w-[70%] min-w-0 items-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:flex">
@@ -2321,7 +2342,7 @@ const headerLabel = computed(() =>
         <span class="truncate text-sm font-semibold">{{ headerLabel }}</span>
       </div>
 
-      <!-- ปุ่มมุมมอง + เข็มทิศ: เต็ม 2 คอลัมน์บนมือถือ, ชิดขวาบนบนจอใหญ่ -->
+      <!-- ปุ่มมุมมอง: เต็ม 2 คอลัมน์บนมือถือ, ชิดขวาบนบนจอใหญ่ -->
       <div class="flex w-full shrink-0 flex-col items-end gap-2 sm:w-auto">
         <div class="pointer-events-auto grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <ToggleGroup
@@ -2351,35 +2372,36 @@ const headerLabel = computed(() =>
             size="sm"
             variant="secondary"
             class="col-span-2 w-full shadow-sm sm:w-auto"
-            @click="backToCampus"
+            @click="backToCampus()"
           >
             <ArrowLeftIcon aria-hidden="true" /> ดูทุกอาคาร
           </Button>
         </div>
 
-        <!-- เข็มทิศทิศเหนือจริง (เอียง 7.08° ตาม docs/test.html) -->
-        <div class="flex flex-col items-center gap-1 rounded-2xl border bg-background/90 px-2 py-1.5 shadow-sm backdrop-blur">
-          <div class="relative size-11 rounded-full border bg-background/80">
-            <span class="absolute left-1/2 top-0 h-1 w-0.5 -translate-x-1/2 rounded-b bg-foreground/50" aria-hidden="true" />
-            <div class="absolute inset-0" :style="{ transform: `rotate(${compassAngle}deg)` }">
-              <span class="absolute left-1/2 top-0.75 -translate-x-1/2 text-[9px] font-black leading-none text-red-500">
-                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">N</span>
-              </span>
-              <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
-                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">E</span>
-              </span>
-              <span class="absolute bottom-0.75 left-1/2 -translate-x-1/2 text-[8px] font-bold leading-none text-muted-foreground">
-                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">S</span>
-              </span>
-              <span class="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
-                <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">W</span>
-              </span>
-            </div>
-            <span class="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />
-          </div>
-          <span class="text-[8px] font-semibold leading-none text-muted-foreground">ทิศเหนือจริง</span>
-        </div>
       </div>
+    </div>
+
+    <!-- เข็มทิศทิศเหนือจริง (เอียง 7.08° ตาม docs/test.html) อยู่ขวาล่างทุกขนาดจอ -->
+    <div class="pointer-events-none absolute bottom-2 right-2 z-20 flex flex-col items-center gap-1 rounded-2xl border bg-background/90 px-2 py-1.5 shadow-sm backdrop-blur sm:bottom-3 sm:right-3">
+      <div class="relative size-11 rounded-full border bg-background/80">
+        <span class="absolute left-1/2 top-0 h-1 w-0.5 -translate-x-1/2 rounded-b bg-foreground/50" aria-hidden="true" />
+        <div class="absolute inset-0" :style="{ transform: `rotate(${compassAngle}deg)` }">
+          <span class="absolute left-1/2 top-0.75 -translate-x-1/2 text-[9px] font-black leading-none text-red-500">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">N</span>
+          </span>
+          <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">E</span>
+          </span>
+          <span class="absolute bottom-0.75 left-1/2 -translate-x-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">S</span>
+          </span>
+          <span class="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] font-bold leading-none text-muted-foreground">
+            <span class="inline-block" :style="{ transform: `rotate(${-compassAngle}deg)` }">W</span>
+          </span>
+        </div>
+        <span class="absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />
+      </div>
+      <span class="text-[8px] font-semibold leading-none text-muted-foreground">ทิศเหนือจริง</span>
     </div>
 
     <!-- ชื่อหอ/อาคารบนมือถืออยู่ซ้ายล่าง ไม่แย่งพื้นที่กับปุ่มควบคุมด้านบน -->

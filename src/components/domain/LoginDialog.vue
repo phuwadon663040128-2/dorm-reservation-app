@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTheme } from '@/composables/useTheme'
 import { users } from '@/fixtures'
 import { resetDemoData } from '@/lib/demo-reset'
+import { errorsFromZod, INPUT_LIMITS, loginCredentialsSchema, registrationSchema } from '@/lib/validation'
 import { useSessionStore } from '@/stores/session'
 import type { User } from '@/types'
 import kkuEmblem from '@/assets/kku-emblem.png'
@@ -56,10 +57,12 @@ const showRegisterPassword = ref(false)
 const loginEmail = ref('thanapon.demo@example.test')
 const loginPassword = ref('demo1234')
 const loginError = ref('')
+const loginFieldErrors = ref<Record<string, string>>({})
 const registerEmail = ref('')
 const registerPassword = ref('')
 const acceptedNotice = ref(false)
 const registrationError = ref('')
+const registrationFieldErrors = ref<Record<string, string>>({})
 const dialogInitialFocus = ref<HTMLElement | null>(null)
 
 const heroImage = computed(() => (theme.value === 'dark' ? heroNight : heroDay))
@@ -86,6 +89,8 @@ watch(
     view.value = initialView
     loginError.value = ''
     registrationError.value = ''
+    loginFieldErrors.value = {}
+    registrationFieldErrors.value = {}
     if (freshOpen) {
       demoOpen.value = false
       showPassword.value = false
@@ -117,8 +122,26 @@ function finishSso(userId: string) {
   emit('signed-in', destination())
 }
 
-function signInByEmail() {
+async function focusFirstInvalid() {
+  await nextTick()
+  const element = document.querySelector<HTMLElement>('[role="dialog"] [aria-invalid="true"]')
+  element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  element?.focus({ preventScroll: true })
+}
+
+async function signInByEmail() {
   loginError.value = ''
+  loginFieldErrors.value = {}
+  const validation = loginCredentialsSchema.safeParse({
+    email: loginEmail.value,
+    password: loginPassword.value,
+  })
+  if (!validation.success) {
+    loginFieldErrors.value = errorsFromZod(validation.error)
+    await focusFirstInvalid()
+    return
+  }
+  loginEmail.value = validation.data.email.trim().toLowerCase()
   const user = session.authenticateApplicant(loginEmail.value, loginPassword.value)
   if (!user) {
     loginError.value = 'ไม่พบบัญชีผู้สมัครหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง'
@@ -132,27 +155,29 @@ function signInByEmail() {
   emit('signed-in', destination())
 }
 
-function submitRegistration() {
+async function submitRegistration() {
   registrationError.value = ''
-  const normalizedEmail = registerEmail.value.trim().toLowerCase()
-  if (!normalizedEmail.includes('@')) {
-    registrationError.value = 'กรุณากรอกอีเมลให้ถูกต้อง'
+  registrationFieldErrors.value = {}
+  const validation = registrationSchema.safeParse({
+    email: registerEmail.value,
+    password: registerPassword.value,
+    acceptedNotice: acceptedNotice.value,
+  })
+  if (!validation.success) {
+    registrationFieldErrors.value = errorsFromZod(validation.error)
+    await focusFirstInvalid()
     return
   }
+  const normalizedEmail = validation.data.email.trim().toLowerCase()
   if (session.userByEmail(normalizedEmail)) {
     registrationError.value = 'อีเมลนี้มีบัญชีอยู่แล้ว กรุณากลับไปเข้าสู่ระบบ'
     return
   }
-  if (registerPassword.value.length < 8) {
-    registrationError.value = 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร'
-    return
-  }
-  if (!acceptedNotice.value) {
-    registrationError.value = 'กรุณาอ่านและรับทราบประกาศความเป็นส่วนตัวก่อนสมัคร'
-    return
-  }
   registerEmail.value = normalizedEmail
-  session.beginEmailRegistration(normalizedEmail, registerPassword.value)
+  if (!session.beginEmailRegistration(normalizedEmail, validation.data.password)) {
+    registrationError.value = 'ไม่สามารถบันทึกข้อมูลสมัครบัญชีได้ กรุณาตรวจสอบข้อมูลอีกครั้ง'
+    return
+  }
   toast.success('ส่งลิงก์ยืนยันอีเมลแบบจำลองแล้ว')
   view.value = 'verify'
 }
@@ -167,7 +192,7 @@ function completeVerification() {
   loginEmail.value = user.email
   loginPassword.value = registerPassword.value
   toast.success('ยืนยันอีเมลสำเร็จ — สร้างบัญชีผู้สมัครแล้ว')
-  emit('signed-in', '/app/rooms')
+  emit('signed-in', destination())
 }
 
 function selectScenario(userId: string) {
@@ -293,10 +318,12 @@ function handleOpenAutoFocus(event: Event) {
                     type="email"
                     autocomplete="email"
                     placeholder="name@example.com"
-                    :aria-invalid="Boolean(loginError)"
+                    :maxlength="INPUT_LIMITS.email"
+                    :aria-invalid="Boolean(loginFieldErrors.email)"
                     :aria-describedby="loginError ? 'dialog-login-error' : undefined"
-                    @input="loginError = ''"
+                    @input="loginError = ''; loginFieldErrors.email = ''"
                   />
+                  <FieldError :errors="[loginFieldErrors.email]" />
                 </Field>
 
                 <Field>
@@ -308,9 +335,10 @@ function handleOpenAutoFocus(event: Event) {
                       class="h-11 w-full rounded-xl px-3 pr-11 text-sm"
                       :type="showPassword ? 'text' : 'password'"
                       autocomplete="current-password"
-                      :aria-invalid="Boolean(loginError)"
+                      :maxlength="INPUT_LIMITS.password"
+                      :aria-invalid="Boolean(loginFieldErrors.password)"
                       :aria-describedby="loginError ? 'dialog-login-error' : undefined"
-                      @input="loginError = ''"
+                      @input="loginError = ''; loginFieldErrors.password = ''"
                     />
                     <button
                       type="button"
@@ -322,6 +350,7 @@ function handleOpenAutoFocus(event: Event) {
                       <EyeIcon v-else class="size-4" aria-hidden="true" />
                     </button>
                   </div>
+                  <FieldError :errors="[loginFieldErrors.password]" />
                   <div class="flex justify-end">
                     <Button type="button" variant="link" class="h-auto px-0 py-0 text-xs font-normal" @click="requestPasswordReset">
                       ลืมรหัสผ่าน?
@@ -338,7 +367,11 @@ function handleOpenAutoFocus(event: Event) {
                   <span>{{ loginError }}</span>
                 </FieldError>
 
-                <Button type="submit" size="lg" class="h-11 w-full justify-center rounded-xl font-semibold">
+                <Button
+                  type="submit"
+                  size="lg"
+                  class="h-11 w-full justify-center rounded-xl font-semibold hover:-translate-y-px hover:bg-primary/90 hover:shadow-md"
+                >
                   เข้าสู่ระบบ
                 </Button>
               </form>
@@ -381,10 +414,12 @@ function handleOpenAutoFocus(event: Event) {
                   type="email"
                   autocomplete="email"
                   placeholder="name@example.com"
-                  :aria-invalid="Boolean(registrationError)"
+                  :maxlength="INPUT_LIMITS.email"
+                  :aria-invalid="Boolean(registrationFieldErrors.email)"
                   :aria-describedby="registrationError ? 'dialog-register-error' : undefined"
-                  @input="registrationError = ''"
+                  @input="registrationError = ''; registrationFieldErrors.email = ''"
                 />
+                <FieldError :errors="[registrationFieldErrors.email]" />
               </Field>
 
               <Field>
@@ -397,9 +432,10 @@ function handleOpenAutoFocus(event: Event) {
                     :type="showRegisterPassword ? 'text' : 'password'"
                     autocomplete="new-password"
                     placeholder="••••••••"
-                    :aria-invalid="Boolean(registrationError)"
+                    :maxlength="INPUT_LIMITS.password"
+                    :aria-invalid="Boolean(registrationFieldErrors.password)"
                     :aria-describedby="registrationError ? 'dialog-register-error' : undefined"
-                    @input="registrationError = ''"
+                    @input="registrationError = ''; registrationFieldErrors.password = ''"
                   />
                   <button
                     type="button"
@@ -411,6 +447,7 @@ function handleOpenAutoFocus(event: Event) {
                     <EyeIcon v-else class="size-4" aria-hidden="true" />
                   </button>
                 </div>
+                <FieldError :errors="[registrationFieldErrors.password]" />
               </Field>
 
               <div class="flex min-w-0 items-start gap-2.5 rounded-xl border bg-background/40 p-3">
@@ -424,11 +461,12 @@ function handleOpenAutoFocus(event: Event) {
               </div>
 
               <Field orientation="horizontal" class="items-start gap-2.5">
-                <Checkbox id="dialog-register-notice" v-model="acceptedNotice" class="mt-0.5" :aria-invalid="Boolean(registrationError)" />
+                <Checkbox id="dialog-register-notice" v-model="acceptedNotice" class="mt-0.5" :aria-invalid="Boolean(registrationFieldErrors.acceptedNotice)" @update:model-value="registrationFieldErrors.acceptedNotice = ''" />
                 <FieldLabel for="dialog-register-notice" class="text-xs font-normal leading-5 sm:text-sm">
                   ข้าพเจ้าได้อ่านและรับทราบประกาศความเป็นส่วนตัวแล้ว
                 </FieldLabel>
               </Field>
+              <FieldError :errors="[registrationFieldErrors.acceptedNotice]" />
 
               <FieldError v-if="registrationError" id="dialog-register-error">
                 {{ registrationError }}

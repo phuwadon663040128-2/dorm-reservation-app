@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import PermissionGate from '@/components/domain/PermissionGate.vue'
+import RefundQueue from '@/components/domain/RefundQueue.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { exceptionTypeLabel, formatBaht } from '@/lib/labels'
 import { usePermissions } from '@/composables/usePermissions'
@@ -87,6 +88,10 @@ function importResults() {
         </PermissionGate>
       </template>
     </StaffPageHeader>
+
+    <PermissionGate permission="payment.refund_status.manage">
+      <RefundQueue />
+    </PermissionGate>
 
     <!-- คิว exception — งานที่ต้องมีคนตัดสินใจ วางไว้บนสุดเสมอ -->
     <section class="space-y-3">

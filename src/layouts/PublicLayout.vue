@@ -27,12 +27,22 @@ const loginEmail = computed(() => {
   return typeof value === 'string' ? value : undefined
 })
 
+function roomSelectionRedirect() {
+  if (route.name !== 'public-rooms') return undefined
+  const query: LocationQueryRaw = { ...route.query }
+  delete query.auth
+  delete query.redirect
+  delete query.reset
+  delete query.authEmail
+  return router.resolve({ name: 'app-rooms', query, hash: route.hash }).fullPath
+}
+
 function openLogin(redirect?: string) {
   const query: LocationQueryRaw = { ...route.query, auth: 'login' }
   delete query.redirect
   delete query.reset
   delete query.authEmail
-  const safeRedirect = internalRedirect(redirect)
+  const safeRedirect = internalRedirect(redirect) ?? roomSelectionRedirect()
   if (safeRedirect) query.redirect = safeRedirect
   router.push({ path: route.path, query, hash: route.hash })
 }

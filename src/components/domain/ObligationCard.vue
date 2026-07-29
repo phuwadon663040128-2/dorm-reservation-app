@@ -27,7 +27,18 @@ import { documentStatusLabel, formatBaht, formatDate, resultStatusLabel } from '
 import { usePaymentsStore } from '@/stores/payments'
 import type { PaymentObligation } from '@/types'
 
-const props = defineProps<{ obligation: PaymentObligation }>()
+const props = withDefaults(defineProps<{
+  obligation: PaymentObligation
+  disabled?: boolean
+  billIndex?: number
+  billCount?: number
+  autoQueueHasNext?: boolean
+}>(), {
+  disabled: false,
+  billIndex: 1,
+  billCount: 1,
+  autoQueueHasNext: false,
+})
 const emit = defineEmits<{ (e: 'payment-flow-finished'): void }>()
 const payments = usePaymentsStore()
 const formOpen = ref(false)
@@ -52,17 +63,21 @@ const paymentPayload = computed(() => [
 ].join('|'))
 
 function openPaymentForm() {
+  if (!formReady.value || (props.disabled && !paid.value)) return false
   paymentPhase.value = 'idle'
   statusOpen.value = false
   formOpen.value = true
+  return true
 }
+
+defineExpose({ openPaymentForm })
 
 function preventStatusDialogDismiss(event: Event) {
   event.preventDefault()
 }
 
 function simulatePayment() {
-  if (paymentPhase.value === 'processing' || paid.value) return
+  if (paymentPhase.value === 'processing' || paid.value || props.disabled) return
   formOpen.value = false
   paymentPhase.value = 'processing'
   statusOpen.value = true
@@ -138,7 +153,7 @@ onBeforeUnmount(() => {
           </span>
           <span class="text-muted-foreground">· เอกสาร: {{ documentStatusLabel[obligation.documentStatus] }}</span>
         </div>
-        <Button v-if="formReady" size="sm" variant="outline" @click="openPaymentForm">
+        <Button v-if="formReady" size="sm" variant="outline" :disabled="disabled && !paid" @click="openPaymentForm">
           <FileTextIcon aria-hidden="true" />
           {{ paid ? 'ดูแบบฟอร์ม QR' : 'เปิด QR เพื่อชำระเงิน' }}
         </Button>
@@ -150,13 +165,19 @@ onBeforeUnmount(() => {
       <p v-if="obligation.override" class="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
         ยอดถูกปรับจาก {{ formatBaht(obligation.override.originalAmount) }} — เหตุผล: {{ obligation.override.reason }}
       </p>
+      <p v-if="obligation.suspendedAt" class="rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+        พักรายการชั่วคราว: {{ obligation.suspensionReason }}
+      </p>
     </CardContent>
   </Card>
 
   <Dialog v-model:open="formOpen">
     <DialogContent class="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-xl">
       <DialogHeader>
-        <DialogTitle>แบบฟอร์มชำระเงิน SCB</DialogTitle>
+        <DialogTitle>
+          แบบฟอร์มชำระเงิน SCB
+          <template v-if="billCount > 1">· บิล {{ billIndex }} จาก {{ billCount }}</template>
+        </DialogTitle>
         <DialogDescription>
           หน้าเฉพาะรายการ {{ obligation.action }} ของคุณจาก combined PDF ที่เจ้าหน้าที่นำเข้าแล้ว
         </DialogDescription>
@@ -218,7 +239,7 @@ onBeforeUnmount(() => {
       </Alert>
 
       <DialogFooter v-if="!paid">
-        <Button class="w-full sm:w-auto" @click="simulatePayment">
+        <Button class="w-full sm:w-auto" :disabled="disabled" @click="simulatePayment">
           <ScanLineIcon aria-hidden="true" />
           จำลองชำระผ่าน SCB สำเร็จ
         </Button>
@@ -254,7 +275,9 @@ onBeforeUnmount(() => {
           <DialogDescription class="max-w-xs text-center leading-relaxed">
             {{ paymentPhase === 'processing'
               ? 'กรุณารอสักครู่และอย่าปิดหน้าต่างนี้ ระบบกำลังตรวจสอบผลรายการ'
-              : 'ระบบจำลองได้รับผลจาก SCB และบันทึกสถานะรายการนี้เรียบร้อยแล้ว' }}
+              : autoQueueHasNext
+                ? 'บันทึกสถานะรายการนี้แล้ว กดปุ่มด้านล่างเพื่อชำระบิลถัดไป'
+                : 'ระบบจำลองได้รับผลจาก SCB และบันทึกสถานะรายการนี้เรียบร้อยแล้ว' }}
           </DialogDescription>
         </DialogHeader>
       </div>
@@ -273,7 +296,7 @@ onBeforeUnmount(() => {
       <DialogFooter v-if="paymentPhase === 'succeeded'">
         <Button class="w-full" @click="finishPaymentFlow">
           <CheckCircle2Icon aria-hidden="true" />
-          เสร็จสิ้น
+          {{ autoQueueHasNext ? 'ไปชำระบิลถัดไป' : 'เสร็จสิ้น' }}
         </Button>
       </DialogFooter>
     </DialogContent>

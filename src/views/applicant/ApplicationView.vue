@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -36,7 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -55,6 +55,16 @@ import {
 } from '@/components/ui/stepper'
 import { Textarea } from '@/components/ui/textarea'
 import ApplicationAttachmentField from '@/components/domain/ApplicationAttachmentField.vue'
+import {
+  formatGpa,
+  formatStudentId,
+  INPUT_LIMITS,
+  maskIdentityNumber,
+  normalizeApplicationData,
+  normalizePhone,
+  type ValidationErrors,
+  validateApplicationStepData,
+} from '@/lib/validation'
 import { useApplicationStore } from '@/stores/application'
 import { useDormStore } from '@/stores/dorm'
 import { useSessionStore } from '@/stores/session'
@@ -69,6 +79,7 @@ const { currentRecord, draft, isRevising, submittedReference } = storeToRefs(app
 const currentStep = ref(1)
 const highestStep = ref(1)
 const validationMessage = ref('')
+const fieldErrors = ref<ValidationErrors>({})
 const submissionSuccessOpen = ref(false)
 const birthDatePopoverOpen = ref(false)
 const birthDateClosedByViewportMove = ref(false)
@@ -134,6 +145,7 @@ const applicantTypes = [
 
 const campaign = computed(() => dorm.campaignById(draft.value.campaignId) ?? dorm.openCampaigns[0])
 const selectedApplicantType = computed(() => applicantTypes.find(type => type.value === draft.value.applicantType))
+const gpaRequired = computed(() => ['current_resident', 'other_dorm_senior'].includes(draft.value.applicantType))
 const activeAssignment = computed(() =>
   application.roomAssignmentForApplicant(session.currentUser?.id ?? ''),
 )
@@ -187,6 +199,11 @@ watch(birthDatePopoverOpen, (open) => {
   if (open) birthDateClosedByViewportMove.value = false
 })
 
+watch(draft, () => {
+  fieldErrors.value = {}
+  validationMessage.value = ''
+}, { deep: true, flush: 'sync' })
+
 // ปิดก่อน Floating UI คำนวณตำแหน่งใหม่ระหว่างเลื่อน เพื่อไม่ให้ปฏิทินลอยตามหรือทับแถบนำทาง
 useEventListener(
   birthDateViewportTarget,
@@ -196,57 +213,24 @@ useEventListener(
 )
 
 function validateStep(step: number) {
-  validationMessage.value = ''
+  if (step < 1 || step > 4) return false
+  const normalized = normalizeApplicationData(draft.value)
+  Object.assign(draft.value, normalized)
+  const validation = validateApplicationStepData(normalized, step as 1 | 2 | 3 | 4)
+  fieldErrors.value = validation.errors
+  validationMessage.value = validation.ok
+    ? ''
+    : Object.values(validation.errors)[0] ?? 'กรุณาตรวจสอบข้อมูลอีกครั้ง'
 
-  if (step === 1 && !draft.value.applicantType) {
-    validationMessage.value = 'กรุณาเลือกประเภทผู้สมัคร'
-  }
+  if (!validation.ok) void focusFirstInvalidField()
+  return validation.ok
+}
 
-  if (step === 2) {
-    const required = [
-      draft.value.title,
-      draft.value.firstName,
-      draft.value.lastName,
-      draft.value.studentId,
-      draft.value.dateOfBirth,
-      draft.value.studyYear,
-      draft.value.faculty,
-      draft.value.major,
-      draft.value.phone,
-      draft.value.email,
-      draft.value.address,
-      draft.value.emergencyName,
-      draft.value.emergencyPhone,
-    ]
-    if (required.some(value => !String(value).trim())) {
-      validationMessage.value = 'กรุณากรอกช่องที่มีเครื่องหมาย * ให้ครบก่อนดำเนินการต่อ'
-    }
-    else {
-      const birthDate = parseDraftBirthDate()
-      if (!birthDate) {
-        validationMessage.value = 'กรุณาเลือกวันเดือนปีเกิดจากปฏิทิน'
-      }
-      else if (birthDate.compare(currentDate) > 0) {
-        validationMessage.value = 'วันเดือนปีเกิดต้องไม่เป็นวันที่ในอนาคต'
-      }
-    }
-  }
-
-  if (step === 3 && !draft.value.bloodGroup) {
-    validationMessage.value = 'กรุณาระบุหมู่เลือด หรือเลือก “ไม่ทราบ”'
-  }
-  if (step === 3 && draft.value.hasCongenitalDisease === 'yes' && !draft.value.congenitalDiseaseDetails.trim()) {
-    validationMessage.value = 'กรุณาระบุรายละเอียดโรคประจำตัว'
-  }
-
-  if (step === 4 && (!draft.value.acceptsRules || !draft.value.confirmsAccuracy)) {
-    validationMessage.value = 'กรุณารับทราบกฎระเบียบและยืนยันความถูกต้องของข้อมูล'
-  }
-
-  if (validationMessage.value) {
-    return false
-  }
-  return true
+async function focusFirstInvalidField() {
+  await nextTick()
+  const element = document.querySelector<HTMLElement>('[aria-invalid="true"]')
+  element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  element?.focus({ preventScroll: true })
 }
 
 function validateApplication() {
@@ -273,7 +257,11 @@ function previousStep() {
 
 function submitApplication() {
   if (!validateApplication()) return
-  application.submit()
+  const reference = application.submit()
+  if (!reference) {
+    validationMessage.value = 'ไม่สามารถบันทึกใบสมัครได้ กรุณาตรวจสอบข้อมูลอีกครั้ง'
+    return
+  }
   session.markCurrentApplicantProfileComplete()
   submissionSuccessOpen.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -296,30 +284,12 @@ function beginRevision() {
 function saveRevision() {
   if (!validateApplication()) return
   const reference = application.saveRevision()
+  if (!reference) {
+    validationMessage.value = 'ไม่สามารถบันทึกการแก้ไขได้ กรุณาตรวจสอบข้อมูลอีกครั้ง'
+    return
+  }
   toast.success(`บันทึกการแก้ไขใบสมัคร ${reference} เรียบร้อยแล้ว`)
   window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function stepDisplayState(stepId: number) {
-  if (stepId === currentStep.value) return 'active'
-  if (isFormLocked.value || stepId < currentStep.value) return 'completed'
-  if (stepId <= highestStep.value) return 'available'
-  return 'locked'
-}
-
-function stepStatusLabel(stepId: number) {
-  const state = stepDisplayState(stepId)
-  if (state === 'active') return isFormLocked.value ? 'กำลังดู' : 'กำลังกรอก'
-  if (state === 'completed') return isFormLocked.value ? 'ส่งแล้ว' : 'เสร็จแล้ว'
-  if (state === 'available') return 'เปิดดูได้'
-  return 'ยังไม่เริ่ม'
-}
-
-function stepStatusClass(stepId: number) {
-  const state = stepDisplayState(stepId)
-  if (state === 'completed') return 'bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300'
-  if (state === 'active') return 'bg-primary/10 text-primary'
-  return 'bg-muted text-muted-foreground'
 }
 
 function selectStep(stepId: number | undefined) {
@@ -390,37 +360,28 @@ onMounted(() => {
               <StepperItem
                 v-for="step in steps"
                 :key="step.id"
+                v-slot="{ state }"
                 :step="step.id"
                 :disabled="step.id > highestStep"
-                class="relative flex w-full items-start gap-0 pb-3 last:pb-0"
+                class="relative flex w-full items-start pb-8 last:pb-0"
               >
                 <StepperSeparator
                   v-if="step.id < steps.length"
-                  :class="[
-                    'absolute -bottom-2.5 left-[1.875rem] top-[3.125rem] w-px -translate-x-1/2',
-                    stepDisplayState(step.id) === 'completed' ? 'bg-primary' : 'bg-muted',
-                  ]"
+                  class="absolute bottom-0 left-5 top-10 w-0.5 -translate-x-1/2 rounded-full bg-border transition-colors group-data-[state=completed]:bg-primary"
                 />
                 <StepperTrigger
-                  class="relative z-10 w-full flex-row items-start gap-3 rounded-lg border border-transparent p-2.5 text-left transition-colors hover:bg-muted/50 group-data-[state=active]:border-primary/30 group-data-[state=active]:bg-primary/5"
+                  class="group/step relative z-10 w-full flex-row items-start gap-4 rounded-md p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   <StepperIndicator
-                    :class="[
-                      'size-10 shrink-0 border bg-card',
-                      stepDisplayState(step.id) === 'completed' && 'border-primary bg-primary text-primary-foreground',
-                      stepDisplayState(step.id) === 'active' && 'border-primary text-primary',
-                    ]"
+                    class="size-10 shrink-0 border border-border bg-card text-muted-foreground transition-colors group-data-[state=active]:border-primary group-data-[state=active]:bg-card group-data-[state=active]:text-primary group-data-[state=active]:ring-2 group-data-[state=active]:ring-primary/20 group-data-[state=active]:ring-offset-2 group-data-[state=active]:ring-offset-card group-data-[state=completed]:border-primary group-data-[state=completed]:bg-primary group-data-[state=completed]:text-primary-foreground"
                   >
-                    <CheckIcon v-if="stepDisplayState(step.id) === 'completed'" class="size-5" aria-hidden="true" />
+                    <CheckIcon v-if="state === 'completed'" class="size-5" aria-hidden="true" />
                     <component :is="step.icon" v-else class="size-5" aria-hidden="true" />
                   </StepperIndicator>
-                  <div class="min-w-0 flex-1 space-y-1">
-                    <div class="flex items-start justify-between gap-2">
-                      <StepperTitle class="text-left text-sm leading-5">{{ step.title }}</StepperTitle>
-                      <span :class="['shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium', stepStatusClass(step.id)]">
-                        {{ stepStatusLabel(step.id) }}
-                      </span>
-                    </div>
+                  <div class="min-w-0 flex-1 space-y-1 pt-0.5">
+                    <StepperTitle class="text-left text-sm leading-5 transition-colors group-data-[state=active]:text-primary group-hover/step:text-primary">
+                      {{ step.title }}
+                    </StepperTitle>
                     <StepperDescription class="text-left text-xs leading-relaxed">{{ step.description }}</StepperDescription>
                   </div>
                 </StepperTrigger>
@@ -445,37 +406,36 @@ onMounted(() => {
           <CardContent class="pt-0">
             <Stepper
               :model-value="currentStep"
+              orientation="vertical"
               linear
-              class="grid w-full gap-2 sm:grid-cols-2"
+              class="flex w-full flex-col gap-0"
               @update:model-value="selectStep"
             >
               <StepperItem
                 v-for="step in steps"
                 :key="step.id"
+                v-slot="{ state }"
                 :step="step.id"
                 :disabled="step.id > highestStep"
-                class="w-full"
+                class="relative flex w-full items-start pb-6 last:pb-0"
               >
+                <StepperSeparator
+                  v-if="step.id < steps.length"
+                  class="absolute bottom-0 left-[1.125rem] top-9 w-0.5 -translate-x-1/2 rounded-full bg-border transition-colors group-data-[state=completed]:bg-primary"
+                />
                 <StepperTrigger
-                  class="w-full flex-row items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 group-data-[state=active]:border-primary group-data-[state=active]:bg-primary/5"
+                  class="group/step relative z-10 w-full flex-row items-start gap-3 rounded-md p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   <StepperIndicator
-                    :class="[
-                      'size-9 shrink-0 border bg-card',
-                      stepDisplayState(step.id) === 'completed' && 'border-primary bg-primary text-primary-foreground',
-                      stepDisplayState(step.id) === 'active' && 'border-primary text-primary',
-                    ]"
+                    class="size-9 shrink-0 border border-border bg-card text-muted-foreground transition-colors group-data-[state=active]:border-primary group-data-[state=active]:bg-card group-data-[state=active]:text-primary group-data-[state=active]:ring-2 group-data-[state=active]:ring-primary/20 group-data-[state=active]:ring-offset-2 group-data-[state=active]:ring-offset-card group-data-[state=completed]:border-primary group-data-[state=completed]:bg-primary group-data-[state=completed]:text-primary-foreground"
                   >
-                    <CheckIcon v-if="stepDisplayState(step.id) === 'completed'" class="size-4" aria-hidden="true" />
+                    <CheckIcon v-if="state === 'completed'" class="size-4" aria-hidden="true" />
                     <component :is="step.icon" v-else class="size-4" aria-hidden="true" />
                   </StepperIndicator>
-                  <div class="min-w-0 flex-1 space-y-1">
-                    <div class="flex flex-wrap items-start justify-between gap-1.5">
-                      <StepperTitle class="text-left text-sm leading-5">{{ step.id }}. {{ step.title }}</StepperTitle>
-                      <span :class="['shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium', stepStatusClass(step.id)]">
-                        {{ stepStatusLabel(step.id) }}
-                      </span>
-                    </div>
+                  <div class="min-w-0 flex-1 space-y-1 pt-0.5">
+                    <StepperTitle class="text-left text-sm leading-5 transition-colors group-data-[state=active]:text-primary group-hover/step:text-primary">
+                      {{ step.id }}. {{ step.title }}
+                    </StepperTitle>
                     <StepperDescription class="text-left text-xs leading-relaxed">{{ step.description }}</StepperDescription>
                   </div>
                 </StepperTrigger>
@@ -577,6 +537,7 @@ onMounted(() => {
               <RadioGroup
                 v-model="draft.applicantType"
                 :disabled="Boolean(submittedReference)"
+                :aria-invalid="Boolean(fieldErrors.applicantType)"
                 class="grid gap-3 sm:grid-cols-2"
               >
                 <FieldLabel
@@ -591,6 +552,7 @@ onMounted(() => {
                   </span>
                 </FieldLabel>
               </RadioGroup>
+              <FieldError class="mt-2" :errors="[fieldErrors.applicantType]" />
               <p v-if="submittedReference" class="mt-3 text-xs text-muted-foreground">
                 ประเภทผู้สมัครและรอบรับสมัครถูกล็อกหลังส่งใบสมัครครั้งแรก
               </p>
@@ -614,7 +576,7 @@ onMounted(() => {
                         id="title"
                         class="h-10 w-full"
                         aria-label="เลือกคำนำหน้า"
-                        :aria-invalid="validationMessage && !draft.title ? true : undefined"
+                        :aria-invalid="Boolean(fieldErrors.title)"
                       >
                         <SelectValue placeholder="เลือก" />
                       </SelectTrigger>
@@ -629,20 +591,24 @@ onMounted(() => {
                         <SelectItem value="other">อื่น ๆ</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FieldError :errors="[fieldErrors.title]" />
                   </Field>
                   <Field>
                     <FieldLabel for="first-name">ชื่อ <span class="text-primary">*</span></FieldLabel>
-                    <Input id="first-name" v-model="draft.firstName" class="h-10" autocomplete="given-name" />
+                    <Input id="first-name" v-model="draft.firstName" class="h-10" autocomplete="given-name" :maxlength="INPUT_LIMITS.personName" :aria-invalid="Boolean(fieldErrors.firstName)" />
+                    <FieldError :errors="[fieldErrors.firstName]" />
                   </Field>
                   <Field>
                     <FieldLabel for="last-name">นามสกุล <span class="text-primary">*</span></FieldLabel>
-                    <Input id="last-name" v-model="draft.lastName" class="h-10" autocomplete="family-name" />
+                    <Input id="last-name" v-model="draft.lastName" class="h-10" autocomplete="family-name" :maxlength="INPUT_LIMITS.personName" :aria-invalid="Boolean(fieldErrors.lastName)" />
+                    <FieldError :errors="[fieldErrors.lastName]" />
                   </Field>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Field>
                     <FieldLabel for="nickname">ชื่อเล่น</FieldLabel>
-                    <Input id="nickname" v-model="draft.nickname" class="h-10" />
+                    <Input id="nickname" v-model="draft.nickname" class="h-10" :maxlength="INPUT_LIMITS.nickname" :aria-invalid="Boolean(fieldErrors.nickname)" />
+                    <FieldError :errors="[fieldErrors.nickname]" />
                   </Field>
                   <Field>
                     <FieldLabel for="birth-date">วันเดือนปีเกิด <span class="text-primary">*</span></FieldLabel>
@@ -653,6 +619,7 @@ onMounted(() => {
                           type="button"
                           variant="outline"
                           class="h-10 w-full justify-between px-3 font-normal"
+                          :aria-invalid="Boolean(fieldErrors.dateOfBirth)"
                           :aria-label="formattedBirthDate ? `วันเดือนปีเกิด ${formattedBirthDate}` : 'เลือกวันเดือนปีเกิด'"
                         >
                           <span :class="formattedBirthDate ? 'text-foreground' : 'text-muted-foreground'">
@@ -682,16 +649,19 @@ onMounted(() => {
                       </PopoverContent>
                     </Popover>
                     <FieldDescription>เลือกวันเกิดตามปฏิทิน ระบบจะแสดงปีพุทธศักราชและบันทึกเป็นวันที่มาตรฐาน</FieldDescription>
+                    <FieldError :errors="[fieldErrors.dateOfBirth]" />
                   </Field>
                   <Field>
                     <FieldLabel for="nationality">สัญชาติ</FieldLabel>
-                    <Input id="nationality" v-model="draft.nationality" class="h-10" />
+                    <Input id="nationality" v-model="draft.nationality" class="h-10" :maxlength="INPUT_LIMITS.nationality" :aria-invalid="Boolean(fieldErrors.nationality)" />
+                    <FieldError :errors="[fieldErrors.nationality]" />
                   </Field>
                 </div>
                 <Field>
                   <FieldLabel for="id-number">เลขประจำตัวประชาชน / Passport</FieldLabel>
-                  <Input id="id-number" v-model="draft.idNumber" class="h-10 sm:max-w-md" inputmode="numeric" />
-                  <FieldDescription>ใช้เพื่อตรวจสอบตัวตนตามเงื่อนไขของรอบรับสมัครเท่านั้น</FieldDescription>
+                  <Input id="id-number" v-model="draft.idNumber" class="h-10 sm:max-w-md" :maxlength="INPUT_LIMITS.identityNumber" :aria-invalid="Boolean(fieldErrors.idNumber)" autocomplete="off" />
+                  <FieldDescription>ข้อมูลเสริม รองรับเลขบัตรประชาชนหรือ Passport และยังไม่ได้ยืนยันตัวตนด้วย ThaID</FieldDescription>
+                  <FieldError :errors="[fieldErrors.idNumber]" />
                 </Field>
               </FieldGroup>
             </CardContent>
@@ -707,12 +677,14 @@ onMounted(() => {
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Field>
                     <FieldLabel for="student-id">รหัสนักศึกษา <span class="text-primary">*</span></FieldLabel>
-                    <Input id="student-id" v-model="draft.studentId" class="h-10" />
+                    <Input id="student-id" v-model="draft.studentId" class="h-10" inputmode="numeric" :maxlength="INPUT_LIMITS.studentId" :aria-invalid="Boolean(fieldErrors.studentId)" @blur="draft.studentId = formatStudentId(draft.studentId)" />
+                    <FieldDescription>ตรวจเฉพาะรูปแบบ 10 หลัก ยังไม่ได้ตรวจสอบกับฐานข้อมูล KKU</FieldDescription>
+                    <FieldError :errors="[fieldErrors.studentId]" />
                   </Field>
                   <Field>
                     <FieldLabel for="degree-level">ระดับการศึกษา <span class="text-primary">*</span></FieldLabel>
                     <Select v-model="draft.degreeLevel">
-                      <SelectTrigger id="degree-level" class="h-10 w-full" aria-label="เลือกระดับการศึกษา">
+                      <SelectTrigger id="degree-level" class="h-10 w-full" aria-label="เลือกระดับการศึกษา" :aria-invalid="Boolean(fieldErrors.degreeLevel)">
                         <SelectValue placeholder="เลือกระดับการศึกษา" />
                       </SelectTrigger>
                       <SelectContent
@@ -725,6 +697,7 @@ onMounted(() => {
                         <SelectItem value="doctoral">ปริญญาเอก</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FieldError :errors="[fieldErrors.degreeLevel]" />
                   </Field>
                   <Field>
                     <FieldLabel for="study-year">ชั้นปี <span class="text-primary">*</span></FieldLabel>
@@ -733,7 +706,7 @@ onMounted(() => {
                         id="study-year"
                         class="h-10 w-full"
                         aria-label="เลือกชั้นปี"
-                        :aria-invalid="validationMessage && !draft.studyYear ? true : undefined"
+                        :aria-invalid="Boolean(fieldErrors.studyYear)"
                       >
                         <SelectValue placeholder="เลือกชั้นปี" />
                       </SelectTrigger>
@@ -745,26 +718,32 @@ onMounted(() => {
                         <SelectItem v-for="year in 8" :key="year" :value="String(year)">ปี {{ year }}</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FieldError :errors="[fieldErrors.studyYear]" />
                   </Field>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                   <Field>
                     <FieldLabel for="faculty">คณะ <span class="text-primary">*</span></FieldLabel>
-                    <Input id="faculty" v-model="draft.faculty" class="h-10" placeholder="เช่น วิศวกรรมศาสตร์" />
+                    <Input id="faculty" v-model="draft.faculty" class="h-10" placeholder="เช่น วิศวกรรมศาสตร์" :maxlength="INPUT_LIMITS.faculty" :aria-invalid="Boolean(fieldErrors.faculty)" />
+                    <FieldError :errors="[fieldErrors.faculty]" />
                   </Field>
                   <Field>
                     <FieldLabel for="major">สาขาวิชา <span class="text-primary">*</span></FieldLabel>
-                    <Input id="major" v-model="draft.major" class="h-10" />
+                    <Input id="major" v-model="draft.major" class="h-10" :maxlength="INPUT_LIMITS.major" :aria-invalid="Boolean(fieldErrors.major)" />
+                    <FieldError :errors="[fieldErrors.major]" />
                   </Field>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                   <Field>
-                    <FieldLabel for="gpa">เกรดเฉลี่ยสะสม (GPA)</FieldLabel>
-                    <Input id="gpa" v-model="draft.gpa" class="h-10" inputmode="decimal" placeholder="0.00" />
+                    <FieldLabel for="gpa">เกรดเฉลี่ยสะสม (GPA) <span v-if="gpaRequired" class="text-primary">*</span></FieldLabel>
+                    <Input id="gpa" v-model="draft.gpa" class="h-10" inputmode="decimal" placeholder="0.00" maxlength="4" :aria-invalid="Boolean(fieldErrors.gpa)" @blur="draft.gpa = formatGpa(draft.gpa)" />
+                    <FieldDescription>{{ gpaRequired ? 'จำเป็นสำหรับประเภทผู้สมัครนี้' : 'เว้นว่างได้หากยังไม่มีผลการเรียนหรือใช้ระบบคะแนนอื่น' }}</FieldDescription>
+                    <FieldError :errors="[fieldErrors.gpa]" />
                   </Field>
                   <Field>
                     <FieldLabel for="advisor">ชื่ออาจารย์ที่ปรึกษา</FieldLabel>
-                    <Input id="advisor" v-model="draft.advisor" class="h-10" />
+                    <Input id="advisor" v-model="draft.advisor" class="h-10" :maxlength="INPUT_LIMITS.advisor" :aria-invalid="Boolean(fieldErrors.advisor)" />
+                    <FieldError :errors="[fieldErrors.advisor]" />
                   </Field>
                 </div>
               </FieldGroup>
@@ -780,30 +759,37 @@ onMounted(() => {
                 <div class="grid gap-4 sm:grid-cols-2">
                   <Field>
                     <FieldLabel for="phone">เบอร์โทรศัพท์ <span class="text-primary">*</span></FieldLabel>
-                    <Input id="phone" v-model="draft.phone" class="h-10" type="tel" autocomplete="tel" />
+                    <Input id="phone" v-model="draft.phone" class="h-10" type="tel" autocomplete="tel" :maxlength="INPUT_LIMITS.phone" :aria-invalid="Boolean(fieldErrors.phone)" @blur="draft.phone = normalizePhone(draft.phone)" />
+                    <FieldDescription>รองรับเบอร์ไทย หรือรูปแบบสากล เช่น +66812345678</FieldDescription>
+                    <FieldError :errors="[fieldErrors.phone]" />
                   </Field>
                   <Field>
                     <FieldLabel for="email">อีเมล <span class="text-primary">*</span></FieldLabel>
-                    <Input id="email" v-model="draft.email" class="h-10" type="email" autocomplete="email" />
+                    <Input id="email" v-model="draft.email" class="h-10" type="email" autocomplete="email" :maxlength="INPUT_LIMITS.email" :aria-invalid="Boolean(fieldErrors.email)" />
+                    <FieldError :errors="[fieldErrors.email]" />
                   </Field>
                 </div>
                 <Field>
                   <FieldLabel for="address">ที่อยู่ที่ติดต่อได้ <span class="text-primary">*</span></FieldLabel>
-                  <Textarea id="address" v-model="draft.address" rows="3" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์" />
+                  <Textarea id="address" v-model="draft.address" rows="3" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์" :maxlength="INPUT_LIMITS.address" :aria-invalid="Boolean(fieldErrors.address)" />
+                  <div class="flex items-start justify-between gap-3"><FieldError :errors="[fieldErrors.address]" /><span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ draft.address.length }}/{{ INPUT_LIMITS.address }}</span></div>
                 </Field>
                 <Separator />
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Field>
                     <FieldLabel for="emergency-name">ชื่อผู้ติดต่อฉุกเฉิน <span class="text-primary">*</span></FieldLabel>
-                    <Input id="emergency-name" v-model="draft.emergencyName" class="h-10" />
+                    <Input id="emergency-name" v-model="draft.emergencyName" class="h-10" :maxlength="INPUT_LIMITS.emergencyName" :aria-invalid="Boolean(fieldErrors.emergencyName)" />
+                    <FieldError :errors="[fieldErrors.emergencyName]" />
                   </Field>
                   <Field>
                     <FieldLabel for="emergency-relation">ความสัมพันธ์</FieldLabel>
-                    <Input id="emergency-relation" v-model="draft.emergencyRelation" class="h-10" placeholder="เช่น บิดา มารดา ผู้ปกครอง" />
+                    <Input id="emergency-relation" v-model="draft.emergencyRelation" class="h-10" placeholder="เช่น บิดา มารดา ผู้ปกครอง" :maxlength="INPUT_LIMITS.emergencyRelation" :aria-invalid="Boolean(fieldErrors.emergencyRelation)" />
+                    <FieldError :errors="[fieldErrors.emergencyRelation]" />
                   </Field>
                   <Field>
                     <FieldLabel for="emergency-phone">เบอร์โทรศัพท์ <span class="text-primary">*</span></FieldLabel>
-                    <Input id="emergency-phone" v-model="draft.emergencyPhone" class="h-10" type="tel" />
+                    <Input id="emergency-phone" v-model="draft.emergencyPhone" class="h-10" type="tel" :maxlength="INPUT_LIMITS.phone" :aria-invalid="Boolean(fieldErrors.emergencyPhone)" @blur="draft.emergencyPhone = normalizePhone(draft.emergencyPhone)" />
+                    <FieldError :errors="[fieldErrors.emergencyPhone]" />
                   </Field>
                 </div>
               </FieldGroup>
@@ -832,7 +818,7 @@ onMounted(() => {
                     id="blood-group"
                     class="h-10 w-full"
                     aria-label="เลือกหมู่เลือด"
-                    :aria-invalid="validationMessage && !draft.bloodGroup ? true : undefined"
+                    :aria-invalid="Boolean(fieldErrors.bloodGroup)"
                   >
                     <SelectValue placeholder="เลือกหมู่เลือด" />
                   </SelectTrigger>
@@ -848,6 +834,7 @@ onMounted(() => {
                     <SelectItem value="unknown">ไม่ทราบ</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError :errors="[fieldErrors.bloodGroup]" />
               </Field>
               <Field>
                 <FieldLabel>มีโรคประจำตัวหรือไม่</FieldLabel>
@@ -862,7 +849,8 @@ onMounted(() => {
               </Field>
               <Field v-if="draft.hasCongenitalDisease === 'yes'">
                 <FieldLabel for="disease-details">รายละเอียดโรคประจำตัว <span class="text-primary">*</span></FieldLabel>
-                <Textarea id="disease-details" v-model="draft.congenitalDiseaseDetails" rows="3" placeholder="ระบุชื่อโรค อาการ และข้อควรระวัง" />
+                <Textarea id="disease-details" v-model="draft.congenitalDiseaseDetails" rows="3" placeholder="ระบุชื่อโรค อาการ และข้อควรระวัง" :maxlength="INPUT_LIMITS.healthDetails" :aria-invalid="Boolean(fieldErrors.congenitalDiseaseDetails)" />
+                <div class="flex items-start justify-between gap-3"><FieldError :errors="[fieldErrors.congenitalDiseaseDetails]" /><span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ draft.congenitalDiseaseDetails.length.toLocaleString('th-TH') }}/{{ INPUT_LIMITS.healthDetails.toLocaleString('th-TH') }}</span></div>
               </Field>
             </CardContent>
           </Card>
@@ -883,15 +871,18 @@ onMounted(() => {
               <FieldGroup>
                 <Field>
                   <FieldLabel for="dorm-activities">กิจกรรมของหอพักที่เคยเข้าร่วม</FieldLabel>
-                  <Textarea id="dorm-activities" v-model="draft.dormActivities" rows="3" />
+                  <Textarea id="dorm-activities" v-model="draft.dormActivities" rows="3" :maxlength="INPUT_LIMITS.activity" :aria-invalid="Boolean(fieldErrors.dormActivities)" />
+                  <div class="flex items-start justify-between gap-3"><FieldError :errors="[fieldErrors.dormActivities]" /><span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ draft.dormActivities.length }}/{{ INPUT_LIMITS.activity }}</span></div>
                 </Field>
                 <Field>
                   <FieldLabel for="university-activities">กิจกรรมของคณะ / มหาวิทยาลัย</FieldLabel>
-                  <Textarea id="university-activities" v-model="draft.universityActivities" rows="3" />
+                  <Textarea id="university-activities" v-model="draft.universityActivities" rows="3" :maxlength="INPUT_LIMITS.activity" :aria-invalid="Boolean(fieldErrors.universityActivities)" />
+                  <div class="flex items-start justify-between gap-3"><FieldError :errors="[fieldErrors.universityActivities]" /><span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ draft.universityActivities.length }}/{{ INPUT_LIMITS.activity }}</span></div>
                 </Field>
                 <Field>
                   <FieldLabel for="talents">ความสามารถพิเศษ</FieldLabel>
-                  <Textarea id="talents" v-model="draft.talents" rows="3" />
+                  <Textarea id="talents" v-model="draft.talents" rows="3" :maxlength="INPUT_LIMITS.activity" :aria-invalid="Boolean(fieldErrors.talents)" />
+                  <div class="flex items-start justify-between gap-3"><FieldError :errors="[fieldErrors.talents]" /><span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ draft.talents.length }}/{{ INPUT_LIMITS.activity }}</span></div>
                 </Field>
               </FieldGroup>
             </CardContent>
@@ -905,15 +896,18 @@ onMounted(() => {
             <CardContent class="grid gap-4 sm:grid-cols-3">
               <Field>
                 <FieldLabel for="vehicle-type">ประเภทยานพาหนะ</FieldLabel>
-                <Input id="vehicle-type" v-model="draft.vehicleType" class="h-10" placeholder="เช่น รถจักรยานยนต์" />
+                <Input id="vehicle-type" v-model="draft.vehicleType" class="h-10" placeholder="เช่น รถจักรยานยนต์" :maxlength="INPUT_LIMITS.vehicle" :aria-invalid="Boolean(fieldErrors.vehicleType)" />
+                <FieldError :errors="[fieldErrors.vehicleType]" />
               </Field>
               <Field>
                 <FieldLabel for="vehicle-brand">ยี่ห้อ</FieldLabel>
-                <Input id="vehicle-brand" v-model="draft.vehicleBrand" class="h-10" />
+                <Input id="vehicle-brand" v-model="draft.vehicleBrand" class="h-10" :maxlength="INPUT_LIMITS.vehicle" :aria-invalid="Boolean(fieldErrors.vehicleBrand)" />
+                <FieldError :errors="[fieldErrors.vehicleBrand]" />
               </Field>
               <Field>
                 <FieldLabel for="vehicle-registration">เลขทะเบียน</FieldLabel>
-                <Input id="vehicle-registration" v-model="draft.vehicleRegistration" class="h-10" />
+                <Input id="vehicle-registration" v-model="draft.vehicleRegistration" class="h-10" :maxlength="INPUT_LIMITS.vehicleRegistration" :aria-invalid="Boolean(fieldErrors.vehicleRegistration)" />
+                <FieldError :errors="[fieldErrors.vehicleRegistration]" />
               </Field>
             </CardContent>
           </Card>
@@ -933,6 +927,7 @@ onMounted(() => {
                 hint="JPG หรือ PNG"
                 accept="image/png,image/jpeg"
                 kind="image"
+                :max-size-mb="5"
                 :state="isFormLocked ? 'done' : 'idle'"
               />
               <ApplicationAttachmentField
@@ -943,6 +938,7 @@ onMounted(() => {
                 select-label="เลือกไฟล์เอกสาร"
                 hint="PDF, JPG หรือ PNG"
                 accept="application/pdf,image/png,image/jpeg"
+                :max-size-mb="10"
                 :state="isFormLocked ? 'done' : 'idle'"
               />
             </CardContent>
@@ -968,7 +964,8 @@ onMounted(() => {
                   <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">ผู้สมัคร</p>
                   <dl class="space-y-2 text-sm">
                     <div class="flex justify-between gap-4"><dt class="text-muted-foreground">ชื่อ</dt><dd class="text-right font-medium">{{ draft.title }} {{ draft.firstName }} {{ draft.lastName }}</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-muted-foreground">รหัสนักศึกษา</dt><dd class="font-medium">{{ draft.studentId }}</dd></div>
+                     <div class="flex justify-between gap-4"><dt class="text-muted-foreground">รหัสนักศึกษา</dt><dd class="font-medium">{{ draft.studentId }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-muted-foreground">เลขประจำตัว / Passport</dt><dd class="font-medium tabular-nums">{{ maskIdentityNumber(draft.idNumber) }}</dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-muted-foreground">คณะ / สาขา</dt><dd class="text-right font-medium">{{ draft.faculty }} / {{ draft.major }}</dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-muted-foreground">ติดต่อ</dt><dd class="text-right font-medium">{{ draft.phone }}</dd></div>
                   </dl>
@@ -999,19 +996,21 @@ onMounted(() => {
             </CardHeader>
             <CardContent class="space-y-4">
               <Label class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 font-normal">
-                <Checkbox v-model="draft.acceptsRules" class="mt-0.5" />
+                <Checkbox v-model="draft.acceptsRules" class="mt-0.5" :aria-invalid="Boolean(fieldErrors.acceptsRules)" />
                 <span>
                   <span class="block font-medium">ข้าพเจ้าได้อ่านและรับทราบกฎระเบียบหอพัก</span>
                   <span class="mt-1 block text-xs leading-relaxed text-muted-foreground">รวมถึงเงื่อนไขสัญญาปีการศึกษา การใช้พื้นที่ส่วนกลาง และแนวทางการยกเลิกตามประกาศที่มีผลบังคับใช้</span>
                 </span>
               </Label>
+              <FieldError :errors="[fieldErrors.acceptsRules]" />
               <Label class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 font-normal">
-                <Checkbox v-model="draft.confirmsAccuracy" class="mt-0.5" />
+                <Checkbox v-model="draft.confirmsAccuracy" class="mt-0.5" :aria-invalid="Boolean(fieldErrors.confirmsAccuracy)" />
                 <span>
                   <span class="block font-medium">ข้าพเจ้ายืนยันว่าข้อมูลข้างต้นถูกต้อง</span>
                   <span class="mt-1 block text-xs leading-relaxed text-muted-foreground">ยินยอมให้มหาวิทยาลัยใช้ข้อมูลเพื่อดำเนินการสมัคร ตรวจสอบสิทธิ์ ติดต่อ และบริหารการเข้าพักตามวัตถุประสงค์ของระบบ</span>
                 </span>
               </Label>
+              <FieldError :errors="[fieldErrors.confirmsAccuracy]" />
             </CardContent>
           </Card>
         </template>

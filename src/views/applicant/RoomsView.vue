@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { InfoIcon, TimerIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -26,7 +26,26 @@ import type { OccupancyMode, Room } from '@/types'
 const session = useSessionStore()
 const reservation = useReservationStore()
 const dorm = useDormStore()
+const route = useRoute()
 const router = useRouter()
+
+const requestedRoom = computed(() => {
+  const roomNumber = typeof route.query.room === 'string' ? route.query.room : ''
+  return roomNumber ? dorm.roomByNumber(roomNumber) : undefined
+})
+const requestedDormGroupId = computed(() => {
+  const room = requestedRoom.value
+  if (room) {
+    return dorm.buildings.find(building => building.id === room.buildingId)?.dormGroupId
+  }
+  return typeof route.query.dorm === 'string' ? route.query.dorm : undefined
+})
+const requestedConfig = computed(() =>
+  typeof route.query.config === 'string' ? route.query.config : undefined,
+)
+const requestedGender = computed(() =>
+  typeof route.query.gender === 'string' ? route.query.gender : undefined,
+)
 
 const canReserve = computed(
   () => Boolean(session.currentUser) && !reservation.myReservation,
@@ -60,6 +79,10 @@ function onSelect(room: Room) {
   dialogOpen.value = true
 }
 
+watch(requestedRoom, (room) => {
+  if (room) onSelect(room)
+}, { immediate: true })
+
 const priceLines = computed(() =>
   selectedRoom.value && occupancy.value
     ? priceLinesFor(selectedRoom.value.config, occupancy.value)
@@ -77,7 +100,7 @@ function reserve() {
     dialogOpen.value = false
     router.push(
       reservation.myReservation?.holdStatus === 'held_payment'
-        ? '/app/payments'
+        ? { path: '/app/payments', query: { pay: 'auto' } }
         : '/app/roommate',
     )
   }
@@ -102,7 +125,12 @@ function reserve() {
       </AlertDescription>
     </Alert>
 
-    <RoomBrowser @select="onSelect" />
+    <RoomBrowser
+      :initial-dorm-group-id="requestedDormGroupId"
+      :initial-config="requestedConfig"
+      :initial-gender="requestedGender"
+      @select="onSelect"
+    />
 
     <!-- Dialog ยืนยันการจอง -->
     <Dialog v-model:open="dialogOpen">
@@ -215,7 +243,12 @@ function reserve() {
               <template v-if="occupancy === 'shared' && campaign.roommateRoomConfirmationRequired">
                 — รูมเมทต้องยืนยันห้องภายใน {{ campaign.roomConfirmationMinutes }} นาที มิฉะนั้นห้องถูกปล่อยคืน
               </template>
-              จากนั้นกลุ่มมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง (deadline เดียวร่วมกัน)
+              <template v-if="occupancy === 'shared'">
+                จากนั้นกลุ่มมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง (deadline เดียวร่วมกัน)
+              </template>
+              <template v-else>
+                จากนั้นคุณมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง
+              </template>
             </span>
           </p>
         </div>
@@ -230,7 +263,7 @@ function reserve() {
           >
             <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
             <template v-else-if="!occupancy">ยังไม่มีรูปแบบการพักที่จองได้</template>
-            <template v-else>จองห้องนี้ — ล็อกทันที</template>
+            <template v-else>จองห้องนี้</template>
           </Button>
         </DialogFooter>
       </DialogContent>

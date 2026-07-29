@@ -143,14 +143,35 @@ const accountIdentifier = computed(() => {
 
 function isMenuActive(menu: TopMenu) {
   if (menu.to === '/') return route.path === '/'
+  if (
+    session.isLoggedIn
+    && !session.isStaff
+    && route.path === '/app/rooms'
+    && menu.activePrefixes.includes('/rooms')
+  ) return true
   return menu.activePrefixes.some(prefix => route.path === prefix || route.path.startsWith(`${prefix}/`))
 }
 
+function portalAwareDestination(to: RouteLocationRaw): RouteLocationRaw {
+  if (
+    session.isLoggedIn
+    && !session.isStaff
+    && typeof to === 'object'
+    && to !== null
+    && 'path' in to
+    && to.path === '/rooms'
+  ) {
+    return { ...to, path: '/app/rooms' }
+  }
+  return to
+}
+
 function isNavItemActive(to: RouteLocationRaw) {
-  if (typeof to === 'string') return route.path === to
-  if (typeof to === 'object' && to !== null && 'path' in to && to.path) {
-    if (route.path !== to.path) return false
-    const query = (to as { query?: Record<string, string> }).query
+  const destination = portalAwareDestination(to)
+  if (typeof destination === 'string') return route.path === destination
+  if (typeof destination === 'object' && destination !== null && 'path' in destination && destination.path) {
+    if (route.path !== destination.path) return false
+    const query = (destination as { query?: Record<string, string> }).query
     return !query || Object.entries(query).every(([key, value]) => route.query[key] === value)
   }
   return false
@@ -158,7 +179,7 @@ function isNavItemActive(to: RouteLocationRaw) {
 
 function navigate(to: RouteLocationRaw) {
   mobileOpen.value = false
-  router.push(to)
+  router.push(portalAwareDestination(to))
 }
 
 function requestLogin() {
@@ -271,7 +292,7 @@ function logout() {
 
         <Button
           v-if="!session.isLoggedIn"
-          class="hidden rounded-full sm:inline-flex"
+          class="hidden rounded-full hover:-translate-y-px hover:bg-primary/90 hover:shadow-md sm:inline-flex"
           @click="requestLogin"
         >
           เข้าสู่ระบบ
@@ -421,7 +442,11 @@ function logout() {
               </template>
 
               <template v-if="!isApplicantContext">
-                <Button v-if="!session.isLoggedIn" class="mt-4 rounded-full" @click="requestLogin">
+                <Button
+                  v-if="!session.isLoggedIn"
+                  class="mt-4 rounded-full hover:-translate-y-px hover:bg-primary/90 hover:shadow-md"
+                  @click="requestLogin"
+                >
                   เข้าสู่ระบบ
                 </Button>
               </template>

@@ -1,8 +1,16 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { OccupancyMode, ReservationGroup, RoommateGroup, RoommateInvitation } from '@/types'
+import type {
+  CancellationRequest,
+  CancellationRequestKind,
+  OccupancyMode,
+  ReservationGroup,
+  RoommateGroup,
+  RoommateInvitation,
+} from '@/types'
 import { reservationGroups as resvFixtures, roommateGroups as groupFixtures, roommateInvitations as invitationFixtures, users } from '@/fixtures'
 import { roomConfigLabel } from '@/lib/labels'
+import { INPUT_LIMITS, roommateSearchSchema } from '@/lib/validation'
 import { useApplicationStore } from './application'
 import { useContractsStore } from './contracts'
 import { useDormStore } from './dorm'
@@ -29,10 +37,17 @@ export interface RoommateCandidateSearchResult {
 }
 
 export const ROOMMATE_SEARCH_MIN_STUDENT_DIGITS = 6
+export const ROOMMATE_SEARCH_MIN_LENGTH = 6
 export const ROOMMATE_SEARCH_RESULT_LIMIT = 5
+export const ROOMMATE_SEARCH_MAX_LENGTH = INPUT_LIMITS.roommateSearch
 
 const ACTIVE_GROUP_STATUSES = ['invitation_pending', 'accepted', 'room_confirmation_pending', 'ready_for_payment', 'confirmed']
-const ACTIVE_HOLD_STATUSES = ['held_roommate_confirmation', 'held_payment', 'confirmed']
+type ActiveHoldStatus = Extract<ReservationGroup['holdStatus'], 'held_roommate_confirmation' | 'held_payment' | 'confirmed'>
+const ACTIVE_HOLD_STATUSES: ActiveHoldStatus[] = ['held_roommate_confirmation', 'held_payment', 'confirmed']
+
+function isActiveHoldStatus(status: ReservationGroup['holdStatus']): status is ActiveHoldStatus {
+  return ACTIVE_HOLD_STATUSES.includes(status as ActiveHoldStatus)
+}
 
 function inMs(ms: number): string {
   return new Date(Date.now() + ms).toISOString()
@@ -42,6 +57,7 @@ export const useReservationStore = defineStore('reservation', () => {
   const invitations = ref<RoommateInvitation[]>(invitationFixtures)
   const roommateGroups = ref<RoommateGroup[]>(groupFixtures)
   const reservationGroups = ref<ReservationGroup[]>(resvFixtures)
+  const cancellationRequests = ref<CancellationRequest[]>([])
 
   const session = useSessionStore()
   const application = useApplicationStore()
@@ -65,7 +81,7 @@ export const useReservationStore = defineStore('reservation', () => {
 
   function activeReservationOf(userId: string) {
     return reservationGroups.value.find(
-      r => r.memberIds.includes(userId) && ACTIVE_HOLD_STATUSES.includes(r.holdStatus),
+      r => r.memberIds.includes(userId) && isActiveHoldStatus(r.holdStatus),
     )
   }
 
@@ -102,6 +118,29 @@ export const useReservationStore = defineStore('reservation', () => {
     return reservationGroups.value.find(r => r.id === id)
   }
 
+  function cancellationRequestForReservation(reservationGroupId: string) {
+    return cancellationRequests.value.find(request => request.reservationGroupId === reservationGroupId)
+  }
+
+  function pendingCancellationForReservation(reservationGroupId: string) {
+    return cancellationRequests.value.find(
+      request => request.reservationGroupId === reservationGroupId && request.status === 'pending',
+    )
+  }
+
+  const pendingCancellationRequests = computed(() =>
+    cancellationRequests.value.filter(request => request.status === 'pending'),
+  )
+
+  const myLatestCancellationRequest = computed(() => {
+    const uid = session.currentUser?.id
+    if (!uid) return undefined
+    return cancellationRequests.value.find((request) => {
+      const resv = reservationById(request.reservationGroupId)
+      return resv?.memberIds.includes(uid)
+    })
+  })
+
   // คิวฝั่ง staff
   const activeHolds = computed(() =>
     reservationGroups.value.filter(r =>
@@ -112,6 +151,200 @@ export const useReservationStore = defineStore('reservation', () => {
   const confirmedReservations = computed(() =>
     reservationGroups.value.filter(r => r.holdStatus === 'confirmed'),
   )
+
+  function notifyReservationMembers(resv: ReservationGroup, title: string, detail: string) {
+    resv.memberIds.forEach(memberId => contractsStore.addNotification(memberId, title, detail))
+  }
+
+  function completeCancellation(resv: ReservationGroup, request: CancellationRequest, actor: string) {
+    if (resv.holdStatus === 'cancelled') return false
+    payments.createRefundRecordsForReservation(resv.id, request.id)
+    resv.holdStatus = 'cancelled'
+    resv.confirmationDeadline = undefined
+    resv.paymentDeadline = undefined
+    dorm.setRoomStatus(resv.roomNumber, 'available')
+    application.releaseRoomAssignmentForReservation(resv.id, `ยกเลิกการจอง: ${request.reason}`)
+    payments.cancelObligationsForReservation(resv.id)
+    contractsStore.cancelUnsignedContractsForReservation(resv.id)
+    const group = roommateGroups.value.find(item => item.id === resv.roommateGroupId)
+    if (group) group.status = 'accepted'
+    notifyReservationMembers(
+      resv,
+      'การจองถูกยกเลิกแล้ว',
+      `ห้อง ${resv.roomNumber} ถูกปล่อยคืนแล้ว${payments.refundRecords.some(item => item.cancellationRequestId === request.id) ? ' ยอดที่ชำระแล้วอยู่ระหว่างการตรวจสอบคืนเงินแยกรายการ' : ''}`,
+    )
+    contractsStore.addAudit({
+      actor,
+      action: 'reservation.cancel',
+      reason: request.reason,
+      relatedIds: [resv.id, request.id, resv.roomNumber],
+      detail: `ยกเลิกการจองห้อง ${resv.roomNumber} และปล่อยห้องคืน โดยเก็บประวัติการชำระและ room assignment เดิมไว้`,
+    })
+    return true
+  }
+
+  function cancelUnpaidReservation(resvId: string, reason: string): ActionResult {
+    const me = session.currentUser
+    const resv = reservationById(resvId)
+    const normalizedReason = reason.trim()
+    if (!me || !resv || !isActiveHoldStatus(resv.holdStatus)) {
+      return { ok: false, message: 'ไม่พบการจองที่สามารถยกเลิกได้' }
+    }
+    if (!normalizedReason || normalizedReason.length > INPUT_LIMITS.cancellationReason) {
+      return { ok: false, message: `กรุณาระบุเหตุผลไม่เกิน ${INPUT_LIMITS.cancellationReason} ตัวอักษร` }
+    }
+    if (pendingCancellationForReservation(resv.id)) {
+      return { ok: true, message: 'คำขอยกเลิกนี้อยู่ระหว่างการตรวจสอบแล้ว' }
+    }
+    if (resv.occupancyMode === 'shared' && resv.leaderId !== me.id) {
+      return { ok: false, message: 'เฉพาะหัวหน้ากลุ่มเท่านั้นที่ยกเลิกการจองทั้งกลุ่มได้' }
+    }
+    if (!resv.memberIds.includes(me.id)) return { ok: false, message: 'คุณไม่ใช่สมาชิกของการจองนี้' }
+    if (contractsStore.hasSignedContractForReservation(resv.id)) {
+      return { ok: false, message: 'การจองนี้มีสัญญาที่ลงนามแล้ว กรุณาติดต่อเจ้าหน้าที่หอพัก' }
+    }
+    if (payments.hasPaidObligationsForReservation(resv.id) || resv.holdStatus === 'confirmed') {
+      return { ok: false, message: 'การจองนี้มีรายการชำระแล้ว กรุณาส่งคำขอยกเลิกให้เจ้าหน้าที่ตรวจสอบ' }
+    }
+
+    const now = new Date().toISOString()
+    const request: CancellationRequest = {
+      id: `cancel-${Date.now()}`,
+      reservationGroupId: resv.id,
+      kind: 'group_cancellation',
+      status: 'approved',
+      requestedBy: me.id,
+      reason: normalizedReason,
+      requestedAt: now,
+      previousHoldStatus: resv.holdStatus,
+      reviewedBy: 'system',
+      reviewedAt: now,
+      reviewReason: 'ยังไม่มีรายการชำระเงิน จึงยกเลิกและปล่อยห้องทันทีตามกติกา',
+    }
+    cancellationRequests.value.unshift(request)
+    completeCancellation(resv, request, me.id)
+    return { ok: true, message: `ยกเลิกการจองห้อง ${resv.roomNumber} และปล่อยห้องคืนแล้ว` }
+  }
+
+  function requestPaidCancellation(
+    resvId: string,
+    reason: string,
+    kind: CancellationRequestKind = 'group_cancellation',
+  ): ActionResult {
+    const me = session.currentUser
+    const resv = reservationById(resvId)
+    const normalizedReason = reason.trim()
+    if (!me || !resv || !isActiveHoldStatus(resv.holdStatus)) {
+      return { ok: false, message: 'ไม่พบการจองที่สามารถส่งคำขอยกเลิกได้' }
+    }
+    if (!normalizedReason || normalizedReason.length > INPUT_LIMITS.cancellationReason) {
+      return { ok: false, message: `กรุณาระบุเหตุผลไม่เกิน ${INPUT_LIMITS.cancellationReason} ตัวอักษร` }
+    }
+    const existing = pendingCancellationForReservation(resv.id)
+    if (existing) return { ok: true, message: 'คำขอยกเลิกนี้อยู่ระหว่างการตรวจสอบแล้ว' }
+    if (!resv.memberIds.includes(me.id)) return { ok: false, message: 'คุณไม่ใช่สมาชิกของการจองนี้' }
+    if (kind === 'group_cancellation' && resv.occupancyMode === 'shared' && resv.leaderId !== me.id) {
+      return { ok: false, message: 'เฉพาะหัวหน้ากลุ่มเท่านั้นที่ส่งคำขอยกเลิกทั้งกลุ่มได้' }
+    }
+    if (kind === 'member_withdrawal' && resv.leaderId === me.id) {
+      return { ok: false, message: 'หัวหน้ากลุ่มต้องใช้คำขอยกเลิกทั้งการจอง' }
+    }
+    if (contractsStore.hasSignedContractForReservation(resv.id)) {
+      return { ok: false, message: 'การจองนี้มีสัญญาที่ลงนามแล้ว กรุณาติดต่อเจ้าหน้าที่หอพัก' }
+    }
+
+    const nowMs = Date.now()
+    const request: CancellationRequest = {
+      id: `cancel-${nowMs}`,
+      reservationGroupId: resv.id,
+      kind,
+      status: 'pending',
+      requestedBy: me.id,
+      reason: normalizedReason,
+      requestedAt: new Date(nowMs).toISOString(),
+      previousHoldStatus: resv.holdStatus,
+      remainingConfirmationMs: resv.confirmationDeadline
+        ? Math.max(0, new Date(resv.confirmationDeadline).getTime() - nowMs)
+        : undefined,
+      remainingPaymentMs: resv.paymentDeadline
+        ? Math.max(0, new Date(resv.paymentDeadline).getTime() - nowMs)
+        : undefined,
+    }
+    cancellationRequests.value.unshift(request)
+    resv.confirmationDeadline = undefined
+    resv.paymentDeadline = undefined
+    if (resv.holdStatus !== 'confirmed') dorm.setRoomStatus(resv.roomNumber, 'temporarily_held')
+    payments.pausePaymentForCancellation(resv.id, request.id)
+    contractsStore.setReservationCancellationBlocked(resv.id, true)
+    notifyReservationMembers(
+      resv,
+      kind === 'member_withdrawal' ? 'สมาชิกส่งคำขอถอนตัว' : 'ส่งคำขอยกเลิกการจองแล้ว',
+      `คำขอสำหรับห้อง ${resv.roomNumber} อยู่ระหว่างการตรวจสอบ ห้องและรายการชำระเงินที่เหลือถูกพักไว้ชั่วคราว`,
+    )
+    contractsStore.addAudit({
+      actor: me.id,
+      action: kind === 'member_withdrawal' ? 'reservation.member_withdrawal.request' : 'reservation.cancel.request',
+      reason: normalizedReason,
+      relatedIds: [resv.id, request.id],
+      detail: `ส่งคำขอสำหรับห้อง ${resv.roomNumber} และพัก deadline/รายการชำระเงินระหว่างรอเจ้าหน้าที่`,
+    })
+    return { ok: true, message: 'ส่งคำขอเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบก่อนปล่อยห้องและพิจารณายอดที่ชำระ' }
+  }
+
+  function reviewCancellationRequest(
+    requestId: string,
+    decision: 'approved' | 'rejected',
+    reviewReason: string,
+  ): ActionResult {
+    const reviewer = session.currentUser
+    const request = cancellationRequests.value.find(item => item.id === requestId)
+    const normalizedReason = reviewReason.trim()
+    if (!reviewer || !session.can('reservation.cancel.review')) return { ok: false, message: 'คุณไม่มีสิทธิ์ตรวจคำขอยกเลิก' }
+    if (!request) return { ok: false, message: 'ไม่พบคำขอยกเลิก' }
+    if (request.status !== 'pending') return { ok: true, message: 'คำขอนี้ถูกตรวจสอบแล้ว' }
+    if (!normalizedReason || normalizedReason.length > INPUT_LIMITS.reviewReason) {
+      return { ok: false, message: `กรุณาระบุผลการตรวจไม่เกิน ${INPUT_LIMITS.reviewReason} ตัวอักษร` }
+    }
+    const resv = reservationById(request.reservationGroupId)
+    if (!resv) return { ok: false, message: 'ไม่พบการจองที่เชื่อมกับคำขอ' }
+
+    request.status = decision
+    request.reviewedBy = reviewer.id
+    request.reviewedAt = new Date().toISOString()
+    request.reviewReason = normalizedReason
+
+    if (decision === 'approved') {
+      completeCancellation(resv, request, reviewer.id)
+    }
+    else {
+      let restoredDeadline: string | undefined
+      if (request.previousHoldStatus === 'held_roommate_confirmation') {
+        restoredDeadline = inMs(request.remainingConfirmationMs ?? 0)
+        resv.confirmationDeadline = restoredDeadline
+        dorm.setRoomStatus(resv.roomNumber, 'temporarily_held', restoredDeadline)
+      }
+      else if (request.previousHoldStatus === 'held_payment') {
+        restoredDeadline = inMs(request.remainingPaymentMs ?? 0)
+        resv.paymentDeadline = restoredDeadline
+        dorm.setRoomStatus(resv.roomNumber, 'temporarily_held', restoredDeadline)
+        payments.resumePaymentForCancellation(resv.id, restoredDeadline)
+      }
+      else {
+        dorm.setRoomStatus(resv.roomNumber, 'reserved')
+        payments.resumePaymentForCancellation(resv.id)
+      }
+      contractsStore.setReservationCancellationBlocked(resv.id, false)
+      notifyReservationMembers(resv, 'คำขอยกเลิกไม่ได้รับอนุมัติ', `การจองห้อง ${resv.roomNumber} กลับสู่สถานะเดิม เหตุผล: ${normalizedReason}`)
+      contractsStore.addAudit({
+        actor: reviewer.id,
+        action: 'reservation.cancel.reject',
+        reason: normalizedReason,
+        relatedIds: [resv.id, request.id],
+        detail: `ปฏิเสธคำขอยกเลิกห้อง ${resv.roomNumber} และคืน deadline/รายการชำระเงินตามเวลาที่เหลือ`,
+      })
+    }
+    return { ok: true, message: decision === 'approved' ? 'อนุมัติคำขอและปล่อยห้องเรียบร้อยแล้ว' : 'ปฏิเสธคำขอและคืนสถานะการจองแล้ว' }
+  }
 
   // ---------- P3 actions (จำลอง domain service ฝั่ง server) ----------
 
@@ -134,7 +367,11 @@ export const useReservationStore = defineStore('reservation', () => {
     query: string,
     limit = ROOMMATE_SEARCH_RESULT_LIMIT,
   ): RoommateCandidateSearchResult {
-    const normalized = query.trim().toLocaleLowerCase('th-TH')
+    const validation = roommateSearchSchema.safeParse(query)
+    if (!validation.success) {
+      return { items: [], hasMore: false }
+    }
+    const normalized = validation.data.toLocaleLowerCase('th-TH')
     const studentDigits = normalized.replace(/\D/g, '')
     const isStudentIdSearch = /^[\d\s-]+$/.test(normalized)
       && studentDigits.length >= ROOMMATE_SEARCH_MIN_STUDENT_DIGITS
@@ -380,6 +617,9 @@ export const useReservationStore = defineStore('reservation', () => {
     const me = session.currentUser
     if (!me) return { ok: false, message: 'กรุณาเข้าสู่ระบบก่อน' }
     const resv = reservationById(resvId)
+    if (resv && pendingCancellationForReservation(resv.id)) {
+      return { ok: false, message: 'การจองนี้มีคำขอยกเลิกที่กำลังรอตรวจสอบ' }
+    }
     if (!resv || resv.holdStatus !== 'held_roommate_confirmation')
       return { ok: false, message: 'การจองนี้ไม่อยู่ในขั้นรอยืนยันห้องแล้ว' }
     if (!resv.memberIds.includes(me.id))
@@ -406,6 +646,9 @@ export const useReservationStore = defineStore('reservation', () => {
     const me = session.currentUser
     if (!me) return { ok: false, message: 'กรุณาเข้าสู่ระบบก่อน' }
     const resv = reservationById(resvId)
+    if (resv && pendingCancellationForReservation(resv.id)) {
+      return { ok: false, message: 'การจองนี้มีคำขอยกเลิกที่กำลังรอตรวจสอบ' }
+    }
     if (!resv || resv.holdStatus !== 'held_roommate_confirmation')
       return { ok: false, message: 'การจองนี้ไม่อยู่ในขั้นรอยืนยันห้องแล้ว' }
     if (!resv.memberIds.includes(me.id))
@@ -428,6 +671,9 @@ export const useReservationStore = defineStore('reservation', () => {
   /** hold หมดเวลา — ปล่อยห้องครั้งเดียวเท่านั้น (idempotent, HOLD-004/007) */
   function expireHold(resvId: string): ActionResult {
     const resv = reservationById(resvId)
+    if (resv && pendingCancellationForReservation(resv.id)) {
+      return { ok: false, message: 'พักการนับเวลาไว้ระหว่างรอตรวจคำขอยกเลิก' }
+    }
     if (!resv || !['held_roommate_confirmation', 'held_payment'].includes(resv.holdStatus))
       return { ok: false, message: 'ไม่มี hold ที่ต้องปล่อยแล้ว' }
     const wasConfirmationStage = resv.holdStatus === 'held_roommate_confirmation'
@@ -456,6 +702,9 @@ export const useReservationStore = defineStore('reservation', () => {
   /** เจ้าหน้าที่ยืนยันการจองเมื่อ obligation ของสมาชิกทุกคนชำระครบ */
   function confirmPaidReservation(resvId: string): ActionResult {
     const resv = reservationById(resvId)
+    if (resv && pendingCancellationForReservation(resv.id)) {
+      return { ok: false, message: 'ยืนยันการจองไม่ได้ระหว่างรอตรวจคำขอยกเลิก' }
+    }
     if (!resv || resv.holdStatus !== 'held_payment') {
       return { ok: false, message: 'การจองนี้ไม่อยู่ในขั้นรอยืนยันการชำระเงิน' }
     }
@@ -483,12 +732,17 @@ export const useReservationStore = defineStore('reservation', () => {
     invitations,
     roommateGroups,
     reservationGroups,
+    cancellationRequests,
     myRoommateGroup,
     myReservation,
     myLatestReservation,
     myInvitations,
     myReceivedPendingInvitations,
     reservationById,
+    cancellationRequestForReservation,
+    pendingCancellationForReservation,
+    pendingCancellationRequests,
+    myLatestCancellationRequest,
     activeHolds,
     confirmedReservations,
     searchRoommateCandidates,
@@ -500,5 +754,8 @@ export const useReservationStore = defineStore('reservation', () => {
     declineRoomSelection,
     expireHold,
     confirmPaidReservation,
+    cancelUnpaidReservation,
+    requestPaidCancellation,
+    reviewCancellationRequest,
   }
 })

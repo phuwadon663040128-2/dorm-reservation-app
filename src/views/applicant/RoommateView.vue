@@ -39,6 +39,8 @@ import { invitationStatusLabel, roommateGroupStatusLabel } from '@/lib/labels'
 import { users } from '@/fixtures'
 import {
   ROOMMATE_SEARCH_MIN_STUDENT_DIGITS,
+  ROOMMATE_SEARCH_MIN_LENGTH,
+  ROOMMATE_SEARCH_MAX_LENGTH,
   ROOMMATE_SEARCH_RESULT_LIMIT,
   useReservationStore,
 } from '@/stores/reservation'
@@ -80,8 +82,9 @@ const isCompleteEmailSearch = computed(() =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedInviteSearch.value),
 )
 const canSearchInvitees = computed(() =>
-  isCompleteEmailSearch.value
-  || (isStudentIdSearch.value && inviteStudentDigits.value.length >= ROOMMATE_SEARCH_MIN_STUDENT_DIGITS),
+  normalizedInviteSearch.value.length >= ROOMMATE_SEARCH_MIN_LENGTH
+  && (isCompleteEmailSearch.value
+    || (isStudentIdSearch.value && inviteStudentDigits.value.length >= ROOMMATE_SEARCH_MIN_STUDENT_DIGITS)),
 )
 const inviteSearchPending = computed(() =>
   canSearchInvitees.value
@@ -170,7 +173,7 @@ function confirmRoom() {
   if (!pendingRoomConfirmation.value) return
   const result = reservation.confirmRoomSelection(pendingRoomConfirmation.value.id)
   toast(result.message)
-  if (result.ok) router.push('/app/payments')
+  if (result.ok) router.push({ path: '/app/payments', query: { pay: 'auto' } })
 }
 function declineRoom() {
   if (!pendingRoomConfirmation.value) return
@@ -330,6 +333,7 @@ function onConfirmationExpired() {
                 autocomplete="off"
                 inputmode="search"
                 enterkeyhint="search"
+                :maxlength="ROOMMATE_SEARCH_MAX_LENGTH"
                 aria-describedby="roommate-search-help"
                 @update:model-value="updateInviteSearchInput"
               />

@@ -11,7 +11,7 @@ export const users: User[] = [
     profileComplete: true,
     kkuSsoLinked: true,
     studentId: '673010001-1',
-    phone: '08x-xxx-1001',
+    phone: '0810001001',
   },
   {
     id: 'applicant-b',
@@ -22,7 +22,7 @@ export const users: User[] = [
     profileComplete: true,
     kkuSsoLinked: false,
     studentId: '673010002-2',
-    phone: '08x-xxx-1002',
+    phone: '0810001002',
   },
   {
     id: 'applicant-c',
@@ -184,6 +184,7 @@ const sectionPermissions: Record<StaffSection, Permission[]> = {
     'reservation.manual_create',
     'reservation.assign_room',
     'reservation.confirm',
+    'reservation.cancel.review',
   ],
   payment: [
     'pricing_rule.manage',
