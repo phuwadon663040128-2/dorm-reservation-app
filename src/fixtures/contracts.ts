@@ -159,7 +159,7 @@ export const notifications: AppNotification[] = [
     userId: 'applicant-b',
     createdAt: agoHours(6),
     title: 'ยังขาดค่าบริการ HL2569',
-    detail: 'ระบบบันทึกยอด ROOM2569 ของคุณแล้ว เหลือ HL2569 อีก 8,400 บาท ภายใน deadline ร่วมของกลุ่ม',
+    detail: 'ระบบบันทึกยอด ROOM2569 ของคุณแล้ว เหลือ HL2569 อีก 8,200 บาท ภายใน deadline ร่วมของกลุ่ม',
     read: false,
   },
   {

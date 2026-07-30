@@ -172,6 +172,7 @@ export const usePaymentsStore = defineStore('payments', () => {
    */
   function generateObligationsForGroup(
     resv: ReservationGroup,
+    dormGroupId: string,
     roomConfig: RoomConfig,
     deadline: string,
     options: { demoPaymentReady?: boolean } = {},
@@ -179,7 +180,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     if (obligations.value.some(o => o.reservationGroupId === resv.id)) return
     const today = new Date().toISOString().slice(0, 10)
     for (const memberId of resv.memberIds) {
-      for (const line of priceLinesFor(roomConfig, resv.occupancyMode)) {
+      for (const line of priceLinesFor(dormGroupId, roomConfig, resv.occupancyMode)) {
         const id = `ob-${resv.id}-${memberId}-${line.action}`
         obligations.value.push({
           id,

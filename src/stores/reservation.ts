@@ -514,7 +514,13 @@ export const useReservationStore = defineStore('reservation', () => {
     dorm.setRoomStatus(resv.roomNumber, 'temporarily_held', deadline)
     const group = roommateGroups.value.find(g => g.id === resv.roommateGroupId)
     if (group) group.status = 'ready_for_payment'
-    payments.generateObligationsForGroup(resv, room.config, deadline, { demoPaymentReady: true })
+    payments.generateObligationsForGroup(
+      resv,
+      dormGroup.id,
+      room.config,
+      deadline,
+      { demoPaymentReady: true },
+    )
     contractsStore.addAudit({
       actor: session.currentUser?.id ?? 'system',
       action: 'application.room_assignment',

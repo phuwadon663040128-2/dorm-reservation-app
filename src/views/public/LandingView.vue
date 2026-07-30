@@ -16,7 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatDate, roomConfigLabel } from '@/lib/labels'
+import { formatDate, roomConfigOptions } from '@/lib/labels'
+import { feeAcademicYear } from '@/fixtures/fees'
 import { useTheme } from '@/composables/useTheme'
 import { useDormStore } from '@/stores/dorm'
 import heroDay from '@/assets/hero-day.png'
@@ -61,7 +62,7 @@ const steps = [
   {
     icon: CalendarDaysIcon,
     title: 'เลือกห้องจริงรายห้อง',
-    detail: 'เลือกหอพัก → ชั้น → ห้อง เห็นสถานะว่าง/ถูกจองชั่วคราวแบบเรียลไทม์',
+    detail: 'เลือกหอพัก ชั้น ห้อง เห็นสถานะว่าง/ถูกจองชั่วคราวแบบเรียลไทม์',
   },
   {
     icon: FilePenLineIcon,
@@ -139,7 +140,9 @@ const steps = [
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
                 <SelectItem value="all">ทุกประเภท</SelectItem>
-                <SelectItem v-for="(label, key) in roomConfigLabel" :key="key" :value="key">{{ label }}</SelectItem>
+                <SelectItem v-for="option in roomConfigOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -202,9 +205,12 @@ const steps = [
                   <p class="line-clamp-2 text-xs leading-relaxed text-white/70">{{ g.description }}</p>
                 </div>
                 <div class="flex items-center justify-between gap-2 border-t border-white/25 pt-3">
-                  <p class="text-sm font-semibold">
-                    เริ่มต้นที่ ฿{{ g.priceFromPerTerm.toLocaleString('th-TH') }} / ภาคการศึกษา
-                  </p>
+                  <div>
+                    <p class="text-sm font-semibold">
+                      เริ่มต้น ฿{{ g.priceFromPerTerm.toLocaleString('th-TH') }} / คน / ภาค (พักคู่)
+                    </p>
+                    <p class="text-[11px] text-white/65">อ้างอิงประกาศปีการศึกษา {{ feeAcademicYear }}</p>
+                  </div>
                   <span
                     class="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/40 transition-all group-hover:translate-x-0.5 group-hover:bg-white group-hover:text-black"
                     aria-hidden="true"

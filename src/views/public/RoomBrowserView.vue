@@ -16,7 +16,11 @@ import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
-import { priceLinesFor } from '@/fixtures'
+import {
+  CURRENT_ACADEMIC_YEAR,
+  PRICING_REFERENCE_ACADEMIC_YEAR,
+  priceLinesFor,
+} from '@/fixtures'
 import { useDormStore } from '@/stores/dorm'
 import { useSessionStore } from '@/stores/session'
 import type { Room } from '@/types'
@@ -54,9 +58,10 @@ const buildingOfSelected = computed(() =>
 // ประมาณการราคาแยกตามรูปแบบการพักที่ห้องรองรับ
 const priceByMode = computed(() => {
   const room = selectedRoom.value
-  if (!room) return []
+  const building = buildingOfSelected.value
+  if (!room || !building) return []
   return room.occupancyCapability.map(mode => {
-    const lines = priceLinesFor(room.config, mode)
+    const lines = priceLinesFor(building.dormGroupId, room.config, mode)
     return { mode, lines, total: lines.reduce((s, l) => s + l.amount, 0) }
   })
 })
@@ -100,7 +105,7 @@ function goReserve() {
           <div class="space-y-0.5">
             <h1 class="text-xl font-bold tracking-tight sm:text-2xl">แผนผังห้องพัก</h1>
             <p class="max-w-2xl text-sm text-muted-foreground">
-              สถานะคำนวณจากห้องจริงรายห้อง — ห้องที่ถูกจองชั่วคราวจะแสดงเวลาหมดสิทธิ์ และกลับมาว่างอัตโนมัติหากไม่ชำระตามกำหนด
+              แสดงสถานะรายห้อง ห้องที่ถูกจองชั่วคราวจะแสดงเวลาหมดสิทธิ์ และกลับมาว่างอัตโนมัติหากไม่ชำระตามกำหนด
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-1.5 text-sm" aria-label="สรุปสถานะห้องทั้งระบบ">
@@ -157,19 +162,22 @@ function goReserve() {
           </div>
 
           <div class="space-y-2">
-            <p class="text-sm font-semibold">ประมาณการค่าใช้จ่าย (ปีการศึกษา 2569)</p>
+            <p class="text-sm font-semibold">ประมาณการค่าใช้จ่ายรอบปีการศึกษา {{ CURRENT_ACADEMIC_YEAR }}</p>
             <div v-for="p in priceByMode" :key="p.mode" class="rounded-lg border p-3">
               <div class="mb-1 flex items-center justify-between gap-2">
                 <Badge variant="secondary">{{ occupancyModeLabel[p.mode] }}</Badge>
                 <span class="text-sm font-semibold tabular-nums">
-                  {{ formatBaht(p.total) }}{{ p.mode === 'shared' ? ' / คน' : '' }}
+                  {{ formatBaht(p.total) }}{{ p.mode === 'shared' ? ' / คน' : ' / ห้อง' }}
                 </span>
               </div>
               <p class="text-xs text-muted-foreground">
                 {{ p.lines.map(l => `${l.ref2} ${l.amount.toLocaleString('th-TH')}`).join(' + ') }}
-                — ยอดจริงยืนยันในแบบฟอร์มธนาคาร (Provisional)
               </p>
             </div>
+            <p class="text-xs leading-relaxed text-muted-foreground">
+              ใช้อัตราประกาศปีการศึกษา {{ PRICING_REFERENCE_ACADEMIC_YEAR }} เป็นข้อมูลอ้างอิงชั่วคราว
+              ระหว่างรอประกาศรอบ {{ CURRENT_ACADEMIC_YEAR }} · ยอดจริงยืนยันในแบบฟอร์มชำระเงิน
+            </p>
           </div>
         </div>
 

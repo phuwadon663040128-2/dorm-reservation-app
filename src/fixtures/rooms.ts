@@ -9,7 +9,7 @@ export const dormGroups: DormGroup[] = [
     name: 'วรเรสซิเดนซ์ / หอ 8 หลัง',
     shortName: 'วรเรสซิเดนซ์',
     description:
-      'หอพักในเครือข่ายวรเรสซิเดนซ์ 8 อาคาร เลขห้องเป็นตัวเลขที่ระบุอาคาร/ชั้น/ห้อง มีห้องธรรมดา (พัดลม) ห้องแอร์ (HL) และห้องแอร์พิเศษ',
+      'หอพักในเครือข่ายวรเรสซิเดนซ์ 8 อาคาร เลขห้องเป็นตัวเลขที่ระบุอาคาร/ชั้น/ห้อง มีห้องธรรมดา (พัดลม) ห้องแอร์ และห้องแอร์พิเศษ',
     buildingCount: 8,
     contractLabel: 'สัญญารายปี',
     priceFromPerTerm: 8100,
@@ -20,7 +20,7 @@ export const dormGroups: DormGroup[] = [
     name: 'หอพักวรอินเตอร์',
     shortName: 'วรเรสอินเตอร์',
     description:
-      'หอพักวรอินเตอร์ 4 อาคาร (A–D) เลขห้องขึ้นต้นด้วยตัวอักษรอาคารตามด้วยชั้น/ห้อง เช่น A101 มีห้องธรรมดา ห้องแอร์ (HL) และห้องแอร์พิเศษ',
+      'หอพักวรอินเตอร์ 4 อาคาร (A–D) เลขห้องขึ้นต้นด้วยตัวอักษรอาคารตามด้วยชั้น/ห้อง เช่น A101 มีห้องธรรมดา ห้องแอร์ และห้องแอร์พิเศษ',
     buildingCount: 4,
     contractLabel: 'สัญญารายปี',
     priceFromPerTerm: 9000,
@@ -40,14 +40,15 @@ export const buildings: Building[] = [
 
 // ---------------------------------------------------------------------------
 // ตัวช่วยสร้างห้องทั้งชั้นตามผังจริง (แปลนผัง 8 หลัง / ผังหออินเตอร์)
-// ประเภทตามป้ายในผัง: ธรรมดา → normal, แอร์ → hl, แอร์พิเศษ → special
+// ประเภทตามป้ายในผัง: ธรรมดา → normal, แอร์ → aircon, แอร์พิเศษ → special
+// ยังไม่กำหนดห้องใดเป็น HL จนกว่าจะได้รับ room master ที่ยืนยันจากเจ้าหน้าที่
 // ---------------------------------------------------------------------------
 
 const FACILITIES: Record<RoomConfig, string[]> = {
   normal: ['เตียงเดี่ยว 2 เตียง', 'โต๊ะอ่านหนังสือ', 'ตู้เสื้อผ้า', 'พัดลม'],
   aircon: ['เครื่องปรับอากาศ', 'เตียงเดี่ยว 2 เตียง', 'โต๊ะอ่านหนังสือ', 'ตู้เสื้อผ้า'],
-  hl: ['เครื่องปรับอากาศ (HL)', 'เตียงเดี่ยว 2 เตียง', 'โต๊ะอ่านหนังสือ', 'ตู้เสื้อผ้า'],
-  special: ['เครื่องปรับอากาศ (HL)', 'พื้นที่กว้างกว่าห้องปกติ', 'เตียงเดี่ยว 2 เตียง', 'ตู้เสื้อผ้า'],
+  hl: ['เครื่องปรับอากาศ', 'เตียงเดี่ยว 2 เตียง', 'โต๊ะอ่านหนังสือ', 'ตู้เสื้อผ้า'],
+  special: ['เครื่องปรับอากาศ', 'พื้นที่กว้างกว่าห้องปกติ', 'เตียงเดี่ยว 2 เตียง', 'ตู้เสื้อผ้า'],
 }
 
 function room(number: string, buildingId: string, floor: number, config: RoomConfig, extra: Partial<Room> = {}): Room {
@@ -90,20 +91,20 @@ function floorRooms(
 
 /** หอ 8 หลัง ชั้น 1 (แปลน x01) — 29 ห้อง */
 const R8_FLOOR1: Record<number, RoomConfig> = {
-  1: 'special', 2: 'special', 3: 'normal', 4: 'hl', 5: 'normal',
-  6: 'hl', 7: 'hl', 8: 'hl', 9: 'normal', 10: 'hl',
+  1: 'special', 2: 'special', 3: 'normal', 4: 'aircon', 5: 'normal',
+  6: 'aircon', 7: 'aircon', 8: 'aircon', 9: 'normal', 10: 'aircon',
   11: 'special', 12: 'special', 13: 'special', 14: 'special',
-  15: 'hl', 16: 'hl', 17: 'hl', 18: 'hl', 19: 'normal', 20: 'normal',
-  25: 'hl', 26: 'hl', 27: 'hl', 28: 'normal', 29: 'normal',
-  30: 'hl', 31: 'hl', 32: 'special', 33: 'special',
+  15: 'aircon', 16: 'aircon', 17: 'aircon', 18: 'aircon', 19: 'normal', 20: 'normal',
+  25: 'aircon', 26: 'aircon', 27: 'aircon', 28: 'normal', 29: 'normal',
+  30: 'aircon', 31: 'aircon', 32: 'special', 33: 'special',
 }
 
 /** หอ 8 หลัง ชั้น 2 (แปลน x02) — 34 ห้อง */
 const R8_FLOOR2: Record<number, RoomConfig> = {
-  1: 'special', 2: 'special', 3: 'normal', 4: 'hl', 5: 'hl',
-  6: 'hl', 7: 'hl', 8: 'hl', 9: 'normal', 10: 'hl',
+  1: 'special', 2: 'special', 3: 'normal', 4: 'aircon', 5: 'aircon',
+  6: 'aircon', 7: 'aircon', 8: 'aircon', 9: 'normal', 10: 'aircon',
   11: 'special', 12: 'special', 13: 'special', 14: 'special',
-  15: 'normal', 16: 'hl', 17: 'normal', 18: 'normal', 19: 'normal', 20: 'normal',
+  15: 'normal', 16: 'aircon', 17: 'normal', 18: 'normal', 19: 'normal', 20: 'normal',
   21: 'normal', 22: 'normal', 23: 'normal',
   24: 'normal', 25: 'special', 26: 'normal', 27: 'normal', 28: 'normal',
   29: 'normal', 30: 'normal', 31: 'normal', 32: 'special', 33: 'normal', 34: 'special',
@@ -122,28 +123,28 @@ const R8_FLOOR34: Record<number, RoomConfig> = {
 
 /** หอ 8 หลัง อาคาร 2 ชั้น 1 (แปลน 201 — ประเภทห้องต่างจากอาคาร 1) — 29 ห้อง */
 const R8_B2_FLOOR1: Record<number, RoomConfig> = {
-  1: 'special', 2: 'special', 3: 'hl', 4: 'normal', 5: 'hl',
-  6: 'hl', 7: 'hl', 8: 'normal', 9: 'hl', 10: 'hl',
+  1: 'special', 2: 'special', 3: 'aircon', 4: 'normal', 5: 'aircon',
+  6: 'aircon', 7: 'aircon', 8: 'normal', 9: 'aircon', 10: 'aircon',
   11: 'special', 12: 'special', 13: 'special', 14: 'special',
-  15: 'hl', 16: 'hl', 17: 'hl', 18: 'hl', 19: 'hl', 20: 'normal',
-  25: 'hl', 26: 'normal', 27: 'hl', 28: 'normal', 29: 'hl',
-  30: 'hl', 31: 'hl', 32: 'special', 33: 'special',
+  15: 'aircon', 16: 'aircon', 17: 'aircon', 18: 'aircon', 19: 'aircon', 20: 'normal',
+  25: 'aircon', 26: 'normal', 27: 'aircon', 28: 'normal', 29: 'aircon',
+  30: 'aircon', 31: 'aircon', 32: 'special', 33: 'special',
 }
 
 /** หอ 8 หลัง อาคาร 2 ชั้น 2 (แปลน 202) — ต่างจากอาคาร 1 ที่ห้อง 03 (แอร์), 04/08 (ธรรมดา) */
-const R8_B2_FLOOR2: Record<number, RoomConfig> = { ...R8_FLOOR2, 3: 'hl', 4: 'normal', 8: 'normal' }
+const R8_B2_FLOOR2: Record<number, RoomConfig> = { ...R8_FLOOR2, 3: 'aircon', 4: 'normal', 8: 'normal' }
 
 /** หอ 8 หลัง อาคาร 2 ชั้น 3–4 (แปลน 203/204) — ต่างจากอาคาร 1 ที่ห้อง 28 (แอร์) */
-const R8_B2_FLOOR34: Record<number, RoomConfig> = { ...R8_FLOOR34, 28: 'hl' }
+const R8_B2_FLOOR34: Record<number, RoomConfig> = { ...R8_FLOOR34, 28: 'aircon' }
 
 /** วรอินเตอร์ ชั้น 1 (แปลน A1/B1) — 30 ห้อง */
 const INT_FLOOR1: Record<number, RoomConfig> = {
-  1: 'hl', 2: 'hl', 3: 'hl', 4: 'hl',
+  1: 'aircon', 2: 'aircon', 3: 'aircon', 4: 'aircon',
   5: 'normal', 6: 'normal', 7: 'normal', 8: 'normal',
-  9: 'hl', 10: 'hl', 11: 'hl',
+  9: 'aircon', 10: 'aircon', 11: 'aircon',
   12: 'normal', 13: 'normal', 14: 'normal',
-  15: 'hl', 16: 'hl', 17: 'hl', 18: 'hl', 19: 'hl', 20: 'hl', 21: 'hl',
-  22: 'hl', 23: 'hl', 24: 'hl', 25: 'hl', 26: 'hl', 27: 'hl', 28: 'hl', 29: 'hl',
+  15: 'aircon', 16: 'aircon', 17: 'aircon', 18: 'aircon', 19: 'aircon', 20: 'aircon', 21: 'aircon',
+  22: 'aircon', 23: 'aircon', 24: 'aircon', 25: 'aircon', 26: 'aircon', 27: 'aircon', 28: 'aircon', 29: 'aircon',
   30: 'special',
 }
 
@@ -153,8 +154,8 @@ const INT_FLOOR_UPPER: Record<number, RoomConfig> = {
   6: 'normal', 7: 'normal', 8: 'normal', 9: 'normal', 10: 'normal',
   11: 'normal', 12: 'normal', 13: 'normal', 14: 'normal', 15: 'normal',
   16: 'normal', 17: 'normal', 18: 'normal', 19: 'normal',
-  20: 'hl', 21: 'hl', 22: 'hl', 23: 'hl', 24: 'hl', 25: 'hl', 26: 'hl',
-  27: 'hl', 28: 'hl', 29: 'hl', 30: 'hl', 31: 'hl', 32: 'hl', 33: 'hl', 34: 'hl',
+  20: 'aircon', 21: 'aircon', 22: 'aircon', 23: 'aircon', 24: 'aircon', 25: 'aircon', 26: 'aircon',
+  27: 'aircon', 28: 'aircon', 29: 'aircon', 30: 'aircon', 31: 'aircon', 32: 'aircon', 33: 'aircon', 34: 'aircon',
   35: 'special',
 }
 
@@ -280,6 +281,6 @@ export const rooms: Room[] = [
   }),
 
   // ---- หอ 8 หลัง อาคาร 3 (ข้อมูลบางส่วน — นอกโฟกัสการนำเสนอ) ----
-  room('3105', 'bld-3', 1, 'hl', { publicStatus: 'reserved' }), // วรัญญาเหมาห้อง ยืนยันถาวรแล้ว
-  room('3106', 'bld-3', 1, 'hl'),
+  room('3105', 'bld-3', 1, 'aircon', { publicStatus: 'reserved' }), // วรัญญาเหมาห้อง ยืนยันถาวรแล้ว
+  room('3106', 'bld-3', 1, 'aircon'),
 ]

@@ -24,9 +24,16 @@ export const roomPublicStatusLabel: Record<RoomPublicStatus, string> = {
 export const roomConfigLabel: Record<RoomConfig, string> = {
   normal: 'ห้องปกติ (พัดลม)',
   aircon: 'ห้องแอร์',
-  hl: 'ห้องแอร์ (HL)',
+  hl: 'ห้องแอร์',
   special: 'ห้องแอร์พิเศษ',
 }
+
+/** ตัวเลือกที่เปิดให้ใช้ใน mock-up ปัจจุบัน — ยังไม่แสดง HL จนกว่าจะยืนยัน room master */
+export const roomConfigOptions: Array<{ value: Exclude<RoomConfig, 'hl'>; label: string }> = [
+  { value: 'normal', label: roomConfigLabel.normal },
+  { value: 'aircon', label: roomConfigLabel.aircon },
+  { value: 'special', label: roomConfigLabel.special },
+]
 
 export interface PlanRoomTypeLabel {
   key: 'fan' | 'aircon' | 'special'

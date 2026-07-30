@@ -245,18 +245,22 @@ function logout() {
           <RouterLink
             v-if="menu.to"
             :to="menu.to"
-            class="rounded-md px-2 py-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
+            class="top-nav-item rounded-md px-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
             :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
+            :data-active="isMenuActive(menu) || undefined"
+            :aria-current="isMenuActive(menu) ? 'page' : undefined"
           >
-            {{ menu.label }}
+            <span class="top-nav-label">{{ menu.label }}</span>
           </RouterLink>
 
           <DropdownMenu v-else>
             <DropdownMenuTrigger
-              class="flex items-center gap-1 rounded-md px-2 py-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
+              class="top-nav-item gap-1 rounded-md px-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
               :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
+              :data-active="isMenuActive(menu) || undefined"
+              :aria-current="isMenuActive(menu) ? 'location' : undefined"
             >
-              {{ menu.label }}
+              <span class="top-nav-label">{{ menu.label }}</span>
               <ChevronDownIcon class="size-3.5" aria-hidden="true" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" class="min-w-64">

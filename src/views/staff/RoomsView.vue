@@ -36,7 +36,7 @@ import {
 import PermissionGate from '@/components/domain/PermissionGate.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
-import { roomConfigLabel, roomPublicStatusLabel } from '@/lib/labels'
+import { roomConfigLabel, roomConfigOptions, roomPublicStatusLabel } from '@/lib/labels'
 import { useDormStore } from '@/stores/dorm'
 
 type RoomSort = 'room-asc' | 'room-desc' | 'building-asc' | 'floor-asc' | 'status-asc'
@@ -256,7 +256,9 @@ function blockRoom(number: string) {
                 <SelectTrigger class="w-full" aria-label="กรองประเภทห้อง"><SelectValue /></SelectTrigger>
                 <SelectContent position="popper">
                   <SelectItem value="all">ทุกประเภท</SelectItem>
-                  <SelectItem v-for="(label, key) in roomConfigLabel" :key="key" :value="key">{{ label }}</SelectItem>
+                  <SelectItem v-for="option in roomConfigOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

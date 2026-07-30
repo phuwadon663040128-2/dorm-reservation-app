@@ -18,6 +18,7 @@ import {
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import ObligationCard from '@/components/domain/ObligationCard.vue'
 import ReservationCancellationControl from '@/components/domain/ReservationCancellationControl.vue'
+import { PRICING_REFERENCE_ACADEMIC_YEAR } from '@/fixtures'
 import { formatBaht } from '@/lib/labels'
 import { useApplicationStore } from '@/stores/application'
 import { usePaymentsStore } from '@/stores/payments'
@@ -161,6 +162,9 @@ async function onPaymentHoldExpired() {
       <h1 class="text-2xl font-bold">การชำระเงิน</h1>
       <p class="text-sm text-muted-foreground">
         ชำระด้วยแบบฟอร์ม QR เฉพาะรายการที่ธนาคารส่งกลับมาให้ระบบ ไม่ต้องอัปโหลดสลิปในขั้นตอนปกติ
+        <span class="block text-xs">
+          ยอดใน mock-up อ้างอิงประกาศค่าธรรมเนียมปีการศึกษา {{ PRICING_REFERENCE_ACADEMIC_YEAR }} ระหว่างรอราคาอย่างเป็นทางการของรอบปัจจุบัน
+        </span>
       </p>
     </div>
 

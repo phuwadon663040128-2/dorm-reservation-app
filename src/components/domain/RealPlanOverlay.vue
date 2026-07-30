@@ -242,37 +242,16 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
         </button>
       </div>
 
-      <!-- รวมเข็มทิศและคำอธิบายไว้เป็นชุดเดียว ผู้ใช้จึงอ่านจากบนลงล่างได้โดยไม่ต้องกวาดตาข้ามผัง -->
+      <!-- คำอธิบายชื่อย่อประเภทห้องสำหรับหน้าจอขนาดเล็ก -->
       <div
         ref="annotationGroup"
-        class="pointer-events-auto z-10 flex w-28 select-none flex-col gap-0.5 transition-opacity duration-100 sm:w-44 sm:gap-2 lg:w-64 lg:gap-2.5"
+        class="pointer-events-auto z-10 flex w-28 select-none flex-col gap-0.5 transition-opacity duration-100 sm:w-44 sm:gap-2 md:hidden"
         :class="[
           annotationReady ? 'opacity-100' : 'opacity-0',
           annotationDetached ? 'relative mb-2 ml-auto mr-2 mt-4' : 'absolute',
         ]"
         :style="annotationDetached ? undefined : annotationStyle"
       >
-        <div
-          class="flex h-8 w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-1.5 shadow-sm sm:h-12 sm:gap-2 sm:px-3 lg:h-16 lg:gap-3 lg:px-4"
-          role="img"
-          :aria-label="`เข็มทิศ — ทิศเหนือทำมุม ${overlay.northAngle} องศาจากด้านบนของแบบแปลน`"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            class="size-5 shrink-0 sm:size-7 lg:size-9"
-            :style="{ transform: `rotate(${overlay.northAngle}deg)` }"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="10.5" class="fill-none stroke-slate-300" stroke-width="1.5" />
-            <path d="M12 4 L15 13 L12 11.4 L9 13 Z" class="fill-orange-700" />
-            <path d="M12 20 L9 13 L12 14.6 L15 13 Z" class="fill-slate-400" />
-          </svg>
-          <span class="min-w-0 leading-tight">
-            <span class="block text-[8px] font-medium text-slate-600 sm:text-[11px] lg:text-sm">ทิศเหนือ</span>
-            <span class="block text-[10px] font-bold text-orange-800 sm:text-sm lg:text-base">N · เหนือ</span>
-          </span>
-        </div>
-
         <div
           class="w-full rounded-lg border border-slate-200 bg-white px-1.5 py-0.5 text-slate-950 shadow-sm sm:px-3 sm:py-2 md:hidden"
           role="group"
@@ -298,8 +277,5 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
         </div>
       </div>
     </div>
-    <p class="text-xs leading-relaxed text-muted-foreground">
-      แตะป้ายเพื่อดูเลขห้องและรายละเอียด  {{ overlay.northNote }}  ขนาดและตำแหน่งอ้างอิงตามแบบแปลนจริง
-    </p>
   </div>
 </template>

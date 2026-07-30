@@ -46,7 +46,8 @@ function isPerSemester(rooms: FeeRoomRow[]) {
       <!-- ตารางราคา -->
       <Card class="overflow-hidden rounded-3xl py-0">
         <div class="overflow-x-auto">
-          <table class="w-full min-w-160 text-sm">
+          <table class="w-full min-w-240 text-sm">
+            <caption class="sr-only">อัตราค่าธรรมเนียม {{ g.name }} ปีการศึกษา {{ feeAcademicYear }}</caption>
             <thead>
               <tr class="border-b bg-muted/50 text-left">
                 <th class="px-5 py-3 font-semibold">ประเภทห้อง</th>
@@ -56,8 +57,9 @@ function isPerSemester(rooms: FeeRoomRow[]) {
                 </template>
                 <template v-else>
                   <th class="px-4 py-3 text-right font-semibold">พักคู่ (ต่อคน/ปี)</th>
-                  <th class="px-4 py-3 text-right font-semibold">แบ่งจ่ายต่อเทอม</th>
-                  <th class="px-4 py-3 text-right font-semibold">เหมาห้อง (ต่อปี)</th>
+                  <th class="px-4 py-3 text-right font-semibold">พักคู่ (ต่อคน/ภาค)</th>
+                  <th class="px-4 py-3 text-right font-semibold">เหมาห้อง (ต่อห้อง/ปี)</th>
+                  <th class="px-4 py-3 text-right font-semibold">เหมาห้อง (ต่อห้อง/ภาค)</th>
                 </template>
                 <th class="px-5 py-3 text-right font-semibold">หน่วยเรียกเก็บ</th>
               </tr>
@@ -76,6 +78,7 @@ function isPerSemester(rooms: FeeRoomRow[]) {
                   <td class="px-4 py-3 text-right tabular-nums">{{ baht(r.twoPersonAnnual) }}</td>
                   <td class="px-4 py-3 text-right tabular-nums">{{ baht(r.twoPersonSplitPerTerm) }}</td>
                   <td class="px-4 py-3 text-right tabular-nums">{{ baht(r.singleAnnual) }}</td>
+                  <td class="px-4 py-3 text-right tabular-nums">{{ baht(r.singleSplitPerTerm) }}</td>
                 </template>
                 <td class="px-5 py-3 text-right text-xs text-muted-foreground">{{ r.billingBasis }}</td>
               </tr>
@@ -115,8 +118,7 @@ function isPerSemester(rooms: FeeRoomRow[]) {
         <InfoIcon class="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
         <p>
           อัตราข้างต้นอ้างอิงประกาศปีการศึกษา {{ feeAcademicYear }} และอาจเปลี่ยนแปลงตามประกาศฉบับใหม่ —
-          ห้องที่มีบริการเครื่องปรับอากาศ (HL) จะมีรายการเรียกเก็บแยกเป็นค่าห้อง (ROOM) และค่าบริการ (HL)
-          ตามที่แสดงในขั้นตอนชำระเงินของระบบจอง
+          ระบบคงตัวเลขรายปีและรายภาคตามต้นฉบับ แม้บางแถวจะรวมกันไม่เท่ากันพอดี
         </p>
       </CardContent>
     </Card>

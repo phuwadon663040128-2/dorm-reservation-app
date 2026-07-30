@@ -17,7 +17,11 @@ import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
-import { priceLinesFor } from '@/fixtures'
+import {
+  CURRENT_ACADEMIC_YEAR,
+  PRICING_REFERENCE_ACADEMIC_YEAR,
+  priceLinesFor,
+} from '@/fixtures'
 import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
@@ -84,11 +88,11 @@ watch(requestedRoom, (room) => {
 }, { immediate: true })
 
 const priceLines = computed(() =>
-  selectedRoom.value && occupancy.value
-    ? priceLinesFor(selectedRoom.value.config, occupancy.value)
+  selectedRoom.value && selectedBuilding.value && occupancy.value
+    ? priceLinesFor(selectedBuilding.value.dormGroupId, selectedRoom.value.config, occupancy.value)
     : [],
 )
-const totalPerResident = computed(() => priceLines.value.reduce((s, l) => s + l.amount, 0))
+const totalPrice = computed(() => priceLines.value.reduce((s, l) => s + l.amount, 0))
 
 const campaign = computed(() => dorm.openCampaigns[0])
 
@@ -219,19 +223,23 @@ function reserve() {
             </p>
           </div>
 
-          <!-- ประมาณการค่าใช้จ่าย (แยก ROOM/HL เสมอ) -->
+          <!-- ประมาณการค่าใช้จ่ายตามประเภทห้องและรูปแบบการพัก -->
           <div v-if="occupancy" class="space-y-1.5 rounded-lg border p-3">
-            <p class="text-sm font-semibold">ประมาณการค่าใช้จ่ายต่อคน (ปีการศึกษา 2569)</p>
+            <p class="text-sm font-semibold">
+              {{ occupancy === 'shared' ? 'ประมาณการค่าใช้จ่ายต่อคน' : 'ประมาณการค่าใช้จ่ายสำหรับเหมาห้อง' }}
+              (รอบปีการศึกษา {{ CURRENT_ACADEMIC_YEAR }})
+            </p>
             <div v-for="line in priceLines" :key="line.action" class="flex items-center justify-between text-sm">
               <span class="text-muted-foreground">{{ line.ref2 }} — {{ line.title }}</span>
               <span class="tabular-nums">{{ formatBaht(line.amount) }}</span>
             </div>
             <div class="flex items-center justify-between border-t pt-1.5 text-sm font-semibold">
-              <span>รวมต่อคน</span>
-              <span class="tabular-nums">{{ formatBaht(totalPerResident) }}</span>
+              <span>{{ occupancy === 'shared' ? 'รวมต่อคน' : 'รวมสำหรับเหมาห้อง' }}</span>
+              <span class="tabular-nums">{{ formatBaht(totalPrice) }}</span>
             </div>
             <p class="text-xs text-muted-foreground">
-              ยอดจริงยืนยันอีกครั้งในแบบฟอร์มชำระเงินของธนาคาร (ราคา Provisional)
+              ใช้อัตราประกาศปีการศึกษา {{ PRICING_REFERENCE_ACADEMIC_YEAR }} เป็นข้อมูลอ้างอิงชั่วคราว
+              ระหว่างรอประกาศรอบ {{ CURRENT_ACADEMIC_YEAR }} · ยอดจริงยืนยันอีกครั้งในแบบฟอร์มชำระเงิน
             </p>
           </div>
 

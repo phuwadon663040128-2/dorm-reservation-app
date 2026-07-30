@@ -297,6 +297,37 @@
 }
 
 @layer components {
+  /* เส้นบอกตำแหน่งของเมนู top navigation ตาม Figma — กว้างตามข้อความและไม่เปลี่ยนความสูง header */
+  .top-nav-item {
+    @apply relative flex h-10 items-center;
+  }
+  .top-nav-label {
+    @apply relative flex h-full items-center;
+  }
+  .top-nav-label::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 4px;
+    border-radius: 24px;
+    background: var(--primary);
+    opacity: 0;
+    transform: scaleX(0.65);
+    transform-origin: center;
+    pointer-events: none;
+    box-shadow:
+      0 12px 5px color-mix(in srgb, var(--primary) 3%, transparent),
+      0 7px 4px color-mix(in srgb, var(--primary) 10%, transparent),
+      0 3px 3px color-mix(in srgb, var(--primary) 17%, transparent),
+      0 1px 2px color-mix(in srgb, var(--primary) 20%, transparent);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  .top-nav-item[data-active="true"] .top-nav-label::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
   /* กรอบตารางข้อมูลฝั่งเจ้าหน้าที่ — หัวตารางพื้นทึบตัวหนังสือเข้ม อ่านไล่คอลัมน์ได้ทันที
      ใช้ครอบ <Table> ของ shadcn แทน div.overflow เดิม */
   .data-table-card {
