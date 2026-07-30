@@ -267,9 +267,9 @@ function submitApplication() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-async function goToOverviewAfterSubmission() {
+async function goToReservationAfterSubmission() {
   submissionSuccessOpen.value = false
-  await router.push('/app')
+  await router.push('/app/reservation')
 }
 
 function beginRevision() {
@@ -1048,24 +1048,27 @@ onMounted(() => {
     </div>
 
     <Dialog v-model:open="submissionSuccessOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader class="pr-7 text-left">
-          <span class="mb-1 grid size-11 place-items-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
-            <CheckCircle2Icon class="size-6" aria-hidden="true" />
-          </span>
-          <DialogTitle>ส่งใบสมัครเรียบร้อยแล้ว</DialogTitle>
-          <DialogDescription class="leading-relaxed">
-            ระบบบันทึกใบสมัครเลขที่
-            <strong class="font-semibold text-foreground">{{ submittedReference }}</strong>
-            พร้อมเชื่อมข้อมูลห้องจากรายการจองของคุณแล้ว
-          </DialogDescription>
-        </DialogHeader>
-        <div class="rounded-lg border bg-muted/50 p-3 text-sm leading-relaxed text-muted-foreground">
-          ใบสมัครถูกส่งเข้าสู่ขั้นตอนตรวจสอบแล้ว คุณสามารถกลับมาเปิดดูหรือแก้ไขข้อมูลที่อนุญาตได้จากเมนูใบสมัคร
+      <DialogContent class="w-[calc(100vw-1rem)] max-w-[430px] gap-0 overflow-hidden rounded-2xl border bg-card p-0">
+        <div class="px-3.5 pb-4 pt-[18px]">
+          <DialogHeader class="items-center gap-1 pr-0 text-center">
+            <span class="mb-1 grid size-[60px] place-items-center rounded-full bg-emerald-600 text-white dark:bg-emerald-500">
+              <CheckCircle2Icon class="size-7" :stroke-width="2.5" aria-hidden="true" />
+            </span>
+            <DialogTitle class="leading-7">ส่งใบสมัครเรียบร้อยแล้ว</DialogTitle>
+            <DialogDescription class="leading-7">
+              ระบบบันทึกใบสมัครเลขที่
+              <strong class="font-semibold text-foreground">{{ submittedReference }}</strong>
+              ของคุณแล้ว
+            </DialogDescription>
+          </DialogHeader>
+          <div class="mt-3 rounded-2xl border bg-muted/35 p-2 text-sm leading-7 text-muted-foreground">
+            ใบสมัครถูกส่งเข้าสู่ขั้นตอนตรวจสอบแล้ว คุณสามารถกลับมาเปิดดูหรือแก้ไขข้อมูลที่อนุญาตได้จากเมนูใบสมัคร
+          </div>
         </div>
-        <DialogFooter>
-          <Button type="button" class="w-full sm:w-auto" @click="goToOverviewAfterSubmission">
-            ไปหน้าภาพรวม
+
+        <DialogFooter class="m-0 grid h-[60px] grid-cols-1 rounded-none border-t bg-muted/40 px-4 py-2.5">
+          <Button type="button" class="h-10 w-full text-base" @click="goToReservationAfterSubmission">
+            ไปหน้าสถานะการจอง
             <ArrowRightIcon aria-hidden="true" />
           </Button>
         </DialogFooter>

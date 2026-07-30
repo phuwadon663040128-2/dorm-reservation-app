@@ -2,26 +2,30 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { InfoIcon, TimerIcon } from '@lucide/vue'
+import { ImageIcon, InfoIcon, TimerIcon, XIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
-import {
-  CURRENT_ACADEMIC_YEAR,
-  PRICING_REFERENCE_ACADEMIC_YEAR,
-  priceLinesFor,
-} from '@/fixtures'
+import { priceLinesFor } from '@/fixtures'
 import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
@@ -95,6 +99,7 @@ const priceLines = computed(() =>
 const totalPrice = computed(() => priceLines.value.reduce((s, l) => s + l.amount, 0))
 
 const campaign = computed(() => dorm.openCampaigns[0])
+const roomImagePlaceholders = [1, 2, 3, 4, 5]
 
 function reserve() {
   if (!selectedRoom.value || !occupancy.value) return
@@ -140,140 +145,246 @@ function reserve() {
     <Dialog v-model:open="dialogOpen">
       <DialogContent
         v-if="selectedRoom"
-        class="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg"
+        :show-close-button="false"
+        class="h-[63.4375rem] max-h-[calc(100dvh-0.5rem)] w-[calc(100vw-0.5rem)] max-w-[24.375rem] grid-rows-[14.5rem_minmax(0,1fr)] gap-0 overflow-hidden rounded-2xl border p-0 lg:h-[39.875rem] lg:max-h-[calc(100dvh-2rem)] lg:w-[calc(100vw-2rem)] lg:max-w-[64rem] lg:grid-cols-2 lg:grid-rows-1"
       >
-        <DialogHeader class="shrink-0 px-4 pb-3 pr-12 pt-4">
-          <div class="flex items-center justify-between gap-2">
-            <DialogTitle>จองห้อง {{ selectedRoom.number }}</DialogTitle>
-            <RoomStatusBadge :status="selectedRoom.publicStatus" />
-          </div>
-          <DialogDescription>
-            {{ roomConfigLabel[selectedRoom.config] }}
-            <template v-if="selectedRoom.dimensions"> · ขนาด {{ selectedRoom.dimensions }}</template>
-          </DialogDescription>
-        </DialogHeader>
+        <DialogClose as-child>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            class="absolute right-4 top-4 z-30 size-10 rounded-full bg-card shadow-sm"
+            aria-label="ปิดหน้าต่างจองห้อง"
+          >
+            <XIcon class="size-6" aria-hidden="true" />
+          </Button>
+        </DialogClose>
 
-        <div class="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-y px-4 py-3">
-          <HoldCountdown
-            v-if="selectedRoom.publicStatus === 'temporarily_held' && selectedRoom.holdExpiresAt"
-            :expires-at="selectedRoom.holdExpiresAt"
-            label="ห้องนี้ถูกจองชั่วคราว เหลือ"
-          />
-          <dl class="grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg border p-3 text-sm sm:grid-cols-3">
-            <div>
-              <dt class="text-xs text-muted-foreground">หอพัก</dt>
-              <dd class="font-medium">{{ selectedDormGroup?.name ?? '—' }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs text-muted-foreground">อาคาร</dt>
-              <dd class="font-medium">{{ selectedBuilding?.name ?? '—' }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs text-muted-foreground">ชั้น</dt>
-              <dd class="font-medium tabular-nums">{{ selectedRoom.floor }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs text-muted-foreground">ประเภทห้อง</dt>
-              <dd class="font-medium">{{ roomConfigLabel[selectedRoom.config] }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs text-muted-foreground">เลขห้อง</dt>
-              <dd class="font-medium tabular-nums">{{ selectedRoom.number }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs text-muted-foreground">รูปแบบการพัก</dt>
-              <dd class="font-medium">
-                {{ occupancy ? occupancyModeLabel[occupancy] : 'ยังไม่มีรูปแบบที่จองได้' }}
-              </dd>
-            </div>
-          </dl>
-          <p v-if="occupancy" class="rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-            <template v-if="occupancy === 'shared'">
-              ระบบจะเก็บข้อมูลห้องนี้ไว้ให้สมาชิกทั้งสองคนเมื่อรูมเมทยืนยันห้องครบ และเติมในใบสมัครภายหลังโดยอัตโนมัติ
-            </template>
-            <template v-else>
-              ระบบจะเก็บข้อมูลห้องนี้ทันทีเมื่อยืนยันจอง และเติมในใบสมัครภายหลังโดยอัตโนมัติ
-            </template>
-          </p>
-          <!-- เลือกรูปแบบการพัก -->
-          <div class="space-y-2">
-            <p id="occupancy-mode-label" class="text-sm font-semibold">รูปแบบการพัก</p>
-            <div class="grid gap-2 sm:grid-cols-2" role="group" aria-labelledby="occupancy-mode-label">
-              <Button
-                v-for="mode in selectedRoom.occupancyCapability"
-                :key="mode"
-                type="button"
-                :variant="occupancy === mode ? 'default' : 'outline'"
-                :disabled="!canChoose(mode)"
-                :aria-pressed="occupancy === mode"
-                class="h-auto flex-col items-start gap-0.5 py-2.5"
-                @click="occupancy = mode"
-              >
-                <span class="font-semibold">{{ occupancyModeLabel[mode] }}</span>
-                <span class="text-xs font-normal opacity-80">
-                  {{ mode === 'shared' ? 'แยกบิล แยกสัญญา คนละฉบับ' : 'จ่ายเต็มห้อง บล็อกเตียงที่สอง สัญญาเดียว' }}
-                </span>
-              </Button>
-            </div>
-            <p v-if="!isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared')" class="text-xs text-muted-foreground">
-              พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม — จัดการได้ที่เมนู “รูมเมท”
-            </p>
-            <p v-if="hasActiveGroup && selectedRoom.occupancyCapability.includes('whole_room')" class="text-xs text-muted-foreground">
-              ต้องการเหมาห้อง? ต้องยกเลิกกลุ่มรูมเมทปัจจุบันก่อน
-            </p>
+        <!-- Desktop: พื้นที่ภาพแบบ mosaic รอเชื่อมรูปจริง -->
+        <div
+          class="hidden min-h-0 grid-cols-2 grid-rows-[1.1fr_0.5fr_0.5fr] gap-4 border-r bg-card p-4 lg:grid"
+          aria-label="ตัวอย่างพื้นที่แสดงภาพห้อง"
+        >
+          <div
+            class="col-span-2 grid min-h-0 place-items-center rounded-2xl bg-muted/45 text-border"
+            role="img"
+            aria-label="ยังไม่มีภาพหลักของห้อง"
+          >
+            <ImageIcon class="size-28" :stroke-width="1.5" aria-hidden="true" />
           </div>
-
-          <!-- ประมาณการค่าใช้จ่ายตามประเภทห้องและรูปแบบการพัก -->
-          <div v-if="occupancy" class="space-y-1.5 rounded-lg border p-3">
-            <p class="text-sm font-semibold">
-              {{ occupancy === 'shared' ? 'ประมาณการค่าใช้จ่ายต่อคน' : 'ประมาณการค่าใช้จ่ายสำหรับเหมาห้อง' }}
-              (รอบปีการศึกษา {{ CURRENT_ACADEMIC_YEAR }})
-            </p>
-            <div v-for="line in priceLines" :key="line.action" class="flex items-center justify-between text-sm">
-              <span class="text-muted-foreground">{{ line.ref2 }} — {{ line.title }}</span>
-              <span class="tabular-nums">{{ formatBaht(line.amount) }}</span>
-            </div>
-            <div class="flex items-center justify-between border-t pt-1.5 text-sm font-semibold">
-              <span>{{ occupancy === 'shared' ? 'รวมต่อคน' : 'รวมสำหรับเหมาห้อง' }}</span>
-              <span class="tabular-nums">{{ formatBaht(totalPrice) }}</span>
-            </div>
-            <p class="text-xs text-muted-foreground">
-              ใช้อัตราประกาศปีการศึกษา {{ PRICING_REFERENCE_ACADEMIC_YEAR }} เป็นข้อมูลอ้างอิงชั่วคราว
-              ระหว่างรอประกาศรอบ {{ CURRENT_ACADEMIC_YEAR }} · ยอดจริงยืนยันอีกครั้งในแบบฟอร์มชำระเงิน
-            </p>
+          <div
+            class="row-span-2 grid min-h-0 place-items-center rounded-2xl bg-muted/45 text-border"
+            role="img"
+            aria-label="ยังไม่มีภาพเพิ่มเติมของห้อง ภาพที่ 1"
+          >
+            <ImageIcon class="size-24" :stroke-width="1.5" aria-hidden="true" />
           </div>
-
-          <!-- กติกา hold -->
-          <p v-if="campaign && occupancy" class="flex items-start gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-            <TimerIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <span>
-              เมื่อกดจอง ห้องถูกล็อกให้ทันที
-              <template v-if="occupancy === 'shared' && campaign.roommateRoomConfirmationRequired">
-                — รูมเมทต้องยืนยันห้องภายใน {{ campaign.roomConfirmationMinutes }} นาที มิฉะนั้นห้องถูกปล่อยคืน
-              </template>
-              <template v-if="occupancy === 'shared'">
-                จากนั้นกลุ่มมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง (deadline เดียวร่วมกัน)
-              </template>
-              <template v-else>
-                จากนั้นคุณมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง
-              </template>
-            </span>
-          </p>
+          <div
+            class="grid min-h-0 place-items-center rounded-2xl bg-muted/45 text-border"
+            role="img"
+            aria-label="ยังไม่มีภาพเพิ่มเติมของห้อง ภาพที่ 2"
+          >
+            <ImageIcon class="size-14" :stroke-width="1.5" aria-hidden="true" />
+          </div>
+          <div
+            class="grid min-h-0 place-items-center rounded-2xl bg-muted/45 text-border"
+            role="img"
+            aria-label="ยังไม่มีภาพเพิ่มเติมของห้อง ภาพที่ 3"
+          >
+            <ImageIcon class="size-14" :stroke-width="1.5" aria-hidden="true" />
+          </div>
         </div>
 
-        <DialogFooter
-          class="mx-0 mb-0 grid shrink-0 grid-cols-2 rounded-none bg-popover p-3 [&>button]:w-full sm:flex sm:[&>button]:w-auto"
+        <!-- Mobile/tablet: ภาพหลักอยู่ด้านบน -->
+        <div
+          class="grid min-h-0 place-items-center bg-muted/45 text-border lg:hidden"
+          role="img"
+          aria-label="ยังไม่มีภาพหลักของห้อง"
         >
-          <Button variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
-          <Button
-            :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !occupancy || !canChoose(occupancy)"
-            @click="reserve"
+          <ImageIcon class="size-24" :stroke-width="1.5" aria-hidden="true" />
+        </div>
+
+        <div class="relative z-10 -mt-px flex min-h-0 flex-col overflow-hidden rounded-t-3xl border-t bg-card lg:mt-0 lg:rounded-none lg:border-t-0">
+          <DialogHeader class="shrink-0 gap-0.5 px-4 pb-3 pr-14 pt-4 lg:min-h-20 lg:justify-center lg:border-b lg:px-4 lg:py-3">
+            <div class="flex min-w-0 flex-wrap items-center gap-2">
+              <DialogTitle>จองห้อง {{ selectedRoom.number }}</DialogTitle>
+              <RoomStatusBadge
+                v-if="selectedRoom.publicStatus !== 'available'"
+                :status="selectedRoom.publicStatus"
+              />
+            </div>
+            <DialogDescription>
+              {{ roomConfigLabel[selectedRoom.config] }}
+              <template v-if="selectedRoom.dimensions"> ขนาด {{ selectedRoom.dimensions }}</template>
+              <template v-else> · ยังไม่มีข้อมูลขนาดห้องอย่างเป็นทางการ</template>
+            </DialogDescription>
+          </DialogHeader>
+
+          <!-- Mobile/tablet: รูปย่อยเลื่อนได้ด้วย shadcn-vue Carousel -->
+          <div class="shrink-0 border-b px-4 pb-4 lg:hidden">
+            <Carousel
+              class="w-full px-10"
+              :opts="{ align: 'start', containScroll: 'trimSnaps' }"
+              aria-label="ภาพเพิ่มเติมของห้อง"
+            >
+              <CarouselContent class="-ml-2">
+                <CarouselItem
+                  v-for="imageIndex in roomImagePlaceholders"
+                  :key="imageIndex"
+                  class="basis-1/3 pl-2"
+                >
+                  <div
+                    class="grid aspect-square place-items-center rounded-lg bg-muted/45 text-border"
+                    role="img"
+                    :aria-label="`ยังไม่มีภาพเพิ่มเติมของห้อง ภาพที่ ${imageIndex}`"
+                  >
+                    <ImageIcon class="size-11" :stroke-width="1.5" aria-hidden="true" />
+                  </div>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious
+                class="left-0 size-6 bg-card"
+                aria-label="ดูภาพก่อนหน้า"
+              />
+              <CarouselNext
+                class="right-0 size-6 bg-card"
+                aria-label="ดูภาพถัดไป"
+              />
+            </Carousel>
+          </div>
+
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div
+              v-if="selectedRoom.publicStatus === 'temporarily_held' && selectedRoom.holdExpiresAt"
+              class="border-b px-4 py-3"
+            >
+              <HoldCountdown
+                :expires-at="selectedRoom.holdExpiresAt"
+                label="ห้องนี้ถูกจองชั่วคราว เหลือ"
+              />
+            </div>
+
+            <dl class="grid grid-cols-2 gap-x-6 gap-y-3 border-b px-4 py-4 text-sm lg:grid-cols-3">
+              <div>
+                <dt class="text-xs text-muted-foreground">หอพัก</dt>
+                <dd class="mt-0.5 font-semibold">{{ selectedDormGroup?.shortName ?? selectedDormGroup?.name ?? '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-foreground">อาคาร</dt>
+                <dd class="mt-0.5 font-semibold">{{ selectedBuilding?.name ?? '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-foreground">เลขห้อง</dt>
+                <dd class="mt-0.5 font-semibold tabular-nums">{{ selectedRoom.number }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-foreground">ชั้น</dt>
+                <dd class="mt-0.5 font-semibold tabular-nums">{{ selectedRoom.floor }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-foreground">ประเภทห้อง</dt>
+                <dd class="mt-0.5 font-semibold">{{ roomConfigLabel[selectedRoom.config] }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-muted-foreground">รูปแบบการพัก</dt>
+                <dd class="mt-0.5 font-semibold">
+                  {{ occupancy ? occupancyModeLabel[occupancy] : 'ยังไม่ได้เลือก' }}
+                </dd>
+              </div>
+            </dl>
+
+            <!-- เลือกรูปแบบการพัก -->
+            <section class="space-y-2 border-b px-4 py-3">
+              <h3 id="occupancy-mode-label" class="text-sm font-semibold">รูปแบบการจอง</h3>
+              <div class="grid grid-cols-2 gap-2" role="group" aria-labelledby="occupancy-mode-label">
+                <Button
+                  v-for="mode in selectedRoom.occupancyCapability"
+                  :key="mode"
+                  type="button"
+                  :variant="occupancy === mode ? 'default' : 'outline'"
+                  :disabled="!canChoose(mode)"
+                  :aria-pressed="occupancy === mode"
+                  class="h-14 min-w-0 flex-col items-start gap-0 px-3 py-1 text-left"
+                  @click="occupancy = mode"
+                >
+                  <span class="truncate font-semibold">{{ occupancyModeLabel[mode] }}</span>
+                  <span class="truncate text-xs font-normal opacity-80">
+                    {{ mode === 'shared' ? 'แยกบิล แยกสัญญา' : 'จ่ายเต็มห้อง สัญญาเดียว' }}
+                  </span>
+                </Button>
+              </div>
+              <p
+                v-if="!isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared')"
+                class="text-xs leading-relaxed text-muted-foreground"
+              >
+                พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม จัดการได้ที่เมนู
+                <RouterLink
+                  to="/app/roommate"
+                  class="font-medium text-foreground underline decoration-primary/70 underline-offset-2 hover:text-primary"
+                  @click="dialogOpen = false"
+                >
+                  “รูมเมท”
+                </RouterLink>
+              </p>
+              <p
+                v-if="hasActiveGroup && selectedRoom.occupancyCapability.includes('whole_room')"
+                class="text-xs leading-relaxed text-muted-foreground"
+              >
+                ต้องการเหมาห้อง? ต้องยกเลิกกลุ่มรูมเมทปัจจุบันก่อน
+              </p>
+            </section>
+
+            <!-- ประมาณการค่าใช้จ่ายตามประเภทห้องและรูปแบบการพัก -->
+            <section v-if="occupancy" class="space-y-3 px-4 py-3">
+              <h3 class="text-sm font-semibold">ค่าใช้จ่าย</h3>
+              <div class="space-y-2">
+                <div
+                  v-for="line in priceLines"
+                  :key="line.action"
+                  class="flex items-center justify-between gap-4 text-sm"
+                >
+                  <span>
+                    {{ line.ref2 }}<template v-if="occupancy === 'whole_room'"> (เหมาห้อง)</template>
+                  </span>
+                  <span class="shrink-0 font-semibold tabular-nums">{{ formatBaht(line.amount) }}</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between border-t pt-2 font-semibold">
+                <span>รวมทั้งหมด</span>
+                <span class="text-xl text-primary tabular-nums">{{ formatBaht(totalPrice) }}</span>
+              </div>
+
+              <p
+                v-if="campaign"
+                class="flex items-start gap-2 rounded-[10px] border bg-muted px-2 py-2 text-xs leading-relaxed text-muted-foreground"
+              >
+                <TimerIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <span>
+                  <template v-if="occupancy === 'shared' && campaign.roommateRoomConfirmationRequired">
+                    รูมเมทต้องยืนยันห้องภายใน {{ campaign.roomConfirmationMinutes }} นาที จากนั้นกลุ่มมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง
+                  </template>
+                  <template v-else>
+                    เมื่อกดจอง คุณมีเวลาชำระเงิน {{ campaign.paymentHoldHours }} ชั่วโมง
+                  </template>
+                </span>
+              </p>
+            </section>
+          </div>
+
+          <DialogFooter
+            class="m-0 grid shrink-0 grid-cols-2 gap-3 rounded-none border-t bg-card p-4 [&>button]:h-11 [&>button]:w-full [&>button]:text-base"
           >
-            <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
-            <template v-else-if="!occupancy">ยังไม่มีรูปแบบการพักที่จองได้</template>
-            <template v-else>จองห้องนี้</template>
-          </Button>
-        </DialogFooter>
+            <Button variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
+            <Button
+              :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !occupancy || !canChoose(occupancy)"
+              @click="reserve"
+            >
+              <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
+              <template v-else-if="!occupancy">ยังไม่มีรูปแบบการพักที่จองได้</template>
+              <template v-else>จองห้องนี้</template>
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   </div>
