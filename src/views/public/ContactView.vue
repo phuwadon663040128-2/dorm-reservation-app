@@ -61,10 +61,10 @@ function clearError(field: string) {
       subtitle="สอบถามการจองหอพัก ค่าธรรมเนียม สัญญาเข้าพัก หรือแจ้งปัญหาการใช้งานระบบ"
     />
 
-    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_26rem]">
+    <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-5 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div class="min-w-0 space-y-5">
         <!-- ข้อมูลสำนักงานแยกหัวข้อและค่าของแต่ละช่องทางให้กวาดสายตาได้ง่าย -->
-        <Card class="overflow-hidden rounded-xl shadow-sm">
+        <Card class="min-w-0 overflow-hidden rounded-xl shadow-sm">
           <CardContent class="p-0">
             <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:p-6">
               <div class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -73,7 +73,7 @@ function clearError(field: string) {
               <div class="min-w-0 flex-1">
                 <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ที่ตั้งสำนักงาน</p>
                 <h2 class="mt-1 text-base font-semibold">{{ dormOfficeContact.organization }}</h2>
-                <p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{{ dormOfficeContact.address }}</p>
+                <p class="mt-1 max-w-3xl break-words text-sm leading-6 text-muted-foreground">{{ dormOfficeContact.address }}</p>
                 <Button as-child variant="outline" size="sm" class="mt-3">
                   <a :href="mapUrl" target="_blank" rel="noopener">
                     เปิดแผนที่ Google Maps
@@ -119,7 +119,7 @@ function clearError(field: string) {
         </Card>
 
         <!-- เบอร์รายกลุ่มหอแสดงเป็นรายการย่อยที่ชื่อ กลุ่มอาคาร และเบอร์โทรอยู่แนวเดียวกัน -->
-        <Card class="rounded-xl shadow-sm">
+        <Card class="min-w-0 rounded-xl shadow-sm">
           <CardHeader class="pb-4">
             <div class="flex items-start gap-3">
               <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -161,7 +161,7 @@ function clearError(field: string) {
       </div>
 
       <!-- แบบฟอร์มคงอยู่ด้านข้างบนจอกว้าง และเรียงต่อจากข้อมูลติดต่อบนจอเล็ก -->
-      <Card class="self-start rounded-xl shadow-sm xl:sticky xl:top-20">
+      <Card class="min-w-0 self-start rounded-xl shadow-sm xl:sticky xl:top-20">
         <CardHeader class="pb-4">
           <div class="flex items-start gap-3">
             <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
