@@ -18,7 +18,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Textarea } from '@/components/ui/textarea'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { formatBaht } from '@/lib/labels'
 import { INPUT_LIMITS } from '@/lib/validation'
 import { usePaymentsStore } from '@/stores/payments'

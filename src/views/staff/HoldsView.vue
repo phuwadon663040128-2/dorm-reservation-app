@@ -21,7 +21,7 @@ import PermissionGate from '@/components/domain/PermissionGate.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { holdStatusLabel, occupancyModeLabel } from '@/lib/labels'
 import { INPUT_LIMITS } from '@/lib/validation'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { useReservationStore } from '@/stores/reservation'
 
 const reservation = useReservationStore()

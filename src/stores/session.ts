@@ -1,8 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Permission, StaffSection, User } from '@/types'
-import { permissionsForSections, users } from '@/fixtures'
-import { loginCredentialsSchema, registrationSchema } from '@/lib/validation'
+import { permissionsForSections, users } from '@/fixtures/users'
 import { useStaffAccessStore } from './staffAccess'
 
 const STORAGE_KEY = 'dorm-demo-session-user'
@@ -12,6 +11,7 @@ const PENDING_PASSWORD_KEY = 'dorm-demo-pending-password'
 const CUSTOM_PASSWORD_KEY = 'dorm-demo-custom-password'
 
 function restoreCustomUser(): User | null {
+  if (import.meta.server) return null
   try {
     const raw = sessionStorage.getItem(CUSTOM_USER_KEY)
     return raw ? JSON.parse(raw) as User : null
@@ -25,6 +25,7 @@ export const useSessionStore = defineStore('session', () => {
   const currentUser = ref<User | null>(restore())
 
   function restore(): User | null {
+    if (import.meta.server) return null
     const id = sessionStorage.getItem(STORAGE_KEY)
     if (!id) return null
     return users.find(u => u.id === id) ?? (customUser.value?.id === id ? customUser.value : null)
@@ -56,8 +57,15 @@ export const useSessionStore = defineStore('session', () => {
   function login(userId: string): User | null {
     const user = availableUsers.value.find(u => u.id === userId) ?? null
     currentUser.value = user
-    if (user) sessionStorage.setItem(STORAGE_KEY, user.id)
+    if (user && import.meta.client) sessionStorage.setItem(STORAGE_KEY, user.id)
     return user
+  }
+
+  /** Re-read browser state after Nuxt restores the server-rendered Pinia payload. */
+  function hydrateFromStorage() {
+    if (import.meta.server) return
+    customUser.value = restoreCustomUser()
+    currentUser.value = restore()
   }
 
   function userByEmail(email: string) {
@@ -65,9 +73,8 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function authenticateApplicant(email: string, password: string): User | null {
-    const validation = loginCredentialsSchema.safeParse({ email, password })
-    if (!validation.success) return null
     const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail || !password) return null
     const fixtureApplicant = users.find(user =>
       user.role === 'applicant' && user.email.toLowerCase() === normalizedEmail,
     )
@@ -76,6 +83,7 @@ export const useSessionStore = defineStore('session', () => {
     if (
       customUser.value
       && customUser.value.email.toLowerCase() === normalizedEmail
+      && import.meta.client
       && sessionStorage.getItem(CUSTOM_PASSWORD_KEY) === password
     ) {
       return login(customUser.value.id)
@@ -84,22 +92,26 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   function beginEmailRegistration(email: string, password: string) {
-    const validation = registrationSchema.safeParse({ email, password, acceptedNotice: true })
-    if (!validation.success) return false
-    sessionStorage.setItem(PENDING_EMAIL_KEY, validation.data.email.trim().toLowerCase())
-    sessionStorage.setItem(PENDING_PASSWORD_KEY, validation.data.password)
+    if (import.meta.server) return false
+    const normalizedEmail = email.trim().toLowerCase()
+    const validEmail = normalizedEmail.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    if (!validEmail || password.length < 8 || password.length > 128) return false
+    sessionStorage.setItem(PENDING_EMAIL_KEY, normalizedEmail)
+    sessionStorage.setItem(PENDING_PASSWORD_KEY, password)
     return true
   }
 
   function pendingEmailRegistration() {
+    if (import.meta.server) return ''
     return sessionStorage.getItem(PENDING_EMAIL_KEY) ?? ''
   }
 
   function completeEmailRegistration(): User | null {
+    if (import.meta.server) return null
     const email = pendingEmailRegistration()
     const password = sessionStorage.getItem(PENDING_PASSWORD_KEY)
     if (!email || !password) return null
-    const name = email.split('@')[0]
+    const name = (email.split('@')[0] ?? '')
       .split(/[._-]+/)
       .filter(Boolean)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
@@ -128,7 +140,7 @@ export const useSessionStore = defineStore('session', () => {
     currentUser.value.kkuSsoLinked = true
     if (customUser.value?.id === currentUser.value.id) {
       customUser.value = currentUser.value
-      sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(customUser.value))
+      if (import.meta.client) sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(customUser.value))
     }
     return true
   }
@@ -138,14 +150,14 @@ export const useSessionStore = defineStore('session', () => {
     currentUser.value.profileComplete = true
     if (customUser.value?.id === currentUser.value.id) {
       customUser.value = currentUser.value
-      sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(customUser.value))
+      if (import.meta.client) sessionStorage.setItem(CUSTOM_USER_KEY, JSON.stringify(customUser.value))
     }
     return true
   }
 
   function logout() {
     currentUser.value = null
-    sessionStorage.removeItem(STORAGE_KEY)
+    if (import.meta.client) sessionStorage.removeItem(STORAGE_KEY)
   }
 
   return {
@@ -160,6 +172,7 @@ export const useSessionStore = defineStore('session', () => {
     can,
     canAccessSection,
     login,
+    hydrateFromStorage,
     userByEmail,
     authenticateApplicant,
     beginEmailRegistration,

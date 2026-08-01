@@ -1,38 +1,16 @@
-import type { Building, DormGroup, Room, RoomConfig } from '@/types'
+import type { Building, Room, RoomConfig } from '@/types'
 import { inHours, inMinutes } from './time'
-import woraResidencePhoto from '@/assets/kku_dorm_images/wora_residence_8_buildings/01_wora_residence_entrance_road_assetkku.jpg'
-import woraInterPhoto from '@/assets/kku_dorm_images/wora_international/wora.png'
 
-export const dormGroups: DormGroup[] = [
-  {
-    id: 'dorm-8-lang',
-    name: 'วรเรสซิเดนซ์ / หอ 8 หลัง',
-    shortName: 'วรเรสซิเดนซ์',
-    description:
-      'หอพักในเครือข่ายวรเรสซิเดนซ์ 8 อาคาร เลขห้องเป็นตัวเลขที่ระบุอาคาร/ชั้น/ห้อง มีห้องธรรมดา (พัดลม) ห้องแอร์ และห้องแอร์พิเศษ',
-    buildingCount: 8,
-    contractLabel: 'สัญญารายปี',
-    priceFromPerTerm: 8100,
-    photo: woraResidencePhoto,
-  },
-  {
-    id: 'dorm-wor-inter',
-    name: 'หอพักวรอินเตอร์',
-    shortName: 'วรเรสอินเตอร์',
-    description:
-      'หอพักวรอินเตอร์ 4 อาคาร (A–D) เลขห้องขึ้นต้นด้วยตัวอักษรอาคารตามด้วยชั้น/ห้อง เช่น A101 มีห้องธรรมดา ห้องแอร์ และห้องแอร์พิเศษ',
-    buildingCount: 4,
-    contractLabel: 'สัญญารายปี',
-    priceFromPerTerm: 9000,
-    photo: woraInterPhoto,
-  },
-]
+export { dormGroups } from './dorm-groups'
 
 // จำนวนชั้นตามผังจริง: วรอินเตอร์ตึกละ 7 ชั้น — หอ 8 หลังตึกละ 4 ชั้น
-// เพศอาคาร 1–2 อ้างอิงหัวกระดาษผังจริง ("หอพักหญิง")
+// วรอินเตอร์: อาคาร A–C หญิง · อาคาร D ชาย
+// เพศอาคาร 1–2 ของหอ 8 หลังอ้างอิงหัวกระดาษผังจริง ("หอพักหญิง")
 export const buildings: Building[] = [
-  { id: 'bld-a', dormGroupId: 'dorm-wor-inter', code: 'A', name: 'อาคาร A', floors: [1, 2, 3, 4, 5, 6, 7], gender: 'female' },
-  { id: 'bld-b', dormGroupId: 'dorm-wor-inter', code: 'B', name: 'อาคาร B', floors: [1, 2, 3, 4, 5, 6, 7], gender: 'male' },
+  { id: 'bld-a', dormGroupId: 'dorm-wor-inter', code: 'A', name: 'อาคาร A (หญิง)', floors: [1, 2, 3, 4, 5, 6, 7], gender: 'female' },
+  { id: 'bld-b', dormGroupId: 'dorm-wor-inter', code: 'B', name: 'อาคาร B (หญิง)', floors: [1, 2, 3, 4, 5, 6, 7], gender: 'female' },
+  { id: 'bld-c', dormGroupId: 'dorm-wor-inter', code: 'C', name: 'อาคาร C (หญิง)', floors: [1, 2, 3, 4, 5, 6, 7], gender: 'female' },
+  { id: 'bld-d', dormGroupId: 'dorm-wor-inter', code: 'D', name: 'อาคาร D (ชาย)', floors: [1, 2, 3, 4, 5, 6, 7], gender: 'male' },
   { id: 'bld-1', dormGroupId: 'dorm-8-lang', code: '1', name: 'อาคาร 1 (หญิง)', floors: [1, 2, 3, 4], gender: 'female' },
   { id: 'bld-2', dormGroupId: 'dorm-8-lang', code: '2', name: 'อาคาร 2 (หญิง)', floors: [1, 2, 3, 4], gender: 'female' },
   { id: 'bld-3', dormGroupId: 'dorm-8-lang', code: '3', name: 'อาคาร 3 (หญิง)', floors: [1, 2, 3, 4], gender: 'female' },
@@ -52,7 +30,7 @@ const FACILITIES: Record<RoomConfig, string[]> = {
 }
 
 function room(number: string, buildingId: string, floor: number, config: RoomConfig, extra: Partial<Room> = {}): Room {
-  const isInter = buildingId === 'bld-a' || buildingId === 'bld-b'
+  const isInter = ['bld-a', 'bld-b', 'bld-c', 'bld-d'].includes(buildingId)
   const dimensions = config === 'special'
     ? (isInter ? '4.2 × 6 ม.' : '4 × 5.5 ม.')
     : (isInter ? '3.5 × 6 ม.' : '3 × 5.5 ม.')
@@ -159,8 +137,18 @@ const INT_FLOOR_UPPER: Record<number, RoomConfig> = {
   35: 'special',
 }
 
+/** อาคารวรอินเตอร์ที่ยังไม่มีสถานะ mock เฉพาะห้อง ใช้โครงสร้างชั้นมาตรฐานเดียวกัน */
+function standardInterBuildingRooms(code: 'C' | 'D', buildingId: 'bld-c' | 'bld-d'): Room[] {
+  return [
+    ...floorRooms(`${code}1`, buildingId, 1, INT_FLOOR1),
+    ...[2, 3, 4, 5, 6, 7].flatMap(floor =>
+      floorRooms(`${code}${floor}`, buildingId, floor, INT_FLOOR_UPPER),
+    ),
+  ]
+}
+
 // เลขห้อง unique ทั้งระบบ — ใช้เป็น Ref.1 โดยตรง
-// อาคารโฟกัสสำหรับการนำเสนอ (ข้อมูลครบทุกชั้น): หอ 8 หลัง อาคาร 1–2 · วรอินเตอร์ อาคาร A–B
+// อาคารโฟกัสสำหรับการนำเสนอ: หอ 8 หลัง อาคาร 1–2 · วรอินเตอร์มีข้อมูล A–D ครบทุกชั้น
 export const rooms: Room[] = [
   // ================= วรอินเตอร์ อาคาร A (หญิง) — ครบ 7 ชั้น =================
   ...floorRooms('A1', 'bld-a', 1, INT_FLOOR1, {
@@ -200,7 +188,7 @@ export const rooms: Room[] = [
     12: { publicStatus: 'temporarily_held', holdExpiresAt: inHours(12) },
   }),
 
-  // ================= วรอินเตอร์ อาคาร B (ชาย) — ครบ 7 ชั้น =================
+  // ================= วรอินเตอร์ อาคาร B (หญิง) — ครบ 7 ชั้น =================
   ...floorRooms('B1', 'bld-b', 1, INT_FLOOR1, {
     2: { publicStatus: 'unavailable', blockedReason: 'ปิดปรับปรุงห้องน้ำ (ก.ค. 2569)' },
     9: { publicStatus: 'reserved' },
@@ -232,6 +220,10 @@ export const rooms: Room[] = [
     4: { publicStatus: 'reserved' },
     29: { publicStatus: 'temporarily_held', holdExpiresAt: inHours(71) },
   }),
+
+  // ================= วรอินเตอร์ อาคาร C (หญิง) / D (ชาย) — ครบ 7 ชั้น =================
+  ...standardInterBuildingRooms('C', 'bld-c'),
+  ...standardInterBuildingRooms('D', 'bld-d'),
 
   // ================= หอ 8 หลัง อาคาร 1 (หญิง) — ครบ 4 ชั้น =================
   ...floorRooms('11', 'bld-1', 1, R8_FLOOR1, {

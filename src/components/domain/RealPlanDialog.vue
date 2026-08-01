@@ -345,6 +345,9 @@ watch(open, (isOpen) => {
           <img
             :src="planUrl"
             :alt="`แผนผังจริง ${building?.name} ชั้น ${floor}`"
+            width="1684"
+            height="1191"
+            decoding="async"
             class="pointer-events-none block size-full object-contain transition-opacity will-change-transform motion-reduce:transition-none"
             :class="imageLoaded ? 'opacity-100' : 'opacity-0'"
             :style="transformStyle"

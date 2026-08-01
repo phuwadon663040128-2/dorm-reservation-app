@@ -7,7 +7,7 @@ import {
   handoffBatches as handoffFixtures,
   keyHandovers as handoverFixtures,
   notifications as notificationFixtures,
-} from '@/fixtures'
+} from '@/fixtures/contracts'
 import { useSessionStore } from './session'
 
 export const useContractsStore = defineStore('contracts', () => {

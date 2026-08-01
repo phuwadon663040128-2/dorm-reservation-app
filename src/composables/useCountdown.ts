@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, ref, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, onMounted, onScopeDispose, ref, toValue, type MaybeRefOrGetter } from 'vue'
 
 /**
  * Countdown จากเวลา ISO เป้าหมาย — ใช้ทั้ง hold ยืนยันห้อง 15 นาที และ payment hold 72 ชม.
@@ -7,10 +7,15 @@ import { computed, onScopeDispose, ref, toValue, type MaybeRefOrGetter } from 'v
  */
 export function useCountdown(target: MaybeRefOrGetter<string | undefined>) {
   const now = ref(Date.now())
-  const timer = setInterval(() => {
-    now.value = Date.now()
-  }, 1000)
-  onScopeDispose(() => clearInterval(timer))
+  let timer: number | undefined
+  onMounted(() => {
+    timer = window.setInterval(() => {
+      now.value = Date.now()
+    }, 1000)
+  })
+  onScopeDispose(() => {
+    if (timer !== undefined) window.clearInterval(timer)
+  })
 
   const remainingMs = computed(() => {
     const t = toValue(target)

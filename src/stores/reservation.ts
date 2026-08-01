@@ -8,7 +8,8 @@ import type {
   RoommateGroup,
   RoommateInvitation,
 } from '@/types'
-import { reservationGroups as resvFixtures, roommateGroups as groupFixtures, roommateInvitations as invitationFixtures, users } from '@/fixtures'
+import { reservationGroups as resvFixtures, roommateGroups as groupFixtures, roommateInvitations as invitationFixtures } from '@/fixtures/reservations'
+import { users } from '@/fixtures/users'
 import { roomConfigLabel } from '@/lib/labels'
 import { INPUT_LIMITS, roommateSearchSchema } from '@/lib/validation'
 import { useApplicationStore } from './application'

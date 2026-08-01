@@ -18,14 +18,14 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTheme } from '@/composables/useTheme'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { resetDemoData } from '@/lib/demo-reset'
 import { errorsFromZod, INPUT_LIMITS, loginCredentialsSchema, registrationSchema } from '@/lib/validation'
 import { useSessionStore } from '@/stores/session'
 import type { User } from '@/types'
-import kkuEmblem from '@/assets/kku-emblem.png'
-import heroDay from '@/assets/login-illustration-light.png'
-import heroNight from '@/assets/login-illustration-dark.png'
+import kkuEmblem from '@/assets/kku-emblem.webp'
+import heroDay from '@/assets/login-illustration-light.webp'
+import heroNight from '@/assets/login-illustration-dark.webp'
 
 type InitialView = 'login' | 'register' | 'verify'
 type DialogView = InitialView | 'sso' | 'reset'
@@ -54,7 +54,7 @@ const view = ref<DialogView>('login')
 const demoOpen = ref(false)
 const showPassword = ref(false)
 const showRegisterPassword = ref(false)
-const loginEmail = ref('thanapon.demo@example.test')
+const loginEmail = ref('nicha.demo@example.test')
 const loginPassword = ref('demo1234')
 const loginError = ref('')
 const loginFieldErrors = ref<Record<string, string>>({})
@@ -241,7 +241,10 @@ function handleOpenAutoFocus(event: Event) {
         <template v-if="view === 'register'">
           <img
             :src="heroImage"
+            width="1200"
+            :height="theme === 'dark' ? 800 : 689"
             alt="อาคารหอพักในกำกับ มหาวิทยาลัยขอนแก่น"
+            decoding="async"
             class="absolute -left-[24.8%] -top-[0.25%] h-auto w-[158.7%] max-w-none"
           />
           <div class="absolute inset-x-0 bottom-0 z-10 h-[44.4%] bg-background px-8 pb-7 pt-14">
@@ -273,7 +276,10 @@ function handleOpenAutoFocus(event: Event) {
           </div>
           <img
             :src="heroImage"
+            width="1200"
+            :height="theme === 'dark' ? 800 : 689"
             alt="อาคารหอพักในกำกับ มหาวิทยาลัยขอนแก่น"
+            decoding="async"
             class="absolute -left-[6.67%] top-[49.6%] h-[63.5%] w-[106.7%] max-w-none object-cover object-center"
           />
         </template>
@@ -287,7 +293,7 @@ function handleOpenAutoFocus(event: Event) {
       >
         <div class="mx-auto flex min-h-0 min-w-0 w-full max-w-[31.5rem] flex-1 flex-col">
           <div v-if="view === 'login' || view === 'register'" class="flex h-10 items-center gap-2.5 pr-10">
-            <img :src="kkuEmblem" alt="ตรามหาวิทยาลัยขอนแก่น" class="h-10 w-auto shrink-0" />
+            <img :src="kkuEmblem" alt="ตรามหาวิทยาลัยขอนแก่น" width="150" height="267" class="h-10 w-auto shrink-0" />
             <span class="leading-tight">
               <span class="block text-[13px] font-semibold text-kku-red">หอพักในกำกับ มหาวิทยาลัยขอนแก่น</span>
               <span class="mt-0.5 block text-[11px] text-muted-foreground">ระบบจัดการจองหอพัก</span>
@@ -308,7 +314,7 @@ function handleOpenAutoFocus(event: Event) {
                 <AlertDescription>เลือกสถานการณ์และเริ่มทดสอบใหม่ได้ทันที</AlertDescription>
               </Alert>
 
-              <form class="mt-5 space-y-4" @submit.prevent="signInByEmail">
+              <form data-testid="login-form" class="mt-5 space-y-4" @submit.prevent="signInByEmail">
                 <Field>
                   <FieldLabel for="dialog-login-email" class="text-sm font-semibold">อีเมล</FieldLabel>
                   <Input
@@ -369,6 +375,7 @@ function handleOpenAutoFocus(event: Event) {
 
                 <Button
                   type="submit"
+                  data-testid="login-submit"
                   size="lg"
                   class="h-11 w-full justify-center rounded-xl font-semibold hover:-translate-y-px hover:bg-primary/90 hover:shadow-md"
                 >
@@ -382,7 +389,15 @@ function handleOpenAutoFocus(event: Event) {
                 <Separator class="flex-1" />
               </div>
 
-              <Button type="button" size="lg" variant="outline" class="h-11 w-full justify-center rounded-xl bg-background/50 font-semibold" @click="openView('sso')">
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                class="h-11 w-full justify-center rounded-xl bg-background/50 font-semibold"
+                disabled
+                aria-disabled="true"
+                title="KKU SSO ยังไม่เปิดใช้งานในต้นแบบ"
+              >
                 <GraduationCapIcon class="size-4.5" aria-hidden="true" />
                 เข้าสู่ระบบด้วย KKU SSO
               </Button>

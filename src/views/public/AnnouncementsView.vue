@@ -2,7 +2,7 @@
 import { MegaphoneIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { announcements } from '@/fixtures'
+import { announcements } from '@/fixtures/announcements'
 </script>
 
 <template>

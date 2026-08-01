@@ -7,7 +7,7 @@ import {
   resultStatusLabel,
   roommateGroupStatusLabel,
 } from '@/lib/labels'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { useApplicationStore } from '@/stores/application'
 import { useContractsStore } from '@/stores/contracts'
 import { usePaymentsStore } from '@/stores/payments'
@@ -83,14 +83,14 @@ export function useApplicantJourney() {
   const contractsStore = useContractsStore()
 
   const now = ref(Date.now())
-  let deadlineTimer: ReturnType<typeof setInterval> | undefined
+  let deadlineTimer: number | undefined
   onMounted(() => {
-    deadlineTimer = setInterval(() => {
+    deadlineTimer = window.setInterval(() => {
       now.value = Date.now()
     }, 1_000)
   })
   onBeforeUnmount(() => {
-    if (deadlineTimer) clearInterval(deadlineTimer)
+    if (deadlineTimer !== undefined) window.clearInterval(deadlineTimer)
   })
 
   const userId = computed(() => session.currentUser?.id)

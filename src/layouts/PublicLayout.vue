@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterView, useRoute, useRouter } from 'vue-router'
+import { computed, defineAsyncComponent } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import type { LocationQueryRaw } from 'vue-router'
 import GlobalHeader from '@/components/domain/GlobalHeader.vue'
-import LoginDialog from '@/components/domain/LoginDialog.vue'
+
+// Login มี component และภาพประกอบจำนวนมาก จึงโหลดเมื่อเปิด modal เท่านั้นเพื่อลดงานหน้าแรก
+const LoginDialog = defineAsyncComponent(() => import('@/components/domain/LoginDialog.vue'))
 
 const router = useRouter()
 const route = useRoute()
@@ -70,7 +72,7 @@ function finishLogin(destination: string) {
     <GlobalHeader context="public" @request-login="openLogin()" />
 
     <main class="flex-1">
-      <RouterView />
+      <slot />
     </main>
 
     <footer class="border-t">
@@ -87,6 +89,7 @@ function finishLogin(destination: string) {
     </footer>
 
     <LoginDialog
+      v-if="loginOpen"
       :open="loginOpen"
       :redirect="loginRedirect"
       :reset="loginReset"

@@ -13,14 +13,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
-import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
 import {
   CURRENT_ACADEMIC_YEAR,
   PRICING_REFERENCE_ACADEMIC_YEAR,
   priceLinesFor,
-} from '@/fixtures'
+} from '@/fixtures/pricing'
 import { useDormStore } from '@/stores/dorm'
 import { useSessionStore } from '@/stores/session'
 import type { Room } from '@/types'
@@ -93,7 +92,8 @@ function goReserve() {
 <template>
   <!-- หน้าแผนผังใช้คอนเทนเนอร์กว้างพิเศษ + ระยะขอบแคบ เพื่อให้ผังแสดงเต็มโดยไม่ต้องเลื่อนแนวนอน -->
   <div class="mx-auto w-full max-w-352 space-y-5 px-3 py-6 sm:px-5">
-    <RoomBrowser
+    <LazyRoomBrowser
+      hydrate-on-interaction
       :initial-dorm-group-id="initialDorm"
       :initial-config="initialConfig"
       :initial-gender="initialGender"
@@ -124,7 +124,7 @@ function goReserve() {
           </div>
         </div>
       </template>
-    </RoomBrowser>
+    </LazyRoomBrowser>
 
     <!-- Dialog รายละเอียดห้อง -->
     <Dialog v-model:open="dialogOpen">

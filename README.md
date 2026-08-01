@@ -1,5 +1,11 @@
-# Vue 3 + TypeScript + Vite
+# KKU Affiliated Dorm Application & Reservation System
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Interactive frontend mock-up built with Nuxt 4, Vue 3, TypeScript, Pinia, Tailwind CSS v4, and shadcn-vue.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Commands
+
+- `npm run dev` — start the Nuxt development server
+- `npm run build` — type-check and generate the optimized static production build
+- `npm run build:server` — create a Nitro server build when backend routes are introduced
+- `npm run generate` — generate a static deployment
+- `npm run preview` — preview the production build locally

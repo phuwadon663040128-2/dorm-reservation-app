@@ -146,6 +146,9 @@ function removeFile() {
             v-if="imagePreviewUrl"
             :src="imagePreviewUrl"
             :alt="`ตัวอย่างไฟล์ ${fileName}`"
+            width="128"
+            height="128"
+            decoding="async"
             class="size-full object-cover"
           >
           <FileImageIcon v-else-if="kind === 'image'" aria-hidden="true" />

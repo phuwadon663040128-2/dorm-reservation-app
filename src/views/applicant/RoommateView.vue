@@ -36,7 +36,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import { invitationStatusLabel, roommateGroupStatusLabel } from '@/lib/labels'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import {
   ROOMMATE_SEARCH_MIN_STUDENT_DIGITS,
   ROOMMATE_SEARCH_MIN_LENGTH,

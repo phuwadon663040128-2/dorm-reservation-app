@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { StaffSection, User } from '@/types'
-import { defaultSectionsFor, users } from '@/fixtures'
+import { defaultSectionsFor, users } from '@/fixtures/users'
 
 const STORAGE_KEY = 'dorm-demo-staff-sections'
 
@@ -11,6 +11,11 @@ export const useStaffAccessStore = defineStore('staffAccess', () => {
   const sectionsByUser = ref<Record<string, StaffSection[]>>(restore())
 
   function restore(): Record<string, StaffSection[]> {
+    if (import.meta.server) {
+      return Object.fromEntries(
+        users.filter(u => u.role !== 'applicant').map(u => [u.id, defaultSectionsFor(u)]),
+      )
+    }
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY)
       if (raw) return JSON.parse(raw)
@@ -21,7 +26,7 @@ export const useStaffAccessStore = defineStore('staffAccess', () => {
   }
 
   function persist() {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(sectionsByUser.value))
+    if (import.meta.client) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(sectionsByUser.value))
   }
 
   function sectionsFor(user: User): StaffSection[] {

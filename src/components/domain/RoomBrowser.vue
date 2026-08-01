@@ -21,7 +21,7 @@ import RoomTile from './RoomTile.vue'
 import { formatBaht, roomConfigLabel, roomConfigOptions } from '@/lib/labels'
 import { overlayFor } from '@/lib/planOverlays'
 import { campusFor } from '@/lib/campus3d'
-import { totalPriceFor } from '@/fixtures'
+import { totalPriceFor } from '@/fixtures/pricing'
 import { useDormStore } from '@/stores/dorm'
 import type { Room, RoomConfig } from '@/types'
 
@@ -87,11 +87,14 @@ const visibleBuildings = computed(() =>
     .buildingsOf(selectedDormGroupId.value)
     .filter(b => genderFilter.value === 'all' || b.gender === genderFilter.value),
 )
+const visibleBuildingCodes = computed(() =>
+  genderFilter.value === 'all'
+    ? undefined
+    : visibleBuildings.value.map(building => building.code),
+)
 
 const selectedBuildingId = ref(
-  campusFor(selectedDormGroupId.value)
-    ? ALL_BUILDINGS
-    : visibleBuildings.value[0]?.id ?? '',
+  visibleBuildings.value[0]?.id ?? '',
 )
 
 watch(visibleBuildings, (list) => {
@@ -153,24 +156,29 @@ const currentOverlay = computed(() =>
     : null,
 )
 
-// อาคาร 2 เป็นทรง L กลับด้าน จึงแยกคำอธิบายไว้ในพื้นที่มุมขวาล่างใต้ canvas ผัง
-const annotationPlacement = computed<'overlay-top-left' | 'detached-bottom-right'>(() =>
-  selectedDormGroupId.value === 'dorm-8-lang' && selectedBuilding.value?.code === '2'
-    ? 'detached-bottom-right'
-    : 'overlay-top-left',
-)
-
-// มุมมอง: ตึก 3D (ค่าเริ่มต้นถ้าหอนี้มีโมเดล) / ผังชั้น / รายการ + modal ผังจริง
+// เริ่มด้วยผังห้องซึ่งพร้อมใช้งานทันที แล้วค่อยโหลด Three.js เมื่อผู้ใช้
+// เลือกมุมมอง 3D โดยตรง เพื่อไม่ให้งานสร้าง scene ขวาง first interaction
+// บนทั้ง desktop และ mobile
 const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
-const viewMode = ref<'3d' | 'plan' | 'list'>(has3d.value ? '3d' : 'plan')
+const viewMode = ref<'3d' | 'plan' | 'list'>('plan')
 const realPlanOpen = ref(false)
 const campusRef = ref<{
   focusBuilding: (code: string) => boolean
   showAllBuildings: () => void
 } | null>(null)
 
+// ตัวกรองเพศต้องให้ผลที่มองเห็นได้ในผัง 3D ด้วย ไม่ปล่อยให้เมนูค้างที่ “ทุกอาคาร”
+// โดยผู้ใช้ยังสลับดู A–C (หญิง) หรือ D (ชาย) จากเมนูอาคารได้
+watch(genderFilter, () => {
+  if (viewMode.value !== '3d') return
+  selectedBuildingId.value = ALL_BUILDINGS
+})
+
 function selectViewMode(value: unknown) {
-  if (value === '3d' && has3d.value) viewMode.value = value
+  if (value === '3d' && has3d.value) {
+    selectedBuildingId.value = ALL_BUILDINGS
+    viewMode.value = value
+  }
   if (value === 'plan' || value === 'list') {
     if (selectedBuildingId.value === ALL_BUILDINGS) {
       selectedBuildingId.value = visibleBuildings.value[0]?.id ?? ''
@@ -406,12 +414,14 @@ const buildingSummary = computed(() => {
           <ToggleGroupItem
             v-if="has3d"
             value="3d"
+            data-testid="room-view-3d"
             class="h-8 w-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
           >
             <Building2Icon aria-hidden="true" /> ตึก 3 มิติ
           </ToggleGroupItem>
           <ToggleGroupItem
             value="plan"
+            data-testid="room-view-plan"
             class="h-8 w-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
           >
             <MapIcon aria-hidden="true" /> ผังชั้น
@@ -439,15 +449,20 @@ const buildingSummary = computed(() => {
     </div>
 
     <!-- มุมมองตึก 3 มิติ — เต็มความกว้าง (แยกจากแท็บชั้น) -->
-    <Campus3D
-      v-if="viewMode === '3d'"
-      ref="campusRef"
-      :dorm-group-id="selectedDormGroupId"
-      :availability="availabilityByCode"
-      @select-building="onSelectBuildingFrom3d"
-      @select-floor="onSelectFloorFrom3d"
-      @switch-dorm="selectedDormGroupId = $event"
-    />
+    <ClientOnly v-if="viewMode === '3d'">
+      <Campus3D
+        ref="campusRef"
+        :dorm-group-id="selectedDormGroupId"
+        :availability="availabilityByCode"
+        :visible-building-codes="visibleBuildingCodes"
+        @select-building="onSelectBuildingFrom3d"
+        @select-floor="onSelectFloorFrom3d"
+        @switch-dorm="selectedDormGroupId = $event"
+      />
+      <template #fallback>
+        <Campus3DLoading />
+      </template>
+    </ClientOnly>
 
     <template v-if="viewMode !== '3d' && selectedBuilding && floorsWithRooms.length">
       <!-- แท็บเลือกชั้น — แสดงผังทีละชั้น -->
@@ -501,7 +516,6 @@ const buildingSummary = computed(() => {
           :overlay="currentOverlay"
           :rooms="currentFloor.allRooms"
           :matched-numbers="currentFloor.matchedNumbers"
-          :annotation-placement="annotationPlacement"
           @select="emit('select', $event)"
         />
         <FloorPlanGrid

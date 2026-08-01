@@ -13,16 +13,15 @@ import type {
   ScbExportBatch,
 } from '@/types'
 import {
-  CURRENT_ACADEMIC_YEAR,
   manualPayments as manualFixtures,
   obligations as obligationFixtures,
   paymentExceptions as exceptionFixtures,
   paymentResultRows as resultFixtures,
-  priceLinesFor,
   returnedPdfPages as pdfFixtures,
   scbBatches as batchFixtures,
-  users,
-} from '@/fixtures'
+} from '@/fixtures/payments'
+import { CURRENT_ACADEMIC_YEAR, priceLinesFor } from '@/fixtures/pricing'
+import { users } from '@/fixtures/users'
 import { useSessionStore } from './session'
 import { useContractsStore } from './contracts'
 import { INPUT_LIMITS } from '@/lib/validation'

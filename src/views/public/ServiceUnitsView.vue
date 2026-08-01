@@ -8,6 +8,7 @@ import { dormOfficeContact, personnel } from '@/fixtures/personnel'
 
 // หน่วยบริการหอพัก — หัวหน้าหน่วยจากข้อมูลบุคลากรจริงของกองบริการหอพักนักศึกษา
 const unitHeads = computed(() => personnel.filter(p => p.section === 'หัวหน้าหน่วยบริการหอพัก'))
+const personnelPhoto = (photo: string) => photo.replace(/\.(?:jpe?g|png)$/i, '.webp')
 
 const duties = [
   'รับแจ้งเข้า–ออกหอพัก ตรวจสอบสิทธิผู้พัก และดูแลการรับกุญแจ',
@@ -65,7 +66,15 @@ const duties = [
         </h2>
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Card v-for="p in unitHeads" :key="p.id" class="overflow-hidden rounded-3xl py-0 transition-colors hover:border-primary/40">
-            <img :src="p.photo" :alt="`รูป${p.name}`" class="aspect-square w-full object-cover object-top" loading="lazy" />
+            <img
+              :src="personnelPhoto(p.photo)"
+              :alt="`รูป${p.name}`"
+              width="640"
+              height="640"
+              class="aspect-square w-full object-cover object-top"
+              loading="lazy"
+              decoding="async"
+            />
             <CardContent class="space-y-0.5 p-4">
               <p class="font-bold leading-snug">{{ p.name }}</p>
               <p class="text-sm text-primary">{{ p.position }}</p>

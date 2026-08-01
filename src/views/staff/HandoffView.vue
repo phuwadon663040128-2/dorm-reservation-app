@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import PermissionGate from '@/components/domain/PermissionGate.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { formatDateTime } from '@/lib/labels'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { useContractsStore } from '@/stores/contracts'
 
 const contractsStore = useContractsStore()

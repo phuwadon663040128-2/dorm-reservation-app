@@ -5,7 +5,8 @@ import type {
 } from '@/stores/application'
 import type { ReservationGroup, User } from '@/types'
 import { roomConfigLabel } from '@/lib/labels'
-import { buildings, dormGroups, rooms } from './rooms'
+import { dormGroups } from './dorm-groups'
+import { buildings, rooms } from './rooms'
 import { reservationGroups } from './reservations'
 import { users } from './users'
 

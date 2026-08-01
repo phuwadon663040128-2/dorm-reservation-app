@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Component } from 'vue'
-import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   BarChart3Icon,
   Building2Icon,
@@ -270,7 +270,7 @@ function logout() {
       </header>
 
       <main class="min-w-0 flex-1 px-3 py-5 sm:px-4 lg:px-6">
-        <RouterView />
+        <slot />
       </main>
     </SidebarInset>
   </SidebarProvider>

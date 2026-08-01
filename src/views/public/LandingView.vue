@@ -9,36 +9,48 @@ import {
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { formatDate, roomConfigOptions } from '@/lib/labels'
+import { campaigns } from '@/fixtures/campaigns'
+import { dormGroups } from '@/fixtures/dorm-groups'
 import { feeAcademicYear } from '@/fixtures/fees'
 import { useTheme } from '@/composables/useTheme'
-import { useDormStore } from '@/stores/dorm'
-import heroDay from '@/assets/hero-day.png'
-import heroNight from '@/assets/hero-night.png'
-import dorm8Light from '@/assets/dorm-home/dorm-8-light.png'
-import dorm8Dark from '@/assets/dorm-home/dorm-8-dark.png'
-import dormInterLight from '@/assets/dorm-home/dorm-inter-light.png'
-import dormInterDark from '@/assets/dorm-home/dorm-inter-dark.png'
+import heroDay640 from '@/assets/hero-day-640.webp'
+import heroDay1024 from '@/assets/hero-day-1024.webp'
+import heroDay from '@/assets/hero-day.webp'
+import heroNight640 from '@/assets/hero-night-640.webp'
+import heroNight1024 from '@/assets/hero-night-1024.webp'
+import heroNight from '@/assets/hero-night.webp'
+import dorm8Light480 from '@/assets/dorm-home/dorm-8-light-480.webp'
+import dorm8Light768 from '@/assets/dorm-home/dorm-8-light-768.webp'
+import dorm8Light from '@/assets/dorm-home/dorm-8-light.webp'
+import dorm8Dark480 from '@/assets/dorm-home/dorm-8-dark-480.webp'
+import dorm8Dark768 from '@/assets/dorm-home/dorm-8-dark-768.webp'
+import dorm8Dark from '@/assets/dorm-home/dorm-8-dark.webp'
+import dormInterLight480 from '@/assets/dorm-home/dorm-inter-light-480.webp'
+import dormInterLight768 from '@/assets/dorm-home/dorm-inter-light-768.webp'
+import dormInterLight from '@/assets/dorm-home/dorm-inter-light.webp'
+import dormInterDark480 from '@/assets/dorm-home/dorm-inter-dark-480.webp'
+import dormInterDark768 from '@/assets/dorm-home/dorm-inter-dark-768.webp'
+import dormInterDark from '@/assets/dorm-home/dorm-inter-dark.webp'
 
-const dorm = useDormStore()
 const router = useRouter()
 const { theme } = useTheme()
 
 // โหลดเฉพาะรูปของธีมที่ใช้อยู่ (กลางวัน/กลางคืน) — สลับทันทีเมื่อเปลี่ยนธีม
 const heroPhoto = computed(() => (theme.value === 'dark' ? heroNight : heroDay))
-const homeDormPhotos = computed<Record<string, string>>(() => ({
-  'dorm-8-lang': theme.value === 'dark' ? dorm8Dark : dorm8Light,
-  'dorm-wor-inter': theme.value === 'dark' ? dormInterDark : dormInterLight,
+const heroPhotoSet = computed(() => theme.value === 'dark'
+  ? `${heroNight640} 640w, ${heroNight1024} 1024w, ${heroNight} 1600w`
+  : `${heroDay640} 640w, ${heroDay1024} 1024w, ${heroDay} 1600w`)
+const homeDormPhotos = computed<Record<string, { src: string; srcset: string }>>(() => ({
+  'dorm-8-lang': theme.value === 'dark'
+    ? { src: dorm8Dark, srcset: `${dorm8Dark480} 480w, ${dorm8Dark768} 768w, ${dorm8Dark} 1100w` }
+    : { src: dorm8Light, srcset: `${dorm8Light480} 480w, ${dorm8Light768} 768w, ${dorm8Light} 1100w` },
+  'dorm-wor-inter': theme.value === 'dark'
+    ? { src: dormInterDark, srcset: `${dormInterDark480} 480w, ${dormInterDark768} 768w, ${dormInterDark} 1000w` }
+    : { src: dormInterLight, srcset: `${dormInterLight480} 480w, ${dormInterLight768} 768w, ${dormInterLight} 1000w` },
 }))
 
-const openCampaign = computed(() => dorm.openCampaigns[0])
+const openCampaign = computed(() => campaigns.find(campaign => campaign.status === 'open'))
 
 // ตัวกรองใน search bar — ส่งต่อไปหน้า /rooms เป็น query
 const searchDorm = ref('all')
@@ -78,7 +90,12 @@ const steps = [
     <section class="relative overflow-hidden">
       <img
         :src="heroPhoto"
+        :srcset="heroPhotoSet"
+        sizes="100vw"
+        width="1600"
+        height="900"
         alt="อาคารหอพัก KKU-WORA International Dormitory"
+        fetchpriority="high"
         class="absolute inset-0 h-full w-full object-cover object-center"
       />
       <!-- overlay ไล่เฉดตามธีมอัตโนมัติผ่านตัวแปร background
@@ -121,44 +138,41 @@ const steps = [
         >
           <div class="min-w-0 flex-1 px-4 py  -1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">หอพัก</span>
-            <Select v-model="searchDorm">
-              <SelectTrigger aria-label="เลือกหอพัก" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
-                <SelectItem value="all">หอพักทั้งหมด</SelectItem>
-                <SelectItem v-for="g in dorm.dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              v-model="searchDorm"
+              aria-label="เลือกหอพัก"
+              class="h-7 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="all">หอพักทั้งหมด</option>
+              <option v-for="g in dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</option>
+            </select>
           </div>
           <div class="hidden h-10 w-px bg-border md:block" aria-hidden="true" />
           <div class="min-w-0 flex-1 px-4 py-1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">ประเภทห้อง</span>
-            <Select v-model="searchConfig">
-              <SelectTrigger aria-label="เลือกประเภทห้อง" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
-                <SelectItem value="all">ทุกประเภท</SelectItem>
-                <SelectItem v-for="option in roomConfigOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              v-model="searchConfig"
+              aria-label="เลือกประเภทห้อง"
+              class="h-7 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="all">ทุกประเภท</option>
+              <option v-for="option in roomConfigOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
           </div>
           <div class="hidden h-10 w-px bg-border md:block" aria-hidden="true" />
           <div class="min-w-0 flex-1 px-4 py-1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">เพศ</span>
-            <Select v-model="searchGender">
-              <SelectTrigger aria-label="เลือกเพศ" class="h-auto w-full border-0 bg-transparent p-0 font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" side="bottom" align="start" :side-offset="6" :avoid-collisions="false">
-                <SelectItem value="all">ทั้งหมด</SelectItem>
-                <SelectItem value="male">ชาย</SelectItem>
-                <SelectItem value="female">หญิง</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              v-model="searchGender"
+              aria-label="เลือกเพศ"
+              class="h-7 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="all">ทั้งหมด</option>
+              <option value="male">ชาย</option>
+              <option value="female">หญิง</option>
+            </select>
           </div>
           <!-- hover = ปุ่มยกตัว + เงาอุ่นด้านล่าง + ลูกศรเลื่อนนำสายตา · active = กดจมกลับ เงาหุบ -->
           <Button
@@ -186,14 +200,21 @@ const steps = [
 
           <div class="grid gap-6 sm:grid-cols-2">
             <RouterLink
-              v-for="g in dorm.dormGroups"
+              v-for="g in dormGroups"
               :key="g.id"
               :to="{ path: '/rooms', query: { dorm: g.id } }"
               class="group relative block overflow-hidden rounded-2xl border shadow-sm transition-shadow hover:shadow-lg"
             >
               <img
-                :src="homeDormPhotos[g.id] ?? g.photo"
+                :src="homeDormPhotos[g.id]?.src ?? g.photo"
+                :srcset="homeDormPhotos[g.id]?.srcset"
+                sizes="(min-width: 1024px) 35vw, (min-width: 640px) 50vw, 100vw"
+                width="800"
+                height="1000"
                 :alt="`ภาพ${g.name}`"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
                 class="aspect-4/5 w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <!-- โหมดมืดใช้ภาพกลางคืน (เข้มอยู่แล้ว) จึงลดความเข้มของ gradient ลงให้ภาพสว่างขึ้น -->

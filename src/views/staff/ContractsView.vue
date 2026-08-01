@@ -15,7 +15,7 @@ import PermissionGate from '@/components/domain/PermissionGate.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { contractStatusLabel, occupancyModeLabel } from '@/lib/labels'
 import { usePermissions } from '@/composables/usePermissions'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { useContractsStore } from '@/stores/contracts'
 import type { ContractStatus } from '@/types'
 

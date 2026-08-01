@@ -15,7 +15,7 @@ import {
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { documentStatusLabel, formatBaht, resultStatusLabel } from '@/lib/labels'
 import { usePermissions } from '@/composables/usePermissions'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { usePaymentsStore } from '@/stores/payments'
 
 const payments = usePaymentsStore()

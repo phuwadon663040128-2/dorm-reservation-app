@@ -4,12 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "nuxt dev",
+    "build": "nuxt typecheck && nuxt generate",
+    "build:server": "nuxt typecheck && nuxt build",
+    "generate": "nuxt generate",
+    "preview": "node scripts/preview-static.mjs",
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@lucide/vue": "^1.23.0",
+    "@pinia/nuxt": "^1.0.1",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/vue-table": "^8.21.3",
     "@types/three": "^0.185.1",
@@ -19,7 +23,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-vue": "^8.6.0",
-    "pinia": "^3.0.4",
+    "nuxt": "^4.5.1",
+    "pinia": "^4.0.2",
     "reka-ui": "^2.10.1",
     "shadcn-vue": "^2.8.0",
     "tailwind-merge": "^3.6.0",
@@ -29,20 +34,17 @@
     "vee-validate": "^4.15.1",
     "vue": "^3.5.39",
     "vue-input-otp": "^0.3.2",
-    "vue-router": "^4.6.4",
+    "vue-router": "^5.2.0",
     "vue-sonner": "^2.0.9",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
-    "@vitejs/plugin-vue": "^6.0.7",
-    "@vue/tsconfig": "^0.9.1",
     "autoprefixer": "^10.5.2",
     "postcss": "^8.5.16",
     "tailwindcss": "^4.3.2",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1",
     "vue-tsc": "^3.3.5"
   }
 }

@@ -1,13 +1,22 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Building, Campaign, DormGroup, Room } from '@/types'
-import { buildings as buildingFixtures, campaigns as campaignFixtures, dormGroups as dormGroupFixtures, rooms as roomFixtures } from '@/fixtures'
+import { campaigns as campaignFixtures } from '@/fixtures/campaigns'
+import { dormGroups as dormGroupFixtures } from '@/fixtures/dorm-groups'
+import { buildings as buildingFixtures, rooms as roomFixtures } from '@/fixtures/rooms'
 
 export const useDormStore = defineStore('dorm', () => {
-  const dormGroups = ref<DormGroup[]>(dormGroupFixtures)
-  const buildings = ref<Building[]>(buildingFixtures)
-  const rooms = ref<Room[]>(roomFixtures)
-  const campaigns = ref<Campaign[]>(campaignFixtures)
+  // Fixtures are immutable module data, not per-request state. Exposing them as
+  // computed values keeps Nuxt from serializing the full room inventory into
+  // every SSR payload. Only a tiny revision counter is hydrated after mutations.
+  const roomRevision = ref(0)
+  const dormGroups = computed<DormGroup[]>(() => dormGroupFixtures)
+  const buildings = computed<Building[]>(() => buildingFixtures)
+  const campaigns = computed<Campaign[]>(() => campaignFixtures)
+  const rooms = computed<Room[]>(() => {
+    void roomRevision.value
+    return roomFixtures
+  })
 
   const openCampaigns = computed(() => campaigns.value.filter(c => c.status === 'open'))
 
@@ -46,6 +55,7 @@ export const useDormStore = defineStore('dorm', () => {
     if (!room) return
     room.publicStatus = status
     room.holdExpiresAt = holdExpiresAt
+    roomRevision.value += 1
   }
 
   return {

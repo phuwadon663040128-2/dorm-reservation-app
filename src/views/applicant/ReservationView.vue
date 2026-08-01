@@ -17,7 +17,7 @@ import {
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import ReservationCancellationControl from '@/components/domain/ReservationCancellationControl.vue'
 import { holdStatusLabel, occupancyModeLabel } from '@/lib/labels'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { usePaymentsStore } from '@/stores/payments'
 import { useReservationStore } from '@/stores/reservation'
 

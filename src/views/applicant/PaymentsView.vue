@@ -18,7 +18,7 @@ import {
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import ObligationCard from '@/components/domain/ObligationCard.vue'
 import ReservationCancellationControl from '@/components/domain/ReservationCancellationControl.vue'
-import { PRICING_REFERENCE_ACADEMIC_YEAR } from '@/fixtures'
+import { PRICING_REFERENCE_ACADEMIC_YEAR } from '@/fixtures/pricing'
 import { formatBaht } from '@/lib/labels'
 import { useApplicationStore } from '@/stores/application'
 import { usePaymentsStore } from '@/stores/payments'

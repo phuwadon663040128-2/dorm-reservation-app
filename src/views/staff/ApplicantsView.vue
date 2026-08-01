@@ -25,7 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 
 const applicants = users.filter(u => u.role === 'applicant')
 const PAGE_SIZE = 25

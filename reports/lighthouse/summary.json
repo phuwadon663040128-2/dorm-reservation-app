@@ -1,0 +1,331 @@
+{
+  "generatedAt": "2026-08-01T14:38:52.042Z",
+  "comparison": [
+    {
+      "page": "home-mobile",
+      "before": {
+        "performance": 78,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 91,
+        "fcpMs": 3190,
+        "lcpMs": 4117,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 509
+      },
+      "after": {
+        "performance": 78,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpMs": 3211,
+        "lcpMs": 4104,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 441
+      },
+      "delta": {
+        "performance": 0,
+        "seo": 9,
+        "lcpMs": -13,
+        "tbtMs": 0,
+        "transferredKB": -68
+      }
+    },
+    {
+      "page": "rooms-mobile",
+      "before": {
+        "performance": 68,
+        "accessibility": 95,
+        "bestPractices": 100,
+        "seo": 91,
+        "fcpMs": 4764,
+        "lcpMs": 4932,
+        "tbtMs": 127,
+        "cls": 0,
+        "transferredKB": 441
+      },
+      "after": {
+        "performance": 79,
+        "accessibility": 95,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpMs": 3728,
+        "lcpMs": 3808,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 376
+      },
+      "delta": {
+        "performance": 11,
+        "seo": 9,
+        "lcpMs": -1124,
+        "tbtMs": -127,
+        "transferredKB": -65
+      }
+    },
+    {
+      "page": "services-mobile",
+      "before": {
+        "performance": 82,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 91,
+        "fcpMs": 3338,
+        "lcpMs": 3563,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 265
+      },
+      "after": {
+        "performance": 84,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpMs": 3336,
+        "lcpMs": 3434,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 253
+      },
+      "delta": {
+        "performance": 2,
+        "seo": 9,
+        "lcpMs": -129,
+        "tbtMs": 0,
+        "transferredKB": -12
+      }
+    },
+    {
+      "page": "home-desktop",
+      "before": {
+        "performance": 97,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 91,
+        "fcpMs": 815,
+        "lcpMs": 1055,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 521
+      },
+      "after": {
+        "performance": 98,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpMs": 806,
+        "lcpMs": 949,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 416
+      },
+      "delta": {
+        "performance": 1,
+        "seo": 9,
+        "lcpMs": -106,
+        "tbtMs": 0,
+        "transferredKB": -105
+      }
+    },
+    {
+      "page": "rooms-desktop",
+      "before": {
+        "performance": 93,
+        "accessibility": 95,
+        "bestPractices": 100,
+        "seo": 91,
+        "fcpMs": 1234,
+        "lcpMs": 1313,
+        "tbtMs": 2,
+        "cls": 0,
+        "transferredKB": 441
+      },
+      "after": {
+        "performance": 96,
+        "accessibility": 95,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpMs": 968,
+        "lcpMs": 1070,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 376
+      },
+      "delta": {
+        "performance": 3,
+        "seo": 9,
+        "lcpMs": -243,
+        "tbtMs": -2,
+        "transferredKB": -65
+      }
+    },
+    {
+      "page": "services-desktop",
+      "before": {
+        "performance": 98,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 91,
+        "fcpMs": 872,
+        "lcpMs": 913,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 265
+      },
+      "after": {
+        "performance": 98,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpMs": 856,
+        "lcpMs": 867,
+        "tbtMs": 0,
+        "cls": 0,
+        "transferredKB": 253
+      },
+      "delta": {
+        "performance": 0,
+        "seo": 9,
+        "lcpMs": -46,
+        "tbtMs": 0,
+        "transferredKB": -12
+      }
+    }
+  ],
+  "roomsMobile": {
+    "performance": 79,
+    "accessibility": 95,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcpMs": 3728,
+    "lcpMs": 3808,
+    "tbtMs": 0,
+    "cls": 0,
+    "transferredKB": 376,
+    "lcpElement": {
+      "selector": "div.rounded-2xl > div.flex > div.space-y-0.5 > p.max-w-2xl",
+      "label": "แสดงสถานะรายห้อง ห้องที่ถูกจองชั่วคราวจะแสดงเวลาหมดสิทธิ์ และกลับมาว่างอัตโนมัติหากไม่ชำระตามกำหนด",
+      "snippet": "<p class=\"max-w-2xl text-sm text-muted-foreground\">"
+    },
+    "payload": [
+      {
+        "type": "total",
+        "requests": 76,
+        "bytes": 385343,
+        "kb": 376.3
+      },
+      {
+        "type": "script",
+        "requests": 65,
+        "bytes": 162272,
+        "kb": 158.5
+      },
+      {
+        "type": "image",
+        "requests": 1,
+        "bytes": 102944,
+        "kb": 100.5
+      },
+      {
+        "type": "font",
+        "requests": 5,
+        "bytes": 77893,
+        "kb": 76.1
+      },
+      {
+        "type": "stylesheet",
+        "requests": 1,
+        "bytes": 27305,
+        "kb": 26.7
+      },
+      {
+        "type": "document",
+        "requests": 1,
+        "bytes": 9202,
+        "kb": 9
+      },
+      {
+        "type": "other",
+        "requests": 3,
+        "bytes": 5727,
+        "kb": 5.6
+      },
+      {
+        "type": "media",
+        "requests": 0,
+        "bytes": 0,
+        "kb": 0
+      },
+      {
+        "type": "third-party",
+        "requests": 0,
+        "bytes": 0,
+        "kb": 0
+      }
+    ],
+    "slowestRequests": [
+      {
+        "url": "http://127.0.0.1:3000/plans/overlay/8lang-101.svg",
+        "type": "Image",
+        "durationMs": 7752.1,
+        "bytes": 102944
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/entry.pdRnDaki.css",
+        "type": "Stylesheet",
+        "durationMs": 499.1,
+        "bytes": 27305
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/BuC7aHgx.js",
+        "type": "Script",
+        "durationMs": 314.1,
+        "bytes": 1715
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/GMMdV0j4.js",
+        "type": "Script",
+        "durationMs": 304.6,
+        "bytes": 662
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/75mZXcpx.js",
+        "type": "Script",
+        "durationMs": 304.3,
+        "bytes": 1166
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/DeZQx8QA2.js",
+        "type": "Script",
+        "durationMs": 304.1,
+        "bytes": 854
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/Cs6WeUCe.js",
+        "type": "Script",
+        "durationMs": 298.7,
+        "bytes": 392
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/Ds0z09OD.js",
+        "type": "Script",
+        "durationMs": 298.6,
+        "bytes": 1298
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/D0RSDcii.js",
+        "type": "Script",
+        "durationMs": 296.4,
+        "bytes": 691
+      },
+      {
+        "url": "http://127.0.0.1:3000/_nuxt/BdsaF9bv.js",
+        "type": "Script",
+        "durationMs": 290.5,
+        "bytes": 757
+      }
+    ]
+  }
+}

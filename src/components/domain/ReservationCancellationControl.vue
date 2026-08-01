@@ -19,7 +19,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { formatBaht, resultStatusLabel } from '@/lib/labels'
 import { INPUT_LIMITS } from '@/lib/validation'
 import { useContractsStore } from '@/stores/contracts'

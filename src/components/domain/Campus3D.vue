@@ -18,6 +18,7 @@ import type { Building3DConfig, CampusPalette, RoadKind } from '@/lib/campus3d'
 const props = defineProps<{
   dormGroupId: string
   availability: Record<string, Record<number, { available: number; total: number }>>
+  visibleBuildingCodes?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -66,6 +67,7 @@ const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 let pickables: THREE.Mesh[] = []
 const buildingDetails = new Map<string, THREE.Group>()
+const buildingRoots = new Map<string, THREE.Group>()
 // งานตกแต่งรายชั้นของตึกหอที่เลือก — ยกขึ้นพร้อมชั้นตอนแยกชั้น (หน้าตาตึกคงเดิมตอนประกบ)
 const buildingFloorGroups = new Map<string, { gap: number; groups: THREE.Group[] }>()
 const adaptiveLabels: THREE.Sprite[] = []
@@ -163,6 +165,24 @@ const roadLegend = computed(() => {
 
 function isContext(b: Building3DConfig) {
   return b.dormGroupId !== props.dormGroupId
+}
+
+function isBuildingVisible(b: Building3DConfig) {
+  return isContext(b)
+    || props.visibleBuildingCodes === undefined
+    || props.visibleBuildingCodes.includes(b.code)
+}
+
+function isBuildingCodeVisible(code: string, dormGroupId: string) {
+  if (dormGroupId !== props.dormGroupId || props.visibleBuildingCodes === undefined) return true
+  return props.visibleBuildingCodes.includes(code)
+}
+
+function updateBuildingVisibility() {
+  for (const building of area.buildings) {
+    const root = buildingRoots.get(`${building.dormGroupId}:${building.code}`)
+    if (root) root.visible = isBuildingVisible(building)
+  }
 }
 
 function shapeOf(b: Building3DConfig) {
@@ -518,6 +538,8 @@ function addBuilding(root: THREE.Group, b: Building3DConfig, p: CampusPalette) {
   const g = new THREE.Group()
   g.position.set(b.x, 0, b.z)
   g.rotation.y = THREE.MathUtils.degToRad(b.rotationY)
+  g.visible = isBuildingVisible(b)
+  buildingRoots.set(`${b.dormGroupId}:${b.code}`, g)
 
   const gap = 0.18
   const dormColor = buildingColor(b, p)
@@ -1645,6 +1667,7 @@ function buildScene() {
   disposables.length = 0
   pickables = []
   buildingDetails.clear()
+  buildingRoots.clear()
   buildingFloorGroups.clear()
   adaptiveLabels.length = 0
 
@@ -1888,8 +1911,12 @@ function pick() {
   if (!camera) return null
   raycaster.setFromCamera(pointer, camera)
   const hits = raycaster.intersectObjects(pickables, false)
-  if (!hits.length) return null
-  return hits[0]!.object.userData as { buildingCode: string; floor: number; dormGroupId: string; context: boolean }
+  const visibleHit = hits.find((hit) => {
+    const data = hit.object.userData as { buildingCode: string; dormGroupId: string }
+    return isBuildingCodeVisible(data.buildingCode, data.dormGroupId)
+  })
+  if (!visibleHit) return null
+  return visibleHit.object.userData as { buildingCode: string; floor: number; dormGroupId: string; context: boolean }
 }
 
 function onMove(e: PointerEvent) {
@@ -1996,7 +2023,7 @@ function focusBuilding(code: string, notifyParent = false) {
   const building = area.buildings.find(item =>
     item.code === code && item.dormGroupId === props.dormGroupId,
   )
-  if (!building) return false
+  if (!building || !isBuildingVisible(building)) return false
 
   diveTarget = null
   diveEmitted = false
@@ -2288,6 +2315,16 @@ watch(() => props.dormGroupId, (dormGroupId) => {
     'spinner',
   )
 })
+
+watch(() => props.visibleBuildingCodes, () => {
+  updateBuildingVisibility()
+  if (
+    selectedCode.value
+    && !isBuildingCodeVisible(selectedCode.value, props.dormGroupId)
+  ) {
+    backToCampus(false)
+  }
+}, { deep: true, flush: 'post' })
 
 function rebuildSceneForTheme() {
   rebuildSceneWithLoading('กำลังปรับผัง 3 มิติให้เข้ากับธีมใหม่', 'skeleton')

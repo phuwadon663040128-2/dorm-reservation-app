@@ -1,0 +1,46 @@
+{
+  "safetyFixture": {
+    "prefetchRemoved": true,
+    "modulepreloadPreserved": true,
+    "cssPreloadPreserved": true,
+    "fontPreloadPreserved": true,
+    "imagePreloadPreserved": true,
+    "stylesheetPreserved": true,
+    "lcpImagePreserved": true
+  },
+  "pages": [
+    {
+      "route": "/",
+      "prefetch": 0,
+      "modulepreload": 43,
+      "stylesheet": 1,
+      "cssPreload": 0,
+      "fontPreload": 0,
+      "imagePreload": 0,
+      "fetchPriorityHighImages": 1,
+      "hasDescription": true
+    },
+    {
+      "route": "/rooms",
+      "prefetch": 0,
+      "modulepreload": 60,
+      "stylesheet": 1,
+      "cssPreload": 0,
+      "fontPreload": 0,
+      "imagePreload": 0,
+      "fetchPriorityHighImages": 0,
+      "hasDescription": true
+    },
+    {
+      "route": "/services/utilities",
+      "prefetch": 0,
+      "modulepreload": 47,
+      "stylesheet": 1,
+      "cssPreload": 0,
+      "fontPreload": 0,
+      "imagePreload": 0,
+      "fetchPriorityHighImages": 0,
+      "hasDescription": true
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "desktopHome": {
+    "label": "desktop-home",
+    "path": "/",
+    "ttfb": 312.5,
+    "responseEnd": 314.2,
+    "domContentLoaded": 1211.4,
+    "load": 1279.9,
+    "fcp": 1264,
+    "lcp": 1264,
+    "vueReady": 1314.2,
+    "clientReadyStart": "NavigationTiming.responseEnd",
+    "clientReadyEnd": "#__nuxt.__vue_app__ observed after Vue mount",
+    "clientReadyAfterHtml": 1000,
+    "jsRequests": 50,
+    "jsTransferKB": 139.1
+  },
+  "desktopServices": {
+    "label": "desktop-services",
+    "path": "/services/utilities",
+    "ttfb": 46.9,
+    "responseEnd": 47.7,
+    "domContentLoaded": 64.7,
+    "load": 70.6,
+    "fcp": 112,
+    "lcp": 112,
+    "vueReady": 100,
+    "clientReadyStart": "NavigationTiming.responseEnd",
+    "clientReadyEnd": "#__nuxt.__vue_app__ observed after Vue mount",
+    "clientReadyAfterHtml": 52.3,
+    "jsRequests": 53,
+    "jsTransferKB": 0
+  },
+  "mobileHome": {
+    "label": "mobile-home",
+    "path": "/",
+    "ttfb": 53.5,
+    "responseEnd": 54.6,
+    "domContentLoaded": 87,
+    "load": 87.5,
+    "fcp": 140,
+    "lcp": 140,
+    "vueReady": 94.8,
+    "clientReadyStart": "NavigationTiming.responseEnd",
+    "clientReadyEnd": "#__nuxt.__vue_app__ observed after Vue mount",
+    "clientReadyAfterHtml": 40.2,
+    "jsRequests": 50,
+    "jsTransferKB": 0
+  },
+  "desktopRooms": {
+    "label": "desktop-rooms",
+    "path": "/rooms",
+    "ttfb": 37.8,
+    "responseEnd": 38.7,
+    "domContentLoaded": 59.8,
+    "load": 60.1,
+    "fcp": 116,
+    "lcp": 116,
+    "vueReady": 73.8,
+    "clientReadyStart": "NavigationTiming.responseEnd",
+    "clientReadyEnd": "#__nuxt.__vue_app__ observed after Vue mount",
+    "clientReadyAfterHtml": 35.1,
+    "jsRequests": 102,
+    "jsTransferKB": 79.6
+  },
+  "dropdown": {
+    "opened": true,
+    "closedWithEscape": true,
+    "closedWhenAnotherOpens": true,
+    "closedOutside": true,
+    "closedAfterNavigate": true,
+    "path": "/services/utilities"
+  },
+  "serviceText": {
+    "hasUtilities": true,
+    "hasMaintenance": true,
+    "hasParcel": true,
+    "hasSpareKey": false,
+    "hasResidential": false,
+    "hasHouseRegistration": false
+  },
+  "roomViews": {
+    "defaultPlan": true,
+    "threeDimensionalLoadedOnDemand": true
+  },
+  "clientNavigation": [
+    {
+      "label": "home-to-rooms",
+      "from": "/",
+      "to": "/rooms",
+      "clickToRenderedMs": 375.5,
+      "jsChunks": 52,
+      "jsTransferKB": 79.6
+    },
+    {
+      "label": "rooms-to-dorm-detail",
+      "from": "/rooms",
+      "to": "/rooms?dorm=dorm-8-lang",
+      "clickToRenderedMs": 47.8,
+      "jsChunks": 0,
+      "jsTransferKB": 0
+    },
+    {
+      "label": "open-login-modal",
+      "from": "/",
+      "to": "/?auth=login",
+      "clickToRenderedMs": 218.7,
+      "jsChunks": 38,
+      "jsTransferKB": 33.6
+    },
+    {
+      "label": "login-to-app",
+      "from": "/?auth=login",
+      "to": "/app/rooms",
+      "clickToRenderedMs": 227.7,
+      "jsChunks": 47,
+      "jsTransferKB": 41.7
+    },
+    {
+      "label": "staff-to-campaigns",
+      "from": "/staff",
+      "to": "/staff/campaigns",
+      "clickToRenderedMs": 63.2,
+      "jsChunks": 3,
+      "jsTransferKB": 2.6
+    },
+    {
+      "label": "staff-to-rooms",
+      "from": "/staff/campaigns",
+      "to": "/staff/rooms",
+      "clickToRenderedMs": 132.4,
+      "jsChunks": 25,
+      "jsTransferKB": 10.2
+    },
+    {
+      "label": "staff-to-obligations",
+      "from": "/staff/rooms",
+      "to": "/staff/obligations",
+      "clickToRenderedMs": 64.3,
+      "jsChunks": 1,
+      "jsTransferKB": 1.6
+    }
+  ],
+  "applicantSession": {
+    "user": "applicant-i",
+    "path": "/app/rooms",
+    "loggedIn": true
+  },
+  "applicantRefresh": {
+    "expectedPath": "/app/rooms",
+    "actualPath": "/app/rooms",
+    "rendered": true,
+    "sessionUser": "applicant-i"
+  },
+  "staffRefresh": {
+    "expectedPath": "/staff",
+    "actualPath": "/staff",
+    "rendered": true,
+    "sessionUser": "staff-admin"
+  },
+  "hydrationProblems": [],
+  "severeConsole": [],
+  "exceptions": []
+}

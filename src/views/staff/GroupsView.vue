@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { roommateGroupStatusLabel } from '@/lib/labels'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { useReservationStore } from '@/stores/reservation'
 import type { RoommateGroupStatus } from '@/types'
 

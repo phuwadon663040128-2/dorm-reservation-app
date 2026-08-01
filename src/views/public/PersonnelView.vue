@@ -7,7 +7,8 @@ import PageHeader from '@/components/domain/PageHeader.vue'
 import { personnel, personnelSections } from '@/fixtures/personnel'
 
 // โครงสร้างบุคลากร — เรียงตามที่กำหนด: ภาพโครงสร้างหน่วยงานก่อน แล้วตามด้วยบุคลากรเรียงตามตำแหน่ง
-const structureChart = '/personnel/structure-chart.png'
+const structureChart = '/personnel/structure-chart.webp'
+const personnelPhoto = (photo: string) => photo.replace(/\.(?:jpe?g|png)$/i, '.webp')
 
 const groups = computed(() =>
   personnelSections.map(section => ({
@@ -39,8 +40,10 @@ const groups = computed(() =>
           </Button>
         </div>
         <div class="bg-white p-4 dark:bg-white/95">
-          <img
-            :src="structureChart"
+        <img
+          :src="structureChart"
+          width="1400"
+          height="788"
             alt="แผนภาพโครงสร้างกองบริการหอพักนักศึกษา มหาวิทยาลัยขอนแก่น"
             class="mx-auto w-full max-w-4xl"
             loading="lazy"
@@ -61,7 +64,15 @@ const groups = computed(() =>
           :key="p.id"
           class="overflow-hidden rounded-3xl py-0 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
         >
-          <img :src="p.photo" :alt="`รูป${p.name}`" class="aspect-square w-full object-cover object-top" loading="lazy" />
+          <img
+            :src="personnelPhoto(p.photo)"
+            :alt="`รูป${p.name}`"
+            width="640"
+            height="640"
+            class="aspect-square w-full object-cover object-top"
+            loading="lazy"
+            decoding="async"
+          />
           <CardContent class="space-y-0.5 p-3.5">
             <p class="text-sm font-bold leading-snug">{{ p.name }}</p>
             <p class="text-xs leading-relaxed text-primary">{{ p.position }}</p>

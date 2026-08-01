@@ -111,8 +111,11 @@ function pickCatalog(id: string) {
         <img
           :src="planUrl"
           :alt="`แบบแปลน ${catalog.buildingLabel(selectedBuilding)} ชั้น ${selectedFloor} — ${catalog.name}`"
+          width="1684"
+          height="1191"
           class="mx-auto max-h-[70vh] w-auto max-w-full"
           loading="lazy"
+          decoding="async"
         />
       </div>
     </Card>

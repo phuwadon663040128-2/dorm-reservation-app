@@ -18,7 +18,7 @@ import RefundQueue from '@/components/domain/RefundQueue.vue'
 import StaffPageHeader from '@/components/domain/StaffPageHeader.vue'
 import { exceptionTypeLabel, formatBaht } from '@/lib/labels'
 import { usePermissions } from '@/composables/usePermissions'
-import { users } from '@/fixtures'
+import { users } from '@/fixtures/users'
 import { usePaymentsStore } from '@/stores/payments'
 import { useReservationStore } from '@/stores/reservation'
 

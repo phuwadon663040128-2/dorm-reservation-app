@@ -4,6 +4,8 @@
 .vscode/
 .vercel/
 .cache/
+.nuxt/
+.output/
 dist/
 logs/
 node_modules/

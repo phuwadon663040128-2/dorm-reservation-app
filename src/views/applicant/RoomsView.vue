@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
-import { ImageIcon, InfoIcon, TimerIcon, XIcon } from '@lucide/vue'
+import { ChevronDownIcon, ImageIcon, InfoIcon, TimerIcon, XIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,7 +25,7 @@ import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
 import { formatBaht, occupancyModeLabel, roomConfigLabel } from '@/lib/labels'
-import { priceLinesFor } from '@/fixtures'
+import { priceLinesFor } from '@/fixtures/pricing'
 import { useDormStore } from '@/stores/dorm'
 import { useReservationStore } from '@/stores/reservation'
 import { useSessionStore } from '@/stores/session'
@@ -100,6 +100,47 @@ const totalPrice = computed(() => priceLines.value.reduce((s, l) => s + l.amount
 
 const campaign = computed(() => dorm.openCampaigns[0])
 const roomImagePlaceholders = [1, 2, 3, 4, 5]
+const detailsScrollArea = ref<HTMLElement | null>(null)
+const canScrollDetails = ref(false)
+const detailsAtTop = ref(true)
+let detailsResizeObserver: ResizeObserver | null = null
+
+function updateDetailsScrollState() {
+  const element = detailsScrollArea.value
+  if (!element) {
+    canScrollDetails.value = false
+    detailsAtTop.value = true
+    return
+  }
+  canScrollDetails.value = element.scrollHeight > element.clientHeight + 8
+  detailsAtTop.value = element.scrollTop < 12
+}
+
+function scrollRoomDetails() {
+  const element = detailsScrollArea.value
+  if (!element) return
+  element.scrollBy({
+    top: Math.max(160, element.clientHeight * 0.55),
+    behavior: 'smooth',
+  })
+}
+
+watch(detailsScrollArea, (element) => {
+  detailsResizeObserver?.disconnect()
+  if (!element) {
+    updateDetailsScrollState()
+    return
+  }
+  detailsResizeObserver = new ResizeObserver(updateDetailsScrollState)
+  detailsResizeObserver.observe(element)
+  void nextTick(updateDetailsScrollState)
+})
+
+watch([dialogOpen, occupancy, selectedRoom], () => {
+  void nextTick(updateDetailsScrollState)
+})
+
+onBeforeUnmount(() => detailsResizeObserver?.disconnect())
 
 function reserve() {
   if (!selectedRoom.value || !occupancy.value) return
@@ -204,7 +245,7 @@ function reserve() {
           <ImageIcon class="size-24" :stroke-width="1.5" aria-hidden="true" />
         </div>
 
-        <div class="relative z-10 -mt-px flex min-h-0 flex-col overflow-hidden rounded-t-3xl border-t bg-card lg:mt-0 lg:rounded-none lg:border-t-0">
+        <div class="relative z-10 -mt-5 flex min-h-0 flex-col overflow-hidden rounded-t-3xl border-t bg-card lg:mt-0 lg:rounded-none lg:border-t-0">
           <DialogHeader class="shrink-0 gap-0.5 px-4 pb-3 pr-14 pt-4 lg:min-h-20 lg:justify-center lg:border-b lg:px-4 lg:py-3">
             <div class="flex min-w-0 flex-wrap items-center gap-2">
               <DialogTitle>จองห้อง {{ selectedRoom.number }}</DialogTitle>
@@ -253,7 +294,11 @@ function reserve() {
             </Carousel>
           </div>
 
-          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div
+            ref="detailsScrollArea"
+            class="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            @scroll="updateDetailsScrollState"
+          >
             <div
               v-if="selectedRoom.publicStatus === 'temporarily_held' && selectedRoom.holdExpiresAt"
               class="border-b px-4 py-3"
@@ -370,6 +415,18 @@ function reserve() {
               </p>
             </section>
           </div>
+
+          <Button
+            v-if="canScrollDetails && detailsAtTop"
+            type="button"
+            size="icon"
+            variant="ghost"
+            class="absolute bottom-[4.65rem] left-1/2 z-20 size-9 -translate-x-1/2 rounded-full bg-card/85 text-muted-foreground shadow-sm backdrop-blur hover:bg-card hover:text-foreground lg:hidden"
+            aria-label="เลื่อนลงเพื่อดูรายละเอียดห้องและค่าใช้จ่ายเพิ่มเติม"
+            @click="scrollRoomDetails"
+          >
+            <ChevronDownIcon class="size-6" :stroke-width="2.5" aria-hidden="true" />
+          </Button>
 
           <DialogFooter
             class="m-0 grid shrink-0 grid-cols-2 gap-3 rounded-none border-t bg-card p-4 [&>button]:h-11 [&>button]:w-full [&>button]:text-base"
