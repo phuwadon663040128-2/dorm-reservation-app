@@ -412,7 +412,7 @@ Do not show scoped-out Roommate, Groups, SCB Export or exact-room screens in pro
 
 Local sources:
 
-- `EN813701 Web Application Development Project Instructions.docx`
+- `reference/project-documents/EN813701 Web Application Development Project Instructions.docx`
 - Project documents 03, 07 and 08 listed in `AGENTS.md`
 - Feature Backlog, Open Questions & Assumptions and Payment Rule Matrix CSV files
 - Current Vue prototype under `src/`

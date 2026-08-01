@@ -65,9 +65,9 @@ const dormItems: MenuItem[] = [
 ]
 
 const serviceItems: MenuItem[] = [
-  { label: 'ค่าน้ำ ค่าไฟ', to: '/services/utilities' },
-  { label: 'แจ้งซ่อม', to: '/services/maintenance' },
-  { label: 'แจ้งรับพัสดุ ไปรษณีย์', to: '/services/parcel' },
+  { label: 'บิลค่าน้ำ-ค่าไฟ', to: '/services/utilities' },
+  { label: 'แจ้งซ่อมออนไลน์', to: '/services/maintenance' },
+  { label: 'แจ้งรับพัสดุ(ไปรษณีย์ไทย)', to: '/services/parcel' },
 ]
 
 const topMenus: TopMenu[] = [

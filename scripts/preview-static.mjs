@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, join, normalize, resolve, sep } from 'node:path'
@@ -11,11 +12,31 @@ function option(name, fallback) {
 
 const host = option('host', process.env.HOST || '127.0.0.1')
 const port = Number(option('port', process.env.PORT || '4173'))
-const outputRoot = resolve(option('root', '.output/public'))
+const customRoot = option('root', '')
+const outputRoot = resolve(customRoot || '.output/public')
+const outputEntry = join(outputRoot, 'index.html')
 
-if (!existsSync(outputRoot)) {
-  console.error(`ไม่พบโฟลเดอร์ static: ${outputRoot}`)
-  process.exit(1)
+if (!existsSync(outputEntry)) {
+  if (customRoot) {
+    console.error(`ไม่พบไฟล์ static entry ที่ระบุ: ${outputEntry}`)
+    process.exit(1)
+  }
+
+  console.log('ยังไม่มี production build — กำลังรัน npm run build ให้อัตโนมัติ...')
+  const npmCli = process.env.npm_execpath
+  const build = npmCli
+    ? spawnSync(process.execPath, [npmCli, 'run', 'build'], { stdio: 'inherit' })
+    : spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], { stdio: 'inherit' })
+
+  if (build.error) {
+    console.error(`ไม่สามารถเริ่ม production build ได้: ${build.error.message}`)
+    process.exit(1)
+  }
+  if (build.status !== 0) process.exit(build.status ?? 1)
+  if (!existsSync(outputEntry)) {
+    console.error(`build สำเร็จแต่ไม่พบไฟล์ static entry: ${outputEntry}`)
+    process.exit(1)
+  }
 }
 
 const contentTypes = {

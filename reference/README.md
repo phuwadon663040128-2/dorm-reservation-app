@@ -9,4 +9,7 @@
 | `design/` | ไฟล์งานออกแบบ: Figma export, ต้นแบบ Vue เดิม (kku-dorm-light-dark-vue), ภาพ mockup light/dark |
 | `media/` | ชุดภาพ/วิดีโอหอพักสำหรับใช้ในเว็บ (zip) — ภาพที่ใช้แล้วอยู่ที่ `src/assets/kku_dorm_images/` |
 | `data-packs/` | ชุดข้อมูลประกอบ: ราคา/ค่าธรรมเนียม (kku_dorm_fee_assets), บุคลากร (dorm_kku_ui_assets), ตราสัญลักษณ์ มข. (kku_emblem_assets) |
-| `agreements/` | เอกสารข้อตกลง/สัญญาต่าง ๆ จากหน้างาน (zip) |
+| `agreements/` | เอกสารข้อตกลง ใบสมัคร และตัวอย่างเอกสารการชำระเงินจากหน้างาน |
+| `project-documents/` | โจทย์และเอกสารต้นทางของรายวิชา/โครงงาน |
+
+โฟลเดอร์ต้นแบบที่แตกจาก ZIP อาจเก็บ source code ไว้เพื่อเทียบหน้าตา แต่ไม่เก็บ `node_modules/`, build output หรือ browser profile ไว้ใน repository

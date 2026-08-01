@@ -2,15 +2,18 @@
 import { nextTick, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import {
+  Building2Icon,
   ClockIcon,
   ExternalLinkIcon,
   MailIcon,
   MapPinIcon,
+  MessageSquareTextIcon,
   PhoneIcon,
   SendIcon,
 } from '@lucide/vue'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -51,112 +54,158 @@ function clearError(field: string) {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-352 space-y-8 px-3 py-8 sm:px-5">
+  <div class="mx-auto w-full max-w-352 space-y-6 px-3 py-6 sm:px-5 sm:py-8">
     <PageHeader
       kicker="ติดต่อเรา"
       title="ติดต่อกองบริการหอพักนักศึกษา"
       subtitle="สอบถามการจองหอพัก ค่าธรรมเนียม สัญญาเข้าพัก หรือแจ้งปัญหาการใช้งานระบบ"
     />
 
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
-      <div class="space-y-4">
-        <!-- ที่อยู่ + เวลาทำการ -->
-        <Card class="rounded-3xl">
-          <CardContent class="space-y-4 p-6">
-            <div class="flex items-start gap-3">
-              <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_26rem]">
+      <div class="min-w-0 space-y-5">
+        <!-- ข้อมูลสำนักงานแยกหัวข้อและค่าของแต่ละช่องทางให้กวาดสายตาได้ง่าย -->
+        <Card class="overflow-hidden rounded-xl shadow-sm">
+          <CardContent class="p-0">
+            <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:p-6">
+              <div class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <MapPinIcon class="size-5" aria-hidden="true" />
               </div>
-              <div class="space-y-1">
-                <h2 class="font-bold">{{ dormOfficeContact.organization }}</h2>
-                <p class="text-sm leading-relaxed text-muted-foreground">{{ dormOfficeContact.address }}</p>
-                <a
-                  :href="mapUrl"
-                  target="_blank"
-                  rel="noopener"
-                  class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                >
-                  เปิดแผนที่ Google Maps <ExternalLinkIcon class="size-3.5" aria-hidden="true" />
-                </a>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ที่ตั้งสำนักงาน</p>
+                <h2 class="mt-1 text-base font-semibold">{{ dormOfficeContact.organization }}</h2>
+                <p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{{ dormOfficeContact.address }}</p>
+                <Button as-child variant="outline" size="sm" class="mt-3">
+                  <a :href="mapUrl" target="_blank" rel="noopener">
+                    เปิดแผนที่ Google Maps
+                    <ExternalLinkIcon class="size-3.5" aria-hidden="true" />
+                  </a>
+                </Button>
               </div>
             </div>
-            <div class="grid gap-3 border-t pt-4 text-sm sm:grid-cols-3">
-              <p class="flex items-start gap-2 text-muted-foreground">
-                <ClockIcon class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-                {{ dormOfficeContact.officeHours }}
-              </p>
-              <p class="flex items-center gap-2 text-muted-foreground">
-                <PhoneIcon class="size-4 shrink-0 text-primary" aria-hidden="true" />
-                <a href="tel:043204303" class="hover:text-foreground hover:underline">043-204-303</a>
-              </p>
-              <p class="flex items-center gap-2 text-muted-foreground">
-                <MailIcon class="size-4 shrink-0 text-primary" aria-hidden="true" />
-                <a href="mailto:dormitory@kku.ac.th" class="hover:text-foreground hover:underline">dormitory@kku.ac.th</a>
-              </p>
-            </div>
+            <dl class="grid border-t sm:grid-cols-3">
+              <div class="flex min-w-0 items-start gap-3 p-4 sm:p-5">
+                <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-primary">
+                  <ClockIcon class="size-4" aria-hidden="true" />
+                </span>
+                <div class="min-w-0">
+                  <dt class="text-xs font-medium text-muted-foreground">เวลาทำการ</dt>
+                  <dd class="mt-1 text-sm leading-5">{{ dormOfficeContact.officeHours }}</dd>
+                </div>
+              </div>
+              <div class="flex min-w-0 items-start gap-3 border-t p-4 sm:border-l sm:border-t-0 sm:p-5">
+                <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-primary">
+                  <PhoneIcon class="size-4" aria-hidden="true" />
+                </span>
+                <div class="min-w-0">
+                  <dt class="text-xs font-medium text-muted-foreground">โทรศัพท์ส่วนกลาง</dt>
+                  <dd class="mt-1 text-sm font-medium tabular-nums">
+                    <a href="tel:043204303" class="hover:text-primary hover:underline">043-204-303</a>
+                  </dd>
+                </div>
+              </div>
+              <div class="flex min-w-0 items-start gap-3 border-t p-4 sm:border-l sm:border-t-0 sm:p-5">
+                <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-primary">
+                  <MailIcon class="size-4" aria-hidden="true" />
+                </span>
+                <div class="min-w-0">
+                  <dt class="text-xs font-medium text-muted-foreground">อีเมล</dt>
+                  <dd class="mt-1 truncate text-sm font-medium">
+                    <a href="mailto:dormitory@kku.ac.th" class="hover:text-primary hover:underline">dormitory@kku.ac.th</a>
+                  </dd>
+                </div>
+              </div>
+            </dl>
           </CardContent>
         </Card>
 
-        <!-- เบอร์ติดต่อรายหอ -->
-        <Card class="rounded-3xl">
-          <CardContent class="space-y-3 p-6">
-            <h2 class="font-bold">เบอร์ติดต่อหอพักแต่ละกลุ่ม</h2>
-            <div class="divide-y">
-              <div
-                v-for="g in feeGroups"
-                :key="g.id"
-                class="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <p class="text-sm font-medium">{{ g.name }}</p>
-                <p class="flex flex-wrap gap-x-4 text-sm text-muted-foreground">
-                  <a
-                    v-for="tel in g.contact"
-                    :key="tel"
-                    :href="`tel:${tel.replaceAll('-', '')}`"
-                    class="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"
-                  >
-                    <PhoneIcon class="size-3.5" aria-hidden="true" /> {{ tel }}
-                  </a>
-                </p>
+        <!-- เบอร์รายกลุ่มหอแสดงเป็นรายการย่อยที่ชื่อ กลุ่มอาคาร และเบอร์โทรอยู่แนวเดียวกัน -->
+        <Card class="rounded-xl shadow-sm">
+          <CardHeader class="pb-4">
+            <div class="flex items-start gap-3">
+              <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Building2Icon class="size-5" aria-hidden="true" />
+              </span>
+              <div class="min-w-0">
+                <CardTitle>เบอร์ติดต่อหอพักแต่ละกลุ่ม</CardTitle>
+                <CardDescription class="mt-1">เลือกโทรติดต่อกลุ่มหอพักที่ต้องการสอบถามโดยตรง</CardDescription>
               </div>
             </div>
+          </CardHeader>
+          <CardContent class="grid gap-3 pt-0">
+            <article
+              v-for="g in feeGroups"
+              :key="g.id"
+              class="rounded-xl border bg-muted/20 p-4"
+            >
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0">
+                  <h3 class="text-sm font-semibold leading-6">{{ g.name }}</h3>
+                  <p class="mt-0.5 text-xs leading-5 text-muted-foreground">{{ g.genderSplit }}</p>
+                </div>
+                <Badge variant="outline" class="w-fit shrink-0 tabular-nums">{{ g.buildingCount }} อาคาร</Badge>
+              </div>
+              <div class="mt-3 flex flex-wrap gap-2 border-t pt-3">
+                <a
+                  v-for="tel in g.contact"
+                  :key="tel"
+                  :href="`tel:${tel.replaceAll('-', '')}`"
+                  class="inline-flex h-9 items-center gap-2 rounded-md border bg-card px-3 text-sm font-medium tabular-nums transition-colors hover:border-primary/50 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <PhoneIcon class="size-3.5" aria-hidden="true" />
+                  {{ tel }}
+                </a>
+              </div>
+            </article>
           </CardContent>
         </Card>
       </div>
 
-      <!-- แบบฟอร์มติดต่อ -->
-      <Card class="self-start rounded-3xl">
-        <CardContent class="space-y-4 p-6">
-          <div class="space-y-1">
-            <h2 class="font-bold">ส่งเรื่องถึงเจ้าหน้าที่</h2>
-            <p class="text-sm text-muted-foreground">เจ้าหน้าที่ตอบกลับทางอีเมลภายใน 1–2 วันทำการ</p>
+      <!-- แบบฟอร์มคงอยู่ด้านข้างบนจอกว้าง และเรียงต่อจากข้อมูลติดต่อบนจอเล็ก -->
+      <Card class="self-start rounded-xl shadow-sm xl:sticky xl:top-20">
+        <CardHeader class="pb-4">
+          <div class="flex items-start gap-3">
+            <span class="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <MessageSquareTextIcon class="size-5" aria-hidden="true" />
+            </span>
+            <div class="min-w-0">
+              <CardTitle>ส่งเรื่องถึงเจ้าหน้าที่</CardTitle>
+              <CardDescription class="mt-1 leading-5">เจ้าหน้าที่ตอบกลับทางอีเมลภายใน 1–2 วันทำการ</CardDescription>
+            </div>
           </div>
+        </CardHeader>
+        <CardContent class="pt-0">
           <form id="contact-form" @submit.prevent="submit">
-            <FieldGroup class="gap-3">
+            <FieldGroup class="gap-4">
               <Field>
-                <FieldLabel for="ct-name">ชื่อ–นามสกุล</FieldLabel>
-                <Input id="ct-name" v-model="form.name" placeholder="เช่น ศุภกร ใจดี" required :maxlength="INPUT_LIMITS.contactName" :aria-invalid="Boolean(fieldErrors.name)" @input="clearError('name')" />
+                <FieldLabel for="ct-name">ชื่อ–นามสกุล <span class="text-primary">*</span></FieldLabel>
+                <Input id="ct-name" v-model="form.name" class="h-10" placeholder="เช่น ศุภกร ใจดี" required :maxlength="INPUT_LIMITS.contactName" :aria-invalid="Boolean(fieldErrors.name)" @input="clearError('name')" />
                 <FieldError :errors="[fieldErrors.name]" />
               </Field>
               <Field>
-                <FieldLabel for="ct-email">อีเมลสำหรับติดต่อกลับ</FieldLabel>
-                <Input id="ct-email" v-model="form.email" type="email" placeholder="name@example.com" :maxlength="INPUT_LIMITS.email" :aria-invalid="Boolean(fieldErrors.email)" @input="clearError('email')" />
+                <FieldLabel for="ct-email" class="flex items-center justify-between gap-3">
+                  <span>อีเมลสำหรับติดต่อกลับ</span>
+                  <span class="text-xs font-normal text-muted-foreground">ไม่บังคับ</span>
+                </FieldLabel>
+                <Input id="ct-email" v-model="form.email" class="h-10" type="email" placeholder="name@example.com" :maxlength="INPUT_LIMITS.email" :aria-invalid="Boolean(fieldErrors.email)" @input="clearError('email')" />
                 <FieldError :errors="[fieldErrors.email]" />
               </Field>
               <Field>
-                <FieldLabel for="ct-subject">หัวข้อเรื่อง</FieldLabel>
-                <Input id="ct-subject" v-model="form.subject" placeholder="เช่น สอบถามการย้ายห้อง" required :maxlength="INPUT_LIMITS.contactSubject" :aria-invalid="Boolean(fieldErrors.subject)" @input="clearError('subject')" />
+                <FieldLabel for="ct-subject">หัวข้อเรื่อง <span class="text-primary">*</span></FieldLabel>
+                <Input id="ct-subject" v-model="form.subject" class="h-10" placeholder="เช่น สอบถามการย้ายห้อง" required :maxlength="INPUT_LIMITS.contactSubject" :aria-invalid="Boolean(fieldErrors.subject)" @input="clearError('subject')" />
                 <FieldError :errors="[fieldErrors.subject]" />
               </Field>
               <Field>
-                <FieldLabel for="ct-message">รายละเอียด</FieldLabel>
-                <Textarea id="ct-message" v-model="form.message" rows="4" placeholder="อธิบายรายละเอียดที่ต้องการสอบถาม" :maxlength="INPUT_LIMITS.contactMessage" :aria-invalid="Boolean(fieldErrors.message)" @input="clearError('message')" />
+                <FieldLabel for="ct-message" class="flex items-center justify-between gap-3">
+                  <span>รายละเอียด</span>
+                  <span class="text-xs font-normal text-muted-foreground">ไม่บังคับ</span>
+                </FieldLabel>
+                <Textarea id="ct-message" v-model="form.message" class="min-h-28 resize-y" rows="5" placeholder="อธิบายรายละเอียดที่ต้องการสอบถาม" :maxlength="INPUT_LIMITS.contactMessage" :aria-invalid="Boolean(fieldErrors.message)" @input="clearError('message')" />
                 <div class="flex items-start justify-between gap-3">
                   <FieldError :errors="[fieldErrors.message]" />
                   <span class="ml-auto text-xs tabular-nums text-muted-foreground">{{ form.message.length.toLocaleString('th-TH') }}/{{ INPUT_LIMITS.contactMessage.toLocaleString('th-TH') }}</span>
                 </div>
               </Field>
-              <Button type="submit" class="w-full rounded-full">
+              <Button type="submit" class="h-10 w-full">
                 <SendIcon aria-hidden="true" /> ส่งเรื่อง
               </Button>
             </FieldGroup>

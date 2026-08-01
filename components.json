@@ -4,7 +4,7 @@
   "font": "geist-sans",
   "typescript": true,
   "tailwind": {
-    "config": "tailwind.config.js",
+    "config": "",
     "css": "src/style.css",
     "baseColor": "neutral",
     "cssVariables": true,
