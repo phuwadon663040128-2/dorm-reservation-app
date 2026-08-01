@@ -7,7 +7,7 @@ import PageHeader from '@/components/domain/PageHeader.vue'
 import { personnel, personnelSections } from '@/fixtures/personnel'
 
 // โครงสร้างบุคลากร — เรียงตามที่กำหนด: ภาพโครงสร้างหน่วยงานก่อน แล้วตามด้วยบุคลากรเรียงตามตำแหน่ง
-const structureChart = '/personnel/structure-chart.webp'
+const structureChart = '/personnel-images/structure-chart.webp'
 const personnelPhoto = (photo: string) => photo.replace(/\.(?:jpe?g|png)$/i, '.webp')
 
 const groups = computed(() =>

@@ -27,7 +27,7 @@ watch(expired, (v) => {
     aria-live="polite"
   >
     <TimerIcon class="size-4 shrink-0" aria-hidden="true" />
-    <span v-if="!expired">{{ label }} <strong class="tabular-nums">{{ display }}</strong></span>
+    <span v-if="!expired">{{ label }} <strong data-allow-mismatch="text" class="tabular-nums">{{ display }}</strong></span>
     <span v-else>หมดเวลา — ห้องถูกปล่อยคืนอัตโนมัติ</span>
   </div>
 </template>

@@ -2,12 +2,9 @@ import { useSessionStore } from '@/stores/session'
 import type { StaffSection } from '@/types'
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  // mock-up นี้เก็บ session ในเบราว์เซอร์ จึงตรวจ navigation หลัง Nuxt hydrate ฝั่ง client เท่านั้น
-  if (import.meta.server) return
-
-  const session = useSessionStore()
-  const router = useRouter()
-
+  // Redirects that do not depend on the browser-only mock session must also run
+  // during SSR. Otherwise Nuxt renders one route on the server and hydrates a
+  // different route in the browser (for example /login -> /?auth=login).
   if (to.meta.notFound === true) return navigateTo('/', { replace: true })
 
   const authRedirect = to.meta.authRedirect
@@ -26,6 +23,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
       },
     }, { replace: true })
   }
+
+  // mock-up นี้เก็บ session ในเบราว์เซอร์ จึงตรวจ navigation ที่เหลือ
+  // หลัง Nuxt hydrate ฝั่ง client เท่านั้น
+  if (import.meta.server) return
+
+  const session = useSessionStore()
+  const router = useRouter()
 
   // หลังเข้าสู่ระบบให้การเลือกห้องมี source of truth เดียว เพื่อคงหอ/ห้องที่เลือกไว้
   if (to.name === 'public-rooms' && session.currentUser?.role === 'applicant') {

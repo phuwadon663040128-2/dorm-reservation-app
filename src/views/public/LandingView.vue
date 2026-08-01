@@ -9,6 +9,13 @@ import {
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { formatDate, roomConfigOptions } from '@/lib/labels'
 import { campaigns } from '@/fixtures/campaigns'
 import { dormGroups } from '@/fixtures/dorm-groups'
@@ -136,43 +143,58 @@ const steps = [
           class="mt-6 flex w-full max-w-4xl flex-col gap-2 rounded-3xl border bg-card p-3 shadow-xl shadow-black/5 transition-[border-color,box-shadow] duration-300 dark:border-primary/20 dark:shadow-[0_0_16px_-11px_var(--primary)] dark:ring-1 dark:ring-primary/5 dark:focus-within:border-primary/30 dark:focus-within:shadow-[0_0_20px_-11px_var(--primary)] dark:focus-within:ring-primary/10 md:flex-row md:items-center md:gap-0 md:rounded-full md:py-2 md:pl-2 md:pr-2"
           @submit.prevent="search"
         >
-          <div class="min-w-0 flex-1 px-4 py  -1.5">
+          <div class="min-w-0 flex-1 px-4 py-1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">หอพัก</span>
-            <select
-              v-model="searchDorm"
-              aria-label="เลือกหอพัก"
-              class="h-7 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="all">หอพักทั้งหมด</option>
-              <option v-for="g in dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</option>
-            </select>
+            <Select v-model="searchDorm">
+              <SelectTrigger
+                data-testid="home-search-dorm"
+                aria-label="เลือกหอพัก"
+                class="h-7 w-full rounded-md border-0 bg-transparent px-0 py-0 font-semibold shadow-none dark:bg-transparent dark:hover:bg-transparent"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">หอพักทั้งหมด</SelectItem>
+                <SelectItem v-for="g in dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div class="hidden h-10 w-px bg-border md:block" aria-hidden="true" />
           <div class="min-w-0 flex-1 px-4 py-1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">ประเภทห้อง</span>
-            <select
-              v-model="searchConfig"
-              aria-label="เลือกประเภทห้อง"
-              class="h-7 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="all">ทุกประเภท</option>
-              <option v-for="option in roomConfigOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
+            <Select v-model="searchConfig">
+              <SelectTrigger
+                data-testid="home-search-config"
+                aria-label="เลือกประเภทห้อง"
+                class="h-7 w-full rounded-md border-0 bg-transparent px-0 py-0 font-semibold shadow-none dark:bg-transparent dark:hover:bg-transparent"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทุกประเภท</SelectItem>
+                <SelectItem v-for="option in roomConfigOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div class="hidden h-10 w-px bg-border md:block" aria-hidden="true" />
           <div class="min-w-0 flex-1 px-4 py-1.5">
             <span class="block text-xs text-muted-foreground" aria-hidden="true">เพศ</span>
-            <select
-              v-model="searchGender"
-              aria-label="เลือกเพศ"
-              class="h-7 w-full cursor-pointer appearance-none border-0 bg-transparent p-0 font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="all">ทั้งหมด</option>
-              <option value="male">ชาย</option>
-              <option value="female">หญิง</option>
-            </select>
+            <Select v-model="searchGender">
+              <SelectTrigger
+                data-testid="home-search-gender"
+                aria-label="เลือกเพศ"
+                class="h-7 w-full rounded-md border-0 bg-transparent px-0 py-0 font-semibold shadow-none dark:bg-transparent dark:hover:bg-transparent"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
+                <SelectItem value="male">ชาย</SelectItem>
+                <SelectItem value="female">หญิง</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <!-- hover = ปุ่มยกตัว + เงาอุ่นด้านล่าง + ลูกศรเลื่อนนำสายตา · active = กดจมกลับ เงาหุบ -->
           <Button

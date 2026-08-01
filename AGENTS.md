@@ -2,7 +2,7 @@
 
 ## Project Context
 
-This is the Vue frontend/mock-up app for the KKU Affiliated Dorm Application & Reservation System.
+This is the Nuxt frontend/mock-up app for the KKU Affiliated Dorm Application & Reservation System.
 
 The current implementation is the visual source of truth. Before making UX/UI or frontend changes, read:
 - `src/style.css`
@@ -20,8 +20,8 @@ For product rules and unresolved policy, use the latest matching exports under `
 If a design brief disagrees with the rendered app, preserve the rendered app unless the user explicitly requests a redesign. If product policy conflicts, the latest pivot/payment notes win.
 
 Stack:
-- Vite + Vue 3 + TypeScript
-- Tailwind CSS v4 via `@tailwindcss/vite`
+- Nuxt 4 (client-side SPA mode) + Vue 3 + TypeScript
+- Tailwind CSS v4 via `@tailwindcss/vite` in `nuxt.config.ts`
 - shadcn-vue v2 components in `src/components/ui`
 - Reka UI primitives
 - lucide icons via `@lucide/vue`
@@ -33,6 +33,7 @@ Do not use React, Next.js, JSX, TSX, or React shadcn/ui imports.
 
 - `npm run dev`
 - `npm run build`
+- `npm run generate`
 - `npx shadcn-vue@latest add <component>`
 
 Use npm in this project. `pnpm` and `yarn` are not assumed to be installed.
@@ -45,7 +46,7 @@ Use npm in this project. `pnpm` and `yarn` are not assumed to be installed.
 - Use `cn` from `@/lib/utils` for class composition.
 - Use lucide icons from `@lucide/vue` in buttons, nav, tables, alerts, and status UI.
 - Keep `src/style.css` as the Tailwind v4 theme source with `@theme inline` semantic tokens.
-- Keep `vite.config.ts` using `tailwindcss()` in the Vite plugin list.
+- Keep `nuxt.config.ts` using `tailwindcss()` in the Nuxt Vite plugin list.
 - Do not restore Tailwind v3 PostCSS config or `@tailwind base/components/utilities`.
 
 Recommended component choices:

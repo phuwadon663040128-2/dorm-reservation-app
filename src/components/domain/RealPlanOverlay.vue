@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import { useCountdown } from '@/composables/useCountdown'
 import { planRoomTypeLabel, planRoomTypeLegendItems, roomPublicStatusLabel } from '@/lib/labels'
 import type { PlanOverlay } from '@/lib/planOverlays'
@@ -11,11 +12,16 @@ const props = defineProps<{
   overlay: PlanOverlay
   rooms: Room[]
   matchedNumbers: Set<string>
+  annotationPlacement?: 'overlay-auto' | 'detached-bottom-right'
 }>()
 
 const emit = defineEmits<{ (e: 'select', room: Room): void }>()
 
 const roomByNumber = computed(() => new Map(props.rooms.map(r => [r.number, r])))
+const planContainer = ref<HTMLElement | null>(null)
+const annotationGroup = ref<HTMLElement | null>(null)
+const { width: planWidth, height: planHeight } = useElementSize(planContainer)
+const { width: annotationWidth, height: annotationHeight } = useElementSize(annotationGroup)
 
 interface Spot {
   room: Room
@@ -60,9 +66,121 @@ function label(room: Room) {
   return `ห้อง ${room.number} — ${planRoomTypeLabel[room.config].full} — ${roomPublicStatusLabel[room.publicStatus]}`
 }
 
+interface NormalizedRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+interface AnnotationCoordinates {
+  x: number
+  y: number
+}
+
 const typeLegendItems = computed(() =>
   planRoomTypeLegendItems(props.rooms.map(room => room.config)),
 )
+
+function overlapArea(a: NormalizedRect, b: NormalizedRect) {
+  const left = Math.max(a.x, b.x)
+  const right = Math.min(a.x + a.width, b.x + b.width)
+  const top = Math.max(a.y, b.y)
+  const bottom = Math.min(a.y + a.height, b.y + b.height)
+  return Math.max(0, right - left) * Math.max(0, bottom - top)
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function findAnnotationPlacement(
+  occupied: NormalizedRect[],
+  width: number,
+  height: number,
+  insetX: number,
+  insetY: number,
+  gapX: number,
+  gapY: number,
+): AnnotationCoordinates {
+  const maxX = 1 - insetX - width
+  const maxY = 1 - insetY - height
+  if (maxX < insetX || maxY < insetY) return { x: insetX, y: insetY }
+
+  const paddedRooms = occupied.map(rect => ({
+    x: rect.x - gapX,
+    y: rect.y - gapY,
+    width: rect.width + gapX * 2,
+    height: rect.height + gapY * 2,
+  }))
+  const xCandidates = new Set<number>([insetX, maxX])
+  const yCandidates = new Set<number>([insetY, maxY])
+  const addX = (value: number) => xCandidates.add(clamp(value, insetX, maxX))
+  const addY = (value: number) => yCandidates.add(clamp(value, insetY, maxY))
+
+  for (const rect of paddedRooms) {
+    addX(rect.x - width)
+    addX(rect.x + rect.width)
+    addY(rect.y - height)
+    addY(rect.y + rect.height)
+  }
+
+  const gridSteps = 32
+  for (let step = 0; step <= gridSteps; step += 1) {
+    addX(insetX + ((maxX - insetX) * step) / gridSteps)
+    addY(insetY + ((maxY - insetY) * step) / gridSteps)
+  }
+
+  let best: { x: number; y: number; overlap: number; position: number } | null = null
+  for (const y of yCandidates) {
+    for (const x of xCandidates) {
+      const candidate = { x, y, width, height }
+      const coveredRoomArea = paddedRooms.reduce((total, rect) => total + overlapArea(candidate, rect), 0)
+      const position = y * 4 + x
+      const hasLessOverlap = !best || coveredRoomArea < best.overlap - 1e-8
+      const hasSameOverlap = best !== null && Math.abs(coveredRoomArea - best.overlap) <= 1e-8
+      if (hasLessOverlap || (best !== null && hasSameOverlap && position < best.position)) {
+        best = { x, y, overlap: coveredRoomArea, position }
+      }
+    }
+  }
+
+  return best ?? { x: insetX, y: insetY }
+}
+
+const annotationReady = computed(
+  () => planWidth.value > 0 && planHeight.value > 0 && annotationWidth.value > 0 && annotationHeight.value > 0,
+)
+
+const annotationDetached = computed(() => props.annotationPlacement === 'detached-bottom-right')
+
+const annotationCoordinates = computed<AnnotationCoordinates>(() => {
+  if (!annotationReady.value) return { x: 0, y: 0 }
+
+  const ox = props.overlay.cropX ?? 0
+  const oy = props.overlay.cropY ?? 0
+  const roomRects: NormalizedRect[] = props.overlay.rooms.map(rect => ({
+    x: (rect.x - ox) / props.overlay.cropW,
+    y: (rect.y - oy) / props.overlay.cropH,
+    width: rect.w / props.overlay.cropW,
+    height: rect.h / props.overlay.cropH,
+  }))
+
+  return findAnnotationPlacement(
+    roomRects,
+    annotationWidth.value / planWidth.value,
+    annotationHeight.value / planHeight.value,
+    8 / planWidth.value,
+    8 / planHeight.value,
+    4 / planWidth.value,
+    4 / planHeight.value,
+  )
+})
+
+const annotationStyle = computed(() => ({
+  left: `${annotationCoordinates.value.x * 100}%`,
+  top: `${annotationCoordinates.value.y * 100}%`,
+}))
 
 // countdown ของห้องที่ถูกจองชั่วคราว (แสดงใน tooltip title ผ่าน label เพียงพอ — จอเล็กไม่มีพื้นที่)
 const heldRoom = computed(() => props.rooms.find(r => r.publicStatus === 'temporarily_held' && r.holdExpiresAt))
@@ -73,7 +191,7 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
   <div class="space-y-2">
     <div class="relative overflow-hidden rounded-2xl border bg-white">
       <!-- แยก canvas ผังออกจากพื้นที่วางคำอธิบาย เพื่อเพิ่มพื้นที่ด้านล่างได้โดยไม่ทำให้ % ของ hotspot เพี้ยน -->
-      <div class="relative">
+      <div ref="planContainer" class="relative">
         <!-- แบบแปลนจริง (ฉบับไม่มีเลขห้อง) — เรนเดอร์ผ่าน <svg><image> ให้เหมือนไฟล์ออกแบบต้นฉบับ
              (ไฟล์แปลนมี viewBox เลื่อนจุดเริ่ม การใช้ <img> ตรง ๆ จะทำให้ภาพเพี้ยนไม่ตรงพิกัดห้อง) -->
         <svg
@@ -109,6 +227,7 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
           </span>
           <span
             v-if="s.room.publicStatus === 'temporarily_held' && s.room.number === heldRoom?.number"
+            data-allow-mismatch="text"
             class="hidden text-[clamp(6px,0.75vw,10px)] font-medium md:block"
           >
             เหลือ {{ heldDisplay }}
@@ -118,7 +237,15 @@ const { display: heldDisplay } = useCountdown(() => heldRoom.value?.holdExpiresA
 
       <!-- คำอธิบายชื่อย่อประเภทห้องสำหรับหน้าจอขนาดเล็ก -->
       <div
-        class="pointer-events-auto absolute right-2 top-2 z-10 flex w-28 select-none flex-col gap-0.5 sm:w-44 sm:gap-2 md:hidden"
+        ref="annotationGroup"
+        data-testid="plan-room-type-legend"
+        :data-placement="annotationDetached ? 'detached-bottom-right' : 'overlay-auto'"
+        class="pointer-events-auto z-10 flex w-28 select-none flex-col gap-0.5 transition-opacity duration-100 sm:w-44 sm:gap-2 md:hidden"
+        :class="[
+          annotationReady ? 'opacity-100' : 'opacity-0',
+          annotationDetached ? 'relative mb-2 ml-auto mr-2 mt-4' : 'absolute',
+        ]"
+        :style="annotationDetached ? undefined : annotationStyle"
       >
         <div
           class="w-full rounded-lg border border-slate-200 bg-white px-1.5 py-0.5 text-slate-950 shadow-sm sm:px-3 sm:py-2 md:hidden"

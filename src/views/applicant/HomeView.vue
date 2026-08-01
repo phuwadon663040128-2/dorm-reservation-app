@@ -278,7 +278,7 @@ watch(
             <TimerIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span v-if="!deadlineExpired">
               เหลือเวลาดำเนินการ
-              <strong class="tabular-nums">{{ deadlineDisplay }}</strong>
+              <strong data-allow-mismatch="text" class="tabular-nums">{{ deadlineDisplay }}</strong>
             </span>
             <span v-else>เลยกำหนดเวลาแล้ว — โปรดตรวจสอบสถานะล่าสุดก่อนดำเนินการ</span>
           </div>

@@ -12,10 +12,12 @@ The script extracts only the required PDFs from the source archives, writes the
 final assets, and removes its temporary extraction directory automatically::
 
     python scripts/clean-plan-backgrounds.py
+    python scripts/clean-plan-backgrounds.py --inter-only C1 D1
 """
 
 from __future__ import annotations
 
+import argparse
 import re
 import shutil
 import subprocess
@@ -38,7 +40,11 @@ EIGHT_OUTPUT = ROOT / "public" / "plans" / "overlay" / "8lang"
 INTER_OUTPUT = ROOT / "public" / "plans" / "overlay" / "inter"
 
 EIGHT_PLANS = ("102", "103", "104", "201", "202", "203", "204")
-INTER_PLANS = tuple(f"{building}{floor}" for building in ("A", "B") for floor in range(1, 8))
+INTER_PLANS = (
+    *tuple(f"{building}{floor}" for building in ("A", "B") for floor in range(1, 8)),
+    "C1",
+    "D1",
+)
 
 ROOM_RE = re.compile(
     r"\{ number: '([^']+)', x: (\d+), y: (\d+), w: (\d+), h: (\d+) \}",
@@ -57,13 +63,18 @@ def seven_zip_executable() -> Path:
     raise FileNotFoundError("7-Zip is required to extract the source PDF archives")
 
 
-def extract_source_plans() -> None:
+def extract_source_plans(
+    eight_plans: tuple[str, ...],
+    inter_plans: tuple[str, ...],
+) -> None:
     extractor = seven_zip_executable()
     jobs = (
-        (EIGHT_ARCHIVE, EIGHT_SOURCE, EIGHT_PLANS),
-        (INTER_ARCHIVE, INTER_SOURCE, INTER_PLANS),
+        (EIGHT_ARCHIVE, EIGHT_SOURCE, eight_plans),
+        (INTER_ARCHIVE, INTER_SOURCE, inter_plans),
     )
     for archive, destination, plans in jobs:
+        if not plans:
+            continue
         if not archive.exists():
             raise FileNotFoundError(f"Missing source archive: {archive}")
         destination.mkdir(parents=True, exist_ok=True)
@@ -200,21 +211,33 @@ def clean_international_plan(plan: str, overlay_source: str) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--inter-only",
+        nargs="+",
+        choices=INTER_PLANS,
+        metavar="PLAN",
+        help="สร้างเฉพาะผังวรอินเตอร์ที่ระบุ เช่น C1 D1",
+    )
+    args = parser.parse_args()
+    eight_plans: tuple[str, ...] = () if args.inter_only else EIGHT_PLANS
+    inter_plans: tuple[str, ...] = tuple(args.inter_only) if args.inter_only else INTER_PLANS
+
     EIGHT_OUTPUT.mkdir(parents=True, exist_ok=True)
     INTER_OUTPUT.mkdir(parents=True, exist_ok=True)
     overlay_source = OVERLAY_DATA.read_text(encoding="utf-8")
 
     remove_temporary_sources()
     try:
-        extract_source_plans()
-        for plan in EIGHT_PLANS:
+        extract_source_plans(eight_plans, inter_plans)
+        for plan in eight_plans:
             clean_eight_building_plan(plan)
-        for plan in INTER_PLANS:
+        for plan in inter_plans:
             clean_international_plan(plan, overlay_source)
     finally:
         remove_temporary_sources()
 
-    print(f"Generated {len(EIGHT_PLANS) + len(INTER_PLANS)} cleaned plan backgrounds")
+    print(f"Generated {len(eight_plans) + len(inter_plans)} cleaned plan backgrounds")
 
 
 if __name__ == "__main__":

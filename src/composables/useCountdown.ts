@@ -1,4 +1,7 @@
-import { computed, onMounted, onScopeDispose, ref, toValue, type MaybeRefOrGetter } from 'vue'
+import { computed, onMounted, toValue, type MaybeRefOrGetter } from 'vue'
+
+let clientTimer: number | undefined
+let clientTimerPending = false
 
 /**
  * Countdown จากเวลา ISO เป้าหมาย — ใช้ทั้ง hold ยืนยันห้อง 15 นาที และ payment hold 72 ชม.
@@ -6,15 +9,21 @@ import { computed, onMounted, onScopeDispose, ref, toValue, type MaybeRefOrGette
  * prototype นี้ใช้เวลาเครื่องแทน server clock
  */
 export function useCountdown(target: MaybeRefOrGetter<string | undefined>) {
-  const now = ref(Date.now())
-  let timer: number | undefined
+  // Nuxt serializes this initial value into the hydration payload, so SSR and
+  // the browser render the exact same countdown text. Every countdown shares
+  // one clock instead of creating one interval per room tile.
+  const now = useState<number>('dorm-countdown-clock', () => Date.now())
+
   onMounted(() => {
-    timer = window.setInterval(() => {
+    if (clientTimer !== undefined || clientTimerPending) return
+    clientTimerPending = true
+    window.requestAnimationFrame(() => {
       now.value = Date.now()
-    }, 1000)
-  })
-  onScopeDispose(() => {
-    if (timer !== undefined) window.clearInterval(timer)
+      clientTimer = window.setInterval(() => {
+        now.value = Date.now()
+      }, 1000)
+      clientTimerPending = false
+    })
   })
 
   const remainingMs = computed(() => {
@@ -42,4 +51,12 @@ export function useCountdown(target: MaybeRefOrGetter<string | undefined>) {
   })
 
   return { remainingMs, expired, display }
+}
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    if (clientTimer !== undefined) window.clearInterval(clientTimer)
+    clientTimer = undefined
+    clientTimerPending = false
+  })
 }

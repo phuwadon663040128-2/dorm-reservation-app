@@ -55,6 +55,8 @@ const { display: holdDisplay, expired: holdExpired } = useCountdown(() => (isHel
   <!-- h-full เฉพาะโหมดปกติ — โหมด compact ห้ามยืดเต็มคอลัมน์ ไม่งั้นผังปีกตั้งฉากจะล้น -->
   <button
     type="button"
+    data-testid="room-tile"
+    :data-room-status="room.publicStatus"
     class="flex flex-col text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     :class="[statusStyle.tile, compact ? 'gap-0.5 rounded-lg border p-1.5' : 'h-full gap-1.5 rounded-xl border-2 p-3']"
     :aria-label="`ห้อง ${room.number} — ${roomPublicStatusLabel[room.publicStatus]}`"
@@ -89,7 +91,7 @@ const { display: holdDisplay, expired: holdExpired } = useCountdown(() => (isHel
       :class="compact ? 'text-[9px]' : 'text-[11px]'"
       aria-live="off"
     >
-      <TimerIcon class="size-3" aria-hidden="true" /> เหลือ {{ holdDisplay }}
+      <TimerIcon class="size-3" aria-hidden="true" /> <span data-allow-mismatch="text">เหลือ {{ holdDisplay }}</span>
     </span>
   </button>
 </template>

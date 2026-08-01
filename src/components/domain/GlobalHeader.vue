@@ -233,17 +233,19 @@ onBeforeUnmount(() => {
       </div>
 
       <nav
-        class="hidden items-center gap-0.5 whitespace-nowrap text-[13px] font-medium min-[1440px]:flex min-[1700px]:text-sm"
+        class="relative z-10 hidden items-center gap-2 whitespace-nowrap text-[13px] font-medium min-[1440px]:flex min-[1700px]:gap-3 min-[1700px]:text-sm"
         aria-label="เมนูเว็บไซต์หอพัก"
       >
         <template v-for="menu in topMenus" :key="menu.label">
           <RouterLink
             v-if="menu.to"
             :to="menu.to"
-            class="top-nav-item rounded-md px-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3"
+            :data-testid="menu.to === '/contact' ? 'top-nav-contact' : undefined"
+            class="top-nav-item rounded-md px-3 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-4"
             :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
             :data-active="isMenuActive(menu) || undefined"
             :aria-current="isMenuActive(menu) ? 'page' : undefined"
+            @click="closeDesktopMenus()"
           >
             <span class="top-nav-label">{{ menu.label }}</span>
           </RouterLink>
@@ -255,7 +257,7 @@ onBeforeUnmount(() => {
             @toggle="handleDropdownToggle"
           >
             <summary
-              class="top-nav-item flex cursor-pointer list-none items-center gap-1 rounded-md px-2 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-3 [&::-webkit-details-marker]:hidden"
+              class="top-nav-item flex cursor-pointer list-none items-center gap-1.5 rounded-md px-3 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-[1700px]:px-4 [&::-webkit-details-marker]:hidden"
               :class="isMenuActive(menu) ? 'font-semibold text-primary' : 'text-foreground/75'"
               :data-active="isMenuActive(menu) || undefined"
               :aria-current="isMenuActive(menu) ? 'location' : undefined"

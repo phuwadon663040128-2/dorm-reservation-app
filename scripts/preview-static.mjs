@@ -69,7 +69,7 @@ const server = createServer((request, response) => {
   const pathname = url.pathname
   const immutable = pathname.startsWith('/_nuxt/')
     || pathname.startsWith('/fonts/')
-    || pathname.startsWith('/personnel/')
+    || pathname.startsWith('/personnel-images/')
     || pathname.startsWith('/plans/')
 
   response.setHeader('Content-Type', contentTypes[extension] || 'application/octet-stream')

@@ -49,7 +49,7 @@ export default defineNuxtConfig({
     '/staff/**': { ssr: false },
     '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/fonts/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
-    '/personnel/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/personnel-images/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/plans/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/favicon.png': { headers: { 'cache-control': 'public, max-age=604800' } },
   },
@@ -58,6 +58,16 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: false,
     plugins: [fileURLToPath(new URL('./src/server/plugins/resource-hints.ts', import.meta.url))],
+    prerender: {
+      // Dynamic routes are not always discoverable while crawling the mock
+      // session flow. Generate their entry HTML so a direct refresh works on
+      // static hosting as well as client-side navigation.
+      routes: [
+        '/campaigns/camp-2569',
+        '/app/application',
+        '/app/application/camp-2569',
+      ],
+    },
     // Server code is never shipped to the browser. Leaving it readable avoids
     // an expensive second minification pass across every mock route.
     minify: false,

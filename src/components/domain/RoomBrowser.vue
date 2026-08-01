@@ -156,6 +156,14 @@ const currentOverlay = computed(() =>
     : null,
 )
 
+// อาคาร 2 เป็นผังตัว L กลับด้านและไม่มีช่องว่างใน canvas มากพอ จึงวาง legend
+// แยกด้านล่าง ส่วนผังอื่นให้ RealPlanOverlay หาพื้นที่ว่างจากพิกัดห้องอัตโนมัติ
+const annotationPlacement = computed<'overlay-auto' | 'detached-bottom-right'>(() =>
+  selectedDormGroupId.value === 'dorm-8-lang' && selectedBuilding.value?.code === '2'
+    ? 'detached-bottom-right'
+    : 'overlay-auto',
+)
+
 // เริ่มด้วยผังห้องซึ่งพร้อมใช้งานทันที แล้วค่อยโหลด Three.js เมื่อผู้ใช้
 // เลือกมุมมอง 3D โดยตรง เพื่อไม่ให้งานสร้าง scene ขวาง first interaction
 // บนทั้ง desktop และ mobile
@@ -428,6 +436,7 @@ const buildingSummary = computed(() => {
           </ToggleGroupItem>
           <ToggleGroupItem
             value="list"
+            data-testid="room-view-list"
             class="h-8 w-full data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 sm:w-auto"
           >
             <LayoutGridIcon aria-hidden="true" /> รายการ
@@ -516,6 +525,7 @@ const buildingSummary = computed(() => {
           :overlay="currentOverlay"
           :rooms="currentFloor.allRooms"
           :matched-numbers="currentFloor.matchedNumbers"
+          :annotation-placement="annotationPlacement"
           @select="emit('select', $event)"
         />
         <FloorPlanGrid

@@ -60,6 +60,8 @@ try {
   const listeners = new Map()
   const consoleItems = []
   const exceptions = []
+  const networkFailures = []
+  const httpErrors = []
 
   socket.onmessage = ({ data }) => {
     const message = JSON.parse(data)
@@ -88,6 +90,22 @@ try {
     }
     if (message.method === 'Runtime.exceptionThrown') {
       exceptions.push(message.params.exceptionDetails.text)
+    }
+    if (message.method === 'Network.loadingFailed' && !message.params.canceled) {
+      networkFailures.push({
+        url: message.params.url ?? message.params.requestId,
+        errorText: message.params.errorText,
+      })
+    }
+    if (
+      message.method === 'Network.responseReceived'
+      && message.params.response.status >= 400
+      && message.params.response.url.startsWith(baseUrl)
+    ) {
+      httpErrors.push({
+        url: message.params.response.url,
+        status: message.params.response.status,
+      })
     }
     for (const listener of listeners.get(message.method) ?? []) {
       listener(message.params)
@@ -133,7 +151,16 @@ try {
     const loaded = once('Page.loadEventFired')
     await call('Page.navigate', { url: `${baseUrl}${path}` })
     await loaded
-    await sleep(2_200)
+    for (let attempt = 0; attempt < 400; attempt += 1) {
+      try {
+        if (await evaluate(`Boolean(document.querySelector('#__nuxt')?.__vue_app__)`)) break
+      } catch {
+        // A development build can briefly replace the execution context while
+        // compiling a route. Retry until the hydrated Nuxt app is interactive.
+      }
+      await sleep(25)
+    }
+    await sleep(200)
   }
 
   async function metrics(label) {
@@ -198,7 +225,17 @@ try {
     const loaded = once('Page.loadEventFired')
     await call('Page.reload')
     await loaded
-    await sleep(750)
+    for (let attempt = 0; attempt < 400; attempt += 1) {
+      try {
+        const rendered = await evaluate(`location.pathname === ${JSON.stringify(expectedPath)}
+          && Boolean(document.querySelector('#__nuxt main'))
+          && Boolean(document.querySelector('#__nuxt')?.__vue_app__)`)
+        if (rendered) break
+      } catch {
+        // Dev route compilation may replace the execution context briefly.
+      }
+      await sleep(25)
+    }
     return evaluate(`({
       expectedPath: ${JSON.stringify(expectedPath)},
       actualPath: location.pathname,
@@ -208,11 +245,43 @@ try {
     })`)
   }
 
+  async function auditRequestedRoute(requestedPath, expectedPaths) {
+    await navigate(requestedPath)
+    const allowedPaths = Array.isArray(expectedPaths) ? expectedPaths : [expectedPaths]
+    for (let attempt = 0; attempt < 400; attempt += 1) {
+      const ready = await evaluate(`(${JSON.stringify(allowedPaths)}).includes(location.pathname)
+        && Boolean(document.querySelector('#__nuxt main'))`)
+      if (ready) break
+      await sleep(25)
+    }
+    return evaluate(`({
+      requestedPath: ${JSON.stringify(requestedPath)},
+      actualPath: location.pathname,
+      query: location.search,
+      expected: (${JSON.stringify(allowedPaths)}).includes(location.pathname),
+      rendered: Boolean(document.querySelector('#__nuxt main')),
+    })`)
+  }
+
+  async function auditRouteGroup(sessionUser, routes) {
+    if (sessionUser) {
+      await evaluate(`sessionStorage.setItem('dorm-demo-session-user', ${JSON.stringify(sessionUser)})`)
+    } else {
+      await evaluate(`sessionStorage.clear()`)
+    }
+    const results = []
+    for (const [requestedPath, expectedPaths = requestedPath] of routes) {
+      results.push(await auditRequestedRoute(requestedPath, expectedPaths))
+    }
+    return results
+  }
+
   await Promise.all([
     call('Page.enable'),
     call('Runtime.enable'),
     call('Log.enable'),
     call('Performance.enable'),
+    call('Network.enable'),
   ])
   await call('Page.addScriptToEvaluateOnNewDocument', {
     source: `(() => {
@@ -240,6 +309,59 @@ try {
   await navigate('/')
   await evaluate(`sessionStorage.clear()`)
   const desktopHome = await metrics('desktop-home')
+  const homeSearchControls = await evaluate(`(async () => {
+    const triggers = [...document.querySelectorAll('[data-testid^="home-search-"]')]
+    const configTrigger = document.querySelector('[data-testid="home-search-config"]')
+    configTrigger.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerId: 1,
+      pointerType: 'mouse',
+    }))
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="select-content"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const content = document.querySelector('[data-slot="select-content"]')
+    document.dispatchEvent(new PointerEvent('pointerup', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerId: 1,
+      pointerType: 'mouse',
+    }))
+    const items = [...(content?.querySelectorAll('[data-slot="select-item"]') ?? [])]
+    const airconItem = items.find(item => item.textContent?.trim() === 'ห้องแอร์')
+    airconItem?.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerId: 2,
+      pointerType: 'mouse',
+    }))
+    airconItem?.dispatchEvent(new PointerEvent('pointerup', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerId: 2,
+      pointerType: 'mouse',
+    }))
+    await new Promise(resolve => setTimeout(resolve, 50))
+    return {
+      shadcnTriggers: triggers.length,
+      nativeSelects: document.querySelectorAll('main select').length,
+      chevrons: triggers.filter(trigger => trigger.querySelector('svg')).length,
+      opened: Boolean(content),
+      optionCount: items.length,
+      selectedConfig: configTrigger.textContent?.trim() ?? '',
+    }
+  })()`)
+  const contactNavigation = await timedClientNavigation(
+    'home-to-contact',
+    `document.querySelector('[data-testid="top-nav-contact"]').click()`,
+    `location.pathname === '/contact'`,
+  )
+  await navigate('/')
   const dropdown = await evaluate(`(async () => {
     const [dormMenu, serviceMenu] = document.querySelectorAll('details[data-header-dropdown]')
     serviceMenu.querySelector('summary').click()
@@ -318,6 +440,24 @@ try {
     }
   })()`)
 
+  const unauthenticatedRoomLogin = await evaluate(`(async () => {
+    document.querySelector('[data-testid="room-view-list"]').click()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-testid="room-tile"][data-room-status="available"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    document.querySelector('[data-testid="room-tile"][data-room-status="available"]').click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('[data-testid="login-form"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const query = new URLSearchParams(location.search)
+    return {
+      loginModalOpened: Boolean(document.querySelector('[data-testid="login-form"]')),
+      roomDetailClosed: !document.querySelector('[data-testid="public-room-detail"]'),
+      auth: query.get('auth'),
+      redirect: query.get('redirect'),
+    }
+  })()`)
+
   await navigate('/')
   await evaluate(`sessionStorage.clear()`)
   const loginModalOpen = await timedClientNavigation(
@@ -336,6 +476,84 @@ try {
     loggedIn: Boolean(document.querySelector('header')),
   })`)
   const applicantRefresh = await reloadAndVerify(loginToApp.to.split('?')[0])
+
+  await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'applicant-a')`)
+  await navigate('/app/application/camp-2569')
+  const applicationValidationLayout = await evaluate(`(async () => {
+    const pinia = document.querySelector('#__nuxt')?.__vue_app__?.config.globalProperties.$pinia
+    const application = pinia?._s?.get('application')
+    const beganRevision = application?.beginRevision() === true
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+    const form = document.querySelector('form.min-w-0')
+    const nextButton = () => [...(form?.querySelectorAll('button') ?? [])].at(-1)
+    nextButton()?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('#first-name'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+
+    const firstName = document.querySelector('#first-name')
+    const beforeGroups = [...document.querySelectorAll('form.min-w-0 [data-slot="field-group"]')]
+      .map(group => group.getBoundingClientRect().height)
+    if (firstName) {
+      firstName.value = ''
+      firstName.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    await Promise.resolve()
+    nextButton()?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('#first-name[aria-invalid="true"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+    const groups = [...document.querySelectorAll('form.min-w-0 [data-slot="field-group"]')]
+    const afterGroups = groups.map(group => group.getBoundingClientRect().height)
+    const controls = [...document.querySelectorAll('form.min-w-0 input, form.min-w-0 textarea, form.min-w-0 [role="combobox"]')]
+    return {
+      beganRevision,
+      path: location.pathname,
+      invalidFieldVisible: Boolean(firstName && firstName.getBoundingClientRect().height > 0),
+      validationRendered: firstName?.getAttribute('aria-invalid') === 'true',
+      visibleGroups: afterGroups.filter(height => height > 0).length,
+      groupCount: groups.length,
+      beforeGroups,
+      afterGroups,
+      controlCount: controls.length,
+      visibleControls: controls.filter(control => control.getBoundingClientRect().height > 0).length,
+    }
+  })()`)
+
+  await evaluate(`sessionStorage.clear()`)
+  await navigate('/contact')
+  const contactValidationLayout = await evaluate(`(async () => {
+    const setValue = (selector, value) => {
+      const element = document.querySelector(selector)
+      if (!element) return false
+      element.value = value
+      element.dispatchEvent(new Event('input', { bubbles: true }))
+      return true
+    }
+    setValue('#ct-name', 'Regression Test')
+    setValue('#ct-email', 'invalid-email')
+    setValue('#ct-subject', 'Validation layout')
+    await Promise.resolve()
+    const contactForm = document.querySelector('#contact-form')
+    if (contactForm) contactForm.noValidate = true
+    document.querySelector('#contact-form button[type="submit"]')?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('#ct-email[aria-invalid="true"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+    const group = document.querySelector('#contact-form [data-slot="field-group"]')
+    const controls = [...document.querySelectorAll('#contact-form input, #contact-form textarea, #contact-form button')]
+    return {
+      validationRendered: document.querySelector('#ct-email')?.getAttribute('aria-invalid') === 'true',
+      groupHeight: group?.getBoundingClientRect().height ?? 0,
+      controlCount: controls.length,
+      visibleControls: controls.filter(control => control.getBoundingClientRect().height > 0).length,
+    }
+  })()`)
 
   await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'staff-admin')`)
   await navigate('/staff')
@@ -356,10 +574,135 @@ try {
     `location.pathname === '/staff/obligations'`,
   )
 
+  const publicRouteAudit = await auditRouteGroup(null, [
+    ['/', '/'],
+    ['/campaigns/camp-2569', '/campaigns/camp-2569'],
+    ['/rooms', '/rooms'],
+    ['/announcements', '/announcements'],
+    ['/personnel', '/personnel'],
+    ['/guide', '/guide'],
+    ['/services', '/services'],
+    ['/services/utilities', '/services/utilities'],
+    ['/services/maintenance', '/services/maintenance'],
+    ['/services/parcel', '/services/parcel'],
+    ['/info/rules', '/info/rules'],
+    ['/info/fees', '/info/fees'],
+    ['/info/floor-plans', '/info/floor-plans'],
+    ['/info/units', '/info/units'],
+    ['/contact', '/contact'],
+    ['/login', '/'],
+    ['/register?email=test@example.test', '/'],
+    ['/verify-email?email=test@example.test', '/'],
+  ])
+  const applicantRouteAudit = await auditRouteGroup('applicant-i', [
+    ['/app', '/app/rooms'],
+    ['/app/campaigns', '/app/campaigns'],
+    ['/app/application/camp-2569', ['/app/rooms', '/app/payments', '/app/roommate', '/app/application/camp-2569']],
+    ['/app/rooms', '/app/rooms'],
+    ['/app/roommate', '/app/roommate'],
+    ['/app/reservation', '/app/reservation'],
+    ['/app/payments', '/app/payments'],
+    ['/app/contracts', '/app/contracts'],
+    ['/app/next-steps', '/app/next-steps'],
+    ['/app/renewal', '/app/renewal'],
+    ['/app/account', '/app/rooms'],
+  ])
+  const staffRouteAudit = await auditRouteGroup('staff-admin', [
+    ['/staff', '/staff'],
+    ['/staff/campaigns', '/staff/campaigns'],
+    ['/staff/rooms', '/staff/rooms'],
+    ['/staff/applicants', '/staff/applicants'],
+    ['/staff/groups', '/staff/groups'],
+    ['/staff/holds', '/staff/holds'],
+    ['/staff/reservations/manual', '/staff/reservations/manual'],
+    ['/staff/obligations', '/staff/obligations'],
+    ['/staff/scb/export', '/staff/scb/export'],
+    ['/staff/scb/pdf-import', '/staff/scb/pdf-import'],
+    ['/staff/scb/results', '/staff/scb/results'],
+    ['/staff/contracts', '/staff/contracts'],
+    ['/staff/key-handover', '/staff/key-handover'],
+    ['/staff/handoff', '/staff/handoff'],
+    ['/staff/reports', '/staff/reports'],
+    ['/staff/audit', '/staff/audit'],
+    ['/staff/settings', '/staff/settings'],
+    ['/staff/access', '/staff/access'],
+  ])
+  const migrationRoutes = [...publicRouteAudit, ...applicantRouteAudit, ...staffRouteAudit]
+
+  await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'applicant-i')`)
+  const applicantBlockedFromStaff = await auditRequestedRoute('/staff', '/app/rooms')
+  await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'staff-admin')`)
+  const staffBlockedFromApplicant = await auditRequestedRoute('/app', '/staff')
+  await evaluate(`sessionStorage.clear()`)
+  const consoleCountBeforeExpected404 = consoleItems.length
+  const networkFailureCountBeforeExpected404 = networkFailures.length
+  const httpErrorCountBeforeExpected404 = httpErrors.length
+  const unknownRouteRedirect = await auditRequestedRoute('/route-that-does-not-exist', '/')
+  // A static host correctly responds 404 before the generated Nuxt fallback
+  // redirects this intentionally unknown route. Do not mix that expected probe
+  // into the diagnostics for the real application routes above.
+  consoleItems.splice(consoleCountBeforeExpected404)
+  networkFailures.splice(networkFailureCountBeforeExpected404)
+  httpErrors.splice(httpErrorCountBeforeExpected404)
+  const routeGuardParity = {
+    applicantBlockedFromStaff,
+    staffBlockedFromApplicant,
+    unknownRouteRedirect,
+  }
+
   await setViewport(390, 844, true)
   await evaluate(`sessionStorage.clear()`)
+  await navigate('/rooms?dorm=dorm-8-lang')
+  const mobileLShapeLegend = await evaluate(`(async () => {
+    document.querySelector('[data-testid="room-view-plan"]')?.click()
+    for (let attempt = 0; attempt < 400; attempt += 1) {
+      const legend = document.querySelector('[data-testid="plan-room-type-legend"]')
+      if (legend && getComputedStyle(legend).opacity === '1') break
+      await new Promise(resolve => setTimeout(resolve, 25))
+    }
+    const legend = document.querySelector('[data-testid="plan-room-type-legend"]')
+    const card = legend?.parentElement
+    if (!legend || !card) return { rendered: false }
+    const legendRect = legend.getBoundingClientRect()
+    const cardRect = card.getBoundingClientRect()
+    const roomRects = [...card.querySelectorAll('button[title^="ห้อง "]')]
+      .map(room => room.getBoundingClientRect())
+    const overlappingRooms = roomRects.filter(rect => !(
+      legendRect.right <= rect.left
+      || legendRect.left >= rect.right
+      || legendRect.bottom <= rect.top
+      || legendRect.top >= rect.bottom
+    )).length
+    return {
+      rendered: true,
+      placement: legend.dataset.placement,
+      leftHalf: legendRect.left + legendRect.width / 2 < cardRect.left + cardRect.width / 2,
+      overlappingRooms,
+      leftPx: +(legendRect.left - cardRect.left).toFixed(1),
+      topPx: +(legendRect.top - cardRect.top).toFixed(1),
+    }
+  })()`)
+
   await navigate('/')
   const mobileHome = await metrics('mobile-home')
+  const mobileNavigation = await evaluate(`(async () => {
+    document.querySelector('button[aria-label="เปิดเมนูเว็บไซต์หอพัก"]')?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('nav[aria-label="เมนูเว็บไซต์หอพักบนมือถือ"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const mobileNav = document.querySelector('nav[aria-label="เมนูเว็บไซต์หอพักบนมือถือ"]')
+    const contact = [...(mobileNav?.querySelectorAll('button') ?? [])]
+      .find(button => button.textContent?.trim() === 'ติดต่อ')
+    contact?.click()
+    for (let attempt = 0; attempt < 200 && location.pathname !== '/contact'; attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    return {
+      drawerOpened: Boolean(mobileNav),
+      contactFound: Boolean(contact),
+      path: location.pathname,
+    }
+  })()`)
   const hydrationProblems = consoleItems.filter(item =>
     /hydration|mismatch|hydrate/i.test(item.text),
   )
@@ -371,11 +714,17 @@ try {
     desktopHome,
     desktopServices,
     mobileHome,
+    mobileLShapeLegend,
+    mobileNavigation,
     desktopRooms,
+    homeSearchControls,
+    contactNavigation,
     dropdown,
     serviceText,
     roomViews,
+    unauthenticatedRoomLogin,
     clientNavigation: [
+      contactNavigation,
       homeToRooms,
       roomsToDorm,
       loginModalOpen,
@@ -386,10 +735,16 @@ try {
     ],
     applicantSession,
     applicantRefresh,
+    applicationValidationLayout,
+    contactValidationLayout,
     staffRefresh,
+    migrationRoutes,
+    routeGuardParity,
     hydrationProblems,
     severeConsole,
     exceptions,
+    networkFailures,
+    httpErrors,
   }
   console.log(JSON.stringify(result, null, 2))
   if (outputPath) {
@@ -400,6 +755,13 @@ try {
   socket.close()
 
   const behaviorPassed = dropdown.opened
+    && homeSearchControls.shadcnTriggers === 3
+    && homeSearchControls.nativeSelects === 0
+    && homeSearchControls.chevrons === 3
+    && homeSearchControls.opened
+    && homeSearchControls.optionCount === 4
+    && homeSearchControls.selectedConfig === 'ห้องแอร์'
+    && contactNavigation.to === '/contact'
     && dropdown.closedWithEscape
     && dropdown.closedWhenAnotherOpens
     && dropdown.closedOutside
@@ -413,15 +775,41 @@ try {
     && !serviceText.hasHouseRegistration
     && roomViews.defaultPlan
     && roomViews.threeDimensionalLoadedOnDemand
+    && mobileLShapeLegend.rendered
+    && mobileLShapeLegend.placement === 'overlay-auto'
+    && mobileLShapeLegend.leftHalf
+    && mobileLShapeLegend.overlappingRooms === 0
+    && mobileNavigation.drawerOpened
+    && mobileNavigation.contactFound
+    && mobileNavigation.path === '/contact'
+    && unauthenticatedRoomLogin.loginModalOpened
+    && unauthenticatedRoomLogin.roomDetailClosed
+    && unauthenticatedRoomLogin.auth === 'login'
+    && unauthenticatedRoomLogin.redirect?.startsWith('/app/rooms')
     && applicantSession.user === 'applicant-i'
     && applicantSession.path.startsWith('/app')
     && applicantRefresh.rendered
     && applicantRefresh.sessionUser === 'applicant-i'
+    && applicationValidationLayout.beganRevision
+    && applicationValidationLayout.path === '/app/application/camp-2569'
+    && applicationValidationLayout.validationRendered
+    && applicationValidationLayout.invalidFieldVisible
+    && applicationValidationLayout.groupCount === 3
+    && applicationValidationLayout.visibleGroups === applicationValidationLayout.groupCount
+    && applicationValidationLayout.controlCount >= 19
+    && applicationValidationLayout.visibleControls === applicationValidationLayout.controlCount
+    && contactValidationLayout.validationRendered
+    && contactValidationLayout.groupHeight > 0
+    && contactValidationLayout.controlCount === contactValidationLayout.visibleControls
     && staffRefresh.rendered
     && staffRefresh.sessionUser === 'staff-admin'
+    && migrationRoutes.every(route => route.expected && route.rendered)
+    && Object.values(routeGuardParity).every(route => route.expected && route.rendered)
     && severeConsole.length === 0
     && hydrationProblems.length === 0
     && exceptions.length === 0
+    && networkFailures.length === 0
+    && httpErrors.length === 0
   if (!behaviorPassed) process.exitCode = 1
 } finally {
   stopBrowser()
