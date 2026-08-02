@@ -561,7 +561,23 @@ try {
     for (let attempt = 0; attempt < 200 && !document.querySelector('[data-testid="public-room-detail"]'); attempt += 1) {
       await new Promise(resolve => setTimeout(resolve, 20))
     }
-    const roomDetailOpenedBeforeLogin = Boolean(document.querySelector('[data-testid="public-room-detail"]'))
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      const gallery = document.querySelector('[data-testid="room-reservation-gallery"]')
+      const details = document.querySelector('[data-testid="room-reservation-details"]')
+      if (
+        gallery
+        && details?.getBoundingClientRect().width > 0
+        && getComputedStyle(gallery).display === 'grid'
+      ) break
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const roomDetail = document.querySelector('[data-testid="public-room-detail"]')
+    const gallery = document.querySelector('[data-testid="room-reservation-gallery"]')
+    const details = document.querySelector('[data-testid="room-reservation-details"]')
+    const roomDetailOpenedBeforeLogin = Boolean(roomDetail)
+    const sharedDialogLayout = roomDetail?.getAttribute('data-room-dialog-layout') === 'shared-reservation'
+    const desktopGalleryVisible = Boolean(gallery && getComputedStyle(gallery).display === 'grid')
+    const detailsVisible = Boolean(details && details.getBoundingClientRect().width > 0)
     const loginStayedClosedWhileViewing = !document.querySelector('[data-testid="login-form"]')
       && !new URLSearchParams(location.search).has('auth')
     document.querySelector('[data-testid="public-room-reserve"]')?.click()
@@ -571,6 +587,9 @@ try {
     const query = new URLSearchParams(location.search)
     return {
       roomDetailOpenedBeforeLogin,
+      sharedDialogLayout,
+      desktopGalleryVisible,
+      detailsVisible,
       loginStayedClosedWhileViewing,
       loginModalOpened: Boolean(document.querySelector('[data-testid="login-form"]')),
       roomDetailClosed: !document.querySelector('[data-testid="public-room-detail"]'),
@@ -645,6 +664,7 @@ try {
     const reservation = pinia?._s?.get('reservation')
     const reservationBefore = reservation?.myReservation?.id ?? null
     const reservationButton = document.querySelector('[data-testid="reservation-submit"]')
+    const applicantRoomDetail = document.querySelector('[data-testid="applicant-room-detail"]')
     const reservationTrigger = document.querySelector('[data-testid="reservation-development-trigger"]')
     reservationTrigger?.focus()
     for (let attempt = 0; attempt < 100; attempt += 1) {
@@ -670,6 +690,7 @@ try {
       navigationTooltipText,
       disabledNavigationPreservedPath: location.pathname === pathBeforeDisabledClick,
       modalOpened: Boolean(reservationButton),
+      sharedDialogLayout: applicantRoomDetail?.getAttribute('data-room-dialog-layout') === 'shared-reservation',
       reservationButtonDisabled: reservationButton?.disabled === true,
       reservationTriggerFocusable: reservationTrigger?.getAttribute('tabindex') === '0',
       reservationTooltipText,
@@ -1077,6 +1098,9 @@ try {
     && mobileNavigation.contactFound
     && mobileNavigation.path === '/contact'
     && unauthenticatedRoomLogin.roomDetailOpenedBeforeLogin
+    && unauthenticatedRoomLogin.sharedDialogLayout
+    && unauthenticatedRoomLogin.desktopGalleryVisible
+    && unauthenticatedRoomLogin.detailsVisible
     && unauthenticatedRoomLogin.loginStayedClosedWhileViewing
     && unauthenticatedRoomLogin.loginModalOpened
     && unauthenticatedRoomLogin.roomDetailClosed
@@ -1098,6 +1122,7 @@ try {
     && applicantDevelopmentLocks.navigationTooltipText.includes('กำลังพัฒนา')
     && applicantDevelopmentLocks.disabledNavigationPreservedPath
     && applicantDevelopmentLocks.modalOpened
+    && applicantDevelopmentLocks.sharedDialogLayout
     && applicantDevelopmentLocks.reservationButtonDisabled
     && applicantDevelopmentLocks.reservationTriggerFocusable
     && applicantDevelopmentLocks.reservationTooltipText.includes('กำลังพัฒนา')
