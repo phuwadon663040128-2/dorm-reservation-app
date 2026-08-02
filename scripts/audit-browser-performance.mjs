@@ -310,7 +310,7 @@ try {
   await evaluate(`sessionStorage.clear()`)
   const desktopHome = await metrics('desktop-home')
   const homeSearchControls = await evaluate(`(async () => {
-    const triggers = [...document.querySelectorAll('[data-testid^="home-search-"]')]
+    const triggers = [...document.querySelectorAll('[data-testid^="home-search-"][data-slot="select-trigger"]')]
     const configTrigger = document.querySelector('[data-testid="home-search-config"]')
     configTrigger.dispatchEvent(new PointerEvent('pointerdown', {
       bubbles: true,
@@ -377,18 +377,23 @@ try {
     await new Promise(resolve => setTimeout(resolve, 20))
     const closedOutside = !serviceMenu.open
     serviceMenu.querySelector('summary').click()
-    const utilities = serviceMenu.querySelector('button')
-    utilities.click()
-    for (let attempt = 0; attempt < 100 && location.pathname !== '/services/utilities'; attempt += 1) {
+    const serviceItems = [...serviceMenu.querySelectorAll('button')]
+    const utilities = serviceItems[0]
+    utilities.focus()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="tooltip-content"]'); attempt += 1) {
       await new Promise(resolve => setTimeout(resolve, 20))
     }
+    const tooltipText = document.querySelector('[data-slot="tooltip-content"]')?.textContent?.trim() ?? ''
+    utilities.click()
+    await new Promise(resolve => setTimeout(resolve, 50))
     return {
       opened,
       closedWithEscape,
       closedWhenAnotherOpens,
       closedOutside,
-      closedAfterNavigate: ![...document.querySelectorAll('details[data-header-dropdown]')]
-        .some(element => element.open),
+      disabledItems: serviceItems.filter(item => item.getAttribute('aria-disabled') === 'true').length,
+      tooltipText,
+      stayedOpenAfterDisabledClick: serviceMenu.open,
       path: location.pathname,
     }
   })()`)
@@ -410,9 +415,10 @@ try {
   await navigate('/')
   const homeToRooms = await timedClientNavigation(
     'home-to-rooms',
-    `document.querySelector('main a[href="/rooms"]').click()`,
+    `document.querySelector('[data-testid="home-search-submit"]').click()`,
     `location.pathname === '/rooms'
-      && Boolean(document.querySelector('[data-testid="room-view-plan"]'))`,
+      && new URLSearchParams(location.search).get('view') === '3d'
+      && document.querySelector('[data-testid="room-view-3d"]')?.dataset.state === 'on'`,
   )
   const roomsToDorm = await timedClientNavigation(
     'rooms-to-dorm-detail',
@@ -422,21 +428,127 @@ try {
       dormMenu.querySelector('button').click()
     })()`,
     `location.pathname === '/rooms'
-      && new URLSearchParams(location.search).get('dorm') === 'dorm-8-lang'`,
+      && new URLSearchParams(location.search).get('dorm') === 'dorm-8-lang'
+      && new URLSearchParams(location.search).get('view') === '3d'
+      && document.querySelector('[data-testid="room-view-3d"]')?.dataset.state === 'on'`,
   )
 
   const desktopRooms = await metrics('desktop-rooms')
   const roomViews = await evaluate(`(async () => {
     const planButton = document.querySelector('[data-testid="room-view-plan"]')
     const threeButton = document.querySelector('[data-testid="room-view-3d"]')
-    const defaultPlan = planButton?.dataset.state === 'on' && !document.querySelector('canvas')
+    const defaultThreeDimensional = threeButton?.dataset.state === 'on'
+    for (let attempt = 0; attempt < 500 && !document.querySelector('canvas'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const threeDimensionalRendered = Boolean(document.querySelector('canvas'))
+    planButton.click()
+    for (let attempt = 0; attempt < 100 && planButton?.dataset.state !== 'on'; attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const switchedToPlan = planButton?.dataset.state === 'on'
     threeButton.click()
+    let skeletonWhenOpening = false
+    for (let attempt = 0; attempt < 80; attempt += 1) {
+      if (document.querySelector('[data-testid="campus-3d-loading"]')) {
+        skeletonWhenOpening = true
+        break
+      }
+      await new Promise(resolve => setTimeout(resolve, 5))
+    }
     for (let attempt = 0; attempt < 500 && !document.querySelector('canvas'); attempt += 1) {
       await new Promise(resolve => setTimeout(resolve, 20))
     }
     return {
-      defaultPlan,
-      threeDimensionalLoadedOnDemand: Boolean(document.querySelector('canvas')),
+      defaultThreeDimensional,
+      threeDimensionalRendered,
+      switchedToPlan,
+      skeletonWhenOpening,
+      reopenedThreeDimensional: threeButton?.dataset.state === 'on' && Boolean(document.querySelector('canvas')),
+    }
+  })()`)
+
+  const buildingMenu = await evaluate(`(async () => {
+    let pointerId = 30
+    const pointer = (type, target, id) => target.dispatchEvent(new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      pointerId: id,
+      pointerType: 'mouse',
+    }))
+    const openSelect = async (trigger) => {
+      const id = pointerId++
+      pointer('pointerdown', trigger, id)
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const content = [...document.querySelectorAll('[data-slot="select-content"]')]
+          .find(item => item.dataset.state === 'open')
+        if (content) {
+          pointer('pointerup', document, id)
+          return content
+        }
+        await new Promise(resolve => setTimeout(resolve, 20))
+      }
+      return null
+    }
+    const chooseItem = async (item) => {
+      if (!item) return false
+      const id = pointerId++
+      pointer('pointerdown', item, id)
+      pointer('pointerup', item, id)
+      await new Promise(resolve => setTimeout(resolve, 80))
+      return true
+    }
+    const closeSelect = async () => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+        await new Promise(resolve => setTimeout(resolve, 40))
+        if (![...document.querySelectorAll('[data-slot="select-content"]')]
+          .some(item => item.dataset.state === 'open')) return true
+      }
+      return false
+    }
+    const optionSnapshot = content => [...(content?.querySelectorAll('[data-testid^="building-option-"]') ?? [])]
+      .map(item => ({
+        code: item.dataset.testid.replace('building-option-', ''),
+        label: item.textContent?.trim() ?? '',
+        disabled: item.hasAttribute('data-disabled'),
+        opacity: getComputedStyle(item).opacity,
+      }))
+
+    const buildingTrigger = document.querySelector('[data-testid="building-select"]')
+    const dormTrigger = document.querySelector('[data-testid="dorm-group-select"]')
+    const r8Content = await openSelect(buildingTrigger)
+    const r8Options = optionSnapshot(r8Content)
+    const r8SelectionBefore = buildingTrigger.textContent?.trim()
+    const developing3 = r8Content?.querySelector('[data-testid="building-development-3"]')
+    developing3?.focus()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="tooltip-content"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const tooltipText = document.querySelector('[data-slot="tooltip-content"]')?.textContent?.trim() ?? ''
+    developing3?.click()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    const r8SelectionAfter = buildingTrigger.textContent?.trim()
+    await closeSelect()
+
+    const dormContent = await openSelect(dormTrigger)
+    const interDorm = dormContent?.querySelector('[data-testid="dorm-group-option-dorm-wor-inter"]')
+    await chooseItem(interDorm)
+    const interContent = await openSelect(buildingTrigger)
+    const interOptions = optionSnapshot(interContent)
+    const interSelectionBefore = buildingTrigger.textContent?.trim()
+    interContent?.querySelector('[data-testid="building-development-C"]')?.click()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    const interSelectionAfter = buildingTrigger.textContent?.trim()
+    await closeSelect()
+
+    return {
+      r8Options,
+      r8SelectionPreserved: r8SelectionBefore === r8SelectionAfter,
+      tooltipText,
+      interOptions,
+      interSelectionPreserved: interSelectionBefore === interSelectionAfter,
     }
   })()`)
 
@@ -465,6 +577,21 @@ try {
     `document.querySelector('[data-testid="login-open"]').click()`,
     `Boolean(document.querySelector('[data-testid="login-form"]'))`,
   )
+  const unavailableLoginAction = await evaluate(`(async () => {
+    const button = [...document.querySelectorAll('button')]
+      .find(item => item.textContent?.includes('KKU SSO'))
+    const trigger = button?.closest('[data-slot="tooltip-trigger"]')
+    trigger?.focus()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="tooltip-content"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    return {
+      buttonDisabled: button?.disabled === true,
+      triggerFocusable: trigger?.getAttribute('tabindex') === '0',
+      tooltipText: document.querySelector('[data-slot="tooltip-content"]')?.textContent?.trim() ?? '',
+      stayedOnLogin: Boolean(document.querySelector('[data-testid="login-form"]')),
+    }
+  })()`)
   const loginToApp = await timedClientNavigation(
     'login-to-app',
     `document.querySelector('[data-testid="login-submit"]').click()`,
@@ -477,49 +604,67 @@ try {
   })`)
   const applicantRefresh = await reloadAndVerify(loginToApp.to.split('?')[0])
 
-  await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'applicant-a')`)
-  await navigate('/app/application/camp-2569')
-  const applicationValidationLayout = await evaluate(`(async () => {
+  const applicantDevelopmentLocks = await evaluate(`(async () => {
+    const desktopNav = document.querySelector('nav[aria-label="เมนูผู้สมัคร"]')
+    const mobileNav = document.querySelector('nav[aria-label="เมนูผู้สมัครบนมือถือ"]')
+    const desktopTriggers = [...(desktopNav?.querySelectorAll('[data-testid^="applicant-desktop-development-"]') ?? [])]
+    const mobileTriggers = [...(mobileNav?.querySelectorAll('[data-testid^="applicant-mobile-development-"]') ?? [])]
+    const labels = triggers => triggers.map(trigger => trigger.getAttribute('aria-label')?.split(' —')[0] ?? '')
+    const disabled = triggers => triggers.every(trigger => trigger.querySelector('button')?.disabled === true)
+
+    const pathBeforeDisabledClick = location.pathname
+    desktopTriggers[0]?.focus()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="tooltip-content"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const navigationTooltipText = [...document.querySelectorAll('[data-slot="tooltip-content"]')]
+      .map(item => item.textContent?.trim() ?? '')
+      .join(' ')
+    desktopTriggers[0]?.click()
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    document.querySelector('[data-testid="room-view-list"]')?.click()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-testid="room-tile"][data-room-status="available"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    document.querySelector('[data-testid="room-tile"][data-room-status="available"]')?.click()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-testid="reservation-submit"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+
     const pinia = document.querySelector('#__nuxt')?.__vue_app__?.config.globalProperties.$pinia
-    const application = pinia?._s?.get('application')
-    const beganRevision = application?.beginRevision() === true
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-
-    const form = document.querySelector('form.min-w-0')
-    const nextButton = () => [...(form?.querySelectorAll('button') ?? [])].at(-1)
-    nextButton()?.click()
-    for (let attempt = 0; attempt < 200 && !document.querySelector('#first-name'); attempt += 1) {
+    const reservation = pinia?._s?.get('reservation')
+    const reservationBefore = reservation?.myReservation?.id ?? null
+    const reservationButton = document.querySelector('[data-testid="reservation-submit"]')
+    const reservationTrigger = document.querySelector('[data-testid="reservation-development-trigger"]')
+    reservationTrigger?.focus()
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      const text = [...document.querySelectorAll('[data-slot="tooltip-content"]')]
+        .map(item => item.textContent?.trim() ?? '')
+        .join(' ')
+      if (text.includes('กำลังพัฒนา')) break
       await new Promise(resolve => setTimeout(resolve, 20))
     }
+    const reservationTooltipText = [...document.querySelectorAll('[data-slot="tooltip-content"]')]
+      .map(item => item.textContent?.trim() ?? '')
+      .join(' ')
+    reservationButton?.click()
+    await new Promise(resolve => setTimeout(resolve, 50))
 
-    const firstName = document.querySelector('#first-name')
-    const beforeGroups = [...document.querySelectorAll('form.min-w-0 [data-slot="field-group"]')]
-      .map(group => group.getBoundingClientRect().height)
-    if (firstName) {
-      firstName.value = ''
-      firstName.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-    await Promise.resolve()
-    nextButton()?.click()
-    for (let attempt = 0; attempt < 200 && !document.querySelector('#first-name[aria-invalid="true"]'); attempt += 1) {
-      await new Promise(resolve => setTimeout(resolve, 20))
-    }
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-
-    const groups = [...document.querySelectorAll('form.min-w-0 [data-slot="field-group"]')]
-    const afterGroups = groups.map(group => group.getBoundingClientRect().height)
-    const controls = [...document.querySelectorAll('form.min-w-0 input, form.min-w-0 textarea, form.min-w-0 [role="combobox"]')]
     return {
-      beganRevision,
-      path: location.pathname,
-      invalidFieldVisible: Boolean(firstName && firstName.getBoundingClientRect().height > 0),
-      validationRendered: firstName?.getAttribute('aria-invalid') === 'true',
-      visibleGroups: afterGroups.filter(height => height > 0).length,
-      groupCount: groups.length,
-      beforeGroups,
-      afterGroups,
-      controlCount: controls.length,
-      visibleControls: controls.filter(control => control.getBoundingClientRect().height > 0).length,
+      desktopLabels: labels(desktopTriggers),
+      desktopDisabled: disabled(desktopTriggers),
+      mobileLabels: labels(mobileTriggers),
+      mobileDisabled: disabled(mobileTriggers),
+      campaignMenuRemoved: !desktopNav?.textContent?.includes('รอบรับสมัคร')
+        && !mobileNav?.textContent?.includes('รอบรับสมัคร'),
+      navigationTooltipText,
+      disabledNavigationPreservedPath: location.pathname === pathBeforeDisabledClick,
+      modalOpened: Boolean(reservationButton),
+      reservationButtonDisabled: reservationButton?.disabled === true,
+      reservationTriggerFocusable: reservationTrigger?.getAttribute('tabindex') === '0',
+      reservationTooltipText,
+      reservationUnchanged: (reservation?.myReservation?.id ?? null) === reservationBefore,
     }
   })()`)
 
@@ -596,15 +741,15 @@ try {
   ])
   const applicantRouteAudit = await auditRouteGroup('applicant-i', [
     ['/app', '/app/rooms'],
-    ['/app/campaigns', '/app/campaigns'],
-    ['/app/application/camp-2569', ['/app/rooms', '/app/payments', '/app/roommate', '/app/application/camp-2569']],
+    ['/app/campaigns', '/app/rooms'],
+    ['/app/application/camp-2569', '/app/rooms'],
     ['/app/rooms', '/app/rooms'],
-    ['/app/roommate', '/app/roommate'],
-    ['/app/reservation', '/app/reservation'],
-    ['/app/payments', '/app/payments'],
-    ['/app/contracts', '/app/contracts'],
-    ['/app/next-steps', '/app/next-steps'],
-    ['/app/renewal', '/app/renewal'],
+    ['/app/roommate', '/app/rooms'],
+    ['/app/reservation', '/app/rooms'],
+    ['/app/payments', '/app/rooms'],
+    ['/app/contracts', '/app/rooms'],
+    ['/app/next-steps', '/app/rooms'],
+    ['/app/renewal', '/app/rooms'],
     ['/app/account', '/app/rooms'],
   ])
   const staffRouteAudit = await auditRouteGroup('staff-admin', [
@@ -651,6 +796,33 @@ try {
   }
 
   await setViewport(390, 844, true)
+  await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'applicant-i')`)
+  await navigate('/app/rooms')
+  const mobileApplicantNavigation = await evaluate(`(async () => {
+    const nav = document.querySelector('nav[aria-label="เมนูผู้สมัครบนมือถือ"]')
+    const triggers = [...(nav?.querySelectorAll('[data-testid^="applicant-mobile-development-"]') ?? [])]
+    const pathBeforeClick = location.pathname
+    triggers[0]?.focus()
+    for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="tooltip-content"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const tooltipText = [...document.querySelectorAll('[data-slot="tooltip-content"]')]
+      .map(item => item.textContent?.trim() ?? '')
+      .join(' ')
+    triggers[0]?.click()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    const navRect = nav?.getBoundingClientRect()
+    const triggerRects = triggers.map(trigger => trigger.getBoundingClientRect())
+    return {
+      rendered: Boolean(nav && getComputedStyle(nav).display !== 'none' && navRect?.height),
+      labels: triggers.map(trigger => trigger.getAttribute('aria-label')?.split(' —')[0] ?? ''),
+      disabled: triggers.every(trigger => trigger.querySelector('button')?.disabled === true),
+      allVisible: triggerRects.every(rect => rect.width > 0 && rect.height > 0),
+      fitsViewport: triggerRects.every(rect => rect.left >= 0 && rect.right <= innerWidth),
+      tooltipText,
+      pathPreserved: location.pathname === pathBeforeClick,
+    }
+  })()`)
   await evaluate(`sessionStorage.clear()`)
   await navigate('/rooms?dorm=dorm-8-lang')
   const mobileLShapeLegend = await evaluate(`(async () => {
@@ -714,6 +886,7 @@ try {
     desktopHome,
     desktopServices,
     mobileHome,
+    mobileApplicantNavigation,
     mobileLShapeLegend,
     mobileNavigation,
     desktopRooms,
@@ -722,7 +895,9 @@ try {
     dropdown,
     serviceText,
     roomViews,
+    buildingMenu,
     unauthenticatedRoomLogin,
+    unavailableLoginAction,
     clientNavigation: [
       contactNavigation,
       homeToRooms,
@@ -735,7 +910,7 @@ try {
     ],
     applicantSession,
     applicantRefresh,
-    applicationValidationLayout,
+    applicantDevelopmentLocks,
     contactValidationLayout,
     staffRefresh,
     migrationRoutes,
@@ -765,16 +940,35 @@ try {
     && dropdown.closedWithEscape
     && dropdown.closedWhenAnotherOpens
     && dropdown.closedOutside
-    && dropdown.closedAfterNavigate
-    && dropdown.path === '/services/utilities'
+    && dropdown.disabledItems === 3
+    && dropdown.tooltipText.includes('กำลังพัฒนา')
+    && dropdown.stayedOpenAfterDisabledClick
+    && dropdown.path === '/'
     && serviceText.hasUtilities
     && serviceText.hasMaintenance
     && serviceText.hasParcel
     && !serviceText.hasSpareKey
     && !serviceText.hasResidential
     && !serviceText.hasHouseRegistration
-    && roomViews.defaultPlan
-    && roomViews.threeDimensionalLoadedOnDemand
+    && roomViews.defaultThreeDimensional
+    && roomViews.threeDimensionalRendered
+    && roomViews.switchedToPlan
+    && roomViews.skeletonWhenOpening
+    && roomViews.reopenedThreeDimensional
+    && buildingMenu.r8Options.length === 8
+    && buildingMenu.r8Options.filter(item => item.disabled).length === 6
+    && buildingMenu.r8Options.filter(item => item.disabled).every(item => item.opacity === '0.5')
+    && buildingMenu.r8Options.find(item => item.code === '4')?.label.includes('(หญิง)')
+    && buildingMenu.r8Options.find(item => item.code === '5')?.label.includes('(ชาย)')
+    && buildingMenu.r8Options.find(item => item.code === '6')?.label.includes('(ชาย)')
+    && buildingMenu.r8Options.find(item => item.code === '7')?.label.includes('(หญิง)')
+    && buildingMenu.r8Options.find(item => item.code === '8')?.label.includes('(หญิง)')
+    && buildingMenu.r8SelectionPreserved
+    && Boolean(buildingMenu.tooltipText)
+    && buildingMenu.interOptions.length === 4
+    && buildingMenu.interOptions.filter(item => item.disabled).length === 2
+    && buildingMenu.interOptions.filter(item => item.disabled).every(item => item.opacity === '0.5')
+    && buildingMenu.interSelectionPreserved
     && mobileLShapeLegend.rendered
     && mobileLShapeLegend.placement === 'overlay-auto'
     && mobileLShapeLegend.leftHalf
@@ -786,18 +980,33 @@ try {
     && unauthenticatedRoomLogin.roomDetailClosed
     && unauthenticatedRoomLogin.auth === 'login'
     && unauthenticatedRoomLogin.redirect?.startsWith('/app/rooms')
+    && unavailableLoginAction.buttonDisabled
+    && unavailableLoginAction.triggerFocusable
+    && unavailableLoginAction.tooltipText.includes('กำลังพัฒนา')
+    && unavailableLoginAction.stayedOnLogin
     && applicantSession.user === 'applicant-i'
     && applicantSession.path.startsWith('/app')
     && applicantRefresh.rendered
     && applicantRefresh.sessionUser === 'applicant-i'
-    && applicationValidationLayout.beganRevision
-    && applicationValidationLayout.path === '/app/application/camp-2569'
-    && applicationValidationLayout.validationRendered
-    && applicationValidationLayout.invalidFieldVisible
-    && applicationValidationLayout.groupCount === 3
-    && applicationValidationLayout.visibleGroups === applicationValidationLayout.groupCount
-    && applicationValidationLayout.controlCount >= 19
-    && applicationValidationLayout.visibleControls === applicationValidationLayout.controlCount
+    && applicantDevelopmentLocks.desktopLabels.join('|') === 'รูมเมท|การจองและชำระเงิน|สัญญาและเข้าพัก'
+    && applicantDevelopmentLocks.desktopDisabled
+    && applicantDevelopmentLocks.mobileLabels.join('|') === 'รูมเมท|การจองและชำระเงิน|สัญญาและเข้าพัก'
+    && applicantDevelopmentLocks.mobileDisabled
+    && applicantDevelopmentLocks.campaignMenuRemoved
+    && applicantDevelopmentLocks.navigationTooltipText.includes('กำลังพัฒนา')
+    && applicantDevelopmentLocks.disabledNavigationPreservedPath
+    && applicantDevelopmentLocks.modalOpened
+    && applicantDevelopmentLocks.reservationButtonDisabled
+    && applicantDevelopmentLocks.reservationTriggerFocusable
+    && applicantDevelopmentLocks.reservationTooltipText.includes('กำลังพัฒนา')
+    && applicantDevelopmentLocks.reservationUnchanged
+    && mobileApplicantNavigation.rendered
+    && mobileApplicantNavigation.labels.join('|') === 'รูมเมท|การจองและชำระเงิน|สัญญาและเข้าพัก'
+    && mobileApplicantNavigation.disabled
+    && mobileApplicantNavigation.allVisible
+    && mobileApplicantNavigation.fitsViewport
+    && mobileApplicantNavigation.tooltipText.includes('กำลังพัฒนา')
+    && mobileApplicantNavigation.pathPreserved
     && contactValidationLayout.validationRendered
     && contactValidationLayout.groupHeight > 0
     && contactValidationLayout.controlCount === contactValidationLayout.visibleControls

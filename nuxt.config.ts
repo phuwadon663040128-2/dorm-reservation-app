@@ -64,7 +64,9 @@ export default defineNuxtConfig({
       // static hosting as well as client-side navigation.
       routes: [
         '/campaigns/camp-2569',
-        '/app/application',
+        // สร้าง shell สำหรับ URL เก่า/ฟีเจอร์ที่ล็อกไว้ เพื่อให้ static host
+        // ตอบ 200 ก่อน middleware ส่งผู้ใช้กลับหน้าห้องพัก
+        '/app/campaigns',
         '/app/application/camp-2569',
       ],
     },
@@ -107,15 +109,15 @@ export default defineNuxtConfig({
 
         // พอร์ทัลผู้สมัคร
         { name: 'app-home', path: '/app', file: viewFile('applicant/HomeView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantHome: true } },
-        { name: 'app-campaigns', path: '/app/campaigns', file: viewFile('applicant/CampaignsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-application', path: '/app/application/:campaignId?', file: viewFile('applicant/ApplicationView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
+        { name: 'app-campaigns-retired', path: '/app/campaigns', file: viewFile('applicant/HomeView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
         { name: 'app-rooms', path: '/app/rooms', file: viewFile('applicant/RoomsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-roommate', path: '/app/roommate', file: viewFile('applicant/RoommateView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-reservation', path: '/app/reservation', file: viewFile('applicant/ReservationView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-payments', path: '/app/payments', file: viewFile('applicant/PaymentsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-contracts', path: '/app/contracts', file: viewFile('applicant/ContractsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-next-steps', path: '/app/next-steps', file: viewFile('applicant/NextStepsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
-        { name: 'app-renewal', path: '/app/renewal', file: viewFile('applicant/RenewalView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant' } },
+        { name: 'app-application', path: '/app/application/:campaignId?', file: viewFile('applicant/ApplicationView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
+        { name: 'app-roommate', path: '/app/roommate', file: viewFile('applicant/RoommateView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
+        { name: 'app-reservation', path: '/app/reservation', file: viewFile('applicant/ReservationView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
+        { name: 'app-payments', path: '/app/payments', file: viewFile('applicant/PaymentsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
+        { name: 'app-contracts', path: '/app/contracts', file: viewFile('applicant/ContractsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
+        { name: 'app-next-steps', path: '/app/next-steps', file: viewFile('applicant/NextStepsView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
+        { name: 'app-renewal', path: '/app/renewal', file: viewFile('applicant/RenewalView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantFeatureUnavailable: true } },
         { name: 'app-account', path: '/app/account', file: viewFile('applicant/HomeView.vue'), meta: { layout: 'applicant', requiresAuth: true, portal: 'applicant', applicantHome: true } },
 
         // พอร์ทัลเจ้าหน้าที่ — section ใช้ตรวจสิทธิ์รายส่วนงานใน middleware

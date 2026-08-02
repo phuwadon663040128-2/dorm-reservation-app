@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatDate, roomConfigOptions } from '@/lib/labels'
+import { preloadCampus3d } from '@/lib/preloadCampus3d'
 import { campaigns } from '@/fixtures/campaigns'
 import { dormGroups } from '@/fixtures/dorm-groups'
 import { feeAcademicYear } from '@/fixtures/fees'
@@ -65,7 +66,8 @@ const searchConfig = ref('all')
 const searchGender = ref('all')
 
 function search() {
-  const query: Record<string, string> = {}
+  void preloadCampus3d()
+  const query: Record<string, string> = { view: '3d' }
   if (searchDorm.value !== 'all') query.dorm = searchDorm.value
   if (searchConfig.value !== 'all') query.config = searchConfig.value
   if (searchGender.value !== 'all') query.gender = searchGender.value
@@ -199,8 +201,11 @@ const steps = [
           <!-- hover = ปุ่มยกตัว + เงาอุ่นด้านล่าง + ลูกศรเลื่อนนำสายตา · active = กดจมกลับ เงาหุบ -->
           <Button
             type="submit"
+            data-testid="home-search-submit"
             size="lg"
             class="rounded-full duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/40 hover:brightness-105 active:translate-y-0 active:bg-primary active:shadow-sm active:shadow-primary/25 active:brightness-95 md:h-14 md:px-8"
+            @pointerenter="preloadCampus3d"
+            @focus="preloadCampus3d"
           >
             ค้นหาห้อง
             <ArrowRightIcon class="transition-transform duration-200 group-hover/button:translate-x-1" aria-hidden="true" />

@@ -2,6 +2,12 @@ import { useSessionStore } from '@/stores/session'
 import type { StaffSection } from '@/types'
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  // หน้ารอบรับสมัครฝั่งผู้สมัครถูกถอดออกแล้ว ลิงก์เก่าจึงกลับมาที่หน้าห้องพัก
+  // แทนการตกไปหน้าแรกหรือแสดงหน้าที่ไม่มีอยู่
+  if (to.path === '/app/campaigns') {
+    return navigateTo('/app/rooms', { replace: true })
+  }
+
   // Redirects that do not depend on the browser-only mock session must also run
   // during SSR. Otherwise Nuxt renders one route on the server and hydrates a
   // different route in the browser (for example /login -> /?auth=login).
@@ -69,6 +75,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
   if (to.meta.portal === 'applicant' && session.isLoggedIn && session.isStaff) {
     return navigateTo('/staff', { replace: true })
+  }
+  if (to.meta.applicantFeatureUnavailable === true && session.currentUser?.role === 'applicant') {
+    return navigateTo('/app/rooms', { replace: true })
   }
   if (to.meta.applicantHome === true) {
     return navigateTo('/app/rooms', { replace: true })

@@ -19,6 +19,7 @@ const props = defineProps<{
   dormGroupId: string
   availability: Record<string, Record<number, { available: number; total: number }>>
   visibleBuildingCodes?: string[]
+  selectableBuildingCodes?: readonly string[]
 }>()
 
 const emit = defineEmits<{
@@ -38,8 +39,7 @@ const hoverLabel = ref<{ x: number; y: number; text: string; sub: string } | nul
 const viewMode = ref<'perspective' | 'top'>('perspective')
 // มุมหมุนการ์ดเข็มทิศ (องศา CSS) — อัปเดตทุกเฟรมตามทิศกล้อง แบบ updateCompass ใน test.html
 const compassAngle = ref(0)
-const sceneBusyLabel = ref<string | null>(null)
-const sceneBusyVariant = ref<'skeleton' | 'spinner'>('skeleton')
+const sceneBusyLabel = ref<string | null>('กำลังเตรียมผังอาคาร 3 มิติ')
 // ป้ายชั้น F1..Fn ข้างตึกตอนชั้นแยกออก (ตำแหน่งคำนวณจากการ project จุด 3D ลงจอทุกเฟรม)
 // dot: จุดสถานะหน้าป้าย — เขียว = ยังมีห้องว่าง · แดง = เต็ม · เทา = ไม่มีข้อมูล
 interface FloorMarker {
@@ -1919,6 +1919,12 @@ function pick() {
   return visibleHit.object.userData as { buildingCode: string; floor: number; dormGroupId: string; context: boolean }
 }
 
+function isBuildingSelectable(code: string, dormGroupId: string) {
+  return dormGroupId !== props.dormGroupId
+    || props.selectableBuildingCodes === undefined
+    || props.selectableBuildingCodes.includes(code)
+}
+
 function onMove(e: PointerEvent) {
   if (pointerPress?.pointerId === e.pointerId && Math.hypot(e.clientX - pointerPress.x, e.clientY - pointerPress.y) > CLICK_SLOP) {
     pointerDragged = true
@@ -1936,6 +1942,7 @@ function onMove(e: PointerEvent) {
     return
   }
   const b = buildingOf(hit.buildingCode)
+  const selectable = isBuildingSelectable(hit.buildingCode, hit.dormGroupId)
   if (hit.context) {
     hoverFloor.code = ''
     hoverFloor.floor = 0
@@ -1943,6 +1950,14 @@ function onMove(e: PointerEvent) {
       x: e.clientX, y: e.clientY,
       text: area.dormNames[hit.dormGroupId] ?? '',
       sub: 'กดเพื่อสลับไปดูหอนี้',
+    }
+  } else if (!selectable) {
+    hoverFloor.code = ''
+    hoverFloor.floor = 0
+    hoverLabel.value = {
+      x: e.clientX, y: e.clientY,
+      text: b.label,
+      sub: 'กำลังพัฒนา',
     }
   } else if (mode.value === 'building' && hit.buildingCode === selectedCode.value) {
     hoverFloor.code = hit.buildingCode
@@ -1959,7 +1974,7 @@ function onMove(e: PointerEvent) {
       sub: hasAny ? `${b.floors} ชั้น · กดเพื่อเลือก` : `${b.floors} ชั้น · ยังไม่เปิดข้อมูลห้อง`,
     }
   }
-  el.style.cursor = 'pointer'
+  el.style.cursor = selectable ? 'pointer' : 'not-allowed'
   applyHighlight()
 }
 
@@ -1971,6 +1986,7 @@ function activatePickedObject() {
     emit('switch-dorm', hit.dormGroupId)
     return
   }
+  if (!isBuildingSelectable(hit.buildingCode, hit.dormGroupId)) return
   if (mode.value === 'campus') {
     focusBuilding(hit.buildingCode, true)
   } else if (mode.value === 'building') {
@@ -2023,7 +2039,11 @@ function focusBuilding(code: string, notifyParent = false) {
   const building = area.buildings.find(item =>
     item.code === code && item.dormGroupId === props.dormGroupId,
   )
-  if (!building || !isBuildingVisible(building)) return false
+  if (
+    !building
+    || !isBuildingVisible(building)
+    || !isBuildingSelectable(building.code, building.dormGroupId)
+  ) return false
 
   diveTarget = null
   diveEmitted = false
@@ -2189,85 +2209,97 @@ function resize() {
 
 onMounted(() => {
   if (!host.value) return
-  reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  renderProfile = detectRenderProfile()
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: false,
-    powerPreference: 'high-performance',
+  // สองเฟรมแรกสงวนให้ Vue และเบราว์เซอร์วาด Skeleton ก่อนเริ่มงาน WebGL ที่ใช้ main thread
+  sceneSkeletonFrame = requestAnimationFrame(() => {
+    sceneRebuildFrame = requestAnimationFrame(() => {
+      if (!host.value) return
+      reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      renderProfile = detectRenderProfile()
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+      })
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, renderProfile.pixelRatioCap))
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      renderer.toneMapping = THREE.ACESFilmicToneMapping
+      renderer.shadowMap.enabled = renderProfile.shadows
+      renderer.shadowMap.type = THREE.PCFShadowMap
+      renderer.shadowMap.autoUpdate = false
+      renderer.domElement.dataset.renderQuality = renderProfile.quality
+      renderer.domElement.dataset.maxFps = String(renderProfile.maxFps)
+      renderer.domElement.dataset.pixelRatio = String(Math.min(window.devicePixelRatio || 1, renderProfile.pixelRatioCap))
+      renderer.domElement.dataset.shadows = String(renderProfile.shadows)
+      host.value.appendChild(renderer.domElement)
+      renderer.domElement.style.width = '100%'
+      renderer.domElement.style.height = '100%'
+      renderer.domElement.style.cursor = 'grab'
+
+      camera = new THREE.PerspectiveCamera(45, 1, 0.5, 1200)
+      controls = new OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true
+      controls.dampingFactor = 0.08
+      controls.minDistance = 30
+      controls.maxDistance = 320
+      controls.maxPolarAngle = Math.PI / 2.15
+      controls.addEventListener('start', onControlsStart)
+
+      resize()
+      buildScene()
+      controls.update()
+      renderer.render(scene!, camera)
+      tick()
+
+      renderer.domElement.addEventListener('pointerdown', onPointerDown)
+      renderer.domElement.addEventListener('pointermove', onMove)
+      renderer.domElement.addEventListener('pointerup', onPointerUp)
+      renderer.domElement.addEventListener('pointercancel', onPointerCancel)
+      ro = new ResizeObserver(resize)
+      ro.observe(host.value)
+      visibilityObserver = new IntersectionObserver(([entry]) => {
+        sceneInViewport = entry?.isIntersecting ?? true
+        if (sceneInViewport) lastFrameAt = 0
+      }, { rootMargin: '120px' })
+      visibilityObserver.observe(host.value)
+
+      // hook สำหรับทดสอบอัตโนมัติเท่านั้น (เฉพาะ dev)
+      if (import.meta.env.DEV) {
+        ;(window as unknown as Record<string, unknown>).__campus3d = {
+          focus: (code: string) => {
+            selectedCode.value = code
+            mode.value = 'building'
+            separationTarget = 1
+            applyHighlight()
+            setCameraForMode('building')
+          },
+          dive: (code: string, floor: number) => {
+            selectedCode.value = code
+            mode.value = 'building'
+            separation = 1
+            separationTarget = 1
+            applyHighlight()
+            dive(code, floor)
+          },
+          metrics: () => ({
+            profile: { ...renderProfile },
+            pixelRatio: renderer?.getPixelRatio(),
+            render: renderer ? { ...renderer.info.render } : null,
+            memory: renderer ? { ...renderer.info.memory } : null,
+          }),
+        }
+      }
+
+      // คง Skeleton จน canvas ที่วาดแล้วพร้อมขึ้นจอ จึงเปิด interaction ของฉาก
+      sceneReleaseFrame = requestAnimationFrame(() => {
+        sceneBusyLabel.value = null
+      })
+    })
   })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, renderProfile.pixelRatioCap))
-  renderer.outputColorSpace = THREE.SRGBColorSpace
-  renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.shadowMap.enabled = renderProfile.shadows
-  renderer.shadowMap.type = THREE.PCFShadowMap
-  renderer.shadowMap.autoUpdate = false
-  renderer.domElement.dataset.renderQuality = renderProfile.quality
-  renderer.domElement.dataset.maxFps = String(renderProfile.maxFps)
-  renderer.domElement.dataset.pixelRatio = String(Math.min(window.devicePixelRatio || 1, renderProfile.pixelRatioCap))
-  renderer.domElement.dataset.shadows = String(renderProfile.shadows)
-  host.value.appendChild(renderer.domElement)
-  renderer.domElement.style.width = '100%'
-  renderer.domElement.style.height = '100%'
-  renderer.domElement.style.cursor = 'grab'
-
-  camera = new THREE.PerspectiveCamera(45, 1, 0.5, 1200)
-  controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableDamping = true
-  controls.dampingFactor = 0.08
-  controls.minDistance = 30
-  controls.maxDistance = 320
-  controls.maxPolarAngle = Math.PI / 2.15
-  controls.addEventListener('start', onControlsStart)
-
-  resize()
-  buildScene()
-  tick()
-
-  renderer.domElement.addEventListener('pointerdown', onPointerDown)
-  renderer.domElement.addEventListener('pointermove', onMove)
-  renderer.domElement.addEventListener('pointerup', onPointerUp)
-  renderer.domElement.addEventListener('pointercancel', onPointerCancel)
-  ro = new ResizeObserver(resize)
-  ro.observe(host.value)
-  visibilityObserver = new IntersectionObserver(([entry]) => {
-    sceneInViewport = entry?.isIntersecting ?? true
-    if (sceneInViewport) lastFrameAt = 0
-  }, { rootMargin: '120px' })
-  visibilityObserver.observe(host.value)
-
-  // hook สำหรับทดสอบอัตโนมัติเท่านั้น (เฉพาะ dev)
-  if (import.meta.env.DEV) {
-    ;(window as unknown as Record<string, unknown>).__campus3d = {
-      focus: (code: string) => {
-        selectedCode.value = code
-        mode.value = 'building'
-        separationTarget = 1
-        applyHighlight()
-        setCameraForMode('building')
-      },
-      dive: (code: string, floor: number) => {
-        selectedCode.value = code
-        mode.value = 'building'
-        separation = 1
-        separationTarget = 1
-        applyHighlight()
-        dive(code, floor)
-      },
-      metrics: () => ({
-        profile: { ...renderProfile },
-        pixelRatio: renderer?.getPixelRatio(),
-        render: renderer ? { ...renderer.info.render } : null,
-        memory: renderer ? { ...renderer.info.memory } : null,
-      }),
-    }
-  }
 })
 
-function rebuildSceneWithLoading(label: string, variant: 'skeleton' | 'spinner') {
+function rebuildSceneWithLoading(label: string) {
   const rebuildVersion = ++sceneRebuildVersion
   sceneBusyLabel.value = label
-  sceneBusyVariant.value = variant
   cancelAnimationFrame(sceneSkeletonFrame)
   cancelAnimationFrame(sceneRebuildFrame)
   cancelAnimationFrame(sceneReleaseFrame)
@@ -2310,10 +2342,7 @@ watch(() => props.dormGroupId, (dormGroupId) => {
   hoverLabel.value = null
   separation = 0
   separationTarget = 0
-  rebuildSceneWithLoading(
-    `กำลังเปิดผัง 3 มิติของ${area.dormNames[dormGroupId] ?? 'หอพักที่เลือก'}`,
-    'spinner',
-  )
+  rebuildSceneWithLoading(`กำลังเปิดผัง 3 มิติของ${area.dormNames[dormGroupId] ?? 'หอพักที่เลือก'}`)
 })
 
 watch(() => props.visibleBuildingCodes, () => {
@@ -2327,7 +2356,7 @@ watch(() => props.visibleBuildingCodes, () => {
 }, { deep: true, flush: 'post' })
 
 function rebuildSceneForTheme() {
-  rebuildSceneWithLoading('กำลังปรับผัง 3 มิติให้เข้ากับธีมใหม่', 'skeleton')
+  rebuildSceneWithLoading('กำลังปรับผัง 3 มิติให้เข้ากับธีมใหม่')
 }
 
 watch(theme, rebuildSceneForTheme)
@@ -2368,7 +2397,6 @@ const headerLabel = computed(() =>
       v-if="sceneBusyLabel"
       overlay
       :label="sceneBusyLabel"
-      :variant="sceneBusyVariant"
     />
 
     <!-- ปุ่มมุมมองอยู่ด้านบน ส่วนชื่ออาคารและเข็มทิศแยกไปมุมล่างเพื่อเปิดพื้นที่ดูผัง -->

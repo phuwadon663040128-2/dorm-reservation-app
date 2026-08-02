@@ -17,9 +17,11 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useTheme } from '@/composables/useTheme'
 import { users } from '@/fixtures/users'
 import { resetDemoData } from '@/lib/demo-reset'
+import { preloadCampus3d } from '@/lib/preloadCampus3d'
 import { errorsFromZod, INPUT_LIMITS, loginCredentialsSchema, registrationSchema } from '@/lib/validation'
 import { useSessionStore } from '@/stores/session'
 import type { User } from '@/types'
@@ -152,6 +154,7 @@ async function signInByEmail() {
     return
   }
   toast.success('เข้าสู่ระบบด้วยอีเมลส่วนตัวสำเร็จ')
+  void preloadCampus3d()
   emit('signed-in', destination())
 }
 
@@ -232,7 +235,8 @@ function handleOpenAutoFocus(event: Event) {
 </script>
 
 <template>
-  <Dialog :open="props.open" @update:open="emit('update:open', $event)">
+  <TooltipProvider :delay-duration="150">
+    <Dialog :open="props.open" @update:open="emit('update:open', $event)">
     <DialogContent
       class="h-auto max-h-[calc(100svh-1rem)] w-[calc(100vw-1rem)] max-w-[32rem]! grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden rounded-xl bg-card p-0 min-[1100px]:h-[calc(100svh-2rem)] min-[1100px]:max-h-[42rem] min-[1100px]:max-w-[72rem]! min-[1100px]:grid min-[1100px]:grid-cols-[minmax(0,29fr)_minmax(26rem,21fr)] [&_[data-slot=dialog-close]]:right-3 [&_[data-slot=dialog-close]]:top-3 [&_[data-slot=dialog-close]]:z-30 [&_[data-slot=dialog-close]]:bg-card/80 [&_[data-slot=dialog-close]]:backdrop-blur-sm"
       @open-auto-focus="handleOpenAutoFocus"
@@ -304,7 +308,7 @@ function handleOpenAutoFocus(event: Event) {
               <DialogHeader class="mt-7 space-y-0 text-left">
                 <DialogTitle class="text-[2rem] font-bold leading-9 tracking-tight">เข้าสู่ระบบ</DialogTitle>
                 <DialogDescription class="mt-2 text-sm leading-6">
-                  ใช้อีเมลส่วนตัวที่ยืนยันแล้ว หรือบัญชี KKU ที่เชื่อมไว้
+                  ใช้อีเมลส่วนตัวที่ยืนยันแล้ว หรือบัญชี KKU-SSO ของท่าน
                 </DialogDescription>
               </DialogHeader>
 
@@ -378,6 +382,8 @@ function handleOpenAutoFocus(event: Event) {
                   data-testid="login-submit"
                   size="lg"
                   class="h-11 w-full justify-center rounded-xl font-semibold hover:-translate-y-px hover:bg-primary/90 hover:shadow-md"
+                  @pointerenter="preloadCampus3d"
+                  @focus="preloadCampus3d"
                 >
                   เข้าสู่ระบบ
                 </Button>
@@ -389,18 +395,28 @@ function handleOpenAutoFocus(event: Event) {
                 <Separator class="flex-1" />
               </div>
 
-              <Button
-                type="button"
-                size="lg"
-                variant="outline"
-                class="h-11 w-full justify-center rounded-xl bg-background/50 font-semibold"
-                disabled
-                aria-disabled="true"
-                title="KKU SSO ยังไม่เปิดใช้งานในต้นแบบ"
-              >
-                <GraduationCapIcon class="size-4.5" aria-hidden="true" />
-                เข้าสู่ระบบด้วย KKU SSO
-              </Button>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span
+                    tabindex="0"
+                    class="block cursor-not-allowed rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-label="เข้าสู่ระบบด้วย KKU SSO — กำลังพัฒนา"
+                  >
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="outline"
+                      class="pointer-events-none h-11 w-full justify-center rounded-xl bg-background/50 font-semibold"
+                      disabled
+                      aria-disabled="true"
+                    >
+                      <GraduationCapIcon class="size-4.5" aria-hidden="true" />
+                      เข้าสู่ระบบด้วย KKU SSO
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" :side-offset="8">กำลังพัฒนา</TooltipContent>
+              </Tooltip>
 
               <div class="mt-auto pt-5 text-center">
                 <p class="text-sm text-muted-foreground">ยังไม่มีบัญชีใช่ไหม?</p>
@@ -645,5 +661,6 @@ function handleOpenAutoFocus(event: Event) {
         </div>
       </section>
     </DialogContent>
-  </Dialog>
+    </Dialog>
+  </TooltipProvider>
 </template>

@@ -16,9 +16,11 @@ import {
   MenuIcon,
 } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import ThemeToggle from '@/components/domain/ThemeToggle.vue'
 import kkuEmblem from '@/assets/kku-emblem-40.webp'
 import { logoutAndResetDemoData } from '@/lib/demo-reset'
+import { preloadCampus3d } from '@/lib/preloadCampus3d'
 import { useSessionStore } from '@/stores/session'
 
 // These overlay trees are not needed for the first public paint. Their code is
@@ -50,6 +52,7 @@ interface MenuItem {
   label: string
   to: RouteLocationRaw
   hint?: string
+  disabled?: boolean
 }
 
 interface TopMenu {
@@ -60,14 +63,14 @@ interface TopMenu {
 }
 
 const dormItems: MenuItem[] = [
-  { label: 'วรเรสซิเดนซ์ (หอพัก 8 หลัง)', to: { path: '/rooms', query: { dorm: 'dorm-8-lang' } } },
-  { label: 'หอพักวรอินเตอร์ (4 หลัง)', to: { path: '/rooms', query: { dorm: 'dorm-wor-inter' } } },
+  { label: 'วรเรสซิเดนซ์ (หอพัก 8 หลัง)', to: { path: '/rooms', query: { dorm: 'dorm-8-lang', view: '3d' } } },
+  { label: 'หอพักวรอินเตอร์ (4 หลัง)', to: { path: '/rooms', query: { dorm: 'dorm-wor-inter', view: '3d' } } },
 ]
 
 const serviceItems: MenuItem[] = [
-  { label: 'บิลค่าน้ำ-ค่าไฟ', to: '/services/utilities' },
-  { label: 'แจ้งซ่อมออนไลน์', to: '/services/maintenance' },
-  { label: 'แจ้งรับพัสดุ(ไปรษณีย์ไทย)', to: '/services/parcel' },
+  { label: 'บิลค่าน้ำ-ค่าไฟ', to: '/services/utilities', disabled: true },
+  { label: 'แจ้งซ่อมออนไลน์', to: '/services/maintenance', disabled: true },
+  { label: 'แจ้งรับพัสดุ(ไปรษณีย์ไทย)', to: '/services/parcel', disabled: true },
 ]
 
 const topMenus: TopMenu[] = [
@@ -156,10 +159,19 @@ function handleDocumentKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') closeDesktopMenus()
 }
 
-function navigate(to: RouteLocationRaw) {
+function navigate(to: RouteLocationRaw, disabled = false) {
+  if (disabled) return
+  preloadRoomDestination(to)
   mobileOpen.value = false
   closeDesktopMenus()
   router.push(portalAwareDestination(to))
+}
+
+function preloadRoomDestination(to: RouteLocationRaw) {
+  const path = typeof to === 'string'
+    ? to.split('?')[0]
+    : typeof to === 'object' && to !== null && 'path' in to ? to.path : undefined
+  if (path === '/rooms' || path === '/app/rooms') void preloadCampus3d()
 }
 
 function requestLogin() {
@@ -200,11 +212,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <header
-    ref="headerRef"
-    class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur"
-    @keydown.esc="closeDesktopMenus()"
-  >
+  <TooltipProvider :delay-duration="150">
+    <header
+      ref="headerRef"
+      class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur"
+      @keydown.esc="closeDesktopMenus()"
+    >
     <div
       class="mx-auto flex h-16 w-full max-w-352 items-center gap-2 px-3 sm:gap-4 sm:px-5 min-[1440px]:grid min-[1440px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
     >
@@ -267,18 +280,30 @@ onBeforeUnmount(() => {
               <ChevronDownIcon class="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
             </summary>
             <div class="absolute left-0 top-full z-50 mt-1 min-w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-              <button
-                v-for="item in menu.items"
-                :key="item.label"
-                type="button"
-                class="flex w-full cursor-pointer rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground"
-                @click="navigate(item.to)"
-              >
-                <span class="flex flex-col">
-                  {{ item.label }}
-                  <span v-if="item.hint" class="text-xs text-muted-foreground">{{ item.hint }}</span>
-                </span>
-              </button>
+              <Tooltip v-for="item in menu.items" :key="item.label">
+                <TooltipTrigger as-child>
+                  <button
+                    type="button"
+                    class="flex w-full rounded-sm px-2 py-1.5 text-left text-sm outline-none focus-visible:bg-accent focus-visible:text-accent-foreground"
+                    :class="item.disabled
+                      ? 'cursor-not-allowed text-muted-foreground opacity-50'
+                      : 'cursor-pointer hover:bg-accent hover:text-accent-foreground'"
+                    :aria-disabled="item.disabled || undefined"
+                    :aria-label="item.disabled ? `${item.label} — กำลังพัฒนา` : undefined"
+                    @pointerenter="preloadRoomDestination(item.to)"
+                    @focus="preloadRoomDestination(item.to)"
+                    @click="navigate(item.to, item.disabled)"
+                  >
+                    <span class="flex flex-col">
+                      {{ item.label }}
+                      <span v-if="item.hint" class="text-xs text-muted-foreground">{{ item.hint }}</span>
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent v-if="item.disabled" side="right" :side-offset="8">
+                  กำลังพัฒนา
+                </TooltipContent>
+              </Tooltip>
             </div>
           </details>
         </template>
@@ -351,18 +376,29 @@ onBeforeUnmount(() => {
                 <p v-if="section.label" class="px-3 pb-1.5 pt-1 text-[11px] font-semibold text-primary">
                   {{ section.label }}
                 </p>
-                <button
-                  v-for="item in section.items"
-                  :key="item.label"
-                  type="button"
-                  class="rounded-lg px-3 py-2 text-left text-sm leading-snug transition-colors"
-                  :class="isNavItemActive(item.to)
-                    ? 'bg-primary/10 font-semibold text-primary'
-                    : 'text-foreground/80 hover:bg-muted hover:text-foreground'"
-                  @click="navigate(item.to)"
-                >
-                  {{ item.label }}
-                </button>
+                <Tooltip v-for="item in section.items" :key="item.label">
+                  <TooltipTrigger as-child>
+                    <button
+                      type="button"
+                      class="rounded-lg px-3 py-2 text-left text-sm leading-snug transition-colors"
+                      :class="item.disabled
+                        ? 'cursor-not-allowed text-muted-foreground opacity-50'
+                        : isNavItemActive(item.to)
+                          ? 'bg-primary/10 font-semibold text-primary'
+                          : 'text-foreground/80 hover:bg-muted hover:text-foreground'"
+                      :aria-disabled="item.disabled || undefined"
+                      :aria-label="item.disabled ? `${item.label} — กำลังพัฒนา` : undefined"
+                      @pointerenter="preloadRoomDestination(item.to)"
+                      @focus="preloadRoomDestination(item.to)"
+                      @click="navigate(item.to, item.disabled)"
+                    >
+                      {{ item.label }}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent v-if="item.disabled" side="left" :side-offset="8">
+                    กำลังพัฒนา
+                  </TooltipContent>
+                </Tooltip>
               </template>
 
               <template v-if="!isApplicantContext">
@@ -393,5 +429,6 @@ onBeforeUnmount(() => {
         </Sheet>
       </div>
     </div>
-  </header>
+    </header>
+  </TooltipProvider>
 </template>

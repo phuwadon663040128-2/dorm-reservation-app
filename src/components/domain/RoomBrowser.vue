@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Select,
@@ -21,15 +22,17 @@ import RoomTile from './RoomTile.vue'
 import { formatBaht, roomConfigLabel, roomConfigOptions } from '@/lib/labels'
 import { overlayFor } from '@/lib/planOverlays'
 import { campusFor } from '@/lib/campus3d'
+import { preloadCampus3d } from '@/lib/preloadCampus3d'
 import { totalPriceFor } from '@/fixtures/pricing'
 import { useDormStore } from '@/stores/dorm'
 import type { Room, RoomConfig } from '@/types'
 
 // โหลด Three.js เฉพาะตอนเปิดมุมมองตึก 3D — ไม่ถ่วง bundle หน้าอื่น
 const Campus3D = defineAsyncComponent({
-  loader: () => import('./Campus3D.vue'),
+  loader: () => preloadCampus3d() ?? import('./Campus3D.vue'),
   loadingComponent: Campus3DLoading,
-  delay: 120,
+  delay: 0,
+  suspensible: false,
 })
 
 // แผนผังห้องรายชั้นตามเอกสาร 03: กลุ่มหอ → อาคาร → ชั้น → ห้องจริง
@@ -39,12 +42,34 @@ const props = defineProps<{
   initialDormGroupId?: string
   initialConfig?: string
   initialGender?: string
+  initialView?: string
 }>()
 
 const emit = defineEmits<{ (e: 'select', room: Room): void }>()
 
 const dorm = useDormStore()
 const ALL_BUILDINGS = 'all'
+
+const SELECTABLE_BUILDING_CODES: Record<string, readonly string[]> = {
+  'dorm-8-lang': ['1', '2'],
+  'dorm-wor-inter': ['A', 'B'],
+}
+
+// อาคาร 4–8 เป็นรายการสื่อสารขอบเขตงานเท่านั้น ไม่เพิ่มเข้า store จึงไม่มี
+// floor/room/plan data หลุดไปทำงานร่วมกับ flow เลือกห้องโดยไม่ตั้งใจ
+const DEVELOPMENT_ONLY_BUILDINGS: Record<string, readonly { id: string; code: string; name: string }[]> = {
+  'dorm-8-lang': [
+    { code: '4', gender: 'หญิง' },
+    { code: '5', gender: 'ชาย' },
+    { code: '6', gender: 'ชาย' },
+    { code: '7', gender: 'หญิง' },
+    { code: '8', gender: 'หญิง' },
+  ].map(building => ({
+    id: `development-building-${building.code}`,
+    code: building.code,
+    name: `อาคาร ${building.code} (${building.gender})`,
+  })),
+}
 
 const selectedDormGroupId = ref(
   dorm.dormGroups.some(g => g.id === props.initialDormGroupId)
@@ -61,6 +86,7 @@ watch(() => props.initialDormGroupId, (dormGroupId) => {
     selectedDormGroupId.value = dormGroupId
   }
 })
+const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
 const configFilter = ref(
   props.initialConfig === 'hl'
     ? 'aircon'
@@ -87,6 +113,25 @@ const visibleBuildings = computed(() =>
     .buildingsOf(selectedDormGroupId.value)
     .filter(b => genderFilter.value === 'all' || b.gender === genderFilter.value),
 )
+const selectableBuildingCodes = computed(() =>
+  SELECTABLE_BUILDING_CODES[selectedDormGroupId.value]
+  ?? visibleBuildings.value.map(building => building.code),
+)
+function isBuildingSelectable(code: string) {
+  return selectableBuildingCodes.value.includes(code)
+}
+const buildingMenuOptions = computed(() => [
+  ...visibleBuildings.value.map(building => ({
+    id: building.id,
+    code: building.code,
+    name: building.name,
+    disabled: !isBuildingSelectable(building.code),
+  })),
+  ...(DEVELOPMENT_ONLY_BUILDINGS[selectedDormGroupId.value] ?? []).map(building => ({
+    ...building,
+    disabled: true,
+  })),
+])
 const visibleBuildingCodes = computed(() =>
   genderFilter.value === 'all'
     ? undefined
@@ -94,7 +139,7 @@ const visibleBuildingCodes = computed(() =>
 )
 
 const selectedBuildingId = ref(
-  visibleBuildings.value[0]?.id ?? '',
+  has3d.value ? ALL_BUILDINGS : visibleBuildings.value[0]?.id ?? '',
 )
 
 watch(visibleBuildings, (list) => {
@@ -164,11 +209,9 @@ const annotationPlacement = computed<'overlay-auto' | 'detached-bottom-right'>((
     : 'overlay-auto',
 )
 
-// เริ่มด้วยผังห้องซึ่งพร้อมใช้งานทันที แล้วค่อยโหลด Three.js เมื่อผู้ใช้
-// เลือกมุมมอง 3D โดยตรง เพื่อไม่ให้งานสร้าง scene ขวาง first interaction
-// บนทั้ง desktop และ mobile
-const has3d = computed(() => campusFor(selectedDormGroupId.value) !== null)
-const viewMode = ref<'3d' | 'plan' | 'list'>('plan')
+// พฤติกรรมเดิมของหน้าเลือกห้องเริ่มจากภาพรวมตึก 3D แล้วจึงเจาะลงไปยัง
+// อาคาร → ชั้น → ผังห้อง โดยหอที่ไม่มีโมเดล 3D จะ fallback เป็นผังชั้น
+const viewMode = ref<'3d' | 'plan' | 'list'>(has3d.value ? '3d' : 'plan')
 const realPlanOpen = ref(false)
 const campusRef = ref<{
   focusBuilding: (code: string) => boolean
@@ -195,9 +238,24 @@ function selectViewMode(value: unknown) {
   }
 }
 
+watch(() => props.initialView, (requestedView) => {
+  if (requestedView === 'plan' || requestedView === 'list') {
+    selectViewMode(requestedView)
+    return
+  }
+  // ค่าเริ่มต้นและ view=3d ต้องกลับสู่ภาพรวมตึก แม้ component เดิมยังไม่ unmount
+  if (!requestedView || requestedView === '3d') selectViewMode('3d')
+})
+
 // ในมุมมอง 3D — เลือกอาคารจาก dropdown ด้านบน = โฟกัสตึกนั้นในฉาก 3D
 watch([selectedBuildingId, viewMode, campusRef], ([id, currentView, campus]) => {
-  if (currentView !== '3d' || !campus) return
+  // ระหว่าง async component แสดง Skeleton ค่า ref อาจชี้ loading component ที่ยังไม่มี API ของฉาก
+  if (
+    currentView !== '3d'
+    || !campus
+    || typeof campus.focusBuilding !== 'function'
+    || typeof campus.showAllBuildings !== 'function'
+  ) return
   if (id === ALL_BUILDINGS) {
     campus.showAllBuildings()
     return
@@ -239,7 +297,7 @@ const availabilityByCode = computed(() => {
 // จาก 3D กดเลือกชั้น → ตั้งอาคาร/ชั้น แล้วสลับไปแผนผังห้อง (พร้อมปุ่มกลับ 3D)
 function onSelectFloorFrom3d(payload: { buildingCode: string; floor: number }) {
   const building = dorm.buildingsOf(selectedDormGroupId.value).find(b => b.code === payload.buildingCode)
-  if (!building) return
+  if (!building || !isBuildingSelectable(building.code)) return
   selectedBuildingId.value = building.id
   selectedFloor.value = payload.floor
   viewMode.value = 'plan'
@@ -251,7 +309,7 @@ function onSelectBuildingFrom3d(buildingCode: string | null) {
     return
   }
   const building = dorm.buildingsOf(selectedDormGroupId.value).find(item => item.code === buildingCode)
-  if (!building) return
+  if (!building || !isBuildingSelectable(building.code)) return
   if (!visibleBuildings.value.some(item => item.id === building.id)) genderFilter.value = 'all'
   selectedBuildingId.value = building.id
 }
@@ -294,7 +352,8 @@ const buildingSummary = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <TooltipProvider :delay-duration="180">
+    <div class="space-y-4">
     <!-- หัวหน้าจอสาธารณะแยกจากตัวกรอง เพื่อให้สรุปอาคารย้ายขึ้นมาอยู่ก่อน toolbar ได้ -->
     <div v-if="$slots.header" class="rounded-2xl border bg-card px-4 py-4 shadow-sm sm:px-5">
       <slot name="header" />
@@ -345,28 +404,62 @@ const buildingSummary = computed(() => {
       <div class="min-w-0 sm:min-w-40">
         <Label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">หอพัก</Label>
         <Select v-model="selectedDormGroupId">
-          <SelectTrigger class="w-full" aria-label="เลือกหอพัก">
+          <SelectTrigger class="w-full" aria-label="เลือกหอพัก" data-testid="dorm-group-select">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="g in dorm.dormGroups" :key="g.id" :value="g.id">{{ g.shortName }}</SelectItem>
+            <SelectItem
+              v-for="g in dorm.dormGroups"
+              :key="g.id"
+              :value="g.id"
+              :data-testid="`dorm-group-option-${g.id}`"
+            >
+              {{ g.shortName }}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div class="min-w-0 sm:min-w-44">
         <Label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">อาคาร</Label>
-        <Select v-model="selectedBuildingId" :disabled="!visibleBuildings.length">
-          <SelectTrigger class="w-full" aria-label="เลือกอาคาร">
-            <SelectValue :placeholder="visibleBuildings.length ? 'เลือกอาคาร' : 'ไม่มีอาคารตามตัวกรอง'" />
+        <Select v-model="selectedBuildingId" :disabled="!buildingMenuOptions.length">
+          <SelectTrigger class="w-full" aria-label="เลือกอาคาร" data-testid="building-select">
+            <SelectValue :placeholder="buildingMenuOptions.length ? 'เลือกอาคาร' : 'ไม่มีอาคารตามตัวกรอง'" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem v-if="has3d && viewMode === '3d'" :value="ALL_BUILDINGS">
               ทุกอาคาร
             </SelectItem>
-            <SelectItem v-for="b in visibleBuildings" :key="b.id" :value="b.id">
-              {{ b.name }}
-            </SelectItem>
+            <template v-for="building in buildingMenuOptions" :key="building.id">
+              <SelectItem
+                v-if="!building.disabled"
+                :value="building.id"
+                :data-testid="`building-option-${building.code}`"
+              >
+                {{ building.name }}
+              </SelectItem>
+              <Tooltip v-else>
+                <TooltipTrigger as-child>
+                  <div
+                    tabindex="0"
+                    role="note"
+                    class="cursor-not-allowed rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    :aria-label="`${building.name} — กำลังพัฒนา`"
+                    :data-testid="`building-development-${building.code}`"
+                  >
+                    <SelectItem
+                      :value="building.id"
+                      disabled
+                      class="cursor-not-allowed"
+                      :data-testid="`building-option-${building.code}`"
+                    >
+                      {{ building.name }}
+                    </SelectItem>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" :side-offset="8">กำลังพัฒนา</TooltipContent>
+              </Tooltip>
+            </template>
           </SelectContent>
         </Select>
       </div>
@@ -464,6 +557,7 @@ const buildingSummary = computed(() => {
         :dorm-group-id="selectedDormGroupId"
         :availability="availabilityByCode"
         :visible-building-codes="visibleBuildingCodes"
+        :selectable-building-codes="selectableBuildingCodes"
         @select-building="onSelectBuildingFrom3d"
         @select-floor="onSelectFloorFrom3d"
         @switch-dorm="selectedDormGroupId = $event"
@@ -552,5 +646,6 @@ const buildingSummary = computed(() => {
     </Card>
 
     <RealPlanDialog v-model:open="realPlanOpen" :building="selectedBuilding ?? null" :floor="selectedFloor" />
-  </div>
+    </div>
+  </TooltipProvider>
 </template>

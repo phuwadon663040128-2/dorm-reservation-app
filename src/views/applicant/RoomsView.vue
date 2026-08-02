@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
+import { useRoute } from 'vue-router'
 import { ChevronDownIcon, ImageIcon, InfoIcon, TimerIcon, XIcon } from '@lucide/vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -21,6 +20,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import HoldCountdown from '@/components/domain/HoldCountdown.vue'
 import RoomBrowser from '@/components/domain/RoomBrowser.vue'
 import RoomStatusBadge from '@/components/domain/RoomStatusBadge.vue'
@@ -35,7 +40,6 @@ const session = useSessionStore()
 const reservation = useReservationStore()
 const dorm = useDormStore()
 const route = useRoute()
-const router = useRouter()
 
 const requestedRoom = computed(() => {
   const roomNumber = typeof route.query.room === 'string' ? route.query.room : ''
@@ -54,9 +58,8 @@ const requestedConfig = computed(() =>
 const requestedGender = computed(() =>
   typeof route.query.gender === 'string' ? route.query.gender : undefined,
 )
-
-const canReserve = computed(
-  () => Boolean(session.currentUser) && !reservation.myReservation,
+const requestedView = computed(() =>
+  typeof route.query.view === 'string' ? route.query.view : undefined,
 )
 
 // dialog เลือกรูปแบบการพัก + ยืนยันจอง
@@ -142,19 +145,6 @@ watch([dialogOpen, occupancy, selectedRoom], () => {
 
 onBeforeUnmount(() => detailsResizeObserver?.disconnect())
 
-function reserve() {
-  if (!selectedRoom.value || !occupancy.value) return
-  const result = reservation.reserveRoom(selectedRoom.value.number, occupancy.value)
-  toast(result.message)
-  if (result.ok) {
-    dialogOpen.value = false
-    router.push(
-      reservation.myReservation?.holdStatus === 'held_payment'
-        ? { path: '/app/payments', query: { pay: 'auto' } }
-        : '/app/roommate',
-    )
-  }
-}
 </script>
 
 <template>
@@ -179,6 +169,7 @@ function reserve() {
       :initial-dorm-group-id="requestedDormGroupId"
       :initial-config="requestedConfig"
       :initial-gender="requestedGender"
+      :initial-view="requestedView"
       @select="onSelect"
     />
 
@@ -362,14 +353,7 @@ function reserve() {
                 v-if="!isLeaderOfAcceptedGroup && selectedRoom.occupancyCapability.includes('shared')"
                 class="text-xs leading-relaxed text-muted-foreground"
               >
-                พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม จัดการได้ที่เมนู
-                <RouterLink
-                  to="/app/roommate"
-                  class="font-medium text-foreground underline decoration-primary/70 underline-offset-2 hover:text-primary"
-                  @click="dialogOpen = false"
-                >
-                  “รูมเมท”
-                </RouterLink>
+                พักคู่ได้เมื่อมีกลุ่มรูมเมทที่ตอบรับแล้ว และคุณเป็นหัวหน้ากลุ่ม — ฟังก์ชัน “รูมเมท” กำลังพัฒนา
               </p>
               <p
                 v-if="hasActiveGroup && selectedRoom.occupancyCapability.includes('whole_room')"
@@ -429,17 +413,34 @@ function reserve() {
           </Button>
 
           <DialogFooter
-            class="m-0 grid shrink-0 grid-cols-2 gap-3 rounded-none border-t bg-card p-4 [&>button]:h-11 [&>button]:w-full [&>button]:text-base"
+            class="m-0 grid shrink-0 grid-cols-2 gap-3 rounded-none border-t bg-card p-4"
           >
-            <Button variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
-            <Button
-              :disabled="selectedRoom.publicStatus !== 'available' || !canReserve || !occupancy || !canChoose(occupancy)"
-              @click="reserve"
-            >
-              <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
-              <template v-else-if="!occupancy">ยังไม่มีรูปแบบการพักที่จองได้</template>
-              <template v-else>จองห้องนี้</template>
-            </Button>
+            <Button class="h-11 w-full text-base" variant="outline" @click="dialogOpen = false">ยกเลิก</Button>
+            <TooltipProvider :delay-duration="180">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span
+                    tabindex="0"
+                    role="button"
+                    aria-disabled="true"
+                    aria-label="จองห้องนี้ — กำลังพัฒนา"
+                    title="กำลังพัฒนา"
+                    class="w-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    data-testid="reservation-development-trigger"
+                  >
+                    <Button
+                      disabled
+                      class="pointer-events-none h-11 w-full text-base opacity-50"
+                      data-testid="reservation-submit"
+                    >
+                      <template v-if="selectedRoom.publicStatus !== 'available'">ห้องนี้ไม่ว่าง</template>
+                      <template v-else>จองห้องนี้</template>
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">กำลังพัฒนา</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </DialogFooter>
         </div>
       </DialogContent>

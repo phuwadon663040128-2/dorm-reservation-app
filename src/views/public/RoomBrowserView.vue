@@ -40,6 +40,9 @@ const initialConfig = computed(() =>
 const initialGender = computed(() =>
   typeof route.query.gender === 'string' ? route.query.gender : undefined,
 )
+const initialView = computed(() =>
+  typeof route.query.view === 'string' ? route.query.view : undefined,
+)
 
 // dialog รายละเอียดห้อง (โหมดสาธารณะ — ดูข้อมูล + ชวนเข้าสู่ระบบเพื่อจอง)
 const selectedRoom = ref<Room | null>(null)
@@ -113,10 +116,11 @@ function goReserve() {
   <!-- หน้าแผนผังใช้คอนเทนเนอร์กว้างพิเศษ + ระยะขอบแคบ เพื่อให้ผังแสดงเต็มโดยไม่ต้องเลื่อนแนวนอน -->
   <div class="mx-auto w-full max-w-352 space-y-5 px-3 py-6 sm:px-5">
     <LazyRoomBrowser
-      hydrate-on-interaction
+      hydrate-on-visible
       :initial-dorm-group-id="initialDorm"
       :initial-config="initialConfig"
       :initial-gender="initialGender"
+      :initial-view="initialView"
       @select="onSelect"
     >
       <!-- ส่วนหัวรวมอยู่ในการ์ดเดียวกับตัวกรอง — สถิติจาก exact rooms (ไม่ใช่โควตา) เป็น pill กะทัดรัด -->
