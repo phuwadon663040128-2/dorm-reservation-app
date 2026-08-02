@@ -49,26 +49,6 @@ const selectedRoom = ref<Room | null>(null)
 const dialogOpen = ref(false)
 
 function onSelect(room: Room) {
-  if (!session.isLoggedIn) {
-    const building = dorm.buildings.find(item => item.id === room.buildingId)
-    const reservationTarget = router.resolve({
-      path: '/app/rooms',
-      query: {
-        ...(building?.dormGroupId ? { dorm: building.dormGroupId } : {}),
-        room: room.number,
-      },
-    }).fullPath
-    router.push({
-      path: route.path,
-      query: {
-        ...route.query,
-        auth: 'login',
-        redirect: reservationTarget,
-      },
-    })
-    return
-  }
-
   selectedRoom.value = room
   dialogOpen.value = true
 }
@@ -207,7 +187,11 @@ function goReserve() {
 
         <DialogFooter>
           <Button variant="outline" @click="dialogOpen = false">ปิด</Button>
-          <Button v-if="selectedRoom.publicStatus === 'available'" @click="goReserve">
+          <Button
+            v-if="selectedRoom.publicStatus === 'available'"
+            data-testid="public-room-reserve"
+            @click="goReserve"
+          >
             {{ session.isLoggedIn && !session.isStaff ? 'ไปจองห้องนี้' : 'เข้าสู่ระบบเพื่อจอง' }}
           </Button>
         </DialogFooter>

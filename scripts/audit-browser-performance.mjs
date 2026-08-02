@@ -558,11 +558,20 @@ try {
       await new Promise(resolve => setTimeout(resolve, 20))
     }
     document.querySelector('[data-testid="room-tile"][data-room-status="available"]').click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('[data-testid="public-room-detail"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const roomDetailOpenedBeforeLogin = Boolean(document.querySelector('[data-testid="public-room-detail"]'))
+    const loginStayedClosedWhileViewing = !document.querySelector('[data-testid="login-form"]')
+      && !new URLSearchParams(location.search).has('auth')
+    document.querySelector('[data-testid="public-room-reserve"]')?.click()
     for (let attempt = 0; attempt < 200 && !document.querySelector('[data-testid="login-form"]'); attempt += 1) {
       await new Promise(resolve => setTimeout(resolve, 20))
     }
     const query = new URLSearchParams(location.search)
     return {
+      roomDetailOpenedBeforeLogin,
+      loginStayedClosedWhileViewing,
       loginModalOpened: Boolean(document.querySelector('[data-testid="login-form"]')),
       roomDetailClosed: !document.querySelector('[data-testid="public-room-detail"]'),
       auth: query.get('auth'),
@@ -1067,6 +1076,8 @@ try {
     && mobileNavigation.drawerOpened
     && mobileNavigation.contactFound
     && mobileNavigation.path === '/contact'
+    && unauthenticatedRoomLogin.roomDetailOpenedBeforeLogin
+    && unauthenticatedRoomLogin.loginStayedClosedWhileViewing
     && unauthenticatedRoomLogin.loginModalOpened
     && unauthenticatedRoomLogin.roomDetailClosed
     && unauthenticatedRoomLogin.auth === 'login'
