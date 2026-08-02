@@ -608,7 +608,7 @@ try {
     const desktopNav = document.querySelector('nav[aria-label="เมนูผู้สมัคร"]')
     const mobileNav = document.querySelector('nav[aria-label="เมนูผู้สมัครบนมือถือ"]')
     const desktopTriggers = [...(desktopNav?.querySelectorAll('[data-testid^="applicant-desktop-development-"]') ?? [])]
-    const mobileTriggers = [...(mobileNav?.querySelectorAll('[data-testid^="applicant-mobile-development-"]') ?? [])]
+    const mobileTriggers = [...(mobileNav?.querySelectorAll('[data-testid^="applicant-mobile-shortcut-"]') ?? [])]
     const labels = triggers => triggers.map(trigger => trigger.getAttribute('aria-label')?.split(' —')[0] ?? '')
     const disabled = triggers => triggers.every(trigger => trigger.querySelector('button')?.disabled === true)
 
@@ -796,11 +796,75 @@ try {
   }
 
   await setViewport(390, 844, true)
+  await evaluate(`sessionStorage.clear()`)
+  await navigate('/')
+  const mobileLoginLayout = await evaluate(`(async () => {
+    document.querySelector('[data-testid="login-open"]')?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('[data-testid="login-form"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const dialog = document.querySelector('[data-slot="dialog-content"]')
+    const scrollArea = document.querySelector('[aria-label="เข้าสู่ระบบและสร้างบัญชี"]')
+    const createAccount = document.querySelector('[data-testid="login-create-account"]')
+    const dialogRect = dialog?.getBoundingClientRect()
+    const buttonRect = createAccount?.getBoundingClientRect()
+    const result = {
+      rendered: Boolean(dialog && scrollArea && createAccount),
+      dialogFitsViewport: Boolean(dialogRect
+        && dialogRect.top >= 0
+        && dialogRect.bottom <= innerHeight),
+      createAccountInitiallyVisible: Boolean(dialogRect && buttonRect
+        && buttonRect.top >= dialogRect.top
+        && buttonRect.bottom <= dialogRect.bottom
+        && buttonRect.bottom <= innerHeight),
+      scrollTop: scrollArea?.scrollTop ?? -1,
+      viewport: { width: innerWidth, height: innerHeight },
+    }
+    document.querySelector('[data-slot="dialog-close"]')?.click()
+    return result
+  })()`)
+
+  await setViewport(360, 640, true)
+  await evaluate(`sessionStorage.clear()`)
+  await navigate('/')
+  const compactMobileLoginLayout = await evaluate(`(async () => {
+    document.querySelector('[data-testid="login-open"]')?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('[data-testid="login-form"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const dialog = document.querySelector('[data-slot="dialog-content"]')
+    const scrollArea = document.querySelector('[aria-label="เข้าสู่ระบบและสร้างบัญชี"]')
+    const createAccount = document.querySelector('[data-testid="login-create-account"]')
+    if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const dialogRect = dialog?.getBoundingClientRect()
+    const buttonRect = createAccount?.getBoundingClientRect()
+    const result = {
+      rendered: Boolean(dialog && scrollArea && createAccount),
+      dialogFitsViewport: Boolean(dialogRect
+        && dialogRect.top >= 0
+        && dialogRect.bottom <= innerHeight),
+      createAccountReachable: Boolean(dialogRect && buttonRect
+        && buttonRect.top >= dialogRect.top
+        && buttonRect.bottom <= dialogRect.bottom
+        && buttonRect.bottom <= innerHeight),
+      scrollable: Boolean(scrollArea && scrollArea.scrollHeight > scrollArea.clientHeight),
+      scrollTop: scrollArea?.scrollTop ?? -1,
+      viewport: { width: innerWidth, height: innerHeight },
+    }
+    document.querySelector('[data-slot="dialog-close"]')?.click()
+    return result
+  })()`)
+
+  await setViewport(390, 844, true)
   await evaluate(`sessionStorage.setItem('dorm-demo-session-user', 'applicant-i')`)
   await navigate('/app/rooms')
   const mobileApplicantNavigation = await evaluate(`(async () => {
     const nav = document.querySelector('nav[aria-label="เมนูผู้สมัครบนมือถือ"]')
-    const triggers = [...(nav?.querySelectorAll('[data-testid^="applicant-mobile-development-"]') ?? [])]
+    const triggers = [...(nav?.querySelectorAll('[data-testid^="applicant-mobile-shortcut-"]') ?? [])]
+    const moreButton = nav?.querySelector('[data-testid="applicant-mobile-more"]')
     const pathBeforeClick = location.pathname
     triggers[0]?.focus()
     for (let attempt = 0; attempt < 100 && !document.querySelector('[data-slot="tooltip-content"]'); attempt += 1) {
@@ -811,17 +875,42 @@ try {
       .join(' ')
     triggers[0]?.click()
     await new Promise(resolve => setTimeout(resolve, 50))
+    moreButton?.click()
+    for (let attempt = 0; attempt < 200 && !document.querySelector('nav[aria-label="เมนูผู้สมัครเพิ่มเติม"]'); attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const moreNav = document.querySelector('nav[aria-label="เมนูผู้สมัครเพิ่มเติม"]')
+    const moreItems = [...(moreNav?.querySelectorAll('[data-testid^="applicant-more-development-"]') ?? [])]
+    moreItems[0]?.focus()
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      const text = [...document.querySelectorAll('[data-slot="tooltip-content"]')]
+        .map(item => item.textContent?.trim() ?? '')
+        .join(' ')
+      if (text.includes('กำลังพัฒนา')) break
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+    const moreTooltipText = [...document.querySelectorAll('[data-slot="tooltip-content"]')]
+      .map(item => item.textContent?.trim() ?? '')
+      .join(' ')
     const navRect = nav?.getBoundingClientRect()
     const triggerRects = triggers.map(trigger => trigger.getBoundingClientRect())
-    return {
+    const result = {
       rendered: Boolean(nav && getComputedStyle(nav).display !== 'none' && navRect?.height),
-      labels: triggers.map(trigger => trigger.getAttribute('aria-label')?.split(' —')[0] ?? ''),
-      disabled: triggers.every(trigger => trigger.querySelector('button')?.disabled === true),
+      shortcutLabels: triggers.map(trigger => trigger.getAttribute('aria-label')?.split(' —')[0] ?? ''),
+      shortcutsDisabled: triggers.every(trigger => trigger.querySelector('button')?.disabled === true),
       allVisible: triggerRects.every(rect => rect.width > 0 && rect.height > 0),
       fitsViewport: triggerRects.every(rect => rect.left >= 0 && rect.right <= innerWidth),
       tooltipText,
+      moreButtonRendered: Boolean(moreButton && moreButton.getBoundingClientRect().height > 0),
+      moreSheetOpened: Boolean(moreNav),
+      moreLabels: moreItems.map(item => item.getAttribute('aria-label')?.split(' —')[0] ?? ''),
+      moreItemsDisabled: moreItems.every(item => item.querySelector('button')?.disabled === true),
+      moreTooltipText,
+      campaignMenuRemoved: !moreNav?.textContent?.includes('รอบรับสมัคร'),
       pathPreserved: location.pathname === pathBeforeClick,
     }
+    document.querySelector('[data-slot="sheet-close"]')?.click()
+    return result
   })()`)
   await evaluate(`sessionStorage.clear()`)
   await navigate('/rooms?dorm=dorm-8-lang')
@@ -886,6 +975,8 @@ try {
     desktopHome,
     desktopServices,
     mobileHome,
+    mobileLoginLayout,
+    compactMobileLoginLayout,
     mobileApplicantNavigation,
     mobileLShapeLegend,
     mobileNavigation,
@@ -990,7 +1081,7 @@ try {
     && applicantRefresh.sessionUser === 'applicant-i'
     && applicantDevelopmentLocks.desktopLabels.join('|') === 'รูมเมท|การจองและชำระเงิน|สัญญาและเข้าพัก'
     && applicantDevelopmentLocks.desktopDisabled
-    && applicantDevelopmentLocks.mobileLabels.join('|') === 'รูมเมท|การจองและชำระเงิน|สัญญาและเข้าพัก'
+    && applicantDevelopmentLocks.mobileLabels.join('|') === 'ชำระเงิน|ใบสมัคร'
     && applicantDevelopmentLocks.mobileDisabled
     && applicantDevelopmentLocks.campaignMenuRemoved
     && applicantDevelopmentLocks.navigationTooltipText.includes('กำลังพัฒนา')
@@ -1000,12 +1091,25 @@ try {
     && applicantDevelopmentLocks.reservationTriggerFocusable
     && applicantDevelopmentLocks.reservationTooltipText.includes('กำลังพัฒนา')
     && applicantDevelopmentLocks.reservationUnchanged
+    && mobileLoginLayout.rendered
+    && mobileLoginLayout.dialogFitsViewport
+    && mobileLoginLayout.createAccountInitiallyVisible
+    && mobileLoginLayout.scrollTop === 0
+    && compactMobileLoginLayout.rendered
+    && compactMobileLoginLayout.dialogFitsViewport
+    && compactMobileLoginLayout.createAccountReachable
     && mobileApplicantNavigation.rendered
-    && mobileApplicantNavigation.labels.join('|') === 'รูมเมท|การจองและชำระเงิน|สัญญาและเข้าพัก'
-    && mobileApplicantNavigation.disabled
+    && mobileApplicantNavigation.shortcutLabels.join('|') === 'ชำระเงิน|ใบสมัคร'
+    && mobileApplicantNavigation.shortcutsDisabled
     && mobileApplicantNavigation.allVisible
     && mobileApplicantNavigation.fitsViewport
     && mobileApplicantNavigation.tooltipText.includes('กำลังพัฒนา')
+    && mobileApplicantNavigation.moreButtonRendered
+    && mobileApplicantNavigation.moreSheetOpened
+    && mobileApplicantNavigation.moreLabels.join('|') === 'รูมเมท|สถานะการจอง|สัญญา|รับกุญแจ|ต่อสัญญา'
+    && mobileApplicantNavigation.moreItemsDisabled
+    && mobileApplicantNavigation.moreTooltipText.includes('กำลังพัฒนา')
+    && mobileApplicantNavigation.campaignMenuRemoved
     && mobileApplicantNavigation.pathPreserved
     && contactValidationLayout.validationRendered
     && contactValidationLayout.groupHeight > 0

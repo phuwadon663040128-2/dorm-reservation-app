@@ -238,7 +238,7 @@ function handleOpenAutoFocus(event: Event) {
   <TooltipProvider :delay-duration="150">
     <Dialog :open="props.open" @update:open="emit('update:open', $event)">
     <DialogContent
-      class="h-auto max-h-[calc(100svh-1rem)] w-[calc(100vw-1rem)] max-w-[32rem]! grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden rounded-xl bg-card p-0 min-[1100px]:h-[calc(100svh-2rem)] min-[1100px]:max-h-[42rem] min-[1100px]:max-w-[72rem]! min-[1100px]:grid min-[1100px]:grid-cols-[minmax(0,29fr)_minmax(26rem,21fr)] [&_[data-slot=dialog-close]]:right-3 [&_[data-slot=dialog-close]]:top-3 [&_[data-slot=dialog-close]]:z-30 [&_[data-slot=dialog-close]]:bg-card/80 [&_[data-slot=dialog-close]]:backdrop-blur-sm"
+      class="h-auto max-h-[calc(100svh-2rem)] w-[calc(100vw-1rem)] max-w-[32rem]! grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden rounded-xl bg-card p-0 min-[1100px]:h-[calc(100svh-2rem)] min-[1100px]:max-h-[42rem] min-[1100px]:max-w-[72rem]! min-[1100px]:grid min-[1100px]:grid-cols-[minmax(0,29fr)_minmax(26rem,21fr)] [&_[data-slot=dialog-close]]:right-3 [&_[data-slot=dialog-close]]:top-3 [&_[data-slot=dialog-close]]:z-30 [&_[data-slot=dialog-close]]:bg-card/80 [&_[data-slot=dialog-close]]:backdrop-blur-sm"
       @open-auto-focus="handleOpenAutoFocus"
     >
       <aside class="relative isolate hidden min-h-0 overflow-hidden bg-background min-[1100px]:block" aria-label="บริการของหอพักออนไลน์">
@@ -292,12 +292,12 @@ function handleOpenAutoFocus(event: Event) {
       <section
         ref="dialogInitialFocus"
         tabindex="-1"
-        class="flex min-h-0 min-w-0 flex-col overflow-y-auto bg-card px-5 py-6 focus:outline-none sm:px-8 sm:py-8"
+        class="flex min-h-0 min-w-0 flex-col overflow-y-auto bg-card px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] focus:outline-none sm:px-8 sm:py-8"
         aria-label="เข้าสู่ระบบและสร้างบัญชี"
       >
         <div class="mx-auto flex min-h-0 min-w-0 w-full max-w-[31.5rem] flex-1 flex-col">
-          <div v-if="view === 'login' || view === 'register'" class="flex h-10 items-center gap-2.5 pr-10">
-            <img :src="kkuEmblem" alt="ตรามหาวิทยาลัยขอนแก่น" width="150" height="267" class="h-10 w-auto shrink-0" />
+          <div v-if="view === 'login' || view === 'register'" class="flex h-9 items-center gap-2.5 pr-10 sm:h-10">
+            <img :src="kkuEmblem" alt="ตรามหาวิทยาลัยขอนแก่น" width="150" height="267" class="h-9 w-auto shrink-0 sm:h-10" />
             <span class="leading-tight">
               <span class="block text-[13px] font-semibold text-kku-red">หอพักในกำกับ มหาวิทยาลัยขอนแก่น</span>
               <span class="mt-0.5 block text-[11px] text-muted-foreground">ระบบจัดการจองหอพัก</span>
@@ -305,9 +305,9 @@ function handleOpenAutoFocus(event: Event) {
           </div>
           <template v-if="view === 'login'">
             <div class="flex min-h-0 flex-1 flex-col">
-              <DialogHeader class="mt-7 space-y-0 text-left">
-                <DialogTitle class="text-[2rem] font-bold leading-9 tracking-tight">เข้าสู่ระบบ</DialogTitle>
-                <DialogDescription class="mt-2 text-sm leading-6">
+              <DialogHeader class="mt-4 space-y-0 text-left sm:mt-7">
+                <DialogTitle class="text-[1.75rem] font-bold leading-8 tracking-tight sm:text-[2rem] sm:leading-9">เข้าสู่ระบบ</DialogTitle>
+                <DialogDescription class="mt-1 text-sm leading-5 sm:mt-2 sm:leading-6">
                   ใช้อีเมลส่วนตัวที่ยืนยันแล้ว หรือบัญชี KKU-SSO ของท่าน
                 </DialogDescription>
               </DialogHeader>
@@ -318,13 +318,13 @@ function handleOpenAutoFocus(event: Event) {
                 <AlertDescription>เลือกสถานการณ์และเริ่มทดสอบใหม่ได้ทันที</AlertDescription>
               </Alert>
 
-              <form data-testid="login-form" class="mt-5 space-y-4" @submit.prevent="signInByEmail">
+              <form data-testid="login-form" class="mt-4 space-y-3 sm:mt-5 sm:space-y-4" @submit.prevent="signInByEmail">
                 <Field>
                   <FieldLabel for="dialog-login-email" class="text-sm font-semibold">อีเมล</FieldLabel>
                   <Input
                     id="dialog-login-email"
                     v-model="loginEmail"
-                    class="h-11 rounded-xl px-3 text-sm"
+                    class="h-10 rounded-xl px-3 text-sm sm:h-11"
                     type="email"
                     autocomplete="email"
                     placeholder="name@example.com"
@@ -342,7 +342,7 @@ function handleOpenAutoFocus(event: Event) {
                     <Input
                       id="dialog-login-password"
                       v-model="loginPassword"
-                      class="h-11 w-full rounded-xl px-3 pr-11 text-sm"
+                      class="h-10 w-full rounded-xl px-3 pr-11 text-sm sm:h-11"
                       :type="showPassword ? 'text' : 'password'"
                       autocomplete="current-password"
                       :maxlength="INPUT_LIMITS.password"
@@ -381,7 +381,7 @@ function handleOpenAutoFocus(event: Event) {
                   type="submit"
                   data-testid="login-submit"
                   size="lg"
-                  class="h-11 w-full justify-center rounded-xl font-semibold hover:-translate-y-px hover:bg-primary/90 hover:shadow-md"
+                  class="h-10 w-full justify-center rounded-xl font-semibold hover:-translate-y-px hover:bg-primary/90 hover:shadow-md sm:h-11"
                   @pointerenter="preloadCampus3d"
                   @focus="preloadCampus3d"
                 >
@@ -389,7 +389,7 @@ function handleOpenAutoFocus(event: Event) {
                 </Button>
               </form>
 
-              <div class="my-4 flex items-center gap-3" aria-hidden="true">
+              <div class="my-3 flex items-center gap-3 sm:my-4" aria-hidden="true">
                 <Separator class="flex-1" />
                 <span class="text-sm text-muted-foreground">หรือ</span>
                 <Separator class="flex-1" />
@@ -406,7 +406,7 @@ function handleOpenAutoFocus(event: Event) {
                       type="button"
                       size="lg"
                       variant="outline"
-                      class="pointer-events-none h-11 w-full justify-center rounded-xl bg-background/50 font-semibold"
+                      class="pointer-events-none h-10 w-full justify-center rounded-xl bg-background/50 font-semibold sm:h-11"
                       disabled
                       aria-disabled="true"
                     >
@@ -418,9 +418,9 @@ function handleOpenAutoFocus(event: Event) {
                 <TooltipContent side="top" :side-offset="8">กำลังพัฒนา</TooltipContent>
               </Tooltip>
 
-              <div class="mt-auto pt-5 text-center">
+              <div class="mt-auto pt-4 text-center sm:pt-5">
                 <p class="text-sm text-muted-foreground">ยังไม่มีบัญชีใช่ไหม?</p>
-                <Button type="button" variant="outline" class="mt-2 h-11 w-full rounded-xl bg-background/50 font-semibold" @click="openView('register')">
+                <Button type="button" variant="outline" class="mt-1.5 h-10 w-full rounded-xl bg-background/50 font-semibold sm:mt-2 sm:h-11" data-testid="login-create-account" @click="openView('register')">
                   สร้างบัญชี
                 </Button>
               </div>
@@ -428,20 +428,20 @@ function handleOpenAutoFocus(event: Event) {
           </template>
 
           <template v-else-if="view === 'register'">
-            <DialogHeader class="mt-7 space-y-0 text-left">
-              <DialogTitle class="pr-10 text-[2rem] font-bold leading-9 tracking-tight">สร้างบัญชีผู้สมัคร</DialogTitle>
-              <DialogDescription class="mt-2 text-sm leading-6">
+            <DialogHeader class="mt-4 space-y-0 text-left sm:mt-7">
+              <DialogTitle class="pr-10 text-[1.75rem] font-bold leading-8 tracking-tight sm:text-[2rem] sm:leading-9">สร้างบัญชีผู้สมัคร</DialogTitle>
+              <DialogDescription class="mt-1 text-sm leading-5 sm:mt-2 sm:leading-6">
                 สมัครด้วยอีเมลส่วนตัวและเชื่อมบัญชี KKU ภายหลังได้
               </DialogDescription>
             </DialogHeader>
 
-            <form class="mt-5 space-y-4" @submit.prevent="submitRegistration">
+            <form class="mt-4 space-y-3 sm:mt-5 sm:space-y-4" @submit.prevent="submitRegistration">
               <Field>
                 <FieldLabel for="dialog-register-email" class="text-sm font-semibold">อีเมล</FieldLabel>
                 <Input
                   id="dialog-register-email"
                   v-model="registerEmail"
-                  class="h-11 rounded-xl px-3 text-sm"
+                  class="h-10 rounded-xl px-3 text-sm sm:h-11"
                   type="email"
                   autocomplete="email"
                   placeholder="name@example.com"
@@ -459,7 +459,7 @@ function handleOpenAutoFocus(event: Event) {
                   <Input
                     id="dialog-register-password"
                     v-model="registerPassword"
-                    class="h-11 w-full rounded-xl px-3 pr-11 text-sm"
+                    class="h-10 w-full rounded-xl px-3 pr-11 text-sm sm:h-11"
                     :type="showRegisterPassword ? 'text' : 'password'"
                     autocomplete="new-password"
                     placeholder="••••••••"
@@ -503,7 +503,7 @@ function handleOpenAutoFocus(event: Event) {
                 {{ registrationError }}
               </FieldError>
 
-              <Button type="submit" size="lg" class="h-11 w-full rounded-xl font-semibold">สร้างบัญชี</Button>
+              <Button type="submit" size="lg" class="h-10 w-full rounded-xl font-semibold sm:h-11">สร้างบัญชี</Button>
             </form>
 
             <Button type="button" variant="link" class="mt-2 w-full text-primary" @click="openView('login')">
